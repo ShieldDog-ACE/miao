@@ -1,0 +1,25 @@
+# 本地密钥与运行时数据：一律不进公开仓库
+.env
+.env.local
+!.env.example
+后台管理系统/config.json
+后台管理系统/config.local.json
+
+# SQLite 数据与上传的图片（含个人数据/测试残留）
+后台管理系统/data/
+后台管理系统/uploads/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+mail-outbox.log
+
+# 依赖与杂项
+node_modules/
+npm-debug.log*
+.DS_Store
+Thumbs.db
+*.log
+
+# 发布打包产物（tools/make-release.sh 输出）
+dist/

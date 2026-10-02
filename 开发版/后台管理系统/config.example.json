@@ -1,0 +1,19 @@
+{
+  "port": 8787,
+  "host": "127.0.0.1",
+  "sessionDays": 30,
+  "security": {
+    "trustProxy": false,
+    "requireSign": true,
+    "botBlock": true,
+    "banMinutes": 30,
+    "autoApproveTeacher": false,
+    "seedDemo": true,
+    "rate": {
+      "api": 150,
+      "auth": 8,
+      "write": 40,
+      "content": 240
+    }
+  }
+}
