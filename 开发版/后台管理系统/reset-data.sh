@@ -70,4 +70,4 @@ console.log("[reset] 当前库：教程 " + c("SELECT COUNT(*) c FROM tutorials"
 dbm.db.close();
 '
 
-echo "✔ 重置完成。接着运行 node tools/sync-seed.js 同步前端兜底副本，然后 bash start.sh 启动。"
+echo "✔ 重置完成。接着运行 bash start.sh 启动（前端正文由后端按需下发，无需再同步任何副本）。"

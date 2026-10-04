@@ -20,6 +20,10 @@
 *.sqlite
 mail-outbox.log
 
+# ── 大模型生成的中间产物与备份（含主管原稿抽取内容，不外传）──
+开发版/后台管理系统/phonemes.bak*/
+开发版/后台管理系统/tools/.pywork/
+
 # ── 内部资料：AI 工作记忆、回收站、发布打包产物 ──
 .workbuddy/
 .Trash-0/

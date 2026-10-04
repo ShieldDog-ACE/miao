@@ -34,6 +34,10 @@ const DEFAULTS = {
   port: 8787,
   host: "127.0.0.1",                          // 生产环境建议 127.0.0.1 + 反向代理（Nginx/Caddy）
   siteDir: path.join(ROOT, "开发版", "喵站"),   // 前端静态目录（ROOT 已是喵站根）
+  // 英语音频挂在后台目录下的 letters/ 与 phonemes/，统一以 /audio/<子目录>/<文件> 对外提供。
+  // 路由层有白名单（只放行这两个子目录），所以指向后台目录本身是安全的 ——
+  // 不会泄露 seed-data.js / db.js / config.json / data/miao.db。
+  audioDir: SERVER_DIR,
   dataDir: path.join(SERVER_DIR, "data"),      // SQLite 数据目录
   uploadDir: "",                                // 留空 = 跟随 dataDir（测试改 MIAO_DATA_DIR 即自动隔离）
   sessionDays: 30,
@@ -107,6 +111,7 @@ function load() {
   if (env.MIAO_PORT) cfg.port = Number(env.MIAO_PORT);
   if (env.MIAO_HOST) cfg.host = env.MIAO_HOST;
   if (env.MIAO_SITE_DIR) cfg.siteDir = path.resolve(env.MIAO_SITE_DIR);
+  if (env.MIAO_AUDIO_DIR) cfg.audioDir = path.resolve(env.MIAO_AUDIO_DIR);
   if (env.MIAO_DATA_DIR) cfg.dataDir = path.resolve(env.MIAO_DATA_DIR);
   if (env.MIAO_UPLOAD_DIR) cfg.uploadDir = path.resolve(env.MIAO_UPLOAD_DIR);
   if (env.SMTP_HOST) cfg.mail.host = env.SMTP_HOST;
@@ -136,6 +141,7 @@ function load() {
   if (env.MIAO_ADMIN_PORT) cfg.admin.port = Number(env.MIAO_ADMIN_PORT);
   if (env.MIAO_ADMIN_PASS) cfg.admin.pass = env.MIAO_ADMIN_PASS;
   cfg.siteDir = path.resolve(cfg.siteDir);
+  cfg.audioDir = path.resolve(cfg.audioDir);
   cfg.dataDir = path.resolve(cfg.dataDir);
   if (!cfg.uploadDir) cfg.uploadDir = path.join(cfg.dataDir, "uploads");   // 默认住在数据目录里
   cfg.uploadDir = path.resolve(cfg.uploadDir);

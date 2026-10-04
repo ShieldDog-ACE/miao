@@ -28,6 +28,7 @@
   --accent-2: #fda3c3;
   --accent-soft: #fde8f0;
   --accent-contrast: #ffffff;
+  --link: #2f6feb;
   --code-bg: #fbf3f6;
   --code-head: #f6e3eb;
   --shadow: 0 6px 28px rgba(232, 91, 140, .08);
@@ -51,6 +52,7 @@
   --accent-2: #ffb7c5;
   --accent-soft: rgba(251, 125, 168, .15);
   --accent-contrast: #2a1219;
+  --link: #7aa2f7;
   --code-bg: #141414;
   --code-head: #232323;
   --shadow: 0 8px 30px rgba(0, 0, 0, .5);
@@ -223,6 +225,10 @@ input, select, textarea { font-family: inherit; font-size: .95rem; }
 }
 /* 自定义封面图：铺满 cover 盒子并裁切，圆角内不外溢 */
 .cover .cover-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* 封面统一 16:9：有图时按比例撑开，不然字标会被裁掉 */
+.t-card .cover.has-img { height: auto; aspect-ratio: 16 / 9; }
+.tut-hero .cover.has-img { width: 240px; height: 135px; }
+.learn-item .cover.has-img { width: 92px; height: 52px; }
 .cg-html { background: linear-gradient(135deg, #ffb7c5, #f4c2cd); }
 .cg-css { background: linear-gradient(135deg, #f8b5d0, #f4c2cd); }
 .cg-js { background: linear-gradient(135deg, #fb7da8, #ffb7c5); }
@@ -306,6 +312,19 @@ input, select, textarea { font-family: inherit; font-size: .95rem; }
 .article p { margin: 12px 0; }
 .article ul { margin: 12px 0 12px 22px; }
 .article li { margin: 5px 0; }
+/* 正文里的链接：全局 a 是「继承颜色、无下划线」，这里单独把它还原成能点的样子 */
+.article a.art-link {
+  color: var(--link); text-decoration: none;
+  border-bottom: 1px solid transparent; cursor: pointer;
+}
+.article a.art-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+/* **重点**：横杠落在字的下面 */
+.article .em, .tip-box .em {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: .18em;
+  text-decoration-color: var(--accent);
+}
 .article code.inl {
   font-family: var(--mono); font-size: .87em;
   background: var(--accent-soft); color: var(--accent-2);
@@ -435,20 +454,6 @@ input, select, textarea { font-family: inherit; font-size: .95rem; }
 .fs-row { display: flex; align-items: center; gap: 14px; }
 .fs-row input[type="range"] { flex: 1; accent-color: var(--accent); }
 
-/* ---------- 后台演示 ---------- */
-.admin-wrap { max-width: 980px; margin: 30px auto 60px; }
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 20px 0; }
-.stat-card { padding: 18px 20px; }
-.stat-card b { font-size: 1.6rem; color: var(--accent); display: block; }
-.stat-card span { font-size: .82rem; color: var(--text-2); }
-.queue-card { padding: 10px 6px; margin-bottom: 18px; }
-.q-item { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: var(--radius-m); }
-.q-item:hover { background: var(--bg-soft); }
-.q-item.clickable { cursor: pointer; }
-.q-item .inf { flex: 1; }
-.q-item .inf h4 { font-size: .95rem; }
-.q-item .inf p { font-size: .8rem; color: var(--text-2); }
-
 /* ---------- 搜索页 ---------- */
 .search-tabs { display: flex; gap: 8px; margin: 18px 0; }
 .s-item { display: block; padding: 15px 19px; margin-bottom: 12px; }
@@ -493,6 +498,7 @@ footer .container { display: flex; justify-content: space-between; align-items: 
   .nav-links { display: none; }
   .tut-hero { flex-direction: column; }
   .tut-hero .cover { width: 100%; }
+  .tut-hero .cover.has-img { width: 100%; height: auto; aspect-ratio: 16 / 9; }
   .me-stats { display: none; }
   .pn-nav { grid-template-columns: 1fr; }
 }
@@ -841,3 +847,76 @@ footer .container > * { font-size: .82rem; color: var(--text-2); }
 .td-blue { background: #5a8fd6; }
 .td-amber { background: #f5a623; }
 .td-gray { background: #9d9da8; }
+
+/* ============================================================
+   英语学习卡片（26 字母 + 48 音标）
+   作为教程正文内嵌：blockHtml 里 {"t":"en","kind":"let"|"ph"}
+   颜色全部走喵站主题令牌，双主题自动适配
+   ============================================================ */
+
+.en-group {
+  display: flex; align-items: baseline; gap: 10px;
+  margin: 30px 0 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.en-gname { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+.en-gcnt { font-size: .8rem; color: var(--text-3); }
+
+.en-grid {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+
+.en-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: var(--radius-m);
+  background: var(--panel); border: 1px solid var(--border);
+  box-shadow: var(--shadow-s);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.en-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--border-strong);
+}
+
+.en-glyph {
+  flex: 0 0 auto; width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-s);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 1.7rem; font-weight: 800; line-height: 1;
+}
+.en-ipa-lg { font-size: 1.15rem; letter-spacing: -.01em; }
+
+.en-meta { flex: 1 1 auto; min-width: 0; }
+.en-ipa { font-family: var(--mono); font-size: .95rem; color: var(--text); font-weight: 600; }
+.en-cn { font-size: .9rem; color: var(--text-2); }
+.en-w { font-family: var(--mono); color: var(--accent); font-size: .85rem; }
+.en-tip {
+  font-size: .76rem; color: var(--text-3); margin-top: 3px;
+  line-height: 1.5;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.en-play {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg-soft);
+  color: var(--text-2); font-size: .82rem; font-weight: 600;
+  transition: all .16s ease;
+}
+.en-play:hover { border-color: var(--accent); color: var(--accent); }
+.en-play.playing {
+  background: var(--accent); border-color: var(--accent); color: var(--accent-contrast);
+}
+.en-ico { font-size: .7rem; line-height: 1; }
+
+.en-none { text-align: center; color: var(--text-3); padding: 50px 0; }
+
+@media (max-width: 640px) {
+  .en-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .en-card { flex-direction: column; text-align: center; padding: 12px 8px; gap: 8px; }
+  .en-tip { display: none; }
+}

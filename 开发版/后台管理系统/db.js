@@ -200,21 +200,43 @@ function verifyPassword(pw, salt, hash) {
 }
 
 /* ---------------- 首次运行：导入 seed-data.js 的种子教程 ---------------- */
+/* 教程正文各自放在独立数据文件里，由 seed-data.js 通过 window.MIAO_XX.tutorial 引用：
+     py-data.js  → window.MIAO_PY   （Python 入门 · 46 章）
+     en-data.js  → window.MIAO_EN   （26 字母 / 48 音标 / 教程正文）
+   每个数据文件都是全站唯一来源，前端与 seed 都不留副本。 */
+const SEED_DEPS = ["py-data.js", "en-data.js"];
+
 function readLegacyData() {
-  // 种子正文的唯一来源是后端 seed-data.js；前端 data.js 只是兜底副本（由 tools/sync-seed.js 生成）
-  const candidates = [
-    path.join(__dirname, "seed-data.js"),
-    path.join(cfg.siteDir, "assets", "js", "data.js")
-  ];
-  const file = candidates.find((f) => fs.existsSync(f));
-  if (!file) return null;
+  // 种子正文的唯一来源是后端 seed-data.js（前端不再保留副本，避免静态泄露全站正文）
+  const seedFile = path.join(__dirname, "seed-data.js");
+  if (!fs.existsSync(seedFile)) return null;
   const sandbox = { window: {}, localStorage: { getItem: () => null, setItem: () => {} }, console };
   sandbox.window.localStorage = sandbox.localStorage;
+  const ctx = vm.createContext(sandbox);
   try {
-    vm.runInNewContext(fs.readFileSync(file, "utf8"), sandbox, { timeout: 5000 });
+    // 先载入各数据文件，让 seed-data.js 能引用它们的 tutorial
+    for (const dep of SEED_DEPS) {
+      const f = path.join(__dirname, dep);
+      if (fs.existsSync(f)) vm.runInContext(fs.readFileSync(f, "utf8"), ctx, { timeout: 5000 });
+    }
+    vm.runInContext(fs.readFileSync(seedFile, "utf8"), ctx, { timeout: 5000 });
     return sandbox.window.MIAO_DATA || null;
   } catch (e) {
     console.error("[db] 迁移种子数据失败：", e.message);
+    return null;
+  }
+}
+
+/* 英语模块数据（26 字母 / 48 音标），供 /api/meta 一并下发 */
+function readEnData() {
+  const f = path.join(__dirname, "en-data.js");
+  if (!fs.existsSync(f)) return null;
+  const sandbox = { window: {} };
+  try {
+    vm.runInNewContext(fs.readFileSync(f, "utf8"), sandbox, { timeout: 5000 });
+    return sandbox.window.MIAO_EN || null;
+  } catch (e) {
+    console.error("[db] 读取 en-data.js 失败：", e.message);
     return null;
   }
 }
@@ -281,6 +303,6 @@ function bootstrapNewUser(userId, userName) {
 
 module.exports = {
   db, get, all, run, tx, now, today, sha256, ensureUser, seedIfEmpty, bootstrapNewUser,
-  hashPassword, newSalt, setPassword, verifyPassword, readLegacyData,
+  hashPassword, newSalt, setPassword, verifyPassword, readLegacyData, readEnData,
   DB_FILE, cfg
 };

@@ -4,8 +4,11 @@
 (function () {
   "use strict";
 
-  var DATA = window.MIAO_DATA;
-  var TUTS = DATA.tutorials;
+  /* 教程正文只来自后端：/api/meta 下发分类、/api/tutorials 下发目录、
+     章节接口按窗口下发正文。前端不再内置任何种子副本，
+     否则静态文件可被直接下载，防爬与分层加载会形同虚设。 */
+  var DATA = window.MIAO_DATA || { categories: {}, tutorials: [] };
+  var TUTS = DATA.tutorials || [];
   var API = window.MIAO_API;
 
   /* 分类：层级对象 { 大类: [小类] } → 拍平成小类列表（供 chips/下拉/默认值） */
@@ -44,6 +47,9 @@
     loadMeta: function () {
       return API.get("/api/meta").then(function (d) {
         if (d.categories) DATA.categories = d.categories;
+        /* 英语模块数据（26 字母 / 48 音标）由后端 en-data.js 经 /api/meta 下发，
+           前端不保留副本 —— 与「正文只来自后端」保持一致 */
+        if (d.en) { EN.letters = d.en.letters || []; EN.phonemes = d.en.phonemes || []; EN.groups = d.en.groups || []; }
         BE.mailReady = !!d.mailReady;
         return d;
       });
@@ -189,6 +195,43 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
+
+  /* ---------------- 正文行内标记 ----------------
+     教程正文是纯文本（先 esc 再拼 HTML），这里只认三种写法：
+       **重点**      → 加下划线（横杠在字的下面）
+       网址          → 蓝色可点击，新窗口打开
+       第 N 课       → 蓝色可点击，跳到本教程那一章（章号来自课程目录，认不出或同号多章就保持原样）
+     渲染前先 setInlineRefs() 告诉它当前教程和章号表。 */
+  var INLINE = { tutId: "", byNo: {} };
+  function setInlineRefs(tutId, chapters) {
+    var byNo = {};
+    (chapters || []).forEach(function (c) {
+      var m = /^第\s*(\d{1,2})\s*课/.exec(c.title || "");
+      if (!m) return;
+      var no = m[1];
+      if (byNo[no] && byNo[no] !== c.id) byNo[no] = "";      // 三节「第 0 课」这种同号多章，不猜
+      else byNo[no] = c.id;
+    });
+    INLINE = { tutId: tutId || "", byNo: byNo };
+  }
+  var INLINE_RE = new RegExp([
+    "(\\*\\*[^*\\n]+\\*\\*)",                                       // 1 重点
+    "((?:https?://|www\\.)[^\\s<>（），。；！？]+" +
+      "|(?:[a-z][a-z0-9-]*\\.)+(?:org|com|cn|net|io|dev|edu)(?:/[^\\s<>（），。；]*)?)",   // 2 网址
+    "(第\\s*(\\d{1,2})\\s*课)"                                       // 3 整段 / 4 课号
+  ].join("|"), "g");
+  function inlineHtml(text) {
+    return esc(text).replace(INLINE_RE, function (all, em, url, ref, no) {
+      if (em) return '<span class="em">' + em.slice(2, -2) + "</span>";
+      if (url) {
+        var href = /^https?:\/\//.test(url) ? url : "https://" + url;
+        return '<a class="art-link" href="' + href + '" target="_blank" rel="noopener noreferrer">' + url + "</a>";
+      }
+      var id = INLINE.byNo[no];
+      if (!id) return all;
+      return '<a class="art-link" href="#/read/' + encodeURIComponent(INLINE.tutId) + "/" + encodeURIComponent(id) + '">' + all + "</a>";
+    });
+  }
   function fmtNum(n) { return n >= 10000 ? (n / 10000).toFixed(1) + " 万" : String(n); }
   /* 开源平台式计数：1.2k / 12.8k / 1.3M */
   function fmtStat(n) {
@@ -213,11 +256,8 @@
   function tutProgress(t) { return t.chapters.length ? Math.round(doneSet(t.id).length / t.chapters.length * 100) : 0; }
 
   /* 用户资料：一律以后端真实数据为准，无本地模拟 */
-  function userDesc() { return (state.user && state.user.desc) || ""; }
   function avCls(name) { var n = 0; for (var i = 0; i < String(name).length; i++) n += String(name).charCodeAt(i); return "avc" + (n % 6); }
   function tutFavs(t) { return t.favs != null ? t.favs : Math.round((t.students || 0) * 0.07); }
-  function workFavs(w) { return w.favs != null ? w.favs : Math.round((w.views || 0) * 0.06); }
-  function myFans() { return (state.counts && state.counts.fans) || 0; }
   /* 关系一律以后端返回为准（BE.relations 由 /api/users/:name、/api/follow 等填充） */
   function isFriend(name) {
     var r = BE.relations[name];
@@ -237,9 +277,6 @@
   }
   function doUnfollow(name) {
     return API.post("/api/unfollow", { name: name }).then(function (d) { BE.relations[name] = d.relation; return d; });
-  }
-  function doAddFriend(name) {
-    return API.post("/api/friends/request", { name: name }).then(function (d) { BE.relations[name] = d.relation; return d; });
   }
   function doRemoveFriend(name) {
     return API.post("/api/friends/remove", { name: name }).then(function (d) { BE.relations[name] = d.relation; return d; });
@@ -546,10 +583,10 @@
   }
 
   function blockHtml(b, i) {
-    if (b.t === "p") return "<p>" + esc(b.text) + "</p>";
+    if (b.t === "p") return "<p>" + inlineHtml(b.text) + "</p>";
     if (b.t === "h2") return '<h2 id="h2-' + i + '">' + esc(b.text) + "</h2>";
-    if (b.t === "tip") return '<div class="tip-box' + tipCls(b) + '">' + esc(b.text) + "</div>";
-    if (b.t === "ul") return "<ul>" + b.items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
+    if (b.t === "tip") return '<div class="tip-box' + tipCls(b) + '">' + inlineHtml(b.text) + "</div>";
+    if (b.t === "ul") return "<ul>" + b.items.map(function (x) { return "<li>" + inlineHtml(x) + "</li>"; }).join("") + "</ul>";
     if (b.t === "code") {
       return '<div class="code-block"><div class="code-head"><span class="lang">' + esc(b.lang) + "</span>" +
         '<button class="copy-btn" data-code="' + esc(b.code) + '">复制</button></div>' +
@@ -573,7 +610,83 @@
         '<audio preload="metadata" src="' + esc(auSrc) + '"></audio>' +
         "</div>";
     }
+    /* 英语学习卡片块：kind = "let"（26 字母）| "ph"（48 音标，可选 grp 指定分组）
+       正文只写 {"t":"en","kind":"ph","grp":"长元音"} 即可；
+       卡片数据由 /api/meta 的 en 字段下发（后端 en-data.js），前端不留副本。 */
+    if (b.t === "en") return enBlockHtml(b);
     return "";
+  }
+
+  /* ---------------- 英语学习卡片（正文内嵌，非独立页面） ----------------
+     数据源：后端 /api/meta 的 en 字段（后端 en-data.js）→ BE.loadMeta() 填充。
+     前端不存副本，仅在内存里保留当前会话的副本。 */
+  var EN = { letters: [], phonemes: [], groups: [] };
+  function enPlayBtn(a, label) {
+    return '<button class="en-play" type="button" data-en-src="' + esc(a) + '" ' +
+      'aria-label="播放' + esc(label) + '读音"><span class="en-ico">▶</span><span class="en-tx">读音</span></button>';
+  }
+  function enCardHtml(x, kind) {
+    if (kind === "let") {
+      return '<div class="en-card" data-en-k="' + esc(x.l) + '">' +
+        '<div class="en-glyph">' + esc(x.l) + "</div>" +
+        '<div class="en-meta"><div class="en-ipa">' + esc(x.ipa) + "</div>" +
+        '<div class="en-cn">' + esc(x.cn) + "</div></div>" +
+        enPlayBtn(x.a, x.l) + "</div>";
+    }
+    return '<div class="en-card en-card-ph" data-en-k="' + esc(x.ph) + '">' +
+      '<div class="en-glyph en-ipa-lg">' + esc(x.ph) + "</div>" +
+      '<div class="en-meta"><div class="en-cn">' + esc(x.cn) +
+      (x.w ? ' <span class="en-w">' + esc(x.w) + "</span>" : "") + "</div>" +
+      (x.tip ? '<div class="en-tip">' + esc(x.tip) + "</div>" : "") + "</div>" +
+      enPlayBtn(x.a, x.ph) + "</div>";
+  }
+  function enBlockHtml(b) {
+    var kind = b.kind || "ph", out = "";
+    if (kind === "let") {
+      var ls = EN.letters;
+      if (!ls.length) return '<div class="en-none">字母数据未加载</div>';
+      out = '<div class="en-grid">' + ls.map(function (x) { return enCardHtml(x, "let"); }).join("") + "</div>";
+      return out;
+    }
+    if (kind === "ph") {
+      var ps = EN.phonemes;
+      if (!ps.length) return '<div class="en-none">音标数据未加载</div>';
+      var grp = b.grp || "";
+      var items = grp ? ps.filter(function (x) { return x.grp === grp; }) : ps;
+      if (grp) {
+        out += '<div class="en-group"><span class="en-gname">' + esc(grp) +
+          '</span><span class="en-gcnt">' + items.length + ' 个</span></div>';
+      }
+      out += '<div class="en-grid">' + items.map(function (x) { return enCardHtml(x, "ph"); }).join("") + "</div>";
+      return out;
+    }
+    return "";
+  }
+
+  /* 正文内英语卡片的播放：单例，同一时刻只播一个；离开页面时停掉 */
+  var enCur = null;
+  function enStop() {
+    if (enCur) { enCur.pause(); enCur = null; }
+    $all(".en-play.playing").forEach(function (b) { b.classList.remove("playing"); });
+  }
+  function enPlay(src, btn) {
+    if (enCur && enCur.dataset.src === src) { enStop(); return; }
+    enStop();
+    var a = new Audio(src);
+    a.dataset.src = src;
+    enCur = a;
+    btn.classList.add("playing");
+    a.onended = function () { btn.classList.remove("playing"); };
+    a.onerror = function () { btn.classList.remove("playing"); toast("音频加载失败：" + src); };
+    a.play().catch(function () {
+      btn.classList.remove("playing");
+      toast("浏览器拦截了自动播放，请再点一次");
+    });
+  }
+  function bindEnCards() {
+    $all(".en-play").forEach(function (b) {
+      b.onclick = function () { enPlay(b.getAttribute("data-en-src"), b); };
+    });
   }
 
   function bindCopy() {
@@ -699,15 +812,7 @@
   /* ---------------- 视图 ---------------- */
   var app;
 
-  function vHome() {
-    var hot = TUTS.slice().sort(function (a, b) { return b.students - a.students; });
-    app.innerHTML =
-      '<div class="container">' +
-      '<section class="sec" style="margin-top:28px"><div class="sec-head"><h2>教程</h2><a href="#/category">全部分类 →</a></div>' +
-      '<div class="grid">' + hot.map(tutCard).join("") + "</div></section>" +
-      "</div>";
-  }
-
+  /* 首页就是分类页：不再单独做一个只有卡片的落地页 */
   function vCategory(params) {
     var curCat = params.cat || "";
     var curDiff = params.diff || "";
@@ -745,7 +850,7 @@
     var diffChips = chipLink("全部难度", "diff", "") + ["入门", "掌握", "精通"].map(function (d) { return chipLink(d, "diff", d); }).join("");
     app.innerHTML =
       '<div class="container">' +
-      '<h1 class="page-title">教程分类</h1>' +
+      '<h1 class="page-title">首页</h1>' +
       '<div class="filter-bar">' + catChips + "</div>" +
       '<div class="filter-bar" style="margin-top:-6px">' + diffChips +
       '<span class="spacer"></span>' +
@@ -875,6 +980,7 @@
     }
     var c = chap(t, params.cid) || t.chapters[0];
     if (!c.blocks) c.blocks = [];          // 章节正文加载失败时只有 {id,title} 桩，兜底空数组防崩溃
+    setInlineRefs(t.id, t.chapters);       // 正文里的「第 N 课」要靠章号表才知道跳哪
     var idx = t.chapters.indexOf(c);
     var prev = t.chapters[idx - 1], next = t.chapters[idx + 1];
     var done = isDone(t.id, c.id);
@@ -943,6 +1049,7 @@
     readMem.tid = t.id; readMem.key = viewKey;
     bindCopy();
     bindAudio();
+    bindEnCards();
     var moreBtn = $("#loadMore");
     if (moreBtn) moreBtn.onclick = function () {
       var y = window.scrollY;
@@ -2750,6 +2857,7 @@
     window.scrollTo(0, 0);
     bindCopy();
     bindAudio();
+    bindEnCards();
     $("#pvBack").onclick = function () { location.hash = "#/editor"; };
     $all("[data-jump]").forEach(function (a) {
       a.onclick = function (e) {
@@ -2818,7 +2926,7 @@
     } catch (e) {
       toast((e && e.message) || "加载失败");
     }
-    if (s.length === 0) vHome();
+    if (s.length === 0) vCategory(r.params);
     else if (s[0] === "category") vCategory(r.params);
     else if (s[0] === "tutorial" && s[1]) vTutorial({ id: s[1] });
     else if (s[0] === "read" && s[1] && s[2]) vRead({ id: s[1], cid: s[2] });

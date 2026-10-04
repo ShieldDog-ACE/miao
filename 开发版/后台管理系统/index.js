@@ -67,24 +67,30 @@ const MIME = {
   ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
   ".gif": "image/gif", ".webp": "image/webp", ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8",
-  ".woff2": "font/woff2", ".map": "application/json"
+  ".woff2": "font/woff2", ".map": "application/json",
+  ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".ogg": "audio/ogg", ".wav": "audio/wav"
 };
 const ROBOTS = [
   "User-agent: *",
   "Allow: /$",
   "Allow: /assets/",
+  "Allow: /audio/",
   "Disallow: /api/",
   "Disallow: /uploads/",
   "Disallow: /server/",
   "Crawl-delay: 10",
   ""].join("\n");
 
+/* /audio/ 允许暴露的子目录白名单（英语字母与音标音频） */
+const AUDIO_SUBDIRS = ["letters", "phonemes"];
+
 function serveFile(res, abs, req) {
   const ext = path.extname(abs).toLowerCase();
   const st = fs.statSync(abs);
   /* 缓存策略：/uploads/ 文件名为内容哈希，可永久缓存；
-     其余站点资源一律 no-cache + ETag 协商：每次请求回源校验，
-     未改动返回 304（省带宽），改过立即下发新内容（改完即生效） */
+     其余站点资源（含 /audio/ 的 01.mp3、A.mp3 等）一律 no-cache + ETag 协商：
+     每次请求回源校验，未改动返回 304（省带宽），改过立即下发新内容（改完即生效）。
+     音频刻意不给 immutable —— 文件名不是内容哈希，重新切片后同名文件必须能立刻生效。 */
   const cacheControl = abs.indexOf(cfg.uploadDir + path.sep) === 0
     ? "public, max-age=31536000, immutable"
     : "no-cache";
@@ -123,16 +129,30 @@ function handleStatic(req, res, pathname) {
     if (fs.existsSync(abs)) return serveFile(res, abs, req);
     return A.helpers.send(res, 404, "404");
   }
+  /* 英语音频：/audio/letters/A.mp3 · /audio/phonemes/01.mp3
+     audioDir 指向后台目录本身，靠下面的白名单限定只能读到这两个子目录，
+     所以 seed-data.js / db.js / config.json / data/miao.db 都碰不到。 */
+  if (pathname.indexOf("/audio/") === 0) {
+    let rel = "";
+    try { rel = decodeURIComponent(pathname.slice("/audio/".length)); } catch (e) { return A.helpers.send(res, 400, "400"); }
+    const seg = rel.split("/");
+    if (seg.length !== 2 || AUDIO_SUBDIRS.indexOf(seg[0]) < 0) return A.helpers.send(res, 404, "404");
+    const abs = path.join(cfg.audioDir, seg[0], path.basename(seg[1]));
+    if (abs.indexOf(cfg.audioDir + path.sep) !== 0) return A.helpers.send(res, 403, "403");
+    if (fs.existsSync(abs) && fs.statSync(abs).isFile()) return serveFile(res, abs, req);
+    return A.helpers.send(res, 404, "404");
+  }
   let rel;
   try { rel = decodeURIComponent(pathname); } catch (e) { return A.helpers.send(res, 400, "400"); }
   if (rel === "/" || rel === "") rel = "/index.html";
   const abs = path.normalize(path.join(cfg.siteDir, rel));
   if (abs !== cfg.siteDir && abs.indexOf(cfg.siteDir + path.sep) !== 0) return A.helpers.send(res, 403, "403");
   if (fs.existsSync(abs) && fs.statSync(abs).isFile()) return serveFile(res, abs, req);
-  // 未知路径：交给前端（哈希路由只会在 / 上），文件不存在则 404
-  const index = path.join(cfg.siteDir, "index.html");
-  if (fs.existsSync(index)) return serveFile(res, index, req);
-  A.helpers.send(res, 404, "前端目录不存在：" + cfg.siteDir);
+  // 本站是哈希路由（页面入口恒为 /），不存在需要「回退到 index.html」的路径。
+  // 缺失的资源（js / css / 图片）直接 404：若回退成 HTML，浏览器会因 MIME 不符拒绝执行，
+  // 既掩盖真实错误，也让排查无从下手。
+  if (!fs.existsSync(cfg.siteDir)) return A.helpers.send(res, 404, "前端目录不存在：" + cfg.siteDir);
+  A.helpers.send(res, 404, "404 Not Found");
 }
 
 /* ---------------- 请求体 ---------------- */

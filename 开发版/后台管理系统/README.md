@@ -94,20 +94,28 @@ bash start-admin.sh          # 读取 .env 里的 MIAO_ADMIN_PASS
 
 ## 教程正文改完为什么不生效
 
-种子教程有两份拷贝，各管一段链路：
+种子教程只有**一份**：`seed-data.js`，且只在**建库时**导入 SQLite；
+库里已有内容时不会再覆盖，所以改了它不会立刻生效。
 
-1. `seed-data.js` → 只在**建库时**导入 SQLite；库里已有内容时不会再覆盖，所以改了它不会立刻生效
-2. `喵站/assets/js/data.js` → 前端首屏兜底副本，**由 seed-data.js 生成**，不要手改
+> 早期版本另维护过一份前端副本 `喵站/assets/js/data.js`（由 `tools/sync-seed.js` 生成）。
+> 它等于把全站正文摆进静态目录——任何人一次请求就能拖走全部教程，
+> 正文分窗与"每分钟 N 篇"的防扒限流全被绕过，现已删除，同步工具一并移除。
+> 前端正文一律经 `/api` 按需下发。
 
-改正文后的正确姿势：
+改正文后的正确姿势（**不会动账号数据**）：
 
 ```bash
-node tools/sync-seed.js     # 把 seed-data.js 同步成前端 data.js
-bash reset-data.sh          # 重建库并重新导入（会先备份旧库）
-bash start.sh
+node tools/sync-python.js      # py-data.js → 库里 id=python（按 id upsert，幂等）
+node tools/insert-english.js   # en-data.js → 库里 id=english
 ```
 
-只想保留线上数据、改单篇教程，请用后台管理系统改正文，不要重置库。
+只跑对应教程的那一个就够，不用重启后端。新拆出数据文件的话，要在 `db.js` 的 `SEED_DEPS`
+里登记一次，否则全新建库时 seed 取不到它。
+
+老师自己改单篇正文走后台管理系统，同样不碰库。
+
+> ⚠️ `reset-data.sh` 会重建整库：账号、密码、收藏、好友、浏览记录全部清空（旧库虽先备份，
+> 但不会自动迁回）。只有你确实要从零重来时才用它。
 
 ## 生产部署建议
 
@@ -128,12 +136,12 @@ bash start.sh
 
 | 层 | 手段 |
 |---|---|
-| 静态 | robots.txt 屏蔽 /api、/uploads、/server；`data.js` 只带种子教程正文（用户投稿一律不在前端） |
+| 静态 | robots.txt 屏蔽 /api、/uploads、/server；前端静态目录**不含任何教程正文**，正文全部经 /api 下发 |
 | 接入层 | 常见爬虫/无头浏览器 UA 拦截（python-requests/curl/Scrapy/Puppeteer…）；空 UA 拒绝 |
 | 蜜罐 | 扫描 .env / wp-login / server/ 等敏感路径 → 记录，二次命中封 IP |
 | 限流 | 按 IP 分桶滑窗：普通 GET 150/min、验证码 8/min、写操作 40/min、正文 240/min；超「封禁阈值」自动封 IP（默认 30 分钟） |
 | 签名 | 写操作必须带 `X-Miao-Nonce` + `X-Miao-Sign`（HMAC-SHA256，密钥在 Cookie miao_ck），nonce 防重放 |
-| 内容 | 正文按 `chapterWindow`（默认 2000 字）分窗下发，游客按 IP 计数、登录按账号计数；每账号每日正文配额（默认 300 章），超量 429 |
+| 内容 | 正文按 `chapterWindow`（默认 2000 字）分窗下发；开源站阅读不限量，仅按 IP / 账号限制「每分钟最多 `docsPerMin`（默认 3）篇文档」防批量扒站，续读 offset 不计数 |
 | 响应头 | CSP / nosniff / X-Frame-Options / Referrer-Policy 等 |
 | 上传 | 图片 ≤1MB、真实格式校验（魔数）、SVG 拒绝脚本、展示图必须站内地址（防外链） |
 
@@ -190,8 +198,7 @@ bash ../tests/run.sh      # 接口 + UI E2E + 后台管理，自动拉起/停止
 
 ```bash
 node tools/check-secrets.js        # 扫密钥残留、真实邮箱/手机号、本机路径、遗留运行数据
-node tools/sync-seed.js --check    # 前端 data.js 是否与 seed-data.js 一致
-bash ../tests/run.sh               # 全量回归
+bash ../tests/run.sh               # 全量回归（后端接口 + 前后端同源 UI + 后台管理）
 
 bash tools/make-release.sh         # 一键导出「可安全公开」的发布副本
 ```

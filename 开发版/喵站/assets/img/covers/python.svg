@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="Python 入门 封面">
+  <!-- 喵站 · Python 教程封面。纯代码绘制，无外部依赖。
+       底色沿用站内示意图的妃色纸面 + 品牌粉，蓝 #3776AB / 黄 #F2B731 只作色相识别；
+       图形是原创的两段互锁圆角块 + >>> 提示符，不复制 PSF 商标图案。 -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffdf9"/>
+      <stop offset="1" stop-color="#fbeef4"/>
+    </linearGradient>
+    <linearGradient id="bl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4f9fd8"/>
+      <stop offset="1" stop-color="#3776ab"/>
+    </linearGradient>
+    <linearGradient id="yl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd95c"/>
+      <stop offset="1" stop-color="#f2b731"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <!-- 网格底纹：暗示代码编辑器 -->
+  <g stroke="#e3b6c8" stroke-opacity=".55">
+    <path d="M0 60H640M0 120H640M0 180H640M0 240H640M0 300H640"/>
+    <path d="M80 0V360M160 0V360M240 0V360M320 0V360M400 0V360M480 0V360M560 0V360"/>
+  </g>
+
+  <!-- 左侧：两段互锁的圆角块 = 蛇形意象 -->
+  <g transform="translate(74,84)">
+    <path d="M56 0c-31 0-46 12-46 32v22h48v8H18C6 62 0 74 0 92v34c0 18 10 28 28 28h18v-26c0-20 15-32 36-32h40c19 0 32-11 32-29V32C154 12 138 0 112 0H56Zm-6 18a11 11 0 1 1 0 22 11 11 0 0 1 0-22Z"
+          fill="url(#bl)"/>
+    <path d="M98 154c31 0 46-12 46-32v-22h-48v-8h40c12 0 18-12 18-30V28c0-18-10-28-28-28H98v26c0 20-15 32-36 32H22C3 58-10 69-10 87v35c0 20 16 32 42 32h66Zm6-18a11 11 0 1 1 0-22 11 11 0 0 1 0 22Z"
+          fill="url(#yl)"/>
+  </g>
+
+  <!-- 右侧：编辑器小卡片，>>> 提示符 + 一行循环。卡片右缘 608，留在 640 画布内 -->
+  <g transform="translate(248,124)" font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace">
+    <rect x="-16" y="-52" width="376" height="150" rx="14" fill="#ffffff" stroke="#f0cfdb"/>
+    <rect x="-16" y="-52" width="376" height="4" rx="2" fill="#3776ab" fill-opacity=".45"/>
+    <text x="12" y="0" font-size="34" font-weight="700" fill="#fb7da8">&gt;&gt;&gt;</text>
+    <text x="82" y="0" font-size="34" font-weight="700" fill="#33333a">print()</text>
+    <rect x="230" y="-24" width="11" height="28" rx="2" fill="#fb7da8"/>
+    <text x="12" y="44" font-size="16" fill="#96909b">for lesson in range(1, 46):</text>
+    <text x="12" y="68" font-size="16" fill="#96909b">    learn(lesson)</text>
+  </g>
+
+  <!-- 字标 -->
+  <g font-family="Inter, PingFang SC, HarmonyOS Sans SC, Microsoft YaHei, sans-serif">
+    <text x="74" y="292" font-size="46" font-weight="800" fill="#2c2a2e" letter-spacing="1">Python</text>
+    <text x="252" y="292" font-size="30" font-weight="600" fill="#3776ab">入门</text>
+    <text x="74" y="326" font-size="15" fill="#8c8794" letter-spacing="2">45 课 · 零基础 · 每课都能直接跑</text>
+  </g>
+  <g transform="translate(556,272)">
+    <rect x="0" y="0" width="58" height="26" rx="13" fill="#fb7da8" fill-opacity=".14" stroke="#fb7da8" stroke-opacity=".55"/>
+    <text x="29" y="18" text-anchor="middle" font-size="14" font-weight="700" fill="#e0578b"
+          font-family="Inter, PingFang SC, sans-serif">v3</text>
+  </g>
+</svg>

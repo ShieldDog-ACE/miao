@@ -106,12 +106,15 @@ function meta(ctx) {
   // 分类体系：优先用 seed-data 里定义的层级分类（大类→小类），否则回退到教程的 cat 聚合
   const seedCats = dbm.readLegacyData && dbm.readLegacyData();
   const cats = all("SELECT cat, COUNT(*) AS c FROM tutorials WHERE published = 1 GROUP BY cat ORDER BY c DESC");
+  // 英语模块数据（26 字母 / 48 音标）：随 meta 一并下发，前端不再保留副本
+  const en = dbm.readEnData && dbm.readEnData();
   return ok(ctx.res, {
     site: "喵站",
     mailReady: mailReady(),
     categories: seedCats && seedCats.categories && !Array.isArray(seedCats.categories)
       ? seedCats.categories
       : cats.map((r) => r.cat).filter(Boolean),
+    en: en ? { letters: en.letters, phonemes: en.phonemes, groups: en.groups } : null,
     stats: {
       tutorials: get("SELECT COUNT(*) AS c FROM tutorials WHERE published = 1").c,
       users: get("SELECT COUNT(*) AS c FROM users").c,
@@ -452,6 +455,9 @@ function blockLen(b) {
   if (b.text) return String(b.text).length;
   if (b.code) return String(b.code).length;
   if (Array.isArray(b.items)) return b.items.join("").length;
+  /* 说明：img / audio / en（英语卡片）等交互块一律返回 0 —— 它们不计入分窗配额。
+     好处是这类块永远不会被窗口切成两半，卡片组始终完整下发；
+     代价是含交互块的章节正文几乎总是 hasMore=false，读者不需要点「继续加载」。 */
   return 0;
 }
 /* 分层加载：每次只下发约 2000 字（按块取整），offset 为已读字符数 */

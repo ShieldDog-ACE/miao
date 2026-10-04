@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="英语发音入门 封面">
+  <!-- 喵站 · 英语教程封面。纯代码绘制，无外部依赖。
+       底色与 Python 封面同族（妃色纸面），主色用青绿 #17A882 区分模块，
+       点缀站内品牌粉 #fb7da8；图形是原创的「字母卡 + 音标 + 声波」组合。 -->
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffdf9"/>
+      <stop offset="1" stop-color="#eaf5f1"/>
+    </linearGradient>
+    <linearGradient id="gd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3fd3ad"/>
+      <stop offset="1" stop-color="#17a882"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="360" fill="url(#bg2)"/>
+  <g stroke="#a9d9cc" stroke-opacity=".55">
+    <path d="M0 72H640M0 144H640M0 216H640M0 288H640"/>
+    <path d="M80 0V360M160 0V360M240 0V360M320 0V360M400 0V360M480 0V360M560 0V360"/>
+  </g>
+
+  <!-- 字母卡：Aa + 音标 -->
+  <g transform="translate(74,60)">
+    <rect x="0" y="0" width="150" height="150" rx="24" fill="url(#gd)"/>
+    <text x="75" y="98" text-anchor="middle" font-size="76" font-weight="800" fill="#083028"
+          font-family="Inter, Helvetica, Arial, sans-serif">Aa</text>
+    <rect x="18" y="164" width="114" height="34" rx="17" fill="#ffffff" stroke="#bfe4d9"/>
+    <text x="75" y="187" text-anchor="middle" font-size="19" fill="#0f7f66"
+          font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace">/eɪ/</text>
+  </g>
+
+  <!-- 音标芯片墙：48 个音标的隐喻 -->
+  <g font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace" font-size="17" fill="#0f7f66">
+    <g transform="translate(258,80)">
+      <rect x="0" y="0" width="52" height="34" rx="10" fill="#ffffff" stroke="#c8e7dd"/><text x="26" y="23" text-anchor="middle">iː</text>
+      <rect x="62" y="0" width="52" height="34" rx="10" fill="#ffffff" stroke="#c8e7dd"/><text x="88" y="23" text-anchor="middle">ɪ</text>
+      <rect x="124" y="0" width="52" height="34" rx="10" fill="#ffffff" stroke="#c8e7dd"/><text x="150" y="23" text-anchor="middle">e</text>
+      <rect x="186" y="0" width="52" height="34" rx="10" fill="#ffffff" stroke="#c8e7dd"/><text x="212" y="23" text-anchor="middle">æ</text>
+      <rect x="248" y="0" width="52" height="34" rx="10" fill="#fde8f0" stroke="#f4b9d1"/><text x="274" y="23" text-anchor="middle" fill="#e0578b">ɑː</text>
+    </g>
+    <g transform="translate(258,124)">
+      <rect x="0" y="0" width="52" height="34" rx="10" fill="#ffffff" stroke="#c8e7dd"/><text x="26" y="23" text-anchor="middle">ʃ</text>
+      <rect x="62" y="0" width="52" height="34" rx="10" fill="#ffffff" stroke="#c8e7dd"/><text x="88" y="23" text-anchor="middle">ʒ</text>
+      <rect x="124" y="0" width="52" height="34" rx="10" fill="#ffffff" stroke="#c8e7dd"/><text x="150" y="23" text-anchor="middle">θ</text>
+      <rect x="186" y="0" width="52" height="34" rx="10" fill="#ffffff" stroke="#c8e7dd"/><text x="212" y="23" text-anchor="middle">ð</text>
+      <rect x="248" y="0" width="52" height="34" rx="10" fill="#ffffff" stroke="#c8e7dd"/><text x="274" y="23" text-anchor="middle">ŋ</text>
+    </g>
+  </g>
+
+  <!-- 声波：点卡片就能听 -->
+  <g transform="translate(258,192)" fill="#17a882">
+    <rect x="0"   y="14" width="6" height="16" rx="3" opacity=".5"/>
+    <rect x="12"  y="6"  width="6" height="32" rx="3" opacity=".7"/>
+    <rect x="24"  y="0"  width="6" height="44" rx="3"/>
+    <rect x="36"  y="9"  width="6" height="26" rx="3" opacity=".8"/>
+    <rect x="48"  y="16" width="6" height="12" rx="3" opacity=".45"/>
+    <rect x="60"  y="4"  width="6" height="36" rx="3" opacity=".85"/>
+    <rect x="72"  y="12" width="6" height="20" rx="3" opacity=".6"/>
+    <rect x="84"  y="2"  width="6" height="40" rx="3"/>
+    <rect x="96"  y="15" width="6" height="14" rx="3" opacity=".5"/>
+    <rect x="108" y="7"  width="6" height="30" rx="3" opacity=".75"/>
+    <rect x="120" y="13" width="6" height="18" rx="3" opacity=".55"/>
+    <rect x="132" y="1"  width="6" height="42" rx="3" fill="#fb7da8"/>
+    <rect x="144" y="10" width="6" height="24" rx="3" opacity=".7"/>
+    <rect x="156" y="17" width="6" height="10" rx="3" opacity=".4"/>
+  </g>
+
+  <!-- 字标 -->
+  <g font-family="Inter, PingFang SC, HarmonyOS Sans SC, Microsoft YaHei, sans-serif">
+    <text x="74" y="306" font-size="42" font-weight="800" fill="#2c2a2e">英语发音</text>
+    <text x="256" y="306" font-size="26" font-weight="600" fill="#17a882">入门</text>
+    <text x="74" y="336" font-size="15" fill="#7f8c88" letter-spacing="2">26 字母 · 48 音标 · 点一下就听</text>
+  </g>
+  <g transform="translate(540,282)">
+    <rect x="0" y="0" width="74" height="26" rx="13" fill="#e8f6f1" stroke="#a9dccb"/>
+    <text x="37" y="18" text-anchor="middle" font-size="14" font-weight="700" fill="#0f7f66"
+          font-family="Inter, PingFang SC, sans-serif">音频</text>
+  </g>
+</svg>

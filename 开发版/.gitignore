@@ -14,6 +14,10 @@
 *.sqlite
 mail-outbox.log
 
+# 音频重切前的备份、原稿转换中间产物
+后台管理系统/phonemes.bak*/
+后台管理系统/tools/.pywork/
+
 # 依赖与杂项
 node_modules/
 npm-debug.log*
