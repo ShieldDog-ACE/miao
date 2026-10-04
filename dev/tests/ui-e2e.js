@@ -12,7 +12,7 @@ const path = require("path");
 const EXTERNAL = process.env.MIAO_TEST_BASE || "";
 const PORT = Number(process.env.MIAO_TEST_PORT || 8793);
 const BASE = EXTERNAL || ("http://127.0.0.1:" + PORT + "/");
-/* 测试务必用独立临时数据目录，绝不能写进正式库（开发版/后台管理系统/data） */
+/* 测试务必用独立临时数据目录，绝不能写进正式库（dev/backend/data） */
 const TMP_ROOT = process.env.MIAO_TEST_TMP || path.join(ROOT(), "..", "..", "tmp");
 const DATA_DIR = process.env.MIAO_TEST_DATA || path.join(TMP_ROOT, "miao-ui-test-" + Date.now());
 const EMAIL = "ui-tester@miao.dev";
@@ -70,7 +70,7 @@ function seedTutorials() {
 
 let server = null;
 async function startServer() {
-  server = spawn(process.execPath, [path.join(ROOT(), "开发版", "后台管理系统", "index.js")], {
+  server = spawn(process.execPath, [path.join(ROOT(), "dev", "backend", "index.js")], {
     cwd: ROOT(),
     env: Object.assign({}, process.env, {
       NODE_NO_WARNINGS: "1", MIAO_PORT: String(PORT), MIAO_DATA_DIR: DATA_DIR, MIAO_NO_MAIL: "1",
@@ -95,7 +95,7 @@ async function startServer() {
     await startServer();
     seedTutorials();
   }
-  const html = fs.readFileSync(path.join(ROOT(), "开发版", "喵站", "index.html"), "utf8");
+  const html = fs.readFileSync(path.join(ROOT(), "dev", "frontend", "index.html"), "utf8");
   const vcErrors = [];
   const dom = new JSDOM(html, {
     url: BASE,

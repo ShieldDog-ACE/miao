@@ -3,7 +3,7 @@
 # 测试一律使用独立临时库并强制 MIAO_NO_MAIL=1，不会碰到正式 data/，也不会真发信
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SRV="$HERE/../后台管理系统"
+SRV="$HERE/../backend"
 . "$SRV/pick-node.sh"
 node_or_die >/dev/null || exit 1
 export NODE_NO_WARNINGS=1

@@ -3,7 +3,7 @@
 """
 喵站 · 赞助二维码生成器（代码实现，不使用原始截图）
 用法：改 PAYLOAD 后运行  python3 gen-donate-qr.py
-输出：开发版/喵站/assets/img/donate-qr.png（页脚「赞助」弹层懒加载此文件）
+输出：dev/frontend/assets/img/donate-qr.png（页脚「赞助」弹层懒加载此文件）
 依赖（仅生成时需要，运行时零依赖）：pip install qrcode pillow
 可选校验：pip install zxing-cpp  → 生成后自动回验扫码内容与 PAYLOAD 一致
 """
@@ -13,7 +13,7 @@ import os
 PAYLOAD = "wxp://f2f0AacGcPUAGXVZnqyZ_4dc1-_2Sib3eTN9mAvoYGyU5CuI5jlSqR3Xx9pPqK_m_lC2"
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
-                   "开发版", "喵站", "assets", "img", "donate-qr.png")
+                   "dev", "frontend", "assets", "img", "donate-qr.png")
 
 import qrcode
 

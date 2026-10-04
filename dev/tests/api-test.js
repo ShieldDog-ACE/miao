@@ -1,6 +1,6 @@
 /**
  * 喵站后端 · 端到端接口测试（真实 HTTP，无第三方依赖）
- * 运行：node 开发版/tests/api-test.js
+ * 运行：node dev/tests/api-test.js
  * 会自己拉起后端（独立端口 + 独立数据目录），跑完自动清理。
  */
 const { spawn, execFileSync } = require("child_process");
@@ -74,7 +74,7 @@ async function call(method, p, body, opts) {
 
 /* ---------- 拉起后端 ---------- */
 function startServer(env) {
-  const child = spawn(process.execPath, [path.join(ROOT, "开发版", "后台管理系统", "index.js")], {
+  const child = spawn(process.execPath, [path.join(ROOT, "dev", "backend", "index.js")], {
     cwd: ROOT,
     env: Object.assign({}, process.env, {
       NODE_NO_WARNINGS: "1",
@@ -182,7 +182,7 @@ function readOutboxCode(email) {
     ok("空 UA 被拦（403）", r.status === 403, String(r.status));
     r = await call("GET", "/api/meta", null, { ua: "Mozilla/5.0 Scrapy/2.11" });
     ok("Scrapy UA 被拦（403）", r.status === 403, String(r.status));
-    const S = require(path.join(ROOT, "开发版", "后台管理系统", "security"));
+    const S = require(path.join(ROOT, "dev", "backend", "security"));
     ok("蜜罐规则覆盖常见扫描路径（.env / wp-login / server / .db）",
       S.TRAP.test("/wp-login.php") && S.TRAP.test("/.env") && S.TRAP.test("/server/index.js") &&
       S.TRAP.test("/server/data/miao.db") && !S.TRAP.test("/assets/js/app.js"));

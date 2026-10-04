@@ -2,7 +2,7 @@
 
 ## 结论：本项目「运行时」零依赖
 
-后端（开发版/后台管理系统/）只用 Node.js 内置模块：
+后端（dev/backend/）只用 Node.js 内置模块：
 `http / fs / path / url / crypto / node:sqlite`
 
 **不需要安装任何 npm 包，也不需要 node_modules。**
@@ -24,9 +24,9 @@
 ```bash
 python3 -m venv Eleven/venv
 Eleven/venv/bin/pip install -i https://mirrors.aliyun.com/pypi/simple/ --no-compile qrcode pillow zxing-cpp
-Eleven/venv/bin/python 开发版/后台管理系统/tools/gen-donate-qr.py
+Eleven/venv/bin/python dev/backend/tools/gen-donate-qr.py
 ```
 
 > 提示：这些依赖只用于一次性生成二维码，装在哪个目录都行（例如 `<你的依赖目录>/venvs/miao-tools`），
-> 二维码已经生成在 `开发版/喵站/assets/img/donate-qr.png`，
+> 二维码已经生成在 `dev/frontend/assets/img/donate-qr.png`，
 > 换收款码时才需要重跑。

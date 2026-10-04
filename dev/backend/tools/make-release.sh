@@ -18,7 +18,7 @@
 # 退出码：0 成功；1 校验失败（一定有敏感文件混进来了，包不会生成）
 set -eu
 
-cd "$(dirname "$0")/.."                      # → 开发版/后台管理系统/
+cd "$(dirname "$0")/.."                      # → dev/backend/
 . ./pick-node.sh
 node_or_die >/dev/null || exit 1
 
@@ -81,7 +81,7 @@ EXCLUDES=(
   --exclude='reset-backup-*/'
 )
 # 顶层条目白名单：文档 + 部署文件（Dockerfile / 反代 / systemd 单元都要进包，否则部署不了）
-for item in 任务书.md DEPLOY.md Dockerfile .dockerignore .gitignore deploy Eleven 开发版; do
+for item in SPEC.md DEPLOY.md Dockerfile .dockerignore .gitignore deploy Eleven dev; do
   src="$SRC_ROOT/$item"
   [ -e "$src" ] || continue
   rsync -a "${EXCLUDES[@]}" "$src" "$STAGE/"
@@ -100,7 +100,7 @@ if [ -n "$BADFILES" ]; then
   BAD=1
 fi
 # 3.2 不允许的目录
-if [ -d "$STAGE/开发版/后台管理系统/data" ]; then echo "  ✘ 不该出现：开发版/后台管理系统/data/"; BAD=1; fi
+if [ -d "$STAGE/dev/backend/data" ]; then echo "  ✘ 不该出现：dev/backend/data/"; BAD=1; fi
 if [ -d "$STAGE/.workbuddy" ]; then echo "  ✘ 不该出现：.workbuddy/"; BAD=1; fi
 # 3.3 内容级扫描（密钥残留 / 真实邮箱 / 本机路径）
 # check-secrets 退出码：0 干净 / 1 有高危 / 2 仅提醒 —— 只有 1 才拦得住发布

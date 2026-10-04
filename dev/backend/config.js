@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 
 const SERVER_DIR = __dirname;
-// 后端位于 <根>/开发版/后台管理系统/，ROOT 需再往上两层到喵站根目录
+// 后端位于 <根>/dev/backend/，ROOT 需再往上两层到喵站根目录
 const ROOT = path.resolve(SERVER_DIR, "..", "..");
 
 /* 读取同目录 .env（KEY=VALUE，# 注释）；已存在的环境变量优先，不覆盖 */
@@ -33,7 +33,7 @@ loadDotEnv();
 const DEFAULTS = {
   port: 8787,
   host: "127.0.0.1",                          // 生产环境建议 127.0.0.1 + 反向代理（Nginx/Caddy）
-  siteDir: path.join(ROOT, "开发版", "喵站"),   // 前端静态目录（ROOT 已是喵站根）
+  siteDir: path.join(ROOT, "dev", "frontend"),   // 前端静态目录（ROOT 已是喵站根）
   // 英语音频挂在后台目录下的 letters/ 与 phonemes/，统一以 /audio/<子目录>/<文件> 对外提供。
   // 路由层有白名单（只放行这两个子目录），所以指向后台目录本身是安全的 ——
   // 不会泄露 seed-data.js / db.js / config.json / data/miao.db。

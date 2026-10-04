@@ -1,7 +1,7 @@
 /**
  * 喵站 · 后台管理系统端到端测试（真实 HTTP）
  * 覆盖：管理口令登录、防爬拦截、老师审核、教程审核上架、发公告、封禁管理
- * 运行：node 开发版/tests/admin-test.js  （自起 backend + admin 两个进程）
+ * 运行：node dev/tests/admin-test.js  （自起 backend + admin 两个进程）
  */
 const { spawn } = require("child_process");
 const fs = require("fs");
@@ -38,7 +38,7 @@ async function call(base, method, p, body, opts) {
 }
 
 function start(name, file, env) {
-  const child = spawn(process.execPath, [path.join(ROOT, "开发版", "后台管理系统", file)], {
+  const child = spawn(process.execPath, [path.join(ROOT, "dev", "backend", file)], {
     cwd: ROOT, env: Object.assign({}, process.env, { NODE_NO_WARNINGS: "1", MIAO_DATA_DIR: DATA_DIR, MIAO_NO_MAIL: "1" }, env),
     stdio: ["ignore", "ignore", "inherit"]
   });

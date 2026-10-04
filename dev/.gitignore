@@ -2,12 +2,12 @@
 .env
 .env.local
 !.env.example
-后台管理系统/config.json
-后台管理系统/config.local.json
+backend/config.json
+backend/config.local.json
 
 # SQLite 数据与上传的图片（含个人数据/测试残留）
-后台管理系统/data/
-后台管理系统/uploads/
+backend/data/
+backend/uploads/
 *.db
 *.db-shm
 *.db-wal
@@ -15,8 +15,8 @@
 mail-outbox.log
 
 # 音频重切前的备份、原稿转换中间产物
-后台管理系统/phonemes.bak*/
-后台管理系统/tools/.pywork/
+backend/phonemes.bak*/
+backend/tools/.pywork/
 
 # 依赖与杂项
 node_modules/

@@ -95,7 +95,7 @@ chown -R miao:miao /opt/miao
 ### 2.4 生成密钥文件 `.env`
 
 ```bash
-cd /opt/miao/开发版/后台管理系统
+cd /opt/miao/dev/backend
 cp .env.example .env
 
 # 生成一个随机后台口令填进去
@@ -174,7 +174,7 @@ ssh -N -L 8788:127.0.0.1:8788 root@服务器IP
 ```bash
 docker build -t miao:1.0.0 .
 docker run --rm -p 8787:8787 -e MIAO_HOST=0.0.0.0 \
-  -v miao-data:/app/开发版/后台管理系统/data miao:1.0.0
+  -v miao-data:/app/dev/backend/data miao:1.0.0
 curl -s --noproxy '*' http://127.0.0.1:8787/api/health
 ```
 
@@ -186,7 +186,7 @@ Zeabur / Render / Koyeb 之类都支持「连 Git 仓库 → 用 Dockerfile 构�
 1. 新建服务 → 选你的仓库 → 构建方式选 **Dockerfile**
 2. **环境变量**里填：`MIAO_HOST=0.0.0.0`、`MIAO_ADMIN_PASS=...`、`SMTP_PASS=...`、
    `MIAO_TRUST_PROXY=false`（PaaS 一般直接暴露，不是自己挂的反代）
-3. **必须挂持久卷**到 `/app/开发版/后台管理系统/data`，否则每次重启 = 数据清空
+3. **必须挂持久卷**到 `/app/dev/backend/data`，否则每次重启 = 数据清空
 4. 记录平台给你的域名
 
 ⚠️ **PaaS 的两个坑**，先想清楚再选：
@@ -287,7 +287,7 @@ Node 版本低于 22.5。`node -v` 确认，按 2.2 节重装。
 
 **Q：改了 `seed-data.js` 但网站内容没变？**
 正常现象。教程正文存在 SQLite 里，改种子只影响**建库那一刻**。
-详见 `开发版/后台管理系统/README.md` 的「教程正文改完为什么不生效」。
+详见 `dev/backend/README.md` 的「教程正文改完为什么不生效」。
 
 **Q：数据丢了怎么办？**
 `data/miao.db` 就是全部。没有备份就没了 —— 所以第 5 节的备份项务必设成定时任务。

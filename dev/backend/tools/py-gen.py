@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成 后台管理系统/py-data.js：3 节准备课（沿用已写正文）+ 他原稿的 45 课。"""
+"""生成 backend/py-data.js：3 节准备课（沿用已写正文）+ 他原稿的 45 课。"""
 import json, re, os
 
 WORK = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".pywork")
@@ -106,7 +106,7 @@ lines = ["""/* 喵站 · Python 教程数据（唯一来源）
  *   node tools/sync-python.js
  *
  * 45 课的骨架来自原稿的四栏课式：【原理讲解】【假设它能干什么】【演示 N】
- * 【常见坑】【任务】【本课一句话】。转换脚本见 任务书.md 的记录。
+ * 【常见坑】【任务】【本课一句话】。转换脚本见 SPEC.md 的记录。
  *
  * 块类型：p 段落 / h2 小标题 / tip 提示框 / ul 列表 / code 代码 / img 示意图。
  * 示意图集中在文件末尾的 FIG 表里，正文只写 FIG.键名。
@@ -129,7 +129,7 @@ lines.append("    diff: `入门`,")
 lines.append("    tags: [`python`, `零基础`, `入门`],")
 lines.append("    author: `喵站官方`,")
 # 封面是代码绘制的 SVG，重生成正文时别把它丢了（常设规则：每个教程都要专门做封面）
-lines.append("    /* 封面由代码绘制，文件在 ../喵站/assets/img/covers/python.svg（改完刷新页面即可） */")
+lines.append("    /* 封面由代码绘制，文件在 ../frontend/assets/img/covers/python.svg（改完刷新页面即可） */")
 lines.append("    cover: `/assets/img/covers/python.svg`,")
 lines.append("    chapters: [")
 for c in chapters:

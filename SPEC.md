@@ -134,18 +134,21 @@
 
 | 版本 | 范围 | 目标 |
 | --- | --- | --- |
-| **开发版（当前）** | 两个核心模块：`开发版/喵站`（前台）、`开发版/后台管理系统` | 跑通全部功能闭环，内部可试用；数据可用 SQLite 本地库 |
+| **开发版（当前）** | 两个核心模块：`dev/frontend`（前台）、`dev/backend` | 跑通全部功能闭环，内部可试用；数据可用 SQLite 本地库 |
 | 上线版 | 开发版功能 + 生产化（正式数据库、对象存储、CDN、邮件服务、监控、备案合规） | 对外发布 |
 
 开发版目录约定：
 
 ```
 喵站/                          ← 项目根（可位于任意磁盘路径）
-├── 任务书.md                ← 本文档
-├── 开发版/
-│   ├── 喵站/                ← 核心模块①：前台（内容展示与浏览入口）
-│   └── 后台管理系统/        ← 核心模块②：后台（审核等管理操作）
-└── 上线版/                  ← 后续阶段
+├── SPEC.md                    ← 本文档
+├── DEPLOY.md                  ← 部署与开源托管指南
+├── dev/                       ← 开发版（当前阶段）
+│   ├── frontend/              ← 核心模块①：前台（内容展示与浏览入口）
+│   ├── backend/               ← 核心模块②：后端服务与后台管理
+│   ├── tests/                 ← 接口 / 后台 / UI 三套测试
+│   └── PLAN.md                ← 前台 UI 计划书
+└── prod/                      ← 上线版（后续阶段）
 ```
 
 ---
@@ -544,9 +547,9 @@ stateDiagram-v2
 
 **改了什么**
 
-- `开发版/后台管理系统/phonemes/01-48.mp3`：全部重切（44.1kHz 单声道 64k，与原格式一致；峰值锚定裁剪 + 130Hz 高通 + 响度对齐）。
-- `开发版/后台管理系统/en-data.js`：48 条 `a` 字段重映射；文件头注释改写为真实朗读顺序。
-- 旧切片备份：`开发版/后台管理系统/phonemes.bak-20261004/`（不在 `/audio/` 白名单内，不会被访问）。
+- `dev/backend/phonemes/01-48.mp3`：全部重切（44.1kHz 单声道 64k，与原格式一致；峰值锚定裁剪 + 130Hz 高通 + 响度对齐）。
+- `dev/backend/en-data.js`：48 条 `a` 字段重映射；文件头注释改写为真实朗读顺序。
+- 旧切片备份：`dev/backend/phonemes.bak-20261004/`（不在 `/audio/` 白名单内，不会被访问）。
 
 **验证**（全部实跑）
 
@@ -574,11 +577,11 @@ stateDiagram-v2
 
 **改了什么**
 
-- 新增 `开发版/后台管理系统/py-data.js`：48 章、正文 202,917 字、447 个 python 代码块、28 张示意图（唯一数据源）。
-- `开发版/后台管理系统/seed-data.js`：内联的 Python 正文（约 10 万字符）换成 `window.MIAO_PY.tutorial` 引用，文件从 116 KB 降到 586 B。
-- `开发版/后台管理系统/db.js`：`readLegacyData()` 增加 `SEED_DEPS = ["py-data.js", "en-data.js"]`，全新安装时先加载数据文件再跑 seed。
-- 新增 `开发版/后台管理系统/tools/sync-python.js`：把 `py-data.js` upsert 进现有 `data/miao.db`，入库前自检（章节数、四栏骨架齐全、图已解析），自检不过直接中止不动库。**不走 `reset-data.sh`，账号与浏览记录不受影响。**
-- 新增 `开发版/后台管理系统/tools/py-convert.py` + `py-gen.py`：原稿 → 站内块结构的转换管线，中间产物在 `tools/.pywork/`。重跑产物 md5 一致，可复现。
+- 新增 `dev/backend/py-data.js`：48 章、正文 202,917 字、447 个 python 代码块、28 张示意图（唯一数据源）。
+- `dev/backend/seed-data.js`：内联的 Python 正文（约 10 万字符）换成 `window.MIAO_PY.tutorial` 引用，文件从 116 KB 降到 586 B。
+- `dev/backend/db.js`：`readLegacyData()` 增加 `SEED_DEPS = ["py-data.js", "en-data.js"]`，全新安装时先加载数据文件再跑 seed。
+- 新增 `dev/backend/tools/sync-python.js`：把 `py-data.js` upsert 进现有 `data/miao.db`，入库前自检（章节数、四栏骨架齐全、图已解析），自检不过直接中止不动库。**不走 `reset-data.sh`，账号与浏览记录不受影响。**
+- 新增 `dev/backend/tools/py-convert.py` + `py-gen.py`：原稿 → 站内块结构的转换管线，中间产物在 `tools/.pywork/`。重跑产物 md5 一致，可复现。
 
 **转换踩过的坑**（都已在 `py-convert.py` 里修掉，改脚本时别退回）
 
@@ -617,8 +620,8 @@ stateDiagram-v2
 
 **改了什么**
 
-- `喵站/assets/js/app.js`：新增 `inlineHtml()` 与 `setInlineRefs()`（约 197–232 行），`blockHtml()` 的 `p` / `tip` / `ul` 三条分支改走 `inlineHtml`；`vRead()` 渲染前调用 `setInlineRefs(t.id, t.chapters)`。
-- `喵站/assets/css/style.css`：新增 `--link`（浅色 `#2f6feb` / 深色 `#7aa2f7`），`.article a.art-link` 蓝色 + 悬停下划线，`.em` 用 2px 下划线、`text-underline-offset: .18em` 让横杠落到字下面。
+- `frontend/assets/js/app.js`：新增 `inlineHtml()` 与 `setInlineRefs()`（约 197–232 行），`blockHtml()` 的 `p` / `tip` / `ul` 三条分支改走 `inlineHtml`；`vRead()` 渲染前调用 `setInlineRefs(t.id, t.chapters)`。
+- `frontend/assets/css/style.css`：新增 `--link`（浅色 `#2f6feb` / 深色 `#7aa2f7`），`.article a.art-link` 蓝色 + 悬停下划线，`.em` 用 2px 下划线、`text-underline-offset: .18em` 让横杠落到字下面。
 
 **支持的写法**
 
@@ -655,8 +658,8 @@ stateDiagram-v2
 
 **改了什么**
 
-- `喵站/index.html`：导航三项变两项 —— `首页 → #/`、`成为老师 → #/apply`。
-- `喵站/assets/js/app.js`：删除 `vHome()`；路由 `s.length === 0` 改为走 `vCategory(r.params)`；页面主标题 `教程分类` → `首页`。
+- `frontend/index.html`：导航三项变两项 —— `首页 → #/`、`成为老师 → #/apply`。
+- `frontend/assets/js/app.js`：删除 `vHome()`；路由 `s.length === 0` 改为走 `vCategory(r.params)`；页面主标题 `教程分类` → `首页`。
 - 面包屑、Logo、404「回首页」等 5 处 `href="#/"` 无需改动，自动落到分类页。
 
 **验证**（浏览器实测）
@@ -677,17 +680,17 @@ stateDiagram-v2
 | 项 | 内容 |
 | --- | --- |
 | 需求 | 给英语、Python 入门做封面：用代码制作页面，保持简洁和站内语言风格，带标志性图标 |
-| 结论 | 两张手写 SVG（`喵站/assets/img/covers/{python,english}.svg`）+ `.cover.has-img` 按 16:9 展示，字标不再被裁 ✅已定 |
+| 结论 | 两张手写 SVG（`frontend/assets/img/covers/{python,english}.svg`）+ `.cover.has-img` 按 16:9 展示，字标不再被裁 ✅已定 |
 | 依据 | 原 `.cover` 固定 110px 高、`object-fit: cover`，16:9 的封面在卡片上会被裁成只剩中间 44%，底部字标整条丢掉 |
 
 **改了什么**
 
-- 新增 `喵站/assets/img/covers/python.svg`（640×360）：妃色纸面底 + 淡网格，左侧原创的两段互锁圆角块（蓝 `#3776AB` / 黄 `#F2B731`，**不复制 PSF 商标图案**），右侧白底编辑器卡片 `>>> print()` + `for lesson in range(1, 46):`，下方字标与「45 课 · 零基础 · 每课都能直接跑」。
-- 新增 `喵站/assets/img/covers/english.svg`（640×360）：同族底色，青绿 `#17A882` 区分模块，`Aa` 字母卡 + `/eɪ/` 音标、10 枚音标芯片、14 根声波条，字标「英语发音入门 · 26 字母 · 48 音标 · 点一下就听」。
+- 新增 `frontend/assets/img/covers/python.svg`（640×360）：妃色纸面底 + 淡网格，左侧原创的两段互锁圆角块（蓝 `#3776AB` / 黄 `#F2B731`，**不复制 PSF 商标图案**），右侧白底编辑器卡片 `>>> print()` + `for lesson in range(1, 46):`，下方字标与「45 课 · 零基础 · 每课都能直接跑」。
+- 新增 `frontend/assets/img/covers/english.svg`（640×360）：同族底色，青绿 `#17A882` 区分模块，`Aa` 字母卡 + `/eɪ/` 音标、10 枚音标芯片、14 根声波条，字标「英语发音入门 · 26 字母 · 48 音标 · 点一下就听」。
 - 两张都写 `<svg width="640" height="360" viewBox=...>`：只有 viewBox 时 `<img>` 拿不到固有尺寸，会退化成 300×150。
-- `喵站/assets/css/style.css`：`.t-card .cover.has-img{height:auto;aspect-ratio:16/9}`、`.tut-hero .cover.has-img{240×135}`、`.learn-item .cover.has-img{92×52}`，720px 断点下 hero 铺满宽度。只作用于「有封面图」的教程，没图的仍是原来的粉色渐变字块。
+- `frontend/assets/css/style.css`：`.t-card .cover.has-img{height:auto;aspect-ratio:16/9}`、`.tut-hero .cover.has-img{240×135}`、`.learn-item .cover.has-img{92×52}`，720px 断点下 hero 铺满宽度。只作用于「有封面图」的教程，没图的仍是原来的粉色渐变字块。
 - 数据侧：`py-data.js` / `en-data.js` 各加一个 `cover` 字段；`tools/sync-python.js`、`tools/insert-english.js` 的 UPDATE 用 `COALESCE(?,thumb/cover/hero)`（数据文件写了才覆盖，没写保留老师在后台设的），INSERT 补上三列，自检顺带回读 `cover`。
-- 顺手修：`喵站/index.html` 首屏主题那段内联 `<script>` 一直被 CSP `script-src 'self'` 拦掉（控制台常年一条 error，深色模式防闪烁等于没做），抽成 `assets/js/theme-boot.js` 用 `src` 加载。全站唯一一处内联脚本，已确认没有第二处。
+- 顺手修：`frontend/index.html` 首屏主题那段内联 `<script>` 一直被 CSP `script-src 'self'` 拦掉（控制台常年一条 error，深色模式防闪烁等于没做），抽成 `assets/js/theme-boot.js` 用 `src` 加载。全站唯一一处内联脚本，已确认没有第二处。
 
 **这一轮另外清掉的四个坑**
 
@@ -711,9 +714,32 @@ stateDiagram-v2
 
 ---
 
+### 15.6 2026-10-05 · 中文路径全改英文
+
+| 项 | 内容 |
+| --- | --- |
+| 需求 | 「把开发版什么的名字都改一下，把中文都改成英文上传到仓库，看着太别扭了」 |
+| 结论 | 短名一套：`dev/` `dev/backend/` `dev/frontend/` `SPEC.md` `dev/PLAN.md` `dev/backend/RUN.md` `Eleven/DEPENDENCIES.md`，未跟踪的 `上线版/` 跟着改成 `prod/` ✅已定 |
+| 依据 | 顶层项目根目录**保持 `喵站` 不动**：Qoder 的工作目录注册在 `…/喵站/开发版` 上，改顶层要手工修 `.git/worktrees/*/gitdir` 与 worktree 里的 `.git` 指针，改错了就和仓库失联；而 GitHub 上别人看到的树只跟仓库内部路径有关 |
+
+**改了什么**
+
+- 物理 `mv`（不是 `git mv`）搬目录：`git mv` 逐文件改名，未跟踪的 `data/miao.db`、`.workbuddy/`、`.Trash-0/` 不会跟着走；整目录 `mv` 之后再 `git add -A`，git 自己按内容识别成 rename，账号库原地保留。
+- 引用同步：`dev/backend/config.js` 的 `ROOT/siteDir`、`dev/tests/run.sh` 的 `SRV`、三个测试里的 `path.join(ROOT, "dev", "backend", …)`、两层 `.gitignore`、`Dockerfile` 的 `COPY` 与 `--env-file`/`-v` 示例、`deploy/*.{service,conf}` 的 `WorkingDirectory`/`ExecStart`/证书路径、`DEPLOY.md`、`tools/{make-release.sh,check-secrets.js,gen-donate-qr.py,py-gen.py}`、两份 README、`SPEC.md`/`PLAN.md` 里的目录树与历史条目。
+- 只改**路径形态**的中文：`后台管理系统（8788）`「后台管理系统已启动」这类散文/界面文案一律保留，`api.js` 里 `site: "喵站"` 是站名不是路径，也没动。
+- 文档名映射：`任务书.md`→`SPEC.md`、`计划书.md`→`PLAN.md`、`启动.md`→`RUN.md`、`依赖说明.md`→`DEPENDENCIES.md`；正文里单独出现的「任务书」「计划书」作为文档名沿用中文，读起来不至于满篇英文。
+
+**验证**
+
+- 起服务：`bash dev/backend/start.sh` 打印的数据目录已是 `…/喵站/dev/backend/data/miao.db`，`/`、`/assets/img/covers/python.svg`、`/audio/phonemes/01.mp3`、`/api/tutorials`、`/api/health` 全 200。
+- 回归：`bash dev/tests/run.sh` → 91 PASS / 0 FAIL（api 76 + admin 15），与改名前逐项一致；`ui-e2e` 仍是本机缺 jsdom，非本次引入。
+- 残留检查：改名后全库再 grep `开发版/`、`后台管理系统/`、`喵站/`、`上线版/`、`"开发版"`、`"后台管理系统"`，只剩两处有意保留的 —— 目录树里的项目根 `喵站/`（顶层不改）和散文用法。
+
+---
+
 ## 16. 常设规则（往后每个教程都按这条走）
 
-1. **每个教程都要专门做封面。** 不许用「首字母色块」兜底了事：用代码画（SVG 优先），640×360（16:9），底色与配色沿用站内示意图那一套（妃色纸面 + 品牌粉 `#FB7DA8`，各模块再给一个自己的主色），画面里要有该教程的标志性图形（Python = 互锁圆角块 + `>>>`，英语 = 字母卡 + 音标 + 声波）。文件放 `喵站/assets/img/covers/<教程id>.svg`，`cover` 字段写进对应数据文件，再跑同步工具进库。注意老师投稿走的是另一条路：后台硬性要求「缩略图 / 卡片图 / 完整图」三图齐备才能提交审核，官方教程一张 16:9 就够（`thumb`/`hero` 都回落到 `cover`）。
+1. **每个教程都要专门做封面。** 不许用「首字母色块」兜底了事：用代码画（SVG 优先），640×360（16:9），底色与配色沿用站内示意图那一套（妃色纸面 + 品牌粉 `#FB7DA8`，各模块再给一个自己的主色），画面里要有该教程的标志性图形（Python = 互锁圆角块 + `>>>`，英语 = 字母卡 + 音标 + 声波）。文件放 `dev/frontend/assets/img/covers/<教程id>.svg`，`cover` 字段写进对应数据文件，再跑同步工具进库。注意老师投稿走的是另一条路：后台硬性要求「缩略图 / 卡片图 / 完整图」三图齐备才能提交审核，官方教程一张 16:9 就够（`thumb`/`hero` 都回落到 `cover`）。
 2. **每更新完一个准确版本就上传仓库。** 判定「准确」的最小集合：回归跑过（`api-test` + `admin-test`）、浏览器里点过、改过的正文同步进库过。一次版本一个提交点，别攒着；推送前先 `git status` 核过暂存内容，`data/`、`uploads/`、`config.json`、`.env` 这些永远不进库。
 
 ---

@@ -97,7 +97,7 @@ bash start-admin.sh          # 读取 .env 里的 MIAO_ADMIN_PASS
 种子教程只有**一份**：`seed-data.js`，且只在**建库时**导入 SQLite；
 库里已有内容时不会再覆盖，所以改了它不会立刻生效。
 
-> 早期版本另维护过一份前端副本 `喵站/assets/js/data.js`（由 `tools/sync-seed.js` 生成）。
+> 早期版本另维护过一份前端副本 `frontend/assets/js/data.js`（由 `tools/sync-seed.js` 生成）。
 > 它等于把全站正文摆进静态目录——任何人一次请求就能拖走全部教程，
 > 正文分窗与"每分钟 N 篇"的防扒限流全被绕过，现已删除，同步工具一并移除。
 > 前端正文一律经 `/api` 按需下发。

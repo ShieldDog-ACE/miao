@@ -7,7 +7,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const ROOT = path.resolve(__dirname, "..", "..");   // 开发版/
+const ROOT = path.resolve(__dirname, "..", "..");   // dev/
 const FROM = (() => {
   const i = process.argv.indexOf("--from");
   return i > 0 ? path.resolve(process.argv[i + 1]) : ROOT;
@@ -81,17 +81,17 @@ function countFiles(dir) {
   return n;
 }
 if (FROM === ROOT) {
-  for (const rel of ["后台管理系统/data", "后台管理系统/uploads"]) {
+  for (const rel of ["backend/data", "backend/uploads"]) {
     const abs = path.join(ROOT, rel);
     if (fs.existsSync(abs)) {
       const n = countFiles(abs);
       if (n) leftovers.push(rel + "/ → " + n + " 个文件（本地运行数据，发布时务必排除）");
     }
   }
-  const envPath = path.join(ROOT, "后台管理系统", ".env");
-  if (fs.existsSync(envPath)) leftovers.push("后台管理系统/.env → 存在（.gitignore 已忽略；用复制目录的方式发布前务必排除）");
-  const cfgPath = path.join(ROOT, "后台管理系统", "config.json");
-  if (fs.existsSync(cfgPath)) leftovers.push("后台管理系统/config.json → 存在（本机偏好配置，仓库只留 config.example.json）");
+  const envPath = path.join(ROOT, "backend", ".env");
+  if (fs.existsSync(envPath)) leftovers.push("backend/.env → 存在（.gitignore 已忽略；用复制目录的方式发布前务必排除）");
+  const cfgPath = path.join(ROOT, "backend", "config.json");
+  if (fs.existsSync(cfgPath)) leftovers.push("backend/config.json → 存在（本机偏好配置，仓库只留 config.example.json）");
 }
 
 let high = 0, med = 0;for (const h of hits) {

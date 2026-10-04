@@ -11,7 +11,7 @@
 
 [Unit]
 Description=喵站 · 前台与 API (8787)
-Documentation=file:/opt/miao/开发版/后台管理系统/README.md
+Documentation=file:/opt/miao/dev/backend/README.md
 After=network-online.target
 Wants=network-online.target
 
@@ -22,10 +22,10 @@ Type=simple
 User=miao
 Group=miao
 
-WorkingDirectory=/opt/miao/开发版/后台管理系统
+WorkingDirectory=/opt/miao/dev/backend
 
 # 密钥（SMTP_PASS / MIAO_ADMIN_PASS）从这里读，不写进服务文件
-EnvironmentFile=/opt/miao/开发版/后台管理系统/.env
+EnvironmentFile=/opt/miao/dev/backend/.env
 
 Environment=NODE_NO_WARNINGS=1
 # 只监听本机，由 Nginx/Caddy 反代进来；挂在反代后记得在 .env 设 MIAO_TRUST_PROXY=true

@@ -110,7 +110,7 @@ window.MIAO_EN = {
     diff: "入门",
     tags: ["英语", "音标", "发音", "零基础"],
     author: "喵站官方",
-    /* 封面由代码绘制，文件在 ../喵站/assets/img/covers/english.svg */
+    /* 封面由代码绘制，文件在 ../frontend/assets/img/covers/english.svg */
     cover: "/assets/img/covers/english.svg",
     chapters: [
       {

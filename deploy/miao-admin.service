@@ -22,10 +22,10 @@ Type=simple
 
 User=miao
 Group=miao
-WorkingDirectory=/opt/miao/开发版/后台管理系统
+WorkingDirectory=/opt/miao/dev/backend
 
 # 后台口令 MIAO_ADMIN_PASS 从 .env 读；没配的话每次启动随机生成一次性口令
-EnvironmentFile=/opt/miao/开发版/后台管理系统/.env
+EnvironmentFile=/opt/miao/dev/backend/.env
 
 Environment=NODE_NO_WARNINGS=1
 # 默认 127.0.0.1（配合反代/SSH 隧道）。要直接监听公网就改成 0.0.0.0 ——
