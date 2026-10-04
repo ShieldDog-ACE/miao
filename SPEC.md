@@ -705,12 +705,12 @@ stateDiagram-v2
 - XML：两张都过 `ElementTree.parse`。
 - 渲染：浏览器里 `naturalWidth/Height = 640/360`，卡片盒 373×209.8、hero 盒 240×135 —— 比例与 16:9 差 <0.01，即零裁切。
 - 主题：`#/` 下 `data-theme` 随 `localStorage.miao_theme` 变（dark/17px 生效），reload 后控制台不再出现 CSP error。
-- 回归：`api-test` 全 PASS、`admin-test` 15/15 PASS。
+- 回归：改名后 `dev/tests/run.sh` 全跑（见 §15.7）。
 
 **未验证**
 
 - 内置浏览器出不了图（`take_screenshot` 报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`），配色是按数值核对的，最终观感要他自己打开看一眼。
-- `ui-e2e.js` 仍因缺 jsdom 跑不了（与本次改动无关）。
+- ~~`ui-e2e.js` 仍因缺 jsdom 跑不了~~ → 当晚补装 jsdom 后已真跑，见 §15.7。
 
 ---
 
@@ -732,8 +732,27 @@ stateDiagram-v2
 **验证**
 
 - 起服务：`bash dev/backend/start.sh` 打印的数据目录已是 `…/喵站/dev/backend/data/miao.db`，`/`、`/assets/img/covers/python.svg`、`/audio/phonemes/01.mp3`、`/api/tutorials`、`/api/health` 全 200。
-- 回归：`bash dev/tests/run.sh` → 91 PASS / 0 FAIL（api 76 + admin 15），与改名前逐项一致；`ui-e2e` 仍是本机缺 jsdom，非本次引入。
+- 回归：`bash dev/tests/run.sh` → 改名当时 91 PASS / 0 FAIL（api 76 + admin 15），与改名前逐项一致；当晚补装 jsdom 后三套全跑 128/128，见 §15.7。
 - 残留检查：改名后全库再 grep `开发版/`、`后台管理系统/`、`喵站/`、`上线版/`、`"开发版"`、`"后台管理系统"`，只剩两处有意保留的 —— 目录树里的项目根 `喵站/`（顶层不改）和散文用法。
+
+---
+
+### 15.7 2026-10-05 · 补装 jsdom，三套回归第一次全跑
+
+| 项 | 内容 |
+| --- | --- |
+| 需求 | 「装（只为跑测试）」—— ui-e2e 是唯一一直跑不了的一套 |
+| 结论 | `npm install --no-save --no-package-lock jsdom` 装进 `dev/tests/node_modules/`（26 MB，被 `node_modules/` 规则忽略，仓库仍零依赖）✅已定 |
+| 依据 | Node 从文件所在目录逐级找 `node_modules`，装在 `dev/tests/` 下 `ui-e2e.js` 直接 require 得到，不用改 `run.sh`、不用设 `NODE_PATH`；`--no-save` 保证不生成 package.json / lock，静态站「无构建、无依赖」这条底线不动 |
+
+**结果**：`bash dev/tests/run.sh` → **128 项全 PASS，0 失败**（接口 76 + 同源 UI 37 + 后台 15）。
+
+- UI 那 37 项里有多条正是此前只能人工核对的：首页卡片来自后端、大类分组三行、小类点选、
+  「收起/展开分类」按钮、「首页」标题、游客免登录直读正文、音频内容块渲染、三图上传槽、
+  最后一条「无未捕获运行期错误」（`inlineHtml()` 改动没有把渲染搞崩）。
+- 也就是说 §15.2–§15.4 里那几句「本机缺 jsdom，只按断言人工核对过」现在被真跑覆盖了。
+- 注意 UI 套件连的是自己的临时库（7 门种子教程），不是 `dev/backend/data/miao.db`，
+  所以它验的是前端逻辑与样式路径，不验 python/english 两篇正文本身。
 
 ---
 
