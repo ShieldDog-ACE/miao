@@ -341,7 +341,7 @@
       '<span class="eq-ico">▶</span><span class="eq-tx">听</span></button>';
   }
 
-  function renderEN(app, tid, cid, spec) {
+  function renderEN(app, tid, cid, spec, my) {
     app.innerHTML = '<div class="ide"><div class="ide-loading">考卷组卷中…</div></div>';
     var need = spec.kind === "enword" ? API.get("/api/words/enword") : API.get("/api/meta");
     need.then(function (d) {
@@ -380,8 +380,10 @@
         : "听力题想听几遍就点几遍。") + "</div></div>" +
       '<div class="en-qs">' + qs.map(function (q, i) { return cardHtml(q, i); }).join("") + "</div>" +
       "</div>" +
-      '<div class="ide-status"><span class="st">⑥ 考试模式</span><span class="st" id="enProg">已答 0 / ' + qs.length + "</span>" +
-      '<span class="st st-score" id="enScore">还没交卷</span></div>' +
+      '<div class="ide-status"><span class="st branch">考试模式</span><span class="st" id="enProg">已答 0 / ' + qs.length + "</span>" +
+      '<span class="st st-score" id="enScore">' +
+      (my && my.best ? "最高 " + my.best + " 分" + (my.passed ? "（已过）" : "") : "") +
+      "</span></div>" +
       "</div>";
 
     bind(app, qs, answers);

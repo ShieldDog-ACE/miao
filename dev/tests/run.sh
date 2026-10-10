@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # 喵站 · 全量测试（纯静态站，无后端）
 #   1) 静态站 UI E2E —— 自起一台只发文件的静态服务器，jsdom 里走一遍读者路径
-#   2) 沙箱对拍     —— 教程正文 433 段代码逐段与本机 CPython 比 stdout（需要 python3）
-#   3) 考卷自测     —— 45 场 Python 考试 + 3 章英语卷的参考解/合法写法/宽松写法/错解
+#   2) 主题闸门     —— 浅/深/粉三套令牌是否齐、36 组字底对比度、:root 外硬编码色
+#   3) 封面闸门     —— 7 张挂站封面的标志居中、安全区、对比度（covers.js --check）
+#   4) 沙箱对拍     —— 教程正文 433 段代码逐段与本机 CPython 比 stdout（需要 python3）
+#   5) 考卷自测     —— 45 场 Python 考试 + 3 章英语卷的参考解/合法写法/宽松写法/错解
 # 跑法：bash dev/tests/run.sh
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -24,6 +26,12 @@ fi
 echo "（本次 UI E2E 用端口 ${MIAO_TEST_PORT}）"
 echo "===== 静态站 UI E2E ====="
 node "$HERE/ui-e2e.js" || EC=1
+echo
+echo "===== 三套配色闸门（令牌完备性 / 字底对比度 / :root 外硬编码色） ====="
+node "$HERE/../tools/theme-check.js" || EC=1
+echo
+echo "===== 封面闸门（标志居中 / 安全区 / 对比度 —— 产物只由 covers.js 拥有） ====="
+node "$HERE/../tools/covers.js" --check || EC=1
 echo
 echo "===== 正文三条闸（梗 / 交叉引用 / 构造首现，只查已重做的新稿） ====="
 node "$HERE/../tools/lesson-audit.cjs" || EC=1

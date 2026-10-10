@@ -71,6 +71,31 @@ const reqLog = [];
     W.MIAO_BE && W.MIAO_BE.error && W.MIAO_BE.error.message);
   ok("教程卡片来自静态数据文件", $$(".t-card").length >= 2, "卡片 " + $$(".t-card").length);
   ok("卡片不再摆编造的「人在学」", !/人在学/.test(txt("#app")), txt(".t-meta"));
+  /* 元信息行：他实测到这一行要塞 261~350px 而格子只有 221px，被压成上下堆叠。
+     像素在 jsdom 里量不到，所以一半盯 DOM 结构、一半盯 CSS 源码规则。 */
+  {
+    var metas = $$(".t-card .t-meta");
+    var shaped = metas.every((m) => m.querySelectorAll(".m-item").length >= 2 && m.querySelectorAll(".diff").length === 1);
+    ok("每张卡片的元信息 = 1 个 .diff + ≥2 个 .m-item（不是散 span 拼的）", shaped,
+      metas.length + " 张，首个：" + (metas[0] ? metas[0].querySelectorAll(".m-item").length + " 项" : "无"));
+    /* 卡片行不摆作者：最窄格子 221px，而「Microsoft 原文 · 喵站译」独占 213px，
+       省略到底只剩「Mi…」—— 摆了个读不出东西的位置。全名在教程页顶与侧栏都有。 */
+    ok("卡片元信息里没有作者名（213px 的作者塞不进 221px 的格子）",
+      !$$(".t-card .t-meta").some((m) => /Microsoft|喵站官方/.test(m.textContent)),
+      (metas[0] ? metas[0].textContent.trim() : "无"));
+    ok("分隔点全部带 .m-sep，没有裸「·」span 混在里面",
+      !$$(".t-card .t-meta > span").some((s) => s.textContent.trim() === "·" && !s.classList.contains("m-sep")));
+    ok("元信息一行摆平：.t-meta 有 flex-wrap:nowrap 与 overflow:hidden",
+      /\.t-meta\s*\{[^}]*flex-wrap:\s*nowrap/.test(CSS_TEXT) && /\.t-meta\s*\{[^}]*overflow:\s*hidden/.test(CSS_TEXT));
+    ok("缩得下的项给了省略号：.t-meta .m-item 有 text-overflow:ellipsis",
+      /\.t-meta \.m-item\s*\{[^}]*text-overflow:\s*ellipsis/.test(CSS_TEXT));
+    ok("窄栏文字补了 min-width:0（flex 子项默认 auto，长标题会撑破容器而不是收缩）",
+      /\.chap-item \.tt\s*\{[^}]*min-width: 0/.test(CSS_TEXT) &&
+      /\.rt-item > span:not\(\.dot\)\s*\{[^}]*min-width: 0/.test(CSS_TEXT) &&
+      /\.crumb\s*\{[^}]*text-overflow: ellipsis/.test(CSS_TEXT));
+    ok("「作者名可以点」这个死件已经删掉（点了没有作者页）",
+      $$(".t-card .t-author").length === 0 && !/\.t-author\s*\{[^}]*cursor:\s*pointer/.test(CSS_TEXT));
+  }
   ok("没有登录 / 注册入口", !/href="#\/login"/.test(W.document.body.innerHTML) && !$("#avBtn"));
   ok("导航里不再有「成为老师」（挪到页脚了）", !/href="#\/apply"/.test($("header").innerHTML));
 
@@ -91,6 +116,15 @@ const reqLog = [];
   W.location.hash = "#/tutorial/python";
   await sleep(1200);
   ok("详情页渲染：48 章目录 + 侧栏", $$(".chap-item").length >= 45 && !!$(".side-card"), "章节 " + $$(".chap-item").length);
+  /* 同一个「入门」以前在三个地方长三种样子：卡片与 hero 是 .badge 胶囊（而 .badge 还被
+     考场面板的计数块共用），右侧信息卡干脆是纯文本。现在三处必须同一个 .diff。 */
+  ok("难度标签在详情页三处同一个样子（都是 .diff，不再是 .badge 或纯文本）",
+    $$(".tut-hero .diff").length === 1 && $$(".tut-hero .badge").length === 0 &&
+    $$(".side-card .kv .diff").length === 1,
+    "hero " + $$(".tut-hero .diff").length + " 个 / 侧栏 " + $$(".side-card .kv .diff").length + " 个");
+  ok("教程页顶的元信息行带作者全名（卡片省掉的那一项在这里补回来）",
+    /喵站官方|Microsoft/.test(txt(".tut-hero .t-meta")), txt(".tut-hero .t-meta").slice(0, 46));
+  ok("详情页信息卡不再用内联 style 摆样式", !/style="[^"]*border-top:1px solid var\(--border\)/.test($(".side-card").outerHTML));
   ok("侧栏报出本机考试进度（45 课里过了几课）", /课末考试/.test(txt(".side-card")), txt(".side-card").slice(0, 70));
 
   /* ---------- 3. 阅读页 ---------- */
@@ -133,9 +167,20 @@ const reqLog = [];
       $$("#jdList li").length + " 项");
   }
   {
-    const gtRule = /\.gt\s*\{[^}]*\}/.exec(CSS_TEXT);
-    ok("行号列一段一个号：.gt 写了 white-space: pre（少了它一列里会折出三个数字）",
-      !!gtRule && /white-space:\s*pre/.test(gtRule[0]), gtRule ? gtRule[0].replace(/\s+/g, " ").slice(0, 56) : "找不到 .gt 规则");
+    const gtRule = /\.gt-code \.ln\s*\{[^}]*\}/.exec(CSS_TEXT);
+    ok("行号列一段一个号：行号行写了 white-space: pre（少了它一列里会折出三个数字）",
+      !!gtRule && /white-space:\s*pre/.test(gtRule[0]), gtRule ? gtRule[0].replace(/\s+/g, " ").slice(0, 56) : "找不到 .gt-code .ln 规则");
+    const taskGrid = /\.ide-task\s*\{[^}]*\}/.exec(CSS_TEXT);
+    ok("题面是两列 grid（行号列 + 文字列），且行号/文字容器 display:contents —— 少一条题面行号就上下分家",
+      !!taskGrid && /display:\s*grid/.test(taskGrid[0]) && /display:\s*contents/.test(CSS_TEXT),
+      taskGrid ? taskGrid[0].replace(/\s+/g, " ").slice(0, 60) : "找不到 .ide-task 规则");
+    const hlRow = /\.hl-row\s*\{[^}]*\}/.exec(CSS_TEXT);
+    ok("高亮层的空行不许塌：.hl-row 写了 min-height（空行 0 高 = 高亮与输入错位）",
+      !!hlRow && /min-height/.test(hlRow[0]), hlRow ? hlRow[0].replace(/\s+/g, " ").slice(0, 56) : "找不到 .hl-row 规则");
+    ok("语法色系全齐：注释/调用/常量/self/f-string 表达式都有色（第七轮一度只剩 5 个色）",
+      [".tk-com", ".tk-call", ".tk-const", ".tk-self", ".tk-fex", ".tk-var", ".tk-pun", ".tk-def", ".tk-cls"].every((s) => CSS_TEXT.indexOf(s) >= 0),
+      [".tk-com", ".tk-call", ".tk-const", ".tk-self", ".tk-fex", ".tk-var", ".tk-pun", ".tk-def", ".tk-cls"].filter((s) => CSS_TEXT.indexOf(s) < 0).join(",") || "9 类全在");
+    ok("「未交卷」徽标已从面板页签删掉（他点名的）", !$("#ptJudge"), $("#ptJudge") ? "还在" : "已删");
     const taskNums = $("#gtTask").textContent.split("\n").length;
     const codeLines = String($("#ideTa").value).split("\n").length;
     ok("行号 = 题面行 + 代码行，题面从 1 起、代码接着往下数",
@@ -169,8 +214,8 @@ const reqLog = [];
   click($("#ideSubmit"));
   await sleep(1000);
   ok("多打空格仍判 100 通过（需求：不能因为一个空格判错）", /100\/100 · 通过/.test(txt("#ideResult")), txt("#ideResult").slice(0, 22));
-  ok("交卷后自动翻到「判定清单」页签，徽章上写出分数",
-    !!$(".panel-tabs .pt[data-pt=\"judge\"].on") && /分/.test(txt("#ptJudge")), txt("#ptJudge"));
+  ok("交卷后自动翻到「判定清单」页签，状态栏写出成绩",
+    !!$(".panel-tabs .pt[data-pt=\"judge\"].on") && /得分 100/.test(txt("#stScore")), txt("#stScore"));
   ok("逐项检测每条都写了「检测到了什么」",
     $$("#ideResult .ck-saw").length >= 3 && $$("#ideResult .ck-saw").every((e) => e.textContent.trim().length > 6),
     $$("#ideResult .ck-saw").length + " 条");

@@ -19,7 +19,7 @@
   }
 
   /* ---------------- 编辑器排版常量：四层（题面 / 行号 / 着色层 / textarea）共用一套 ---------------- */
-  var LH = 1.7;          /* 行距：四层必须一模一样，差 0.1 行号就飘 */
+  var LH = 1.6;          /* 行距：四层必须一模一样，与 style.css 的 --ide-lh 是同一个数，差 0.1 行号就飘 */
   var PAD_V = 10, PAD_H = 14;
 
   /* ---------------- 字号：Ctrl+滚轮 / Ctrl+−0，改的是 #ideRoot 上的 --ide-fs ---------------- */
@@ -112,11 +112,13 @@
       var sl = strLen(code, i);
       if (sl) {
         var raw = code.slice(i, i + sl);
-        var isF = /[fF]/.test(raw.slice(0, 3));
+        var fm = /^([rRbBuUfF]*)(['"]{1,3})/.exec(raw);
+        /* 只看引号前面的真前缀：用 raw.slice(0,3) 粗判会把引号后的内容字符算进去，
+           'f{x}' 这种普通字符串就被误判成 f-string，{x} 染上表达式的色 */
+        var isF = /[fF]/.test(fm[1]);
         if (!isF) add("tk-str", raw);
         else {
           /* f-string：串本身跟着串色，{} 里的表达式单独一个色，读长串时能一眼看出哪段是代码 */
-          var fm = /^([rRbBuUfF]*)(['"]{1,3})/.exec(raw);
           var bStart = fm[0].length, bEnd = raw.length - fm[2].length;
           add("tk-str", raw.slice(0, bStart));
           var seg = bStart, p = bStart;
@@ -185,7 +187,7 @@
     var tid = params.id, cid = params.cid;
     app.innerHTML = '<div class="ide"><div class="ide-loading">考卷加载中…</div></div>';
     API.get("/api/exams/" + encodeURIComponent(tid) + "/" + encodeURIComponent(cid)).then(function (data) {
-      render(app, tid, cid, data.exam || data);
+      render(app, tid, cid, data.exam || data, data.my || null);
     }).catch(function (e) {
       app.innerHTML = '<div class="ide"><div class="ide-loading">' +
         "<h2>这场考试打不开</h2><p>" + esc(e.message || "未知错误") + "</p>" +
@@ -193,10 +195,10 @@
     });
   }
 
-  function render(app, tid, cid, exam) {
+  function render(app, tid, cid, exam, my) {
     /* 英语那两套卷（字母音标卷 / 单词卷）不是写代码，交给另一套界面画 */
     if (exam && (exam.kind === "en" || exam.kind === "enword") && root.MIAO_EXAM_EN) {
-      root.MIAO_EXAM_EN.render(app, tid, cid, exam);
+      root.MIAO_EXAM_EN.render(app, tid, cid, exam, my);
       return;
     }
     var title = exam.title || ("第 " + cid.replace(/\D/g, "") + " 课考试");
@@ -230,7 +232,7 @@
       '<button class="ide-exit" id="ideExit" type="button" title="退出考试，回到课文（草稿留在本机，回来还在）">← 退出考试</button>' +
       '<div class="ide-tb-mid"><b class="tb-file">' + esc(fileName) + '</b><span class="tb-sep">—</span><span>' + esc(title) + "</span></div>" +
       '<div class="ide-tb-right">' +
-      '<span class="ide-zoom" id="ideZoom" title="Ctrl+滚轮 或 Ctrl +/−/0 调编辑器字号">字号 ' + FS_0 + "</span>" +
+      '<button class="ide-zoom" id="ideZoom" type="button" title="当前编辑器字号；点一下回到 ' + FS_0 + '，Ctrl+滚轮 或 Ctrl +/− 微调">字号 ' + FS_0 + "</button>" +
       '<button class="ide-btn ide-btn-run" id="ideRun" type="button" title="运行（Ctrl+Enter）"><b>▶</b> 运行</button>' +
       '<button class="ide-btn" id="ideReset" type="button" title="恢复成本课初始代码">重置</button>' +
       '<button class="ide-btn ide-btn-go" id="ideSubmit" type="button" title="按本课目标判分（不扣运行次数，取最高分）">交卷</button>' +
@@ -271,7 +273,7 @@
       '<div class="panel-split" id="panelSplit" title="上下拖改变面板高度"></div>' +
       '<div class="panel-tabs">' +
       '<span class="pt on" data-pt="term">终端</span>' +
-      '<span class="pt" data-pt="judge">判定清单 <i class="badge" id="ptJudge">未交卷</i></span>' +
+      '<span class="pt" data-pt="judge">判定清单</span>' +
       '<span class="pt" data-pt="prob">问题 <i class="badge" id="ptProb">0</i></span>' +
       '<span class="panel-ops">' +
       '<button class="po" id="termClear" type="button" title="清空终端输出">清屏</button>' +
@@ -305,14 +307,16 @@
       "</div>" +
       "</div>" +
 
-      /* ---- 状态栏 ---- */
+      /* ---- 状态栏：左边是模式，右边照着 VS Code 摆位置 / 编码 / 缩进 / 语言 / 成绩 ---- */
       '<div class="ide-status">' +
-      '<span class="st branch">⑥ 考试模式</span>' +
+      '<span class="st branch">考试模式</span>' +
       '<span class="st" id="stPos">Ln 1, Col 1</span>' +
       '<span class="st" id="stLen"></span>' +
       '<span class="st st-opt">UTF-8</span><span class="st st-opt">空格: 4</span>' +
       '<span class="st st-opt">Python</span>' +
-      '<span class="st st-score" id="stScore">还没交卷</span>' +
+      '<span class="st st-score" id="stScore">' +
+      (my && my.best ? "最高 " + my.best + " 分" + (my.passed ? "（已过）" : "") : "") +
+      "</span>" +
       "</div></div>";
 
     /* ---------- 题面：一行一对（行号 + 文字），文字折行了行号也跟着走，不会错位 ---------- */
@@ -354,6 +358,9 @@
       }).join("\n");
       hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft;
       gtCode.scrollTop = ta.scrollTop;
+      /* 标签页上的点 =「内容与初始代码不一样」。草稿每次击键都自动存，
+         「没保存」这个状态在考场里不存在，点不该表达一个不存在的状态 */
+      dirty.classList.toggle("on", ta.value !== (exam.starter || ""));
       alignGutter(lines.length);
       syncPos();
     }
@@ -382,7 +389,6 @@
       $$(".gt-code .ln").forEach(function (el, i) { el.classList.toggle("cur", i === idx); });
     }
     ta.addEventListener("input", function () {
-      dirty.classList.add("on");
       saveDraft(tid, cid, ta.value);
       syncSize();
     });
@@ -419,6 +425,7 @@
 
     function applyWrap() {
       editor.classList.toggle("wrap", wrapOn);
+      ta.wrap = wrapOn ? "soft" : "off";          /* textarea 的折行最终听 wrap 属性的，两层都写才保险 */
       var btn = $("#wrapToggle");
       btn.textContent = wrapOn ? "自动换行：开" : "自动换行：关";
       btn.classList.toggle("on", wrapOn);
@@ -427,6 +434,7 @@
       syncSize();
     }
     applyFs();
+    $("#ideZoom").onclick = function () { setFs(FS_0); };
 
     ta.addEventListener("keydown", function (ev) {
       var k = ev.key;
@@ -450,7 +458,7 @@
           ta.value = v.slice(0, s) + "    " + v.slice(e2);
           ta.selectionStart = ta.selectionEnd = s + 4;
         }
-        dirty.classList.add("on"); saveDraft(tid, cid, ta.value); syncSize();
+        saveDraft(tid, cid, ta.value); syncSize();
         return;
       }
       if (k === "Enter") {                          /* 自动缩进：跟上一行对齐，冒号后多进一层 */
@@ -462,7 +470,7 @@
         var add2 = "\n" + indent, val = ta.value;
         ta.value = val.slice(0, pos) + add2 + val.slice(ta.selectionEnd);
         ta.selectionStart = ta.selectionEnd = pos + add2.length;
-        dirty.classList.add("on"); saveDraft(tid, cid, ta.value); syncSize();
+        saveDraft(tid, cid, ta.value); syncSize();
       }
     });
     syncSize();
@@ -635,8 +643,6 @@
         (res.passed && exam.reference ? '<pre class="rs-ref hidden">' + esc(exam.reference) + "</pre>" : "");
       $("#stScore").textContent = "得分 " + res.score + "（" + (res.passed ? "已过" : "未过") + "）";
       $("#stScore").classList.toggle("ok", res.passed);
-      $("#ptJudge").textContent = res.score + " 分";
-      $("#ptJudge").classList.toggle("ok", res.passed);
       showPane("judge");
       /* 题面里那几行「条件 N」跟着一起打勾/打叉 —— 两边说的是同一批条件 */
       $$(".tl-ck").forEach(function (el) {
@@ -678,7 +684,21 @@
       runBox = null; termLine("[已恢复成本课初始代码]", "term-dim");
     };
     $("#termClear").onclick = function () { term.innerHTML = ""; runBox = null; termLine("[终端已清空]", "term-dim"); };
-    $("#panelHide").onclick = function () { $("#idePanel").classList.toggle("hidden-panel"); };
+    /* 收起时清掉行内的 flexBasis（不然 flex 0 0 auto 被行内像素值压着，收不起来）；
+       展开时把本机记住的高度放回去 */
+    function setPanelHidden(hide) {
+      var p = $("#idePanel");
+      p.classList.toggle("hidden-panel", hide);
+      if (hide) p.style.flexBasis = "";
+      else {
+        try {
+          var ph = Number(localStorage.getItem("miao_ide_panel_h"));
+          p.style.flexBasis = (ph >= PH_MIN && ph <= PH_MAX ? ph : 232) + "px";
+        } catch (e) { p.style.flexBasis = ""; }
+      }
+      $("#panelHide").textContent = hide ? "展开面板" : "收起面板 ×";
+    }
+    $("#panelHide").onclick = function () { setPanelHidden(!$("#idePanel").classList.contains("hidden-panel")); };
     $("#taskToggle").onclick = function () {
       var off = taskWrap.classList.toggle("min");
       $("#taskToggle").textContent = off ? "展开题面" : "收起题面";
@@ -722,7 +742,7 @@
     function showPane(name) {
       $$(".panel-tabs .pt").forEach(function (x) { x.classList.toggle("on", x.dataset.pt === name); });
       $$(".pane", $("#panelBody")).forEach(function (p) { p.classList.toggle("on", p.dataset.pane === name); });
-      $("#idePanel").classList.remove("hidden-panel");
+      setPanelHidden(false);
     }
     $$(".panel-tabs .pt").forEach(function (b) { b.onclick = function () { showPane(b.dataset.pt); }; });
 

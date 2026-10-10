@@ -111,7 +111,7 @@
 
   /* 只剩阅读体验与本机学习数据四样：换设备或清缓存会丢，这是不要后端的代价 */
   var state = {
-    theme: store.get("theme", "auto"),           // light | dark | auto
+    theme: store.get("theme", "auto"),           // light | dark | pink | auto
     progress: store.get("progress", {}),         // {tid: [cid]} 学完哪些课
     favs: store.get("favs", []),                 // [tid] 本机收藏（与 data.js 同一个键）
     fs: store.get("fs", 15)                      // 阅读字号
@@ -201,6 +201,26 @@
 
   /* 账号体系（登录 / 注册 / 用户资料 / 关注与好友 / 创作中心）已随后端整体删除，此处不留占位 */
 
+  /* ---------------- 元信息行（卡片 · 教程页顶 · 右侧信息卡共用） ----------------
+     以前「入门」这个标签在三处长三种样子（卡片与教程页是 .badge 胶囊，而 .badge 又被
+     考场面板的计数块占着，右侧信息卡干脆是纯文本），而且卡片那一行既不能缩
+     也不会省略：实测要塞 261~350px，格子只有 221px，flex 就把文字压成上下两三行。
+     现在一行摆平、从左到右：难度徽章与「共 N 章」永远不缩，作者先缩、进度次之，缩不下的
+     出省略号。 */
+  function diffBadge(t) { return '<span class="diff">' + esc(t.diff || "未标难度") + "</span>"; }
+  function metaSep() { return '<span class="m-sep">·</span>'; }
+  /* opts.author=false 的场合（首页卡片）不摆作者：格子最窄只有 221px，而
+     「Microsoft 原文 · 喵站译」独占 213px —— 省略到底就剩「Mi…」，摆一个读不出
+     东西的位置不如不摆。作者全名在教程页顶的元信息行与右侧信息卡都有。 */
+  function tutMeta(t, opts) {
+    opts = opts || {};
+    var n = (t.chapters || []).length || t.chaps || 0;
+    var bits = ['<span class="m-item m-fix">共 ' + n + " 章</span>", '<span class="m-item">' + esc(localNote(t)) + "</span>"];
+    if (opts.author) bits.push('<span class="m-item" title="' + esc(t.author) + '">' + esc(t.author) + "</span>");
+    if (opts.tail) bits.push(opts.tail);
+    return '<div class="t-meta">' + diffBadge(t) + bits.join(metaSep()) + "</div>";
+  }
+
   function toast(msg) {
     var box = $("#toast");
     var el = document.createElement("div");
@@ -223,8 +243,12 @@
   /* matchMedia 缺失时（老浏览器 / 测试环境）降级为浅色，避免整站初始化中断 */
   var mq = (typeof window.matchMedia === "function") ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
+  /* 手改 localStorage 塞进一个不存在的主题名时，data-theme 会变成谁都不匹配的串，
+     页面静默退回 :root 且开关上看不出问题 —— 所以这里认表，不认就直接当 auto。 */
+  var THEME_OK = { light: 1, dark: 1, pink: 1, auto: 1 };
+
   function applyTheme() {
-    var t = state.theme;
+    var t = THEME_OK[state.theme] ? state.theme : "auto";
     if (t === "auto") {
       t = (mq && mq.matches) ? "dark" : "light";
     }
@@ -252,7 +276,10 @@
       '<a class="dd-item" id="annItem">公告</a>' +
       '<div class="dd-title">外观主题</div>' +
       '<div class="seg" id="segInMenu">' +
-      '<button data-t="light">浅色</button><button data-t="dark">深色</button><button data-t="auto">跟随系统</button>' +
+      '<button data-t="light" title="苹果 / DeepSeek 那套中性灰阶 + 蓝">浅色</button>' +
+      '<button data-t="dark" title="VS Code / Trae 那套灰阶 + 蓝">深色</button>' +
+      '<button data-t="pink" title="站点原本的粉色">粉色</button>' +
+      '<button data-t="auto" title="按系统的明暗偏好走，只会是浅色或深色">跟随</button>' +
       "</div>" +
       '<div class="dd-title">正文字号</div>' +
       '<div class="seg" id="segFs">' +
@@ -269,7 +296,7 @@
     var gm = $("#gearMenu"), gb = $("#gearBtn");
     if (gb) gb.onclick = function (e) { e.stopPropagation(); gm.classList.toggle("hidden"); };
     $all("#segInMenu button").forEach(function (b) {
-      b.onclick = function () { setTheme(b.dataset.t); toast("已切换主题"); };
+      b.onclick = function () { setTheme(b.dataset.t); toast("主题：" + b.textContent); };
     });
     $all("#segFs button").forEach(function (b) {
       b.onclick = function () {
@@ -375,10 +402,8 @@
       coverHtml(t, "card") +
       '<div class="t-body"><h3><a class="t-title" href="' + href + '">' + esc(t.title) + "</a></h3>" +
       '<p class="intro">' + esc(t.intro) + "</p>" +
-      '<div class="t-meta"><span class="t-author">' + esc(t.author) + "</span><span>·</span><span>共 " +
-        (t.chaps || (t.chapters || []).length || 0) + " 章</span><span>·</span><span>" + localNote(t) + "</span>" +
-      (state.favs.indexOf(t.id) >= 0 ? '<span class="star-badge on" title="已收藏在本机"><i class="star-ico">★</i>已收藏</span>' : "") +
-      '<span class="badge">' + esc(t.diff) + "</span></div>" +
+      tutMeta(t, state.favs.indexOf(t.id) >= 0
+        ? { tail: '<span class="star-badge on" title="已收藏在本机"><i class="star-ico">★</i>已收藏</span>' } : null) +
       "</div></div>";
   }
 
@@ -767,7 +792,8 @@
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>完整图</button>'
         : "") + "</div>" +
       '<div class="info"><h1>' + esc(t.title) + "</h1>" +
-      '<div class="tags"><span class="badge">' + esc(t.diff) + '</span>' + t.tags.map(function (x) { return '<span class="chip">' + esc(x) + "</span>"; }).join("") + "</div>" +
+      tutMeta(t, { author: true }) +
+      '<div class="tags">' + t.tags.map(function (x) { return '<span class="chip">' + esc(x) + "</span>"; }).join("") + "</div>" +
       '<p class="intro">' + esc(t.intro) + "</p>" +
       '<div class="ops">' + (nextC
         ? '<a class="btn btn-primary" href="#/read/' + t.id + "/" + nextC.id + '">' + (started ? "继续学习 · 已学 " + pct + "%" : "开始学习") + "</a>"
@@ -779,15 +805,13 @@
       '<div class="chap-list card"><div style="padding:10px 14px 4px;font-weight:700">章节目录 · 共 ' + chapsN + " 章</div>" + chapItems + "</div>" +
       '<div class="side-card card">' +
       '<h3>作者 · 课程信息</h3>' +
-      '<div class="author-row">' +
-      '<div style="flex:1;min-width:0"><div style="font-weight:600"><span class="t-author">' + esc(t.author) + "</span></div>" +
-      '<div class="muted small">喵站官方整理，内容永久免费</div></div>' +
-      "</div>" +
-      '<div style="border-top:1px solid var(--border);margin:14px 0 12px"></div>' +
+      '<div class="author-row"><div class="author-main"><div class="author-name">' + esc(t.author) + "</div>" +
+      '<div class="muted small">喵站官方整理，内容永久免费</div></div></div>' +
+      '<div class="side-sep"></div>' +
       '<div class="kv"><span>章节数</span><span>' + chapsN + "</span></div>" +
       '<div class="kv"><span>本机已学</span><span>' + done.length + " / " + chapsN + "</span></div>" +
       (examN ? '<div class="kv"><span>课末考试</span><span>' + passedN + " / " + examN + " 课已通过</span></div>" : "") +
-      '<div class="kv"><span>难度</span><span>' + esc(t.diff) + "</span></div>" +
+      '<div class="kv"><span>难度</span><span class="kv-diff">' + diffBadge(t) + "</span></div>" +
       '<div class="kv"><span>最近更新</span><span>' + esc(t.updated) + "</span></div>" +
       "</div></div></div>";
 
@@ -966,25 +990,25 @@
     if (!q) body = '<div class="empty">输入关键词，搜索教程、章节或作者</div>';
     else if (tab === "tutorial") body = rTut.length ? rTut.map(function (t) {
       return '<a class="s-item card" href="#/tutorial/' + t.id + '"><h4>' + hi(t.title) + "</h4><p>" + hi(t.intro.slice(0, 60)) + "…</p>" +
-        '<div class="t-meta">' + esc(t.author) + " · 共 " + (t.chaps || (t.chapters || []).length) + ' 章</div></a>';
+        tutMeta(t, { author: true }) + "</a>";
     }).join("") : '<div class="empty">没有找到相关教程，试试其他关键词</div>';
     else if (tab === "chapter") body = rChap.length ? rChap.map(function (r) {
       return '<a class="s-item card" href="#/read/' + r.t.id + "/" + r.c.id + '"><h4>' + hi(r.c.title) + "</h4><p>" + hi(r.t.title) + " · " + esc(r.t.author) + "</p></a>";
     }).join("") : '<div class="empty">没有找到相关章节</div>';
     else body = rAuth.length ? rAuth.map(function (a) {
       var ts = TUTS.filter(function (t) { return t.author === a; });
-      return '<div class="s-item card"><h4>' + hi(a) + '</h4><p>发布教程 ' + ts.length + " 门：" + ts.map(function (t) { return '<a href="#/tutorial/' + t.id + '" style="color:var(--accent)">' + esc(t.title) + "</a>"; }).join("、") + "</p></div>";
+      return '<div class="s-item card"><h4>' + hi(a) + '</h4><p>发布教程 ' + ts.length + " 门：" + ts.map(function (t) { return '<a href="#/tutorial/' + t.id + '">' + esc(t.title) + "</a>"; }).join("、") + "</p></div>";
     }).join("") : '<div class="empty">没有找到相关作者</div>';
 
     app.innerHTML =
-      '<div class="container" style="max-width:820px">' +
+      '<div class="container search-wrap">' +
       '<h1 class="page-title">搜索' + (q ? "：“" + esc(q) + "”" : "") + "</h1>" +
       '<div class="search-tabs">' +
       '<a class="chip' + (tab === "tutorial" ? " on" : "") + '" href="#/search?q=' + encodeURIComponent(q) + '&tab=tutorial">教程' + (q ? cnt(rTut.length) : "") + "</a>" +
       '<a class="chip' + (tab === "chapter" ? " on" : "") + '" href="#/search?q=' + encodeURIComponent(q) + '&tab=chapter">章节' + (q ? cnt(rChap.length) : "") + "</a>" +
       '<a class="chip' + (tab === "author" ? " on" : "") + '" href="#/search?q=' + encodeURIComponent(q) + '&tab=author">作者' + (q ? cnt(rAuth.length) : "") + "</a>" +
       "</div>" +
-      (q ? '<div class="muted small" style="margin:-6px 0 10px">搜索范围：课程名、章节标题与课程带的词表。正文是点开那门课才下载到本地的，不为一次搜索把全站拉下来。</div>' : "") +
+      (q ? '<div class="muted small search-scope">搜索范围：课程名、章节标题与课程带的词表。正文是点开那门课才下载到本地的，不为一次搜索把全站拉下来。</div>' : "") +
       body + "</div>";
     var ns = $("#navSearch"); if (ns) ns.value = q;
   }
