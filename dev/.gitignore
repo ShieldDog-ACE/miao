@@ -1,29 +1,15 @@
-# 本地密钥与运行时数据：一律不进公开仓库
+# 喵站 dev · 本地文件不入公开仓库
 .env
 .env.local
-!.env.example
-backend/config.json
-backend/config.local.json
+!*.env.example
 
-# SQLite 数据与上传的图片（含个人数据/测试残留）
-backend/data/
-backend/uploads/
-*.db
-*.db-shm
-*.db-wal
-*.sqlite
-mail-outbox.log
-
-# 音频重切前的备份、原稿转换中间产物
-backend/phonemes.bak*/
-backend/tools/.pywork/
-
-# 依赖与杂项
+# 测试依赖与产物
 node_modules/
-npm-debug.log*
+tests/oracle/*.tmp
+
+# 打包产物与杂项
+dist/
+*.log
+*.db
 .DS_Store
 Thumbs.db
-*.log
-
-# 发布打包产物（tools/make-release.sh 输出）
-dist/

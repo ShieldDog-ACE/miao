@@ -1,101 +1,50 @@
 /**
- * 喵站 · 前端+后端同源 E2E（jsdom）
- * 前提：后端已在本机启动（由 run.sh 拉起），前端从 http://127.0.0.1:<port>/ 加载。
- * 流程：游客浏览 → 登录（读后端 outbox 拿验证码）→ 解锁正文 → 收藏 → 回关/好友 → 申请老师 → 创作中心门禁
+ * 喵站 · 纯静态站 E2E（jsdom + 本地静态服务器）
+ *
+ * 站点没有后端了：正文与题库从 assets/data/ 直接进页面，收藏 / 进度 / 成绩落 localStorage。
+ * 这套测试做三件事：
+ *   1. 真起一台只发文件的静态服务器（dev/tests/static-server.js，零依赖），jsdom 从 HTTP 加载页面；
+ *   2. 走一遍读者的真实路径：首页 → 分类 → 详情 → 阅读 → 考试 → 交卷 → 收藏 → 页脚投稿入口；
+ *   3. 反向断言：页面不许再发出任何 /api 请求，也不许再有登录注册入口。
+ * 跑法：node dev/tests/ui-e2e.js（或 bash dev/tests/run.sh 一起跑）
  */
 const { JSDOM } = require("jsdom");
-const { spawn } = require("child_process");
-const { DatabaseSync } = require("node:sqlite");
 const fs = require("fs");
 const path = require("path");
+const { start } = require("./static-server.js");
 
-const EXTERNAL = process.env.MIAO_TEST_BASE || "";
+const DEV = path.resolve(__dirname, "..");
 const PORT = Number(process.env.MIAO_TEST_PORT || 8793);
-const BASE = EXTERNAL || ("http://127.0.0.1:" + PORT + "/");
-/* 测试务必用独立临时数据目录，绝不能写进正式库（dev/backend/data） */
-const TMP_ROOT = process.env.MIAO_TEST_TMP || path.join(ROOT(), "..", "..", "tmp");
-const DATA_DIR = process.env.MIAO_TEST_DATA || path.join(TMP_ROOT, "miao-ui-test-" + Date.now());
-const EMAIL = "ui-tester@miao.dev";
-const OUTBOX = path.join(DATA_DIR, "mail-outbox.log");
+const BASE = "http://127.0.0.1:" + PORT + "/";
+/* 布局类的回归（行号列折行、长文字撑破卡片）在 jsdom 里量不到像素，只能直接盯住 CSS 源码里的规则 */
+const CSS_TEXT = fs.readFileSync(path.join(DEV, "frontend/assets/css/style.css"), "utf8");
 
-function ROOT() { return path.resolve(__dirname, "..", ".."); }
 const results = [];
 function ok(name, cond, extra) {
-  results.push((cond ? "PASS" : "FAIL") + " | " + name + (extra ? "  → " + extra : ""));
+  results.push((cond ? "PASS" : "FAIL") + " | " + name + (extra != null && extra !== "" ? "  → " + extra : ""));
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-function readCode(email) {
-  if (!fs.existsSync(OUTBOX)) return null;
-  const blocks = fs.readFileSync(OUTBOX, "utf8").split("-".repeat(60));
-  for (let i = blocks.length - 1; i >= 0; i--) {
-    if (blocks[i].indexOf(email) >= 0) {
-      const m = /验证码是：(\d{6})/.exec(blocks[i]);
-      if (m) return m[1];
-    }
-  }
-  return null;
-}
-let w0 = null;
-function pickWin(a, b) { return (a && a.document) ? a : (b || w0); }
-function selOf(a, b) { return (a && a.document) ? b : a; }
-const txt = (a, b) => { const w = pickWin(a, b); const e = w.document.querySelector(selOf(a, b)); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; };
-const $ = (a, b) => { const w = pickWin(a, b); return w.document.querySelector(selOf(a, b)); };
-const $$ = (a, b) => { const w = pickWin(a, b); return Array.from(w.document.querySelectorAll(selOf(a, b))); };
-const click = (w, el) => { if (el) el.dispatchEvent(new w.MouseEvent("click", { bubbles: true })); };
-const type = (w, el, v) => { if (!el) return; el.value = v; el.dispatchEvent(new w.Event("input", { bubbles: true })); };
 
-/* 测试自造教程（seed 已清空演示数据）：js 5 章（c4 含音频块）+ 另 5 门补足首页卡片 */
-function seedTutorials() {
-  const db = new DatabaseSync(path.join(DATA_DIR, "miao.db"));
-  const mk = (id, title, cat, chapters) => {
-    db.prepare("INSERT OR REPLACE INTO tutorials (id,title,intro,cat,diff,tags,thumb,cover,hero,author,chapters,seed_views,seed_favs,views,published,updated,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-      .run(id, title, "测试简介", cat, "入门", "[]", "", "", "", "喵站官方", JSON.stringify(chapters), 12000, 1500, 0, 1, new Date().toISOString().slice(0, 10), Date.now());
-  };
-  const jsChaps = [];
-  for (let i = 1; i <= 5; i++) {
-    const blocks = [{ t: "p", text: "JavaScript 第 " + i + " 章正文内容，用于测试分层加载与正文渲染。" }];
-    if (i === 4) blocks.push({ t: "audio", src: "", title: "演示音频", dur: 12 });
-    jsChaps.push({ id: "c" + i, title: "第 " + i + " 章", blocks: blocks });
-  }
-  mk("js", "JavaScript 指南", "js", jsChaps);
-  ["css|CSS 基础|css", "html|HTML 入门|html", "python|Python 上手|python", "sql|SQL 数据库|sql", "git|Git 版本控制|git"]
-    .forEach(function (row) {
-      const p = row.split("|");
-      const ch = [];
-      for (let i = 1; i <= 3; i++) ch.push({ id: "c" + i, title: "第 " + i + " 章", blocks: [{ t: "p", text: p[1] + " 第 " + i + " 章。" }] });
-      mk(p[0], p[1], p[2], ch);
-    });
-  db.close();
-}
+let W = null;                                   // jsdom window，所有选择器默认在它身上找
+const winOf = (a, b) => (a && a.document) ? a : ((b && b.document) ? b : W);
+const selOf = (a, b) => (a && a.document) ? b : a;
+const txt = (a, b) => { const el = winOf(a, b).document.querySelector(selOf(a, b)); return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; };
+const $ = (a, b) => winOf(a, b).document.querySelector(selOf(a, b));
+const $$ = (a, b) => Array.from(winOf(a, b).document.querySelectorAll(selOf(a, b)));
+const click = (el, w) => { if (!el) return; const t = w || W; el.dispatchEvent(new t.MouseEvent("click", { bubbles: true })); };
+const type = (el, v, w) => { const t = (w) || W; if (!el) return; el.value = v; el.dispatchEvent(new t.Event("input", { bubbles: true })); };
 
 let server = null;
-async function startServer() {
-  server = spawn(process.execPath, [path.join(ROOT(), "dev", "backend", "index.js")], {
-    cwd: ROOT(),
-    env: Object.assign({}, process.env, {
-      NODE_NO_WARNINGS: "1", MIAO_PORT: String(PORT), MIAO_DATA_DIR: DATA_DIR, MIAO_NO_MAIL: "1",
-      MIAO_AUTO_TEACHER: "true"          // E2E 走「提交即通过」，保证门禁流程断言确定
-    }),
-    stdio: ["ignore", "ignore", "inherit"]
-  });
-  for (let i = 0; i < 25; i++) {
-    try {
-      const r = await fetch(BASE + "api/health", { headers: { "User-Agent": "Mozilla/5.0 Chrome/120" }, signal: AbortSignal.timeout(2000) });
-      if (r.ok) return;
-    } catch (e) { /* 未就绪，继续等 */ }
-    await sleep(400);
-  }
-  throw new Error("后端启动失败");
-}
+
+/* 静态服务器替我记每一笔请求：按需加载到底有没有生效，只看这个清单，不看代码注释 */
+const reqLog = [];
 
 (async () => {
-  if (!EXTERNAL) {
-    fs.rmSync(DATA_DIR, { recursive: true, force: true });
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    await startServer();
-    seedTutorials();
-  }
-  const html = fs.readFileSync(path.join(ROOT(), "dev", "frontend", "index.html"), "utf8");
+  server = await start(PORT, (u) => reqLog.push(String(u).split("?")[0]));
+
+  /* 静态站上任何一次 /api 请求都是「后端没删干净」的证据 */
+  const apiCalls = [];
+  const html = fs.readFileSync(path.join(DEV, "frontend", "index.html"), "utf8");
   const vcErrors = [];
   const dom = new JSDOM(html, {
     url: BASE,
@@ -103,164 +52,390 @@ async function startServer() {
     resources: "usable",
     pretendToBeVisual: true,
     beforeParse(window) {
-      // 桥接：Node fetch + 手动 Cookie 会话（jsdom 不会自动给 fetch 带 Cookie）
-      const real = global.fetch;
+      const real = window.fetch ? window.fetch.bind(window) : null;
       window.fetch = function (input, init) {
-        init = Object.assign({}, init || {});
-        const u = new URL(typeof input === "string" ? input : input.url, window.location.href).href;
-        init.headers = new global.Headers(init.headers || {});
-        const ck = window.document.cookie;
-        if (ck && !init.headers.has("Cookie")) init.headers.set("Cookie", ck);
-        return real(u, init).then(function (res) {
-          const sc = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
-          sc.forEach(function (c) { window.document.cookie = c.split(";")[0]; });
-          return res;
-        });
+        const u = typeof input === "string" ? input : ((input && input.url) || "");
+        if (/\/api\//.test(u)) apiCalls.push(u);
+        return real ? real(u, init) : Promise.reject(new Error("这个环境没有 fetch"));
       };
-      window.addEventListener("error", function (e) { vcErrors.push(String(e.message)); });
+      window.addEventListener("error", (e) => vcErrors.push(String(e.message)));
     }
   });
-  const w = dom.window;
-  w0 = w;
+  W = dom.window;
   await sleep(2500);
+  /* 首屏拉到的脚本，此刻就定终身了 */
+  const shellJs = reqLog.filter((u) => u.endsWith(".js"));
 
-  /* 1. 首页（后端数据） */
-  ok("首页加载（后端连接成功）", w.MIAO_BE && w.MIAO_BE.ready === true && !w.MIAO_BE.error, w.MIAO_BE && w.MIAO_BE.error && w.MIAO_BE.error.message);
-  ok("教程卡片来自后端", $$(w, ".t-card").length >= 6, "卡片 " + $$(w, ".t-card").length);
-  ok("卡片带开源平台式收藏计数", !!$(".t-card .star-badge", w) && /[\d.]+k/.test(txt(w, ".t-card .star-badge")), txt(w, ".t-card .star-badge"));
+  /* ---------- 1. 首页与数据源 ---------- */
+  ok("页面加载：本地数据层就绪", W.MIAO_BE && W.MIAO_BE.ready === true && !W.MIAO_BE.error,
+    W.MIAO_BE && W.MIAO_BE.error && W.MIAO_BE.error.message);
+  ok("教程卡片来自静态数据文件", $$(".t-card").length >= 2, "卡片 " + $$(".t-card").length);
+  ok("卡片不再摆编造的「人在学」", !/人在学/.test(txt("#app")), txt(".t-meta"));
+  ok("没有登录 / 注册入口", !/href="#\/login"/.test(W.document.body.innerHTML) && !$("#avBtn"));
+  ok("导航里不再有「成为老师」（挪到页脚了）", !/href="#\/apply"/.test($("header").innerHTML));
 
-  /* 1.5 分类页：大类 → 小类 分组展示 + 可关闭分类（回到全部） */
-  w.location.hash = "#/category";
+  /* ---------- 2. 分类与详情 ---------- */
+  W.location.hash = "#/category";
   await sleep(1000);
-  const bigs = $$(w, ".cat-big").map(function (e) { return e.textContent; });
-  ok("分类页显示大类标题（编程语言/开发工具/其他）", bigs.length >= 3, JSON.stringify(bigs));
-  ok("分类按大类分组（每个大类一行小类）", $$(w, ".cat-row").length >= 3, $$(w, ".cat-row").length + " 行");
-  ok("小类可点选（python/ts/git 等）", $$(".cat-group .chip", w).some(function (e) { return e.textContent.trim() === "python"; }));
-  ok("分类「全部」入口（清空分类）", $$(".cat-head .chip", w).some(function (e) {
-    return e.textContent.trim() === "全部";
-  }));
-  const catTg = $("#catToggle", w);
-  ok("存在「收起分类」按钮", !!catTg && catTg.textContent.indexOf("收起") >= 0, catTg ? catTg.textContent : "无");
-  if (catTg) {
-    click(w, catTg); await sleep(500);
-    ok("点击后分类收起", $("#catBody", w).classList.contains("hidden"));
-    ok("按钮变为「展开分类」", $("#catToggle", w).textContent.indexOf("展开") >= 0);
-    click(w, $("#catToggle", w)); await sleep(500);
-    ok("再点恢复展开", !$("#catBody", w).classList.contains("hidden"));
+  /* 小类为空的大类（动手造 / 英语）在 app.js 里渲染成 chip 而不是带标题的一行，
+     所以判据是「每个大类都有入口」，不是「有几行标题」 */
+  {
+    var bigs = Object.keys(W.MIAO_SITE.categories);
+    var titled = $$(".cat-big").map((e) => e.textContent.trim());
+    var chips = $$(".cat-group .chip").map((e) => e.textContent.trim());
+    var gone = bigs.filter((b) => titled.indexOf(b) < 0 && chips.indexOf(b) < 0);
+    ok("每个大类都有入口（行标题或 chip）", gone.length === 0,
+      "标题 " + JSON.stringify(titled) + " 缺 " + JSON.stringify(gone));
   }
-
-  /* 2. 游客免登录：详情可见、正文可直接读（不再强制登录） */
-  w.location.hash = "#/tutorial/js";
-  await sleep(900);
-  ok("详情页渲染（游客）", !!$(".tut-hero", w));
-  ok("游客可见章节目录", $$(".chap-item", w).length >= 3, "目录项 " + $$(".chap-item", w).length);
-  w.location.hash = "#/read/js/c1";
-  await sleep(900);
-  ok("游客可直接读正文（不强制登录）", w.location.hash.indexOf("login") < 0 && !$("#lEmail", w),
-    "hash=" + w.location.hash);
-  const gArt = $(".article", w);
-  ok("游客看到正文内容", !!gArt && (gArt.textContent || "").trim().length > 20,
-    "字数 " + (gArt ? (gArt.textContent || "").trim().length : 0));
-
-  /* 3. 邮箱验证码登录（先进入登录页） */
-  w.location.hash = "#/login";
-  await sleep(1000);
-  type(w, $("#lEmail", w), EMAIL);
-  click(w, $("#sendCode", w));
-  await sleep(900);
-  const code = readCode(EMAIL);
-  ok("验证码已发出（outbox 可读）", !!code, String(code));
-  type(w, $("#lCode", w), code || "000000");
-  click(w, $("#btnL", w));
-  await sleep(1000);
-  ok("登录成功（导航出现头像）", !!$("#avBtn", w));
-  ok("新用户初始化了社交数据", (w.localStorage.getItem("miao_follows") || "") === "" || true); // follows 在后端
-
-  /* 4. 登录后解锁正文 */
-  w.location.hash = "#/read/js/c1";
+  ok("python 小类在列", $$(".cat-group .chip").some((e) => e.textContent.trim() === "python"));
+  W.location.hash = "#/tutorial/python";
   await sleep(1200);
-  ok("登录后正文渲染", $$(w, ".article").length > 0 && txt(w, ".article").length > 50, "正文 " + txt(w, ".article").length + " 字");
-  ok("章节目录显示全部章节", $$(w, ".rt-item").length >= 5, "章节 " + $$(w, ".rt-item").length);
-  w.location.hash = "#/read/js/c4";
-  await sleep(1100);
-  ok("音频内容块正常渲染（c4）", !!$(".art-audio", w) && !!$(".art-audio .au-btn", w));
+  ok("详情页渲染：48 章目录 + 侧栏", $$(".chap-item").length >= 45 && !!$(".side-card"), "章节 " + $$(".chap-item").length);
+  ok("侧栏报出本机考试进度（45 课里过了几课）", /课末考试/.test(txt(".side-card")), txt(".side-card").slice(0, 70));
 
-  /* 5. 星标收藏（走后端） */
-  w.location.hash = "#/tutorial/js";
+  /* ---------- 3. 阅读页 ---------- */
+  W.location.hash = "#/read/python/l01";
+  await sleep(1300);
+  ok("正文直接渲染，不登录也能读", $$(".article").length > 0 && txt(".article").length > 50, "正文 " + txt(".article").length + " 字");
+  ok("排了考卷的课只有「进入考试」", !!$(".exam-entry") && !$("#doneBtn"));
+  W.location.hash = "#/read/python/s01";
+  await sleep(1200);
+  ok("第 0 课不考试：仍是「完成！」按钮", !!$("#doneBtn") && !$(".exam-entry"));
+  click($("#doneBtn"));
   await sleep(900);
-  const fav0 = $("#favBtn", w);
-  ok("收藏按钮（未收藏＝空心）", fav0 && fav0.textContent.indexOf("☆") >= 0 && !fav0.classList.contains("on"));
-  click(w, fav0);
-  await sleep(900);
-  const fav1 = $("#favBtn", w);
-  ok("收藏后变黄（实心 ★）", fav1 && fav1.textContent.indexOf("★") >= 0 && fav1.classList.contains("on"));
-  click(w, fav1);
-  await sleep(900);
-  ok("再点取消收藏", $("#favBtn", w) && $("#favBtn", w).textContent.indexOf("☆") >= 0);
+  ok("点完成写进本机进度（localStorage）",
+    (JSON.parse(W.localStorage.getItem("miao_progress") || "{}").python || []).indexOf("s01") >= 0,
+    W.localStorage.getItem("miao_progress"));
 
-  /* 6. 关注作者 → 回关/互关 */
-  w.location.hash = "#/tutorial/js";
-  await sleep(900);
-  console.log("[debug-before] relations=", JSON.stringify(w.MIAO_BE.relations), "| follows后端=", JSON.stringify(w.MIAO_BE.userProfile && w.MIAO_BE.userProfile.counts));
-  click(w, $("#followBtn", w));
-  await sleep(1100);
-  const lbl = $("#followBtn", w) ? $("#followBtn", w).textContent.trim() : "";
-  if (lbl !== "取关" && lbl !== "已互关") {
-    console.log("[debug] toast=", txt(w, "#toast"), "| relations=", JSON.stringify(w.MIAO_BE.relations), "| user=", JSON.stringify(w.MIAO_BE.ready && w.MIAO_BE.userProfile));
+  /* ---------- 4. Python 考试：IDE / 跑 / 判分 / 完成标记 ---------- */
+  W.location.hash = "#/read/python/l01";
+  await sleep(1200);
+  click($(".exam-entry"));
+  await sleep(1700);
+  ok("考试页是整屏 IDE：标题栏 / 编辑区 / 底部面板 / 终端 / 状态栏都在",
+    !!$(".ide-titlebar") && !!$("#ideEditor") && !!$("#idePanel") && !!$("#term") && !!$(".ide-status"));
+  ok("左上角有「退出考试」", !!$("#ideExit") && /退出/.test(txt("#ideExit")), txt("#ideExit"));
+  ok("考场只剩编辑区：活动栏、考试目录、右侧任务卡、假菜单全没了",
+    [".ide-activity", ".ide-explorer", ".ide-side", ".ide-tb-menu", ".tab-add"].filter((s) => !!$(s)).length === 0,
+    "还在的：" + [".ide-activity", ".ide-explorer", ".ide-side", ".ide-tb-menu", ".tab-add"].filter((s) => !!$(s)).join(","));
+  ok("运行 / 重置 / 交卷 都在标题栏里（不再被 sticky 导航条盖住）",
+    !!$(".ide-titlebar #ideRun") && !!$(".ide-titlebar #ideReset") && !!$(".ide-titlebar #ideSubmit"), txt(".ide-tb-right"));
+  ok("考试路由给 body 挂上 exam-mode，导航条与页脚让位", W.document.body.classList.contains("exam-mode"),
+    W.document.body.className || "(无类名)");
+  {
+    const taskTxt = txt("#ideTask");
+    const conds = (taskTxt.match(/# 条件\d+：/g) || []).length;
+    ok("题面就是文件顶部那几行 # 注释：任务题目 + 逐条条件",
+      /^# /.test(taskTxt) && /# 任务题目：/.test(taskTxt) && conds >= 3, conds + " 条条件");
+    ok("题面里的条件与判定清单一一对应，不会两处说两套话",
+      conds > 0 && conds === $$("#jdList li").length, "题面 " + conds + " 条 / 清单 " + $$("#jdList li").length + " 条");
+    ok("判定清单住在下方面板的页签里，不在右边", !!$(".panel-tabs .pt[data-pt=\"judge\"]") && !!$("#jdList"),
+      $$("#jdList li").length + " 项");
   }
-  ok("关注后进入 取关/已互关 态", lbl === "取关" || lbl === "已互关", lbl + " ｜ toast=" + txt(w, "#toast").slice(-30));
-
-  /* 7. 好友系统（后端数据） */
-  w.location.hash = "#/friends";
-  await sleep(900);
-  ok("好友页正常渲染", !!$("#frName", w), "输入框=" + !!$("#frName", w));
-
-  /* 8. 个人中心 + 申请老师 → 创作中心门禁 */
-  w.location.hash = "#/me";
-  await sleep(1000);
-  ok("个人中心统计渲染", $$(".me-head .st", w).length >= 5, $$(".me-head .st", w).length + " 项");
-  ok("个人中心显示账号 ID", /ID \d+/.test(txt(w, ".me-head")), txt(w, ".me-head .badge.b-gray"));
-  w.location.hash = "#/apply";
+  {
+    const gtRule = /\.gt\s*\{[^}]*\}/.exec(CSS_TEXT);
+    ok("行号列一段一个号：.gt 写了 white-space: pre（少了它一列里会折出三个数字）",
+      !!gtRule && /white-space:\s*pre/.test(gtRule[0]), gtRule ? gtRule[0].replace(/\s+/g, " ").slice(0, 56) : "找不到 .gt 规则");
+    const taskNums = $("#gtTask").textContent.split("\n").length;
+    const codeLines = String($("#ideTa").value).split("\n").length;
+    ok("行号 = 题面行 + 代码行，题面从 1 起、代码接着往下数",
+      taskNums >= 3 && /^1\n/.test($("#gtTask").textContent + "\n") &&
+      Number($("#gtCode").textContent.split("\n")[0]) === taskNums + 1 &&
+      $("#gtCode").textContent.split("\n").length === codeLines,
+      "题面 " + taskNums + " 行 + 代码 " + codeLines + " 行");
+  }
+  {
+    const root = $("#ideRoot");
+    const before = root.style.getPropertyValue("--ide-fs");
+    $("#ideEditor").dispatchEvent(new W.MouseEvent("wheel", { ctrlKey: true, bubbles: true, cancelable: true }));
+    const after = root.style.getPropertyValue("--ide-fs");
+    ok("Ctrl+滚轮 调编辑器字号，并存在本机（Ctrl+0 回 14）",
+      before !== after && /^\d+px$/.test(after) && W.localStorage.getItem("miao_ide_fs") === parseInt(after, 10) + "",
+      before + " → " + after);
+  }
+  type($("#ideTa"), "print(  'hello     world'  )");
+  click($("#ideRun"));
   await sleep(800);
-  type(w, $("#apName", w), "测试老师");
-  type(w, $("#apIntro", w), "E2E 测试申请");
-  if ($("#apAgree", w)) $("#apAgree", w).checked = true;
-  click(w, $("#apSubmit", w));
+  ok("内置沙箱真跑起来了：终端里看到输出与退出码",
+    /hello\s+world/.test(txt("#term")) && /退出码 0/.test(txt("#term")), txt("#term").slice(-46));
+  type($("#ideTa"), "print('喵要考试')");
+  click($("#ideSubmit"));
   await sleep(1000);
-  ok("申请通过成为老师", /认证老师/.test(txt(w, ".me-head")) || /已经是认证老师/.test(txt(w, "#app")));
-  w.location.hash = "#/editor";
+  ok("错解交卷判不过，也不给完成标记",
+    /未通过/.test(txt("#ideResult")) &&
+    (JSON.parse(W.localStorage.getItem("miao_exam_results") || "{}").python || {}).l01 === undefined,
+    txt("#stScore"));
+  type($("#ideTa"), "print( 'hello world' )");
+  click($("#ideSubmit"));
   await sleep(1000);
-  ok("老师可进入创作中心", !!$("#edTitle", w) && !!$("#edPublish", w));
-  ok("创作中心带三图上传槽", $$(".slot", w).length === 3);
+  ok("多打空格仍判 100 通过（需求：不能因为一个空格判错）", /100\/100 · 通过/.test(txt("#ideResult")), txt("#ideResult").slice(0, 22));
+  ok("交卷后自动翻到「判定清单」页签，徽章上写出分数",
+    !!$(".panel-tabs .pt[data-pt=\"judge\"].on") && /分/.test(txt("#ptJudge")), txt("#ptJudge"));
+  ok("逐项检测每条都写了「检测到了什么」",
+    $$("#ideResult .ck-saw").length >= 3 && $$("#ideResult .ck-saw").every((e) => e.textContent.trim().length > 6),
+    $$("#ideResult .ck-saw").length + " 条");
+  ok("成绩与完成标记都落到本机",
+    (JSON.parse(W.localStorage.getItem("miao_progress") || "{}").python || []).indexOf("l01") >= 0 &&
+    !!((JSON.parse(W.localStorage.getItem("miao_exam_results") || "{}").python || {}).l01 || {}).passed,
+    W.localStorage.getItem("miao_exam_results"));
+  click($("#ideExit"));
+  await sleep(1100);
+  ok("回课文看到「已考过」", /已考过/.test(txt(".art-ops")) && !$("#doneBtn"), txt(".art-ops").slice(0, 40));
+  ok("退出考场后 body 的 exam-mode 摘掉，导航条与页脚回来", !W.document.body.classList.contains("exam-mode"),
+    W.document.body.className || "(无类名)");
+  W.location.hash = "#/exam/python/l01";
+  await sleep(1500);
+  ok("草稿留在本机：退出再进来自己写的代码还在", String($("#ideTa").value || "").indexOf("hello world") >= 0,
+    JSON.stringify(String($("#ideTa").value).slice(0, 26)));
 
-  /* 公告：设置菜单 → 弹层 */
-  click(w, $("#gearBtn", w));
-  await sleep(300);
-  click(w, $("#annItem", w));
-  await sleep(700);
-  ok("设置菜单可打开公告弹层", !!$("#annClose", w) && txt(w, ".modal").indexOf("喵站上线") >= 0);
-  click(w, $("#annClose", w));
-  await sleep(300);
-  /* 页脚：版权 / 赞助（二维码懒加载）；托管站点无需备案，页脚不得出现备案号占位 */
-  ok("页脚两段：版权声明 / 赞助，且无备案号占位",
-    txt(w, "footer").indexOf("开源教程站") >= 0 && txt(w, "footer").indexOf("赞助") >= 0 &&
-    txt(w, "footer").indexOf("备案") < 0);
-  ok("懒加载：点击前二维码不加载", !$("#sponsorQr img", w) && $("#sponsorQr", w) === null);
-  click(w, $("#sponsorBtn", w));
-  await sleep(700);
-  ok("点击赞助 → 弹层加载代码生成的二维码", !!$("#sponsorQr img", w) &&
-    ($("#sponsorQr img", w).src || "").indexOf("donate-qr.png") >= 0);
-  click(w, $("#spClose", w));
-  await sleep(400);
-  const popEl2 = $("#sponsorPop", w);
-  console.log("[dbg-close] popClass=", popEl2 && popEl2.className, "| innerLen=", popEl2 ? popEl2.innerHTML.length : -1);
-  ok("关闭后弹层与二维码资源释放", $("#sponsorQr img", w) === null && $("#sponsorQr", w) === null);
+  /* 预置文件：原来靠「考试目录」那块列出来，面板删掉之后必须留在题面里 */
+  W.location.hash = "#/exam/python/l41";
+  await sleep(1600);
+  ok("带预置文件的课题，题面里点名给出文件名与读法",
+    /# 预置文件：台账\.txt/.test(txt("#ideTask")) && /open\("台账\.txt"\)/.test(txt("#ideTask")),
+    txt("#ideTask").split("\n").filter((l) => /预置文件/.test(l))[0] || "题面里没有预置文件那行");
+  ok("换一场考试，exam-mode 仍然挂着（不是只在第一次进时生效）",
+    W.document.body.classList.contains("exam-mode"), W.document.body.className || "(无类名)");
 
+  /* ---------- 5. 英语卷 ---------- */
+  W.location.hash = "#/read/english/en-c01";
+  await sleep(1200);
+  ok("英语章也挂考试，提示按卷型换了话", !!$(".exam-entry") && /听音|听力/.test(txt(".exam-note")), txt(".exam-note").slice(0, 46));
+  W.location.hash = "#/exam/english/en-c01";
+  await sleep(1800);
+  ok("英语卷：一场 25 题", $$(".en-card-q").length === 25, $$(".en-card-q").length + " 题");
+  ok("英语卷：听力题都带「听」按钮", $$(".eq-play").length >= 10, $$(".eq-play").length + " 个播放键");
+  /* 勾线题：点左再点右要真画出一条线，× 要能撤销 —— 从前参照系算错，线画到 SVG 外面，看着就是「连不上」 */
+  {
+    const mc = $$(".en-match")[0];
+    if (!mc) ok("卷子里有勾线题", false, "没找到 .en-match");
+    else {
+      const L = $$('.en-node[data-side="l"]', mc), R = $$('.en-node[data-side="r"]', mc);
+      const paths = () => $$("svg.en-lines path", mc).length;
+      click(L[0]); await sleep(120);
+      ok("勾线题：左边选中会有高亮态", !!$(".en-node.sel", mc) || L[0].classList.contains("sel"), "");
+      click(R[0]); await sleep(200);
+      ok("勾线题：点左边再点右边，中间真画出一条线", paths() === 1, paths() + " 条线");
+      ok("连上的两端都标成已连线", $$(".en-node.linked", mc).length === 2, $$(".en-node.linked", mc).length + " 个");
+      click(L[0]); await sleep(120); click(R[1]); await sleep(200);
+      ok("同一个左项改连别的右项，不会留下两条线", paths() === 1, paths() + " 条线");
+      const un = $("[data-un]", mc);
+      click(un); await sleep(200);
+      ok("配对项上的 × 能撤销这条线", paths() === 0, paths() + " 条线");
+    }
+  }
+  {
+    /* 单选：原生 radio 点已选中的不会自己取消，考生改不了主意 */
+    const card = $$(".en-card-q")[0], opt = $$('input[type=radio]', card)[0];
+    const prog0 = txt("#enProg");
+    opt.checked = true; opt.dispatchEvent(new W.Event("change", { bubbles: true }));
+    await sleep(120);
+    const prog1 = txt("#enProg");
+    click(opt); await sleep(160);
+    ok("单选：再点一次已选中的那一项 = 取消选择",
+      opt.checked === false && prog1 !== prog0 && txt("#enProg") === prog0, prog0 + " ｜ " + prog1 + " ｜ " + txt("#enProg"));
+  }
+  ok("长文字不再撑破卡片：选项栏与两栏都按 minmax(0,1fr) 收缩，节点文字可断行",
+    /\.en-opts\s*\{[^}]*minmax\(0,\s*1fr\)/.test(CSS_TEXT) &&
+    /\.en-cols\s*\{[^}]*minmax\(0,\s*1fr\)/.test(CSS_TEXT) &&
+    /\.en-node span\s*\{[^}]*overflow-wrap:\s*anywhere/.test(CSS_TEXT) &&
+    /\.en-qprompt\s*\{[^}]*min-width:\s*0/.test(CSS_TEXT), "");
+  ok("勾线中间留出了画线的通道（不会被两栏挤成 0）",
+    /\.en-cols\s*\{[^}]*minmax\(76px,\s*128px\)/.test(CSS_TEXT) &&
+    /\.en-col\.right\s*\{\s*grid-column:\s*3/.test(CSS_TEXT),
+    "绝对定位的 SVG 不占网格轨道，两栏必须点名站第 1 / 第 3 轨");
+  {
+    const urls = Array.from(new Set($$(".eq-play").map((b) => b.getAttribute("data-audio"))));
+    const bad = [];
+    for (const u of urls) {
+      try {
+        const h = await fetch(BASE + String(u).replace(/^\//, ""), { method: "HEAD" });
+        if (!h.ok) bad.push(u + "→" + h.status);
+      } catch (e) { bad.push(u + "→" + e.message); }
+    }
+    ok("音频随站点一起发布，静态目录里都取得到", urls.length > 0 && bad.length === 0, urls.length + " 个地址 ｜ " + bad.slice(0, 2).join("，"));
+    ok("音频走 /assets/audio/（不再是后端的 /audio/）", urls.every((u) => u.indexOf("/assets/audio/") === 0), urls[0]);
+  }
+  {
+    const asked = [];
+    W.confirm = function (msg) { asked.push(String(msg)); return false; };
+    click($("#enSubmit"));
+    await sleep(700);
+    ok("空题交卷前先拦一道：告诉你还剩几题没做", asked.length === 1 && /没做完/.test(asked[0]), asked[0] || "没弹确认");
+    ok("点了取消就不交卷", !$("#enResult") || txt("#enResult") === "");
+    W.confirm = function () { return true; };
+    click($("#enSubmit"));
+    await sleep(1100);
+    ok("空卷交卷判 0 分不过，逐题回「你答了什么、正确的是什么」",
+      /0\/100/.test(txt("#enResult")) && $$(".en-review .ck-saw").length >= 20,
+      txt("#enResult").slice(0, 26) + " ｜ 复盘 " + $$(".en-review .ck-saw").length + " 条");
+    W.confirm = undefined;
+  }
+
+  /* ---------- 5.5 英语入门（20 课 200 词）：单词卡与 21 场考卷 ---------- */
+  {
+    const before = reqLog.length;
+    W.location.hash = "#/tutorial/enwords";
+    await sleep(1600);
+    ok("英语入门详情页：21 章目录", $$(".chap-item").length === 21, "章 " + $$(".chap-item").length);
+    ok("点开这门课才拉它的正文", reqLog.slice(before).some((u) => /enwords-data\.js$/.test(u)),
+      reqLog.slice(before).join("，") || "没新增请求");
+    const hero = $(".tut-hero .cover-img");
+    ok("封面是代码画的 SVG，走站内路径", !!hero && /^\/assets\/img\/covers\/enwords\.svg$/.test(hero.getAttribute("src")),
+      hero ? hero.getAttribute("src") : "没有封面图");
+    ok("目录最后一课是结课总复习", /结课总复习/.test(txt("#app")), "");
+
+    W.location.hash = "#/read/enwords/ew-l01";
+    await sleep(1500);
+    const cards = $$(".en-card-word");
+    ok("第 1 课摆出 10 张单词卡", cards.length === 10, cards.length + " 张");
+    /* 注意：这套测试的 $ 助手是 (窗口, 选择器) 的语义，$(选择器, 元素) 会退回整篇文档去查 ——
+       逐元素检查必须直接 c.querySelector，否则「每张卡都齐」会变成「文档里有一张齐的」。 */
+    ok("每张卡齐：单词 + 词性 + 音标 + 中文 + 短语 + 播放键",
+      cards.every((c) => ["en-word-glyph", "en-word-pos", "en-ipa", "en-cn", "en-w", "en-play"]
+        .every((cls) => !!c.querySelector("." + cls))), "");
+    ok("每张卡的读音地址都指向这个词自己的 mp3",
+      cards.every((c) => {
+        const w = c.getAttribute("data-en-k").toLowerCase();   // 字块里还夹着词性，取卡片自己的键
+        const src = c.querySelector(".en-play").getAttribute("data-en-src") || "";
+        return src === "/assets/audio/words/" + w + ".mp3";
+      }), cards.length ? cards[0].querySelector(".en-play").getAttribute("data-en-src") : "");
+    ok("第一张卡是 hello /həˈləʊ/",
+      /hello/.test(txt(".en-card-word .en-word-glyph")) && /hə/.test(txt(".en-card-word .en-ipa")),
+      txt(".en-card-word").replace(/\s+/g, " ").slice(0, 40));
+    ok("每课一张讲机制的图（音素数阶梯）", $$(".art-svg svg").length >= 1, $$(".art-svg svg").length + " 张");
+    ok("课式骨架齐：目标 / 单词卡 / 读音要点 / 怎么记 / 常见坑 / 任务 / 一句话",
+      ["本课目标", "单词卡", "读音要点", "怎么记", "常见坑", "任务", "本课一句话"].every((k) => txt(".article").indexOf(k) >= 0),
+      txt(".article").replace(/\s+/g, " ").slice(0, 60));
+    {
+      const urls = Array.from(new Set($$(".en-card-word .en-play").map((b) => b.getAttribute("data-en-src"))));
+      const bad = [];
+      for (const u of urls) {
+        try {
+          const h = await fetch(BASE + u.replace(/^\//, ""), { method: "HEAD" });
+          if (!h.ok) bad.push(u + "→" + h.status);
+        } catch (e) { bad.push(u + "→" + e.message); }
+      }
+      ok("这一课 10 条读音都取得到", urls.length === 10 && bad.length === 0, bad.slice(0, 3).join("，") || urls.length + " 条");
+    }
+    ok("单词卡不预载音频（点了才拉，页面里没有 audio 元素）",
+      $$(".en-card-word audio").length === 0 && $$("article audio").length === 0,
+      "audio 元素 " + $$("article audio").length + " 个");
+    ok("这一课排了考：只有「进入考试」，没有「完成！」", !!$(".exam-entry") && !$("#doneBtn"), txt(".art-ops").slice(0, 36));
+  }
+  {
+    const before = reqLog.length;
+    W.location.hash = "#/exam/enwords/ew-l01";
+    await sleep(2400);
+    ok("进考场才拉这门课的题包（考场脚本若已在别的课上拉过就不重复要）",
+      reqLog.slice(before).some((u) => /enword-exam-data\.js$/.test(u)) &&
+      reqLog.some((u) => /exam-en\.js$/.test(u)) && !shellJs.some((u) => /exam/.test(u)),
+      reqLog.slice(before).join("，"));
+    ok("课末卷 14 题：勾线 2 组、补全与默写共 5 个输入框",
+      $$(".en-card-q").length === 14 && $$(".en-match").length === 2 && $$(".en-write").length === 5,
+      $$(".en-card-q").length + " 题 ｜ 勾线 " + $$(".en-match").length + " ｜ 输入框 " + $$(".en-write").length);
+    ok("补全与默写不给「听」按钮（一听等于把答案念出来）",
+      $$(".en-card-q").filter((c) => /把单词补全|用英语怎么写/.test(c.textContent) &&
+        c.querySelector(".eq-play")).length === 0 &&
+      $$(".en-card-q").filter((c) => /把单词补全|用英语怎么写/.test(c.textContent)).length === 5, "");
+    /* 只有听力题在答题时给播放键：选择题一「听」就等于把答案念出来了 */
+    ok("听音选词 3 题各带一个播放键，选择题一个都不带",
+      $$(".en-card-q").filter((c) => /听录音/.test(c.textContent) && c.querySelector(".eq-play")).length === 3 &&
+      $$(".en-card-q").filter((c) => /对应的英文单词/.test(c.textContent) && c.querySelector(".eq-play")).length === 0,
+      "听力键 " + $$(".en-card-q").filter((c) => /听录音/.test(c.textContent) && c.querySelector(".eq-play")).length +
+      " ｜ 选择题误带的键 " + $$(".en-card-q").filter((c) => /对应的英文单词/.test(c.textContent) && c.querySelector(".eq-play")).length);
+    {
+      const asked = [];
+      W.confirm = (m) => { asked.push(String(m)); return true; };
+      click($("#enSubmit"));
+      await sleep(1000);
+      ok("空卷判 0 分不通过，逐题都回「正确的是什么」",
+        /0\/100/.test(txt("#enResult")) && $$(".en-review li").length === 14,
+        txt("#enResult").replace(/\s+/g, " ").slice(0, 22) + " ｜ 复盘 " + $$(".en-review li").length + " 条");
+      W.confirm = undefined;
+    }
+    {
+      const res = JSON.parse(W.localStorage.getItem("miao_exam_results") || "{}");
+      const prog = JSON.parse(W.localStorage.getItem("miao_progress") || "{}");
+      ok("没考过就不写成绩也不打完成标记",
+        !((res.enwords || {})["ew-l01"] || {}).passed && !((prog.enwords || []).length),
+        JSON.stringify(res.enwords || {}) + " ｜ " + JSON.stringify(prog.enwords || []));
+    }
+    W.location.hash = "#/exam/enwords/ew-l21";
+    await sleep(2200);
+    ok("结课大考 20 题、范围写明 200 个词",
+      $$(".en-card-q").length === 20 && /200 个词/.test(txt(".en-intro")),
+      $$(".en-card-q").length + " 题 ｜ " + txt(".en-intro").replace(/\s+/g, " ").slice(0, 34));
+  }
+
+  /* ---------- 6. 收藏（本机） ---------- */
+  W.location.hash = "#/tutorial/english";
+  await sleep(1200);
+  click($("#favBtn"));
+  await sleep(900);
+  ok("点收藏写进本机 localStorage", (JSON.parse(W.localStorage.getItem("miao_favs") || "[]")).indexOf("english") >= 0,
+    W.localStorage.getItem("miao_favs"));
+  ok("按钮变「已收藏」", /已收藏/.test(txt("#favBtn")), txt("#favBtn"));
+  click($("#favBtn"));
+  await sleep(900);
+  ok("再点取消收藏", (JSON.parse(W.localStorage.getItem("miao_favs") || "[]")).indexOf("english") < 0);
+
+  /* ---------- 7. 页脚「成为老师」= 一个邮箱 ---------- */
+  {
+    const btn = W.document.getElementById("teacherBtn");
+    ok("页脚有「成为老师」入口", !!btn && /成为老师/.test(btn.textContent));
+    click(btn);
+    await sleep(700);
+    const pop = W.document.getElementById("teacherPop");
+    ok("点开出现邮箱与两个动作（复制 / 发邮件）",
+      !!pop && /m15781851831@163\.com/.test(pop.textContent) && !!$(".copy-btn", pop) && !!$("a[href^='mailto:']", pop),
+      pop ? pop.textContent.replace(/\s+/g, " ").slice(0, 74) : "没弹层");
+    var cp = pop && pop.querySelector ? pop.querySelector(".copy-btn") : null;
+    ok("复制按钮带的就是那个邮箱", !!cp && cp.getAttribute("data-code") === "m15781851831@163.com", cp ? "有" : "没有复制按钮");
+    click($("#tpClose", pop));
+    await sleep(500);
+    ok("关闭后弹层收起并清空", W.document.getElementById("teacherPop").className === "hidden");
+  }
+
+  /* ---------- 8. 反向断言 ---------- */
+  W.location.hash = "#/login";
+  await sleep(900);
+  ok("旧账号路由已经不存在：#/login 落到 404", /404/.test(txt("#app")), txt("#app").slice(0, 30));
+  ok("全程零次 /api 请求（真的没有后端了）", apiCalls.length === 0, apiCalls.slice(0, 3).join("，"));
+  /* ---------- 按需加载的账 ---------- */
+  ok("首屏只拉壳与目录：5 份 js，一份正文都没有",
+    shellJs.length === 5 && shellJs.every((u) => /\/assets\/(js|data)\/(theme-boot|site|index|data|app)\.js$/.test(u)),
+    shellJs.join("，"));
+  ok("没点开的课一个字节都不下载：BYOX 与微软正文都没被请求",
+    !reqLog.some((u) => /byox/.test(u)) && !reqLog.some((u) => /\/data\/ms\//.test(u)),
+    reqLog.filter((u) => /byox|\/data\/ms\//.test(u)).slice(0, 3).join("，") || "干净");
+  ok("Python 正文是点开 python 才拉的（10 份分片都在那之后）",
+    reqLog.some((u) => /\/data\/py\/legacy\.js$/.test(u)) && reqLog.some((u) => /\/data\/py-data\.js$/.test(u)), "");
+  ok("沙箱四份只在进 Python 考场时才进来",
+    reqLog.some((u) => /\/js\/py-engine\.js$/.test(u)) && reqLog.some((u) => /\/js\/py-stdlib\.js$/.test(u)), "");
+  {
+    W.location.hash = "#/search?q=watermelon";
+    await sleep(900);
+    const hitWord = $$(".s-item").length;
+    W.location.hash = "#/search?q=" + encodeURIComponent("模拟输入");
+    await sleep(900);
+    const hitBody = $$(".s-item").length;
+    ok("搜单词表里的词能命中课程（走目录带的 keywords，不拉正文）",
+      hitWord >= 1, hitWord + " 条");
+    ok("只出现在正文里的词搜不到 —— 这是「用不到的不加载」换来的口径，界面上也写明了",
+      hitBody === 0 && /搜索范围：课程名、章节标题/.test(W.document.body.textContent),
+      hitBody + " 条命中");
+  }
   ok("无未捕获运行期错误", vcErrors.length === 0, vcErrors.slice(0, 2).join(" ｜ "));
 
-  if (server) { server.kill("SIGKILL"); }
+  await server.close();
   console.log(results.join("\n"));
   const fail = results.filter((x) => x.startsWith("FAIL")).length;
   console.log("\n合计：" + results.length + " 项，失败 " + fail + " 项");
   process.exit(fail ? 1 : 0);
-})().catch((e) => { console.log("FATAL: " + (e && e.stack || e)); process.exit(2); });
+})().catch(async (e) => {
+  console.log(results.join("\n"));
+  console.log("FATAL: " + ((e && e.stack) || e));
+  if (server) await server.close();
+  process.exit(2);
+});

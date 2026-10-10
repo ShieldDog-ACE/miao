@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>喵站 · 简单学编程喵~</title>
-  <meta name="description" content="喵站：体系化编程图文教程，游客免登录畅读，人人可申请成为老师发布教程。">
+  <meta name="description" content="喵站：体系化图文教程，不用注册不用登录，课末考试与代码运行都在浏览器里完成，内容永久免费。双击 index.html 就能开，任何静态托管都能上。">
   <script src="assets/js/theme-boot.js"></script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23e75490'/%3E%3Ctext x='16' y='21' font-size='14' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%E5%96%B5%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -15,12 +15,11 @@
       <a class="logo" href="#/"><b>喵站</b><span>MIAO&nbsp;DEV</span></a>
       <nav class="nav-links">
         <a href="#/">首页</a>
-        <a href="#/apply">成为老师</a>
       </nav>
       <div class="nav-search">
-        <input id="navSearch" type="search" placeholder="搜索教程 / 章节 / 作者，回车搜索" aria-label="搜索">
+        <input id="navSearch" type="search" placeholder="搜索教程 / 章节标题 / 作者，回车搜索" aria-label="搜索">
       </div>
-      <!-- 右上角：齿轮设置在左，头像在右 -->
+      <!-- 右上角只有一个齿轮：公告、主题、字号 -->
       <div class="nav-right" id="navRight"></div>
     </div>
   </header>
@@ -30,14 +29,26 @@
   <footer>
     <div class="container">
       <span>© 2026 喵站 Miao · 开源教程站，内容永久免费</span>
+      <button class="foot-link" id="teacherBtn" type="button">成为老师</button>
       <button class="foot-link" id="sponsorBtn" type="button">赞助</button>
     </div>
   </footer>
 
+  <div id="teacherPop" class="hidden"></div>
   <div id="sponsorPop" class="hidden"></div>
 
   <div id="toast"></div>
-  <script src="assets/js/api.js"></script>
+
+  <!-- ── 首屏就这五份，共 ~120 KB（纯静态、无后端、不拉服务） ─────────────────────
+       site.js   登记清单：每门课要加载哪些脚本、考场用哪套引擎
+       index.js  目录：课程元信息 + 每章标题 + 排考情况（dev/tools/gen-index.js 生成）
+       data.js   本地数据层 + 按需加载器
+       app.js    视图与路由
+       正文、题库、沙箱、音频一律不在这里：<script> 由 data.js 在「点开那一门课」时注入。
+       谁把 assets/data/*.js 往这里补一行，首屏就退回 3 MB —— 加课请改 site.js 再跑 gen-index.js。 -->
+  <script src="assets/data/site.js"></script>
+  <script src="assets/data/index.js"></script>
+  <script src="assets/js/data.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>

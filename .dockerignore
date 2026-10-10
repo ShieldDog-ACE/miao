@@ -1,46 +1,39 @@
 # 构建镜像时排除的东西（build context = 仓库根）
 #
-# ⚠️ 下面这几组是安全红线，别删：一旦漏进 context，本地密钥与测试数据就会被打进镜像。
-#    路径同时写「裸名」和「**/名」两种形式 —— Docker 的 ignore 通配不跨目录，
-#    只写 data/ 是挡不住 dev/backend/data/ 的。
+# ⚠️ 一条铁律：别写 `data` 或 `**/data`。
+#    站点的正文与题库就在 dev/frontend/assets/data/ 下面，
+#    Docker 的 ignore 通配不跨目录，`**/data` 会把整个教程目录挡在镜像外。
 
+# ── 密钥与本地配置（当前站点不需要，但这条规矩留着）──
 .env
-**/.env
 .env.local
-**/.env.local
-config.json
-**/config.json
-**/config.local.json
+**/.env
+config.local.json
 
-data
-**/data
-uploads
-**/uploads
-
-*.db
-**/*.db
-*.db-wal
-**/*.db-wal
-*.db-shm
-**/*.db-shm
-*.sqlite
-**/*.sqlite
-
-# 内部资料 / 回收站 / 打包产物
+# ── 仓库与本地杂物 ──
+.git
+**/.git
 .workbuddy
 **/.workbuddy
 .Trash-0
 **/.Trash-0
 dist
 **/dist
-.git
-**/.git
 prod
-
-# 文档与依赖（运行时用不到）
-*.md
-**/*.md
-node_modules
-**/node_modules
 *.log
 **/*.log
+.DS_Store
+Thumbs.db
+
+# ── 依赖与开发期工具（nginx 只发文件，运行时什么都不需要）──
+node_modules
+**/node_modules
+dev/tests
+dev/tools
+dev/PLAN.md
+dev/任务书.md
+
+# ── 文档（镜像里用不到）──
+*.md
+**/*.md
+!dev/frontend/**/*.md

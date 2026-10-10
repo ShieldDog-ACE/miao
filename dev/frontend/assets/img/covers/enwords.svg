@@ -1,0 +1,103 @@
+<!-- 喵站 · 英语入门（200 词）封面。纯代码绘制，无外部依赖。
+     与站内其它封面同族：妃色纸面 + 细网格底，品牌粉 #fb7da8 点睛，本课主色用蓝 #2f6feb，
+     与「英语发音入门」那门课的青绿分开。画面就是这门课的三样东西：
+     单词卡（单词 / 音标 / 词性 / 中文）、主题芯片、读音声波。字形全用系统 sans，不引外部字体。 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="英语入门 20 课 200 个基础单词 封面">
+  <defs>
+    <linearGradient id="bgw" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffdf9"/>
+      <stop offset="1" stop-color="#e9f0fb"/>
+    </linearGradient>
+    <linearGradient id="gwb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6ea8f7"/>
+      <stop offset="1" stop-color="#2f6feb"/>
+    </linearGradient>
+    <pattern id="dots" x="0" y="0" width="7" height="7" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="5" height="5" rx="1.5" fill="#9dc0ef"/>
+    </pattern>
+  </defs>
+
+  <rect width="640" height="360" fill="url(#bgw)"/>
+  <g stroke="#a9c3e0" stroke-opacity=".5">
+    <path d="M0 72H640M0 144H640M0 216H640M0 288H640"/>
+    <path d="M80 0V360M160 0V360M240 0V360M320 0V360M400 0V360M480 0V360M560 0V360"/>
+  </g>
+
+  <!-- 单词卡：一个词 = 单词 + 音标 + 词性中文，就是这门课里每张卡的样子 -->
+  <g transform="translate(56,48)">
+    <rect x="0" y="0" width="198" height="130" rx="18" fill="url(#gwb)"/>
+    <text x="20" y="52" font-size="37" font-weight="800" fill="#0b2f6b"
+          font-family="Inter, Helvetica, Arial, sans-serif">apple</text>
+    <text x="20" y="80" font-size="18" fill="#154484"
+          font-family="JetBrains Mono, SFMono-Regular, Consolas, monospace">/ˈæpl/</text>
+    <text x="20" y="106" font-size="16" fill="#0b2f6b"
+          font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">n. 苹果</text>
+    <circle cx="170" cy="104" r="17" fill="#ffffff" fill-opacity=".93"/>
+    <path d="M165 97 L177 104 L165 111 Z" fill="#2f6feb"/>
+  </g>
+
+  <!-- 主题芯片：20 个主题里挑 12 个摆成 4×3，一枚用品牌粉点出「这一枚是当下在听的」 -->
+  <g font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif" font-size="14" fill="#2b5fa8">
+    <g transform="translate(278,48)">
+      <rect x="0" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="39" y="20" text-anchor="middle">打招呼</text>
+      <rect x="88" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="127" y="20" text-anchor="middle">家庭</text>
+      <rect x="176" y="0" width="78" height="30" rx="15" fill="#fde8f0" stroke="#f4b9d1"/><text x="215" y="20" text-anchor="middle" fill="#e0578b">数字</text>
+      <rect x="264" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="303" y="20" text-anchor="middle">颜色</text>
+    </g>
+    <g transform="translate(278,86)">
+      <rect x="0" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="39" y="20" text-anchor="middle">时间</text>
+      <rect x="88" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="127" y="20" text-anchor="middle">疑问词</text>
+      <rect x="176" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="215" y="20" text-anchor="middle">形容词</text>
+      <rect x="264" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="303" y="20" text-anchor="middle">天气</text>
+    </g>
+    <g transform="translate(278,124)">
+      <rect x="0" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="39" y="20" text-anchor="middle">学校</text>
+      <rect x="88" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="127" y="20" text-anchor="middle">身体</text>
+      <rect x="176" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="215" y="20" text-anchor="middle">食物</text>
+      <rect x="264" y="0" width="78" height="30" rx="15" fill="#ffffff" stroke="#c5daf5"/><text x="303" y="20" text-anchor="middle">动词</text>
+    </g>
+    <text x="278" y="176" font-size="13" fill="#7a8aa0">共 20 个主题 · 每个主题 10 个词</text>
+  </g>
+
+  <!-- 读音声波：每张卡都能点着听 -->
+  <g transform="translate(56,200)" fill="#2f6feb">
+    <rect x="0"   y="12" width="6" height="18" rx="3" opacity=".5"/>
+    <rect x="13"  y="4"  width="6" height="34" rx="3" opacity=".7"/>
+    <rect x="26"  y="0"  width="6" height="42" rx="3"/>
+    <rect x="39"  y="9"  width="6" height="24" rx="3" opacity=".8"/>
+    <rect x="52"  y="15" width="6" height="12" rx="3" opacity=".45"/>
+    <rect x="65"  y="3"  width="6" height="36" rx="3" opacity=".85"/>
+    <rect x="78"  y="11" width="6" height="20" rx="3" opacity=".6"/>
+    <rect x="91"  y="1"  width="6" height="40" rx="3"/>
+    <rect x="104" y="14" width="6" height="14" rx="3" opacity=".5"/>
+    <rect x="117" y="6"  width="6" height="30" rx="3" opacity=".75"/>
+    <rect x="130" y="12" width="6" height="18" rx="3" opacity=".55"/>
+    <rect x="143" y="0"  width="6" height="42" rx="3" fill="#fb7da8"/>
+    <rect x="156" y="9"  width="6" height="24" rx="3" opacity=".7"/>
+    <rect x="169" y="16" width="6" height="10" rx="3" opacity=".4"/>
+    <rect x="182" y="5"  width="6" height="32" rx="3" opacity=".8"/>
+    <rect x="195" y="13" width="6" height="16" rx="3" opacity=".55"/>
+    <rect x="208" y="2"  width="6" height="38" rx="3" opacity=".9"/>
+    <rect x="221" y="10" width="6" height="22" rx="3" opacity=".65"/>
+  </g>
+  <g transform="translate(300,208)">
+    <rect x="0" y="0" width="112" height="26" rx="13" fill="#e8f0fc" stroke="#a9c7e8"/>
+    <text x="56" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#2b5fa8"
+          font-family="Inter, PingFang SC, sans-serif">点卡听读音</text>
+  </g>
+
+  <!-- 20 列 × 10 行 = 200 个点：这门课的全部家底。
+       点阵用 pattern 铺，尺寸按 7px 一格算死，画出来的就是 20×10，不靠手数矩形。 -->
+  <g transform="translate(430,196)">
+    <rect x="0" y="0" width="139" height="69" fill="url(#dots)"/>
+    <text x="0" y="88" font-size="12" fill="#8fa4bd"
+          font-family="Inter, PingFang SC, sans-serif">20 列 × 10 行 = 200 个词</text>
+  </g>
+
+  <!-- 字标 -->
+  <g font-family="Inter, PingFang SC, HarmonyOS Sans SC, Microsoft YaHei, sans-serif">
+    <text x="56" y="300" font-size="42" font-weight="800" fill="#2c2a2e">英语入门</text>
+    <text x="230" y="300" font-size="26" font-weight="600" fill="#2f6feb">200 词</text>
+    <text x="56" y="330" font-size="15" fill="#7f8c9a" letter-spacing="1.5">20 课 · 每课 10 词 · 音标 中文 短语 · 每课一场小考</text>
+  </g>
+</svg>
