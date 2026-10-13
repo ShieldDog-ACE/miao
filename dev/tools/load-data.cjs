@@ -1,8 +1,8 @@
 /* 喵站 · 数据加载器（测试与工具专用，和 index.html 的引入顺序完全一致）
  *
  * 为什么要有这一份：py-data.js 从第四轮起是「装配层」，它本身不含正文，
- * 正文在 data/py/legacy.js（旧稿兜底）与 data/py/p1…p7.js（新稿）里。
- * 谁想拿到 window.MIAO_PY，就必须按浏览器一样的顺序把这几份都跑一遍。
+ * 正文在 data/py/p1…p9.js 里（旧稿兜底那份 py/legacy.js 第十轮删了：48 章已全部由分部覆盖）。
+ * 谁想拿到 window.MIAO_PY，就必须按浏览器一样的顺序把这些份都跑一遍。
  * py-oracle.js / engine-test.js / lesson-audit.cjs 三处共用这一份，避免三个加载器各跑各的。
  */
 const fs = require("fs");
@@ -13,7 +13,7 @@ const DEV = path.resolve(__dirname, "..");
 const DATA = path.join(DEV, "frontend", "assets", "data");
 
 function pyFiles() {
-  const files = [path.join(DATA, "site.js"), path.join(DATA, "py", "legacy.js")];
+  const files = [path.join(DATA, "site.js")];
   /* 分部文件按名字排序扫进来（p1、p10、p2… 字典序不影响正确性：每份只管自己的章 id） */
   fs.readdirSync(path.join(DATA, "py")).filter(function (f) { return /^p\d+\.js$/.test(f); }).sort(function (a, b) {
     return parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10);

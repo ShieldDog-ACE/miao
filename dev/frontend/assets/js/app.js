@@ -1394,6 +1394,8 @@
 
   async function router() {
     var r = parseHash(), s = r.seg;
+    /* 读者一动（换页、进考场、回首页），正在跑的预取立刻让路 —— 补齐别的分片永远不是当前的事 */
+    if (API.stopPrefetch) API.stopPrefetch();
     /* 考场是整屏界面：站点导航条与页脚让位（否则 sticky 的导航条会盖住标题栏的运行/交卷） */
     document.body.classList.toggle("exam-mode", s[0] === "exam");
     if (!BE.ready && !BE.error) await BE.boot();
@@ -1401,18 +1403,17 @@
     /* 正文与考场脚本都是点开才拉的：先给一句到位的等待提示，别让人对着不动的旧页面猜 */
     var wantId = s[1];
     var needFetch = (s[0] === "tutorial" || s[0] === "read" || s[0] === "exam") &&
-      wantId && API._local && !API._local.full[wantId];
+      wantId && !API.bodyReady(wantId, s[2] || "");
     if (needFetch) {
-      app.innerHTML = '<div class="container"><div class="empty">正在把这一门课的正文取过来…</div></div>';
+      app.innerHTML = '<div class="container"><div class="empty">' +
+        (s[0] === "tutorial" ? "正在取这本教程的目录…" : "正在取这一课的正文…") + "</div></div>";
     }
     try {
       if (s[0] === "tutorial" && s[1]) {
         await BE.ensureTutorial(s[1]);
       } else if (s[0] === "read" && s[1] && s[2]) {
         await BE.ensureTutorial(s[1]);
-        var rt = BE.find(s[1]);
-        var hasCh = rt && rt.chapters && rt.chapters.some(function (c) { return c.id === s[2]; });
-        try { await BE.loadChapter(s[1], s[2]); }       // 游客也可读；这一条会把那门课的正文脚本拉进来
+        try { await BE.loadChapter(s[1], s[2]); }       // 游客也可读；这一条只拉骨架 + 这一章的分片
         catch (e) { toast(e.message || "本章加载失败"); }
       } else if (s[0] === "exam" && s[1] && s[2]) {
         await BE.ensureTutorial(s[1]);                  // 考试要考哪一课，得先有章节目录
@@ -1424,7 +1425,11 @@
     if (s.length === 0) vCategory(r.params);
     else if (s[0] === "category") vCategory(r.params);
     else if (s[0] === "tutorial" && s[1]) vTutorial({ id: s[1] });
-    else if (s[0] === "read" && s[1] && s[2]) vRead({ id: s[1], cid: s[2] });
+    else if (s[0] === "read" && s[1] && s[2]) {
+        vRead({ id: s[1], cid: s[2] });
+        /* 这一章已经落在页面上了：人若没别的事，空了再把这本教程其余的分片补齐 */
+        if (API.prefetchCourse) API.prefetchCourse(s[1], s[2]);
+      }
     else if (s[0] === "exam" && s[1] && s[2]) {
       var UI = examUi();                            /* 考场脚本此刻才在 window 上 */
       if (!UI) { v404(); return; }

@@ -6,10 +6,16 @@
 
 正文、题库、音频都是静态文件；代码运行、判分、成绩、收藏、学习进度全在浏览器里。
 
-**首屏只拉 5 份脚本**（约 120 KB）：`theme-boot.js`、`site.js`、`index.js`、`data.js`、`app.js`。
-一门课的正文（Python 823 KB、微软四门各 240–316 KB、英语入门 168 KB）要**点进那门课才注入**；
-考场脚本与题库要**点进考场才注入**（Python 那套连沙箱四份一起）。
-没点开的课，一个字节都不下载 —— 这条由 `tests/ui-e2e.js` 里那 5 条请求账断言盯着。
+**首屏只拉 5 份脚本**：176 KB（gzip 57 KB）—— `theme-boot.js`、`site.js`、`index.js`、`data.js`、`app.js`。
+
+正文是**两层按需**（第十一轮起）：
+点进一门课，只注入那门课的**骨架 `boot`**（装配层 + 占位/骨架，3–63 KB）——详情页的章节目录靠 `index.js`
+里的章号与标题，一块正文都不为它来；点开哪一章，才拉**那一章的分片**（`chunks` 算出来的那一份，
+Python ≤43 KB、微软逐课 ≤12 KB、C++ ≤67 KB）；这一章落页后读者没别的事，`data.js` 才在空闲时
+按「离当前章就近」一片一片补齐同门其余分片，读者一动就立刻收手。没点开的课一个字节都不下载。
+考场脚本与题库要**点进考场才注入**（Python 那套连沙箱四份一起），进考场同样不为考试拖来整门课正文。
+这套账由 `tests/ui-e2e.js` 的 §7.9 那 12 条断言盯着（骨架一片都不来 / 打开一章只多那一片 /
+补齐是渐进且就近的 / 回首页就停 / 占位稿只在该它出场时拉 / 考场不拉正文）。
 
 ## 目录
 
@@ -31,9 +37,9 @@ dev/
 │       │   ├── exam-paper.js ← 笔试判分引擎（选择/多选/填空/补代码/写输出/排序），零 DOM
 │       │   └── exam-en.js    ← 英语出题与判分：字母 / 音标 / 单词三种池子
 │       ├── data/
-│       │   ├── site.js       ← 登记清单：分类、每门课要加载哪些脚本、考场用哪套引擎、公告、页脚邮箱
-│       │   ├── index.js      ← 【生成物】首屏目录：课程元信息 + 每章标题 + 排考情况 + 文件清单
-│       │   ├── py-data.js + py/*.js         ← Python 48 章（legacy 兜底 + p1…p9 新稿 + 装配层）
+│       │   ├── site.js       ← 登记清单：分类、每门课的骨架 boot 与正文 files、装配函数名、考场用哪套引擎、公告、页脚邮箱
+│       │   ├── index.js      ← 【生成物】首屏目录：课程元信息 + 每章标题 + 排考情况 + boot/chunks（这一章的正文在哪个文件）
+│       │   ├── py-data.js + py/*.js         ← Python 48 章（p1…p9 新稿 + 可重入装配层；legacy 死稿已删）
 │       │   ├── en-data.js                   ← 26 字母 / 48 音标 / 发音入门三章
 │       │   ├── enwords-data.js              ← 【生成物】英语入门：200 词 + 21 章
 │       │   ├── ms-data.js + ms/*.js + ms-bodies.js ← 微软 MIT 四门 95 课（逐课一个文件）
@@ -103,7 +109,10 @@ node dev/tools/enword-words.js "$MIAO_ENWORDS_JSON"                             
 
 1. **正文**：写一份 `assets/data/<新课程>-data.js`，导出 `window.MIAO_XX = { tutorial: { id, title, intro, cat, diff, tags, author, cover, chapters: [{id,title,blocks}] } }`；
    在 `assets/data/site.js` 的 `tutorials` 里登记一条（`source` / `files`，可以写 `{ glob: "assets/data/xx/*.js" }`）；
-   **跑 `node dev/tools/gen-index.js`**。不要往 `index.html` 里加 `<script>` —— 那等于把首屏从 120 KB 打回 3 MB，
+   **跑 `node dev/tools/gen-index.js`**。正文若拆成多片（一课一文件或一片几章），还要两件：
+   `boot` 写「点开任何一章都必拉的那几份」（装配层 + 骨架），并把装配过程挂成可反复调用的函数（`MIAO_XX_ASSEMBLE`）
+   登记进 `assemble` —— 数据层每拉进一片要再拼一次；不能重入的装配层过不了 `gen-index.js` 那道闸。
+   不要往 `index.html` 里加 `<script>` —— 那等于把首屏从 57 KB（gzip）打回 1.3 MB，
    UI E2E 的请求账断言会当场红。
 2. **考卷**：题数据写成一份文件，在登记里填 `examFiles` 与 `engine`（`code` / `en` / `enword`，留空就是不排考）；
    排了考的课，阅读页只给「进入考试」，**考过才打完成标记**。

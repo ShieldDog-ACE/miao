@@ -1,8 +1,10 @@
 /* 喵站 · 站点目录（首屏唯一要读的教程数据）· 由 dev/tools/gen-index.js 生成，别手改
  *
- * 这里只有：每门课的元信息、每章的 id 与标题、哪些章排了考、点开这门课要注入哪些脚本。
- * 正文一块都不在 —— 所以改任何一课的正文，都要重跑生成器，标题与章数才会同步到这里。
- * 生成时间：2026-10-13 10:51
+ * 这里只有：每门课的元信息、每章的 id 与标题、哪些章排了考、
+ * 以及分层加载要的两张表 —— boot（点开这门课任何一章都必拉的骨架）与
+ * chunks（每一章的正文落在哪个文件，由「后写的顶掉先写的」算出来的赢家）。
+ * 正文一块都不在 —— 所以改任何一课的正文，都要重跑生成器，标题、章数与这张映射才会同步。
+ * 生成时间：2026-10-13 14:34
  */
 window.MIAO_INDEX = {
  "tutorials": [
@@ -11,6 +13,7 @@ window.MIAO_INDEX = {
    "source": "MIAO_PY",
    "engine": "code",
    "mount": "",
+   "assemble": "MIAO_PY_ASSEMBLE",
    "title": "Python 入门",
    "intro": "45 课从零学完 Python 基础：每课都讲原理、给能跑的演示、列常见坑、留课后任务。附三节准备课讲清解释器与装环境，正文全部可直接运行验证。",
    "cat": "python",
@@ -268,19 +271,77 @@ window.MIAO_INDEX = {
     "l45"
    ],
    "keywords": [],
-   "files": [
-    "assets/data/py/legacy.js",
-    "assets/data/py/p1.js",
-    "assets/data/py/p2.js",
-    "assets/data/py/p3.js",
-    "assets/data/py/p4.js",
-    "assets/data/py/p5.js",
-    "assets/data/py/p6.js",
-    "assets/data/py/p7.js",
-    "assets/data/py/p8.js",
-    "assets/data/py/p9.js",
+   "boot": [
     "assets/data/py-data.js"
    ],
+   "chunks": {
+    "assets/data/py/p1.js": [
+     "s01",
+     "s02",
+     "s03",
+     "l01",
+     "l02",
+     "l03",
+     "l04",
+     "l05",
+     "l06"
+    ],
+    "assets/data/py/p2.js": [
+     "l07",
+     "l08",
+     "l09",
+     "l10",
+     "l11",
+     "l12",
+     "l13"
+    ],
+    "assets/data/py/p3.js": [
+     "l14",
+     "l15",
+     "l16",
+     "l17"
+    ],
+    "assets/data/py/p4.js": [
+     "l18",
+     "l19",
+     "l20",
+     "l21"
+    ],
+    "assets/data/py/p5.js": [
+     "l22",
+     "l23",
+     "l24",
+     "l25"
+    ],
+    "assets/data/py/p6.js": [
+     "l35",
+     "l36",
+     "l37",
+     "l38",
+     "l39",
+     "l40",
+     "l41"
+    ],
+    "assets/data/py/p7.js": [
+     "l42",
+     "l43",
+     "l44",
+     "l45"
+    ],
+    "assets/data/py/p8.js": [
+     "l26",
+     "l27",
+     "l28",
+     "l29"
+    ],
+    "assets/data/py/p9.js": [
+     "l30",
+     "l31",
+     "l32",
+     "l33",
+     "l34"
+    ]
+   },
    "examFiles": [
     "assets/data/py-exam-data.js",
     "assets/data/exam-parts/l04-l10.js",
@@ -289,15 +350,14 @@ window.MIAO_INDEX = {
     "assets/data/exam-parts/l25-l31.js",
     "assets/data/exam-parts/l32-l38.js",
     "assets/data/exam-parts/l39-l45.js"
-   ],
-   "bytes": 842816,
-   "examBytes": 99691
+   ]
   },
   {
    "id": "english",
    "source": "MIAO_EN",
    "engine": "en",
    "mount": "",
+   "assemble": "",
    "title": "英语发音入门：26 字母 + 48 音标",
    "intro": "26 个字母、48 个国际音标，每个都能直接听发音。配套卡片帮你把字母和音标一次记牢，打好英语拼读的地基喵～",
    "cat": "英语",
@@ -334,20 +394,20 @@ window.MIAO_INDEX = {
     "en-c03"
    ],
    "keywords": [],
-   "files": [
+   "boot": [
     "assets/data/en-data.js"
    ],
+   "chunks": {},
    "examFiles": [
     "assets/data/en-exam-data.js"
-   ],
-   "bytes": 13909,
-   "examBytes": 2039
+   ]
   },
   {
    "id": "enwords",
    "source": "MIAO_ENW",
    "engine": "enword",
    "mount": "",
+   "assemble": "",
    "title": "英语入门：20 课 200 个基础单词",
    "intro": "从 hello 到 have，20 个主题各 10 个真正入门要用的词。每个词都有读音、音标、词性、中文和一句常用短语，点一下就听；每课一场小考，最后一场 200 词的结课大考。",
    "cat": "英语",
@@ -675,20 +735,20 @@ window.MIAO_INDEX = {
     "like",
     "have"
    ],
-   "files": [
+   "boot": [
     "assets/data/enwords-data.js"
    ],
+   "chunks": {},
    "examFiles": [
     "assets/data/enword-exam-data.js"
-   ],
-   "bytes": 172234,
-   "examBytes": 14569
+   ]
   },
   {
    "id": "genai",
    "source": "MIAO_MS_GENAI",
    "engine": "",
    "mount": "MIAO_MS_MOUNT",
+   "assemble": "",
    "title": "生成式 AI 入门（译自 Microsoft · MIT）",
    "intro": "微软官方写的 22 课生成式 AI 入门课，MIT 授权、本站译成中文。从「大模型到底在干什么」讲起，一路到提示工程、向量与 RAG、微调、Agent、元提示、设计原则与落地应用。每课自带可跑的 notebook 与代码。",
    "cat": "大模型",
@@ -797,41 +857,86 @@ window.MIAO_INDEX = {
    ],
    "examIds": [],
    "keywords": [],
-   "files": [
+   "boot": [
     "assets/data/ms-data.js",
-    "assets/data/ms/genai-c01.js",
-    "assets/data/ms/genai-c02.js",
-    "assets/data/ms/genai-c03.js",
-    "assets/data/ms/genai-c04.js",
-    "assets/data/ms/genai-c05.js",
-    "assets/data/ms/genai-c06.js",
-    "assets/data/ms/genai-c07.js",
-    "assets/data/ms/genai-c08.js",
-    "assets/data/ms/genai-c09.js",
-    "assets/data/ms/genai-c10.js",
-    "assets/data/ms/genai-c11.js",
-    "assets/data/ms/genai-c12.js",
-    "assets/data/ms/genai-c13.js",
-    "assets/data/ms/genai-c14.js",
-    "assets/data/ms/genai-c15.js",
-    "assets/data/ms/genai-c16.js",
-    "assets/data/ms/genai-c17.js",
-    "assets/data/ms/genai-c18.js",
-    "assets/data/ms/genai-c19.js",
-    "assets/data/ms/genai-c20.js",
-    "assets/data/ms/genai-c21.js",
-    "assets/data/ms/genai-c22.js",
     "assets/data/ms-bodies.js"
    ],
-   "examFiles": [],
-   "bytes": 249631,
-   "examBytes": 0
+   "chunks": {
+    "assets/data/ms/genai-c01.js": [
+     "genai-c01"
+    ],
+    "assets/data/ms/genai-c02.js": [
+     "genai-c02"
+    ],
+    "assets/data/ms/genai-c03.js": [
+     "genai-c03"
+    ],
+    "assets/data/ms/genai-c04.js": [
+     "genai-c04"
+    ],
+    "assets/data/ms/genai-c05.js": [
+     "genai-c05"
+    ],
+    "assets/data/ms/genai-c06.js": [
+     "genai-c06"
+    ],
+    "assets/data/ms/genai-c07.js": [
+     "genai-c07"
+    ],
+    "assets/data/ms/genai-c08.js": [
+     "genai-c08"
+    ],
+    "assets/data/ms/genai-c09.js": [
+     "genai-c09"
+    ],
+    "assets/data/ms/genai-c10.js": [
+     "genai-c10"
+    ],
+    "assets/data/ms/genai-c11.js": [
+     "genai-c11"
+    ],
+    "assets/data/ms/genai-c12.js": [
+     "genai-c12"
+    ],
+    "assets/data/ms/genai-c13.js": [
+     "genai-c13"
+    ],
+    "assets/data/ms/genai-c14.js": [
+     "genai-c14"
+    ],
+    "assets/data/ms/genai-c15.js": [
+     "genai-c15"
+    ],
+    "assets/data/ms/genai-c16.js": [
+     "genai-c16"
+    ],
+    "assets/data/ms/genai-c17.js": [
+     "genai-c17"
+    ],
+    "assets/data/ms/genai-c18.js": [
+     "genai-c18"
+    ],
+    "assets/data/ms/genai-c19.js": [
+     "genai-c19"
+    ],
+    "assets/data/ms/genai-c20.js": [
+     "genai-c20"
+    ],
+    "assets/data/ms/genai-c21.js": [
+     "genai-c21"
+    ],
+    "assets/data/ms/genai-c22.js": [
+     "genai-c22"
+    ]
+   },
+   "examFiles": []
   },
   {
    "id": "ml",
    "source": "MIAO_MS_ML",
    "engine": "",
    "mount": "MIAO_MS_MOUNT",
+   "assemble": "",
    "title": "机器学习入门（译自 Microsoft · MIT）",
    "intro": "微软官方 9 组 · 每组 3 课的机器学习入门，MIT 授权、本站译成中文。从回归、分类、聚类一路做到 NLP、时间序列与强化学习，每组都带可跑的 notebook，还专门有一组讲真实项目里怎么落地。",
    "cat": "大模型",
@@ -961,46 +1066,101 @@ window.MIAO_INDEX = {
    ],
    "examIds": [],
    "keywords": [],
-   "files": [
+   "boot": [
     "assets/data/ms-data.js",
-    "assets/data/ms/ml-c01.js",
-    "assets/data/ms/ml-c02.js",
-    "assets/data/ms/ml-c03.js",
-    "assets/data/ms/ml-c04.js",
-    "assets/data/ms/ml-c05.js",
-    "assets/data/ms/ml-c06.js",
-    "assets/data/ms/ml-c07.js",
-    "assets/data/ms/ml-c08.js",
-    "assets/data/ms/ml-c09.js",
-    "assets/data/ms/ml-c10.js",
-    "assets/data/ms/ml-c11.js",
-    "assets/data/ms/ml-c12.js",
-    "assets/data/ms/ml-c13.js",
-    "assets/data/ms/ml-c14.js",
-    "assets/data/ms/ml-c15.js",
-    "assets/data/ms/ml-c16.js",
-    "assets/data/ms/ml-c17.js",
-    "assets/data/ms/ml-c18.js",
-    "assets/data/ms/ml-c19.js",
-    "assets/data/ms/ml-c20.js",
-    "assets/data/ms/ml-c21.js",
-    "assets/data/ms/ml-c22.js",
-    "assets/data/ms/ml-c23.js",
-    "assets/data/ms/ml-c24.js",
-    "assets/data/ms/ml-c25.js",
-    "assets/data/ms/ml-c26.js",
-    "assets/data/ms/ml-c27.js",
     "assets/data/ms-bodies.js"
    ],
-   "examFiles": [],
-   "bytes": 309305,
-   "examBytes": 0
+   "chunks": {
+    "assets/data/ms/ml-c01.js": [
+     "ml-c01"
+    ],
+    "assets/data/ms/ml-c02.js": [
+     "ml-c02"
+    ],
+    "assets/data/ms/ml-c03.js": [
+     "ml-c03"
+    ],
+    "assets/data/ms/ml-c04.js": [
+     "ml-c04"
+    ],
+    "assets/data/ms/ml-c05.js": [
+     "ml-c05"
+    ],
+    "assets/data/ms/ml-c06.js": [
+     "ml-c06"
+    ],
+    "assets/data/ms/ml-c07.js": [
+     "ml-c07"
+    ],
+    "assets/data/ms/ml-c08.js": [
+     "ml-c08"
+    ],
+    "assets/data/ms/ml-c09.js": [
+     "ml-c09"
+    ],
+    "assets/data/ms/ml-c10.js": [
+     "ml-c10"
+    ],
+    "assets/data/ms/ml-c11.js": [
+     "ml-c11"
+    ],
+    "assets/data/ms/ml-c12.js": [
+     "ml-c12"
+    ],
+    "assets/data/ms/ml-c13.js": [
+     "ml-c13"
+    ],
+    "assets/data/ms/ml-c14.js": [
+     "ml-c14"
+    ],
+    "assets/data/ms/ml-c15.js": [
+     "ml-c15"
+    ],
+    "assets/data/ms/ml-c16.js": [
+     "ml-c16"
+    ],
+    "assets/data/ms/ml-c17.js": [
+     "ml-c17"
+    ],
+    "assets/data/ms/ml-c18.js": [
+     "ml-c18"
+    ],
+    "assets/data/ms/ml-c19.js": [
+     "ml-c19"
+    ],
+    "assets/data/ms/ml-c20.js": [
+     "ml-c20"
+    ],
+    "assets/data/ms/ml-c21.js": [
+     "ml-c21"
+    ],
+    "assets/data/ms/ml-c22.js": [
+     "ml-c22"
+    ],
+    "assets/data/ms/ml-c23.js": [
+     "ml-c23"
+    ],
+    "assets/data/ms/ml-c24.js": [
+     "ml-c24"
+    ],
+    "assets/data/ms/ml-c25.js": [
+     "ml-c25"
+    ],
+    "assets/data/ms/ml-c26.js": [
+     "ml-c26"
+    ],
+    "assets/data/ms/ml-c27.js": [
+     "ml-c27"
+    ]
+   },
+   "examFiles": []
   },
   {
    "id": "webdev",
    "source": "MIAO_MS_WEBDEV",
    "engine": "",
    "mount": "MIAO_MS_MOUNT",
+   "assemble": "",
    "title": "Web 开发入门（译自 Microsoft · MIT）",
    "intro": "微软官方 10 组 · 每组 2–3 课的 Web 开发入门，MIT 授权、本站译成中文。HTML/CSS/JS 打底，后面连着做打字小游戏、浏览器扩展、太空游戏、银行页面、代码编辑器，最后一组是接大模型的旅行生成器项目。",
    "cat": "计算机基础",
@@ -1129,46 +1289,101 @@ window.MIAO_INDEX = {
    ],
    "examIds": [],
    "keywords": [],
-   "files": [
+   "boot": [
     "assets/data/ms-data.js",
-    "assets/data/ms/webdev-c01.js",
-    "assets/data/ms/webdev-c02.js",
-    "assets/data/ms/webdev-c03.js",
-    "assets/data/ms/webdev-c04.js",
-    "assets/data/ms/webdev-c05.js",
-    "assets/data/ms/webdev-c06.js",
-    "assets/data/ms/webdev-c07.js",
-    "assets/data/ms/webdev-c08.js",
-    "assets/data/ms/webdev-c09.js",
-    "assets/data/ms/webdev-c10.js",
-    "assets/data/ms/webdev-c11.js",
-    "assets/data/ms/webdev-c12.js",
-    "assets/data/ms/webdev-c13.js",
-    "assets/data/ms/webdev-c14.js",
-    "assets/data/ms/webdev-c15.js",
-    "assets/data/ms/webdev-c16.js",
-    "assets/data/ms/webdev-c17.js",
-    "assets/data/ms/webdev-c18.js",
-    "assets/data/ms/webdev-c19.js",
-    "assets/data/ms/webdev-c20.js",
-    "assets/data/ms/webdev-c21.js",
-    "assets/data/ms/webdev-c22.js",
-    "assets/data/ms/webdev-c23.js",
-    "assets/data/ms/webdev-c24.js",
-    "assets/data/ms/webdev-c25.js",
-    "assets/data/ms/webdev-c26.js",
-    "assets/data/ms/webdev-c27.js",
     "assets/data/ms-bodies.js"
    ],
-   "examFiles": [],
-   "bytes": 323658,
-   "examBytes": 0
+   "chunks": {
+    "assets/data/ms/webdev-c01.js": [
+     "webdev-c01"
+    ],
+    "assets/data/ms/webdev-c02.js": [
+     "webdev-c02"
+    ],
+    "assets/data/ms/webdev-c03.js": [
+     "webdev-c03"
+    ],
+    "assets/data/ms/webdev-c04.js": [
+     "webdev-c04"
+    ],
+    "assets/data/ms/webdev-c05.js": [
+     "webdev-c05"
+    ],
+    "assets/data/ms/webdev-c06.js": [
+     "webdev-c06"
+    ],
+    "assets/data/ms/webdev-c07.js": [
+     "webdev-c07"
+    ],
+    "assets/data/ms/webdev-c08.js": [
+     "webdev-c08"
+    ],
+    "assets/data/ms/webdev-c09.js": [
+     "webdev-c09"
+    ],
+    "assets/data/ms/webdev-c10.js": [
+     "webdev-c10"
+    ],
+    "assets/data/ms/webdev-c11.js": [
+     "webdev-c11"
+    ],
+    "assets/data/ms/webdev-c12.js": [
+     "webdev-c12"
+    ],
+    "assets/data/ms/webdev-c13.js": [
+     "webdev-c13"
+    ],
+    "assets/data/ms/webdev-c14.js": [
+     "webdev-c14"
+    ],
+    "assets/data/ms/webdev-c15.js": [
+     "webdev-c15"
+    ],
+    "assets/data/ms/webdev-c16.js": [
+     "webdev-c16"
+    ],
+    "assets/data/ms/webdev-c17.js": [
+     "webdev-c17"
+    ],
+    "assets/data/ms/webdev-c18.js": [
+     "webdev-c18"
+    ],
+    "assets/data/ms/webdev-c19.js": [
+     "webdev-c19"
+    ],
+    "assets/data/ms/webdev-c20.js": [
+     "webdev-c20"
+    ],
+    "assets/data/ms/webdev-c21.js": [
+     "webdev-c21"
+    ],
+    "assets/data/ms/webdev-c22.js": [
+     "webdev-c22"
+    ],
+    "assets/data/ms/webdev-c23.js": [
+     "webdev-c23"
+    ],
+    "assets/data/ms/webdev-c24.js": [
+     "webdev-c24"
+    ],
+    "assets/data/ms/webdev-c25.js": [
+     "webdev-c25"
+    ],
+    "assets/data/ms/webdev-c26.js": [
+     "webdev-c26"
+    ],
+    "assets/data/ms/webdev-c27.js": [
+     "webdev-c27"
+    ]
+   },
+   "examFiles": []
   },
   {
    "id": "agents",
    "source": "MIAO_MS_AGENTS",
    "engine": "",
    "mount": "MIAO_MS_MOUNT",
+   "assemble": "",
    "title": "AI Agent 入门（译自 Microsoft · MIT）",
    "intro": "微软官方 19 课 AI Agent 入门，MIT 授权、本站译成中文。讲清 agent 与普通对话的区别、任务描述与规划、对话方式、信任来源、知识检索、多 agent 协作、工作流、可观测性，最后一课是真实的旅行规划 agent，末尾还有一课专门讲 agent 的安全。",
    "cat": "Agent",
@@ -1265,38 +1480,77 @@ window.MIAO_INDEX = {
    ],
    "examIds": [],
    "keywords": [],
-   "files": [
+   "boot": [
     "assets/data/ms-data.js",
-    "assets/data/ms/agents-c01.js",
-    "assets/data/ms/agents-c02.js",
-    "assets/data/ms/agents-c03.js",
-    "assets/data/ms/agents-c04.js",
-    "assets/data/ms/agents-c05.js",
-    "assets/data/ms/agents-c06.js",
-    "assets/data/ms/agents-c07.js",
-    "assets/data/ms/agents-c08.js",
-    "assets/data/ms/agents-c09.js",
-    "assets/data/ms/agents-c10.js",
-    "assets/data/ms/agents-c11.js",
-    "assets/data/ms/agents-c12.js",
-    "assets/data/ms/agents-c13.js",
-    "assets/data/ms/agents-c14.js",
-    "assets/data/ms/agents-c15.js",
-    "assets/data/ms/agents-c16.js",
-    "assets/data/ms/agents-c17.js",
-    "assets/data/ms/agents-c18.js",
-    "assets/data/ms/agents-c19.js",
     "assets/data/ms-bodies.js"
    ],
-   "examFiles": [],
-   "bytes": 245905,
-   "examBytes": 0
+   "chunks": {
+    "assets/data/ms/agents-c01.js": [
+     "agents-c01"
+    ],
+    "assets/data/ms/agents-c02.js": [
+     "agents-c02"
+    ],
+    "assets/data/ms/agents-c03.js": [
+     "agents-c03"
+    ],
+    "assets/data/ms/agents-c04.js": [
+     "agents-c04"
+    ],
+    "assets/data/ms/agents-c05.js": [
+     "agents-c05"
+    ],
+    "assets/data/ms/agents-c06.js": [
+     "agents-c06"
+    ],
+    "assets/data/ms/agents-c07.js": [
+     "agents-c07"
+    ],
+    "assets/data/ms/agents-c08.js": [
+     "agents-c08"
+    ],
+    "assets/data/ms/agents-c09.js": [
+     "agents-c09"
+    ],
+    "assets/data/ms/agents-c10.js": [
+     "agents-c10"
+    ],
+    "assets/data/ms/agents-c11.js": [
+     "agents-c11"
+    ],
+    "assets/data/ms/agents-c12.js": [
+     "agents-c12"
+    ],
+    "assets/data/ms/agents-c13.js": [
+     "agents-c13"
+    ],
+    "assets/data/ms/agents-c14.js": [
+     "agents-c14"
+    ],
+    "assets/data/ms/agents-c15.js": [
+     "agents-c15"
+    ],
+    "assets/data/ms/agents-c16.js": [
+     "agents-c16"
+    ],
+    "assets/data/ms/agents-c17.js": [
+     "agents-c17"
+    ],
+    "assets/data/ms/agents-c18.js": [
+     "agents-c18"
+    ],
+    "assets/data/ms/agents-c19.js": [
+     "agents-c19"
+    ]
+   },
+   "examFiles": []
   },
   {
    "id": "cpp",
    "source": "MIAO_CPP",
    "engine": "paper",
    "mount": "",
+   "assemble": "MIAO_CPP_ASSEMBLE",
    "title": "C++ 入门",
    "intro": "从第一行 main() 走到能独立写出几百行的小程序：现代 C++（C++23）的 81 节必修课。每一课都从他的源稿出发，讲机制、带演示、有常见坑；课末考试过关这一课才算学完。",
    "cat": "C++",
@@ -1734,30 +1988,135 @@ window.MIAO_INDEX = {
     "c81"
    ],
    "keywords": [],
-   "files": [
-    "assets/data/cpp/legacy.js",
-    "assets/data/cpp/p00.js",
-    "assets/data/cpp/p01.js",
-    "assets/data/cpp/p02.js",
-    "assets/data/cpp/p03.js",
-    "assets/data/cpp/p04.js",
-    "assets/data/cpp/p05.js",
-    "assets/data/cpp/p06.js",
-    "assets/data/cpp/p07.js",
-    "assets/data/cpp/p08.js",
-    "assets/data/cpp/p09.js",
-    "assets/data/cpp/p10.js",
-    "assets/data/cpp/p11.js",
-    "assets/data/cpp/p12.js",
-    "assets/data/cpp/p13.js",
-    "assets/data/cpp/p14.js",
-    "assets/data/cpp/p15.js",
-    "assets/data/cpp/p16.js",
-    "assets/data/cpp/p17.js",
-    "assets/data/cpp/p18.js",
-    "assets/data/cpp/p19.js",
+   "boot": [
     "assets/data/cpp-data.js"
    ],
+   "chunks": {
+    "assets/data/cpp/p00.js": [
+     "s01",
+     "s02",
+     "s03"
+    ],
+    "assets/data/cpp/p01.js": [
+     "c01",
+     "c02",
+     "c03",
+     "c04",
+     "c05"
+    ],
+    "assets/data/cpp/p02.js": [
+     "c06",
+     "c07",
+     "c08",
+     "c09",
+     "c10"
+    ],
+    "assets/data/cpp/p03.js": [
+     "c11",
+     "c12",
+     "c13",
+     "c14",
+     "c15"
+    ],
+    "assets/data/cpp/p04.js": [
+     "c16",
+     "c17",
+     "c18",
+     "c19",
+     "c20"
+    ],
+    "assets/data/cpp/p05.js": [
+     "c21",
+     "c22",
+     "c23",
+     "c24",
+     "c25"
+    ],
+    "assets/data/cpp/p06.js": [
+     "c26",
+     "c27",
+     "c28",
+     "c29",
+     "c30"
+    ],
+    "assets/data/cpp/p07.js": [
+     "c31",
+     "c32",
+     "c33",
+     "c34"
+    ],
+    "assets/data/cpp/p08.js": [
+     "c35",
+     "c36",
+     "c37",
+     "c38"
+    ],
+    "assets/data/cpp/p09.js": [
+     "c39",
+     "c40",
+     "c41",
+     "c42"
+    ],
+    "assets/data/cpp/p10.js": [
+     "c43",
+     "c44",
+     "c45",
+     "c46"
+    ],
+    "assets/data/cpp/p11.js": [
+     "c47",
+     "c48",
+     "c49",
+     "c50"
+    ],
+    "assets/data/cpp/p12.js": [
+     "c51",
+     "c52",
+     "c53",
+     "c54"
+    ],
+    "assets/data/cpp/p13.js": [
+     "c55",
+     "c56",
+     "c57",
+     "c58"
+    ],
+    "assets/data/cpp/p14.js": [
+     "c59",
+     "c60",
+     "c61",
+     "c62"
+    ],
+    "assets/data/cpp/p15.js": [
+     "c63",
+     "c64",
+     "c65",
+     "c66"
+    ],
+    "assets/data/cpp/p16.js": [
+     "c67",
+     "c68",
+     "c69",
+     "c70"
+    ],
+    "assets/data/cpp/p17.js": [
+     "c71",
+     "c72",
+     "c73",
+     "c74"
+    ],
+    "assets/data/cpp/p18.js": [
+     "c75",
+     "c76",
+     "c77",
+     "c78"
+    ],
+    "assets/data/cpp/p19.js": [
+     "c79",
+     "c80",
+     "c81"
+    ]
+   },
    "examFiles": [
     "assets/data/cpp-exam/p01.js",
     "assets/data/cpp-exam/p02.js",
@@ -1779,15 +2138,14 @@ window.MIAO_INDEX = {
     "assets/data/cpp-exam/p18.js",
     "assets/data/cpp-exam/p19.js",
     "assets/data/cpp-exam-data.js"
-   ],
-   "bytes": 966201,
-   "examBytes": 448064
+   ]
   },
   {
    "id": "cppm",
    "source": "MIAO_CPPM",
    "engine": "paper",
    "mount": "",
+   "assemble": "MIAO_CPPM_ASSEMBLE",
    "title": "C++ 掌握",
    "intro": "接「C++ 入门」往深里走：标准库容器与算法、类与 RAII、模板与泛型、数据结构与算法实战，共 132 课。每一课考过才算学完。",
    "cat": "C++",
@@ -2439,45 +2797,215 @@ window.MIAO_INDEX = {
     "m199"
    ],
    "keywords": [],
-   "files": [
-    "assets/data/cppm/legacy.js",
-    "assets/data/cppm/p01.js",
-    "assets/data/cppm/p02.js",
-    "assets/data/cppm/p03.js",
-    "assets/data/cppm/p04.js",
-    "assets/data/cppm/p05.js",
-    "assets/data/cppm/p06.js",
-    "assets/data/cppm/p07.js",
-    "assets/data/cppm/p08.js",
-    "assets/data/cppm/p09.js",
-    "assets/data/cppm/p10.js",
-    "assets/data/cppm/p11.js",
-    "assets/data/cppm/p12.js",
-    "assets/data/cppm/p13.js",
-    "assets/data/cppm/p14.js",
-    "assets/data/cppm/p15.js",
-    "assets/data/cppm/p16.js",
-    "assets/data/cppm/p17.js",
-    "assets/data/cppm/p18.js",
-    "assets/data/cppm/p19.js",
-    "assets/data/cppm/p20.js",
-    "assets/data/cppm/p21.js",
-    "assets/data/cppm/p22.js",
-    "assets/data/cppm/p23.js",
-    "assets/data/cppm/p24.js",
-    "assets/data/cppm/p25.js",
-    "assets/data/cppm/p26.js",
-    "assets/data/cppm/p27.js",
-    "assets/data/cppm/p28.js",
-    "assets/data/cppm/p29.js",
-    "assets/data/cppm/p30.js",
-    "assets/data/cppm/p31.js",
-    "assets/data/cppm/p32.js",
-    "assets/data/cppm/p34.js",
-    "assets/data/cppm/p35.js",
-    "assets/data/cppm/p36.js",
+   "boot": [
     "assets/data/cppm-data.js"
    ],
+   "chunks": {
+    "assets/data/cppm/legacy.js": [
+     "m173",
+     "m174",
+     "m187",
+     "m188",
+     "m189",
+     "m190",
+     "m192",
+     "m193",
+     "m194",
+     "m196",
+     "m197",
+     "m198",
+     "m200",
+     "m201",
+     "m202",
+     "m203",
+     "m204",
+     "m205",
+     "m206",
+     "m207",
+     "m208",
+     "m209",
+     "m210",
+     "m211",
+     "m212",
+     "m213"
+    ],
+    "assets/data/cppm/p01.js": [
+     "m82"
+    ],
+    "assets/data/cppm/p02.js": [
+     "m83",
+     "m84",
+     "m85"
+    ],
+    "assets/data/cppm/p03.js": [
+     "m86",
+     "m87",
+     "m88"
+    ],
+    "assets/data/cppm/p04.js": [
+     "m89",
+     "m90",
+     "m91",
+     "m92"
+    ],
+    "assets/data/cppm/p05.js": [
+     "m93",
+     "m94",
+     "m95",
+     "m96"
+    ],
+    "assets/data/cppm/p06.js": [
+     "m97",
+     "m98",
+     "m99",
+     "m100"
+    ],
+    "assets/data/cppm/p07.js": [
+     "m101",
+     "m102",
+     "m103",
+     "m104"
+    ],
+    "assets/data/cppm/p08.js": [
+     "m105",
+     "m106",
+     "m107",
+     "m108"
+    ],
+    "assets/data/cppm/p09.js": [
+     "m109",
+     "m110",
+     "m111",
+     "m112"
+    ],
+    "assets/data/cppm/p10.js": [
+     "m113",
+     "m114",
+     "m115",
+     "m116"
+    ],
+    "assets/data/cppm/p11.js": [
+     "m117",
+     "m118",
+     "m119",
+     "m120"
+    ],
+    "assets/data/cppm/p12.js": [
+     "m121",
+     "m122",
+     "m123",
+     "m124"
+    ],
+    "assets/data/cppm/p13.js": [
+     "m125",
+     "m126",
+     "m127",
+     "m128"
+    ],
+    "assets/data/cppm/p14.js": [
+     "m129",
+     "m130",
+     "m131",
+     "m132"
+    ],
+    "assets/data/cppm/p15.js": [
+     "m133",
+     "m134",
+     "m135",
+     "m136"
+    ],
+    "assets/data/cppm/p16.js": [
+     "m137",
+     "m138",
+     "m139",
+     "m140"
+    ],
+    "assets/data/cppm/p17.js": [
+     "m141",
+     "m142",
+     "m143",
+     "m144"
+    ],
+    "assets/data/cppm/p18.js": [
+     "m145",
+     "m146",
+     "m147",
+     "m148"
+    ],
+    "assets/data/cppm/p19.js": [
+     "m149",
+     "m150"
+    ],
+    "assets/data/cppm/p20.js": [
+     "m151",
+     "m152"
+    ],
+    "assets/data/cppm/p21.js": [
+     "m153",
+     "m154"
+    ],
+    "assets/data/cppm/p22.js": [
+     "m155",
+     "m156"
+    ],
+    "assets/data/cppm/p23.js": [
+     "m157",
+     "m158"
+    ],
+    "assets/data/cppm/p24.js": [
+     "m159",
+     "m160"
+    ],
+    "assets/data/cppm/p25.js": [
+     "m161",
+     "m162"
+    ],
+    "assets/data/cppm/p26.js": [
+     "m163",
+     "m164"
+    ],
+    "assets/data/cppm/p27.js": [
+     "m165",
+     "m166"
+    ],
+    "assets/data/cppm/p28.js": [
+     "m167",
+     "m168",
+     "m169",
+     "m170"
+    ],
+    "assets/data/cppm/p29.js": [
+     "m171",
+     "m172"
+    ],
+    "assets/data/cppm/p30.js": [
+     "m175",
+     "m176",
+     "m177",
+     "m178"
+    ],
+    "assets/data/cppm/p31.js": [
+     "m179",
+     "m180",
+     "m181",
+     "m182"
+    ],
+    "assets/data/cppm/p32.js": [
+     "m183",
+     "m184",
+     "m185",
+     "m186"
+    ],
+    "assets/data/cppm/p34.js": [
+     "m191"
+    ],
+    "assets/data/cppm/p35.js": [
+     "m195"
+    ],
+    "assets/data/cppm/p36.js": [
+     "m199"
+    ]
+   },
    "examFiles": [
     "assets/data/cppm-exam/p01.js",
     "assets/data/cppm-exam/p02.js",
@@ -2512,9 +3040,7 @@ window.MIAO_INDEX = {
     "assets/data/cppm-exam/p32.js",
     "assets/data/cppm-exam/p36.js",
     "assets/data/cppm-exam-data.js"
-   ],
-   "bytes": 1407856,
-   "examBytes": 572303
+   ]
   }
  ]
 };

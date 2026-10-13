@@ -463,6 +463,73 @@ const reqLog = [];
     ok("关闭后弹层收起并清空", W.document.getElementById("teacherPop").className === "hidden");
   }
 
+  /* ---------- 7.9 分层加载的账：点开哪章拉哪章，空了才补齐 ---------- */
+  {
+    const short = (u) => String(u).replace(/^\/?assets\/data\//, "data/").replace(/^\/?assets\/js\//, "js/").split("/").slice(-2).join("/");
+    const bytesOf = (list) => list.reduce((n, u) => {
+      try { return n + fs.statSync(path.join(DEV, "frontend", String(u).replace(/^\/+/, ""))).size; } catch (e) { return n; }
+    }, 0);
+    const jsFrom = (mark) => reqLog.slice(mark).filter((u) => u.endsWith(".js"));
+
+    /* ① 详情页：132 章的目录要齐，但正文一片都不要 */
+    let mark = reqLog.length;
+    W.location.hash = "#/tutorial/cppm";
+    await sleep(1300);
+    let got = jsFrom(mark);
+    ok("点进 132 章那门课：只拉骨架那一份，正文分片一片都不来",
+      got.length === 1 && /\/data\/cppm-data\.js$/.test(got[0]), got.map(short).join("，"));
+    ok("详情页 132 章目录照样齐（章号与标题在 index.js 里，不靠正文）",
+      $$(".chap-item").length === 132, "章 " + $$(".chap-item").length);
+
+    /* ② 打开其中一课：只多它自己那一份分片 */
+    mark = reqLog.length;
+    W.location.hash = "#/read/cppm/m90";
+    await sleep(900);
+    got = jsFrom(mark);
+    ok("打开第 90 课：只多拉它那一份分片 p04.js（m89–m92 在同一片）",
+      got.length === 1 && /\/data\/cppm\/p04\.js$/.test(got[0]), got.map(short).join("，"));
+    ok("这一章的正文真落到页面上了", !!$(".article h1") && txt(".article h1").length > 4, txt(".article h1").slice(0, 24));
+    ok("从进目录到正文落地，一共只传了不到 130 KB",
+      bytesOf(got) < 130 * 1024, (bytesOf(got) / 1024).toFixed(0) + " KB");
+
+    /* ③ 这一章到位、人没别的事：空了才往后补齐，而且是渐进的（起手有 2.5 s 缓冲） */
+    mark = reqLog.length;
+    await sleep(7000);
+    got = jsFrom(mark).filter((u) => /\/data\/cppm\/(p\d+|legacy)\.js$/.test(u));
+    ok("空了就在补这本其余的分片（不止手头这一片）", got.length >= 2, got.map(short).join("，"));
+    ok("补齐按就近排：接着补的是往后那一片 p05.js（m93–m96）",
+      got.some((u) => /\/p05\.js$/.test(u)), got.map(short).join("，"));
+    ok("补齐是渐进的，不是一把把 36 片全拉完", got.length < 36, "这几秒补了 " + got.length + " 片");
+
+    /* ④ 读者一动就让路 */
+    W.location.hash = "#/";
+    await sleep(700);
+    const before = reqLog.filter((u) => /\/data\/cppm\/(p\d+|legacy)\.js$/.test(u)).length;
+    await sleep(3600);
+    const after = reqLog.filter((u) => /\/data\/cppm\/(p\d+|legacy)\.js$/.test(u)).length;
+    ok("回首页之后预取立刻收手：不再偷偷拉分片", before === after, before + " → " + after);
+
+    /* ⑤ 占位稿只在该它出场时才拉：cppm 还欠着 26 章正文 */
+    mark = reqLog.length;
+    W.location.hash = "#/read/cppm/m200";
+    await sleep(900);
+    got = jsFrom(mark).filter((u) => /\/data\/cppm\//.test(u));
+    ok("点开还挂着占位的第 200 课：拉的是那份占位稿 legacy.js，不是几十份真正文",
+      got.length === 1 && /cppm\/legacy\.js$/.test(got[0]), got.map(short).join("，"));
+
+    /* ⑥ 进考场只要题包与引擎，不为考试拖来整门课正文 */
+    mark = reqLog.length;
+    W.location.hash = "#/exam/cpp/c05";
+    await sleep(4000);
+    got = jsFrom(mark);
+    ok("进 C++ 考场：题包与笔试引擎都来了",
+      got.some((u) => /\/data\/cpp-exam\//.test(u)) && got.some((u) => /exam-paper(-ui)?\.js$/.test(u)),
+      got.map(short).slice(0, 6).join("，"));
+    ok("进考场不拉这门课的正文分片",
+      !got.some((u) => /\/data\/cpp\/p\d+\.js$/.test(u)),
+      got.filter((u) => /\/data\/cpp\//.test(u)).map(short).join("，") || "一片都没拉");
+  }
+
   /* ---------- 8. 反向断言 ---------- */
   W.location.hash = "#/login";
   await sleep(900);
@@ -475,8 +542,13 @@ const reqLog = [];
   ok("没点开的课一个字节都不下载：BYOX 与微软正文都没被请求",
     !reqLog.some((u) => /byox/.test(u)) && !reqLog.some((u) => /\/data\/ms\//.test(u)),
     reqLog.filter((u) => /byox|\/data\/ms\//.test(u)).slice(0, 3).join("，") || "干净");
-  ok("Python 正文是点开 python 才拉的（10 份分片都在那之后）",
-    reqLog.some((u) => /\/data\/py\/legacy\.js$/.test(u)) && reqLog.some((u) => /\/data\/py-data\.js$/.test(u)), "");
+  ok("Python 正文分片是点开 python 才拉的，旧稿兜底那份死稿已经不在树里",
+    reqLog.some((u) => /\/data\/py-data\.js$/.test(u)) && reqLog.some((u) => /\/data\/py\/p\d+\.js$/.test(u)) &&
+    !reqLog.some((u) => /\/data\/py\/legacy\.js$/.test(u)),
+    reqLog.filter((u) => /\/data\/py\//.test(u)).map((u) => u.split("/").pop()).slice(0, 4).join("，"));
+  ok("旧稿死稿不回归：540 KB 的 py/legacy.js 与 44 KB 的 cpp/legacy.js 都从产物里没了",
+    !fs.existsSync(path.join(DEV, "frontend/assets/data/py/legacy.js")) &&
+    !fs.existsSync(path.join(DEV, "frontend/assets/data/cpp/legacy.js")), "两份都删干净了");
   ok("沙箱四份只在进 Python 考场时才进来",
     reqLog.some((u) => /\/js\/py-engine\.js$/.test(u)) && reqLog.some((u) => /\/js\/py-stdlib\.js$/.test(u)), "");
   {
