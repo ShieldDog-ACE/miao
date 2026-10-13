@@ -909,19 +909,33 @@
   }
   R.makeEnv = makeEnv;
 
-  /* 报错正文按 CPython 的排法：Traceback → 每帧一行 → 类名: 正文 */
+  /* 报错正文按 CPython 的排法：Traceback → 每帧（File 行 + 缩进的源码回显）→ 类名: 正文。
+     这两段以前是「拼好了又丢掉」：语法错把 File/源码两行扔了只回结论行，
+     运行错则因为 env.pyStack 从没入栈而一帧都没有 —— 于是终端里只有两行字，
+     看着根本不像 Python，也轮不到呈现层给回显的源码上语法色。 */
+  function frameLines(file, line, env, srcByFile) {
+    var out = ['  File "' + file + '", line ' + line];
+    var srcLine = (srcByFile[file] || env.src || "").split("\n")[line - 1];
+    if (srcLine !== undefined) out.push("    " + srcLine.replace(/\t/g, "        "));
+    return out;
+  }
   function formatErr(e, env, srcByFile) {
     if (!e) return "";
     if (e.isPyError) {
-      var lines = ['  File "' + (e.pyfile || env.file) + '", line ' + e.pyline];
-      var srcLine = (srcByFile[e.pyfile || env.file] || env.src || "").split("\n")[e.pyline - 1];
-      if (srcLine !== undefined) lines.push("    " + srcLine.replace(/\t/g, "        "));
-      return "SyntaxError: " + e.pymsg + "\n";
+      /* CPython 对语法错不打 Traceback 头，直接 File 行 + 源码回显 + 结论行 */
+      return frameLines(e.pyfile || env.file, e.pyline, env, srcByFile)
+        .concat(["SyntaxError: " + e.pymsg]).join("\n") + "\n";
     }
     if (e && e.k2 === "exc") {
       var out = ["Traceback (most recent call last):"];
-      (env.pyStack || []).forEach(function (fr) {
-        out.push('  File "' + fr.file + '", line ' + fr.line + ", in " + fr.name);
+      var stack = (env.pyStack && env.pyStack.length) ? env.pyStack
+        : (e.pyline || env.line ? [{ file: e.pyfile || env.file, line: e.pyline || env.line, name: "<module>" }] : []);
+      stack.forEach(function (fr) {
+        var head = '  File "' + fr.file + '", line ' + fr.line + ", in " + fr.name;
+        var body = frameLines(fr.file, fr.line, env, srcByFile);
+        body[0] = head;                       /* File 行补上「, in 函数名」，源码回显跟在它下面 */
+        out.push(body[0]);
+        if (body[1] !== undefined) out.push(body[1]);
       });
       out.push(R.excLine(e, env));
       return out.join("\n") + "\n";

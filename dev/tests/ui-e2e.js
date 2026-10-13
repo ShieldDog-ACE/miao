@@ -157,10 +157,12 @@ const reqLog = [];
   ok("考试路由给 body 挂上 exam-mode，导航条与页脚让位", W.document.body.classList.contains("exam-mode"),
     W.document.body.className || "(无类名)");
   {
-    const taskTxt = txt("#ideTask");
+    const lines = String($("#ideTa").value).split("\n");
+    const cut = lines.indexOf("#") + 1;
+    const taskTxt = lines.slice(0, cut).join("\n");
     const conds = (taskTxt.match(/# 条件\d+：/g) || []).length;
-    ok("题面就是文件顶部那几行 # 注释：任务题目 + 逐条条件",
-      /^# /.test(taskTxt) && /# 任务题目：/.test(taskTxt) && conds >= 3, conds + " 条条件");
+    ok("题面就写在编辑器里：textarea 以 # 注释开头（任务题目 + 逐条条件），独行 # 收尾",
+      /^# /.test(lines[0]) && /# 任务题目：/.test(taskTxt) && conds >= 3 && lines[cut - 1] === "#", conds + " 条条件");
     ok("题面里的条件与判定清单一一对应，不会两处说两套话",
       conds > 0 && conds === $$("#jdList li").length, "题面 " + conds + " 条 / 清单 " + $$("#jdList li").length + " 条");
     ok("判定清单住在下方面板的页签里，不在右边", !!$(".panel-tabs .pt[data-pt=\"judge\"]") && !!$("#jdList"),
@@ -170,10 +172,6 @@ const reqLog = [];
     const gtRule = /\.gt-code \.ln\s*\{[^}]*\}/.exec(CSS_TEXT);
     ok("行号列一段一个号：行号行写了 white-space: pre（少了它一列里会折出三个数字）",
       !!gtRule && /white-space:\s*pre/.test(gtRule[0]), gtRule ? gtRule[0].replace(/\s+/g, " ").slice(0, 56) : "找不到 .gt-code .ln 规则");
-    const taskGrid = /\.ide-task\s*\{[^}]*\}/.exec(CSS_TEXT);
-    ok("题面是两列 grid（行号列 + 文字列），且行号/文字容器 display:contents —— 少一条题面行号就上下分家",
-      !!taskGrid && /display:\s*grid/.test(taskGrid[0]) && /display:\s*contents/.test(CSS_TEXT),
-      taskGrid ? taskGrid[0].replace(/\s+/g, " ").slice(0, 60) : "找不到 .ide-task 规则");
     const hlRow = /\.hl-row\s*\{[^}]*\}/.exec(CSS_TEXT);
     ok("高亮层的空行不许塌：.hl-row 写了 min-height（空行 0 高 = 高亮与输入错位）",
       !!hlRow && /min-height/.test(hlRow[0]), hlRow ? hlRow[0].replace(/\s+/g, " ").slice(0, 56) : "找不到 .hl-row 规则");
@@ -181,13 +179,36 @@ const reqLog = [];
       [".tk-com", ".tk-call", ".tk-const", ".tk-self", ".tk-fex", ".tk-var", ".tk-pun", ".tk-def", ".tk-cls"].every((s) => CSS_TEXT.indexOf(s) >= 0),
       [".tk-com", ".tk-call", ".tk-const", ".tk-self", ".tk-fex", ".tk-var", ".tk-pun", ".tk-def", ".tk-cls"].filter((s) => CSS_TEXT.indexOf(s) < 0).join(",") || "9 类全在");
     ok("「未交卷」徽标已从面板页签删掉（他点名的）", !$("#ptJudge"), $("#ptJudge") ? "还在" : "已删");
-    const taskNums = $("#gtTask").textContent.split("\n").length;
-    const codeLines = String($("#ideTa").value).split("\n").length;
-    ok("行号 = 题面行 + 代码行，题面从 1 起、代码接着往下数",
-      taskNums >= 3 && /^1\n/.test($("#gtTask").textContent + "\n") &&
-      Number($("#gtCode").textContent.split("\n")[0]) === taskNums + 1 &&
-      $("#gtCode").textContent.split("\n").length === codeLines,
-      "题面 " + taskNums + " 行 + 代码 " + codeLines + " 行");
+    ok("题面面板与两个开关都没了：收起题面 / 自动换行不再存在（他点名的）",
+      !$(".ide-task") && !$("#gtTask") && !$("#taskToggle") && !$("#wrapToggle") && !/\.ide-editor\.wrap/.test(CSS_TEXT),
+      ["ide-task", "gtTask", "taskToggle", "wrapToggle"].filter((s) => $("#" + s) || $("." + s)).join(",") || "全删");
+    const val = String($("#ideTa").value);
+    const nums = $$("#gtCode .ln");
+    ok("行号一列编到底：从 1 起、条数等于文件行数（题面 + 代码）",
+      nums.length > 1 && nums[0].textContent === "1" && Number(nums[nums.length - 1].textContent) === val.split("\n").length,
+      "行号 " + nums.length + " 行 / 文件 " + val.split("\n").length + " 行");
+    ok("textarea 固定不折行（wrap=off，自动换行开关删了）", $("#ideTa").getAttribute("wrap") === "off");
+    /* 题面不再锁（2026-10-13 他点名「允许整块删掉」）：整份重打就是整份重打，
+       # 注释不许自己长回来；判分口径改成「独行 # 之后算代码」，删了题面就整份算代码。 */
+    type($("#ideTa"), "print('replaced')");
+    ok("题面删得掉：整份重打之后缓冲区就是这一段，注释不复活",
+      String($("#ideTa").value) === "print('replaced')",
+      JSON.stringify(String($("#ideTa").value).slice(0, 34)));
+    $("#ideReset").click();
+    const back = String($("#ideTa").value);
+    ok("重置把题面与初始代码一起放回来",
+      /^# /.test(back) && /# 任务题目：/.test(back) && /# 条件1：/.test(back),
+      back.split("\n").slice(0, 2).join(" ⏎ "));
+    /* 判分只取那条独行 "#" 之后：把代码全擦掉、只留题面，交卷必须被拦 ——
+       题面里写着「是用 print 打出来的」这类条件，能凑分的话锁区一删就全是满分了 */
+    const cut = back.split("\n").indexOf("#");
+    const taskOnly = back.split("\n").slice(0, cut + 1).join("\n") + "\n";
+    type($("#ideTa"), taskOnly);
+    click($("#ideSubmit"));
+    await sleep(300);
+    const tItem = W.document.querySelector("#toast .toast-item");
+    ok("只留题面、一个字代码没写就交卷 → 拦住（题面那几行注释不算代码）",
+      !!tItem && /先写点代码再交卷/.test(tItem.textContent), tItem ? tItem.textContent : "没有 toast");
   }
   {
     const root = $("#ideRoot");
@@ -233,12 +254,12 @@ const reqLog = [];
   ok("草稿留在本机：退出再进来自己写的代码还在", String($("#ideTa").value || "").indexOf("hello world") >= 0,
     JSON.stringify(String($("#ideTa").value).slice(0, 26)));
 
-  /* 预置文件：原来靠「考试目录」那块列出来，面板删掉之后必须留在题面里 */
+  /* 预置文件：原来靠「考试目录」那块列出来，面板删掉之后必须留在题面（编辑器顶上的注释）里 */
   W.location.hash = "#/exam/python/l41";
   await sleep(1600);
   ok("带预置文件的课题，题面里点名给出文件名与读法",
-    /# 预置文件：台账\.txt/.test(txt("#ideTask")) && /open\("台账\.txt"\)/.test(txt("#ideTask")),
-    txt("#ideTask").split("\n").filter((l) => /预置文件/.test(l))[0] || "题面里没有预置文件那行");
+    /# 预置文件：台账\.txt/.test(String($("#ideTa").value)) && /open\("台账\.txt"\)/.test(String($("#ideTa").value)),
+    String($("#ideTa").value).split("\n").filter((l) => /预置文件/.test(l))[0] || "题面里没有预置文件那行");
   ok("换一场考试，exam-mode 仍然挂着（不是只在第一次进时生效）",
     W.document.body.classList.contains("exam-mode"), W.document.body.className || "(无类名)");
 

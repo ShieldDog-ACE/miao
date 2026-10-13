@@ -126,6 +126,26 @@ function txt(x, y, s, o) {
 }
 const SANS = "'Noto Sans CJK SC','DejaVu Sans','PingFang SC','Microsoft YaHei',sans-serif";
 
+/* 标志里的字：整块字形必须落在那块面里，还要和面色分得开。
+   txt() 只量整张画布的安全区，管不到面与面之间的斜接缝 —— cpp 上一版的 ++ 就是踩着
+   接缝画到顶面外面去了，白 C 又写在了浅色面上，两个字符合起来读不出「C++」。
+   pts 必须按屏幕上的顺时针给（y 轴向下），这样内部点的叉积恒为正。
+   宽度用浏览器实测字距（Noto Sans CJK SC 800）：textW 的拉丁 0.56em 对 C / + 这种
+   宽字低估 15%，而接缝只剩几个 px，拿平均值过闸等于没过。 */
+function markText(pts, bg, x, y, s, o) {
+  const half = (o.adv || textW(s, o.size, !!o.mono)) / 2;
+  const x0 = x - half, x1 = x + half, y0 = y - o.size * 0.8, y1 = y + o.size * 0.26;
+  if (CR(o.fill, bg) < 4.5) throw new Error(`标志「${s}」和所在面分不开（${CR(o.fill, bg).toFixed(2)}:1）`);
+  for (let k = 0; k < pts.length; k++) {
+    const ax = pts[k][0], ay = pts[k][1], nx = pts[(k + 1) % pts.length][0], ny = pts[(k + 1) % pts.length][1];
+    const ex = nx - ax, ey = ny - ay;
+    for (const [px, py] of [[x0, y0], [x1, y0], [x0, y1], [x1, y1]])
+      if (ex * (py - ay) - ey * (px - ax) < 0)
+        throw new Error(`标志「${s}」出了所在面：角点 ${n(px)},${n(py)} 越过边 ${n(ax)},${n(ay)}→${n(nx)},${n(ny)}`);
+  }
+  return txt(x, y, s, { size: o.size, weight: o.weight, fill: o.fill, anchor: "middle" });
+}
+
 /* ---------------- 版式：标志在正中上方，标题与说明居中在下 ---------------- */
 /* 中线 cx=320。标志带 y 40~186，色线 y 196，标题基线 246，说明基线 284。
    每条 spec 只能往这几个槽里放东西，越界由 helper 当场拦下。 */
@@ -166,6 +186,22 @@ function markSnakes(h, colors) {
   const tx = x0 - PY_BBOX.x0 * s, ty = y0 - PY_BBOX.y0 * s;
   return `<g transform="translate(${n(tx)},${n(ty)}) scale(${n(s)})" stroke-linejoin="round">` +
     BLUE_SNAKE.map((d, i) => `<path d="${d}" fill="${colors[i]}" stroke="${colors[i]}" stroke-width="0.8"/>`).join("") + "</g>";
+}
+
+/* ---------------- C++ 立方体的骨架 ---------------- */
+/* 尖顶六边形（r=66，中心 320,110）切成三块平行四边形面。顶点一律按屏幕顺时针给，
+   markText 的「点在多边形内」判据靠这个顺序才成立。 */
+function cppFaces() {
+  const r = 66, dx = r * 0.866, cy = 110;
+  const T = [CX, cy - r], B = [CX, cy + r],
+    TL = [CX - dx, cy - r / 2], TR = [CX + dx, cy - r / 2],
+    BL = [CX - dx, cy + r / 2], BR = [CX + dx, cy + r / 2], M = [CX, cy];
+  return { T, TR, BR, B, BL, TL, M, top: [T, TR, M, TL], left: [TL, M, B, BL], right: [M, TR, BR, B] };
+}
+function facePoly(pts, fill, tag) {
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  box(tag, Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys));
+  return `<polygon points="${pts.map(p => `${n(p[0])},${n(p[1])}`).join(" ")}" fill="${fill}"/>`;
 }
 
 /* ---------------- 各门课的标志 ---------------- */
@@ -249,6 +285,33 @@ const MARKS = {
       circ(320, 164, 8, c.tint, { tag: "回路点" }) +
       lines("M300 156C310 168 330 168 340 156", { stroke: c.tint, width: 2.5 });
   },
+  /* C++ 入门：官方 logo 的几何 —— 尖顶六边形立方体，三块面按官方配色
+     顶面浅 #659AD2 / 左面 #00599C / 右面 #004482。白字只能压在下面这两块深色面上。
+     C 写在左面、++ 写在右面，两块面共用的那条竖棱（320,110→320,176）正好落在两者之间，
+     横着读就是「C++」。两个字符的墨心都对在 y≈123.5，谁都不许踩接缝。 */
+  cpp(c) {
+    const F = cppFaces();
+    const L = "#00599c", R = "#004482";
+    return facePoly(F.top, "#659ad2", "C++顶面") +
+      facePoly(F.left, L, "C++左面") +
+      facePoly(F.right, R, "C++右面") +
+      markText(F.left, L, 292, 138.5, "C", { size: 40, weight: 800, fill: "#ffffff", adv: 0.656 * 40 }) +
+      markText(F.right, R, 350, 135, "++", { size: 30, weight: 800, fill: "#ffffff", adv: 1.18 * 30 });
+  },
+  /* C++ 掌握：同一个立方体只揭开顶面 —— 顶面实色当盖子，下面两块面留白，
+     C 与 ++ 用本课程本色的深蓝直接写在牌底上。「外壳拆开、里面看得清」就是掌握要干的事，
+     和入门那张整块实心立方体一眼分得开，但仍是同一个 logo 家族。 */
+  cppm(c) {
+    const F = cppFaces(), dx = F.TR[0] - CX;
+    const hexPts = [F.T, F.TR, F.BR, F.B, F.BL, F.TL].map(p => `${n(p[0])},${n(p[1])}`).join(" ");
+    box("掌握六边形", CX - dx - 3.25, 110 - 66 - 3.25, CX + dx + 3.25, 110 + 66 + 3.25);
+    return facePoly(F.top, "#659ad2", "掌握顶面") +
+      `<polygon points="${hexPts}" fill="none" stroke="${c.tint}" stroke-width="6.5" stroke-linejoin="round"/>` +
+      lines(`M${n(F.M[0])} ${n(F.M[1])}L${n(F.TL[0])} ${n(F.TL[1])}M${n(F.M[0])} ${n(F.M[1])}L${n(F.TR[0])} ${n(F.TR[1])}M${n(F.M[0])} ${n(F.M[1])}L${n(F.B[0])} ${n(F.B[1])}`,
+        { stroke: c.tint, width: 3.5, tag: "棱线" }) +
+      markText(F.left, c.plate, 292, 138.5, "C", { size: 40, weight: 800, fill: c.tint, adv: 0.656 * 40 }) +
+      markText(F.right, c.plate, 350, 135, "++", { size: 30, weight: 800, fill: c.tint, adv: 1.18 * 30 });
+  },
 };
 
 /* ---------------- 在册课程表 ---------------- */
@@ -264,6 +327,16 @@ const SPECS = [
   { id: "ml", title: "机器学习入门", sub: "译自 Microsoft · MIT · 27 课", plate: "#eef4f7", tint: "#1b6f8c", ink: "#17262d", dim: "#5b7078" },
   { id: "webdev", title: "Web 开发入门", sub: "译自 Microsoft · MIT · 27 课", plate: "#eef5f1", tint: "#2f7d55", ink: "#18271f", dim: "#5d7568" },
   { id: "agents", title: "AI Agent 入门", sub: "译自 Microsoft · MIT · 19 课", plate: "#fdf2ec", tint: "#b8500f", ink: "#2b1d12", dim: "#7d6a5c" },
+  {
+    id: "cpp", title: "C++ 入门", sub: "81 课 · 现代 C++ · 每课考过关才能往下走",
+    plate: "#eef2f8", tint: "#00599c", ink: "#142639", dim: "#57677c",
+    credit: "标志几何取自 ISO C++ 官方 logo（六边形立方体，顶面 #659AD2 / 左面 #00599C / 右面 #004482）；仅用于指代 C++ 这门语言本身，不代表官方出品或背书。",
+  },
+  {
+    id: "cppm", title: "C++ 掌握", sub: "132 课 · 标准库 · 数据结构与算法实战",
+    plate: "#ecf0f7", tint: "#004482", ink: "#0f2032", dim: "#525f76",
+    credit: "标志几何取自 ISO C++ 官方 logo（六边形立方体揭开顶面的线框版）；仅用于指代 C++ 这门语言本身，不代表官方出品或背书。",
+  },
 ];
 
 /* d 属性 → 包围盒。把控制点也算进去（只会把盒子放大、不会缩小），所以拿它当

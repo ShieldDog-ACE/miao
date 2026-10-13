@@ -14,7 +14,7 @@ window.MIAO_SITE = {
   /* 大类 → 小类（首页分类页按这个层级摆）。
      这些位置是他给之后留的内容位，不许按「现在有没有教程」当死件删。 */
   categories: {
-    "编程语言": ["python", "java", "c++", "js", "ts", "c", "c#", "汇编"],
+    "编程语言": ["python", "java", "C++","js", "ts", "c", "c#", "汇编"],
     "开发工具": ["git", "github", "linux", "vs code", "trae"],
     "其他": ["计算机基础", "高等数学", "嵌入式", "算法", "Agent", "大模型", "英语"]
   },
@@ -55,17 +55,31 @@ window.MIAO_SITE = {
       id: "agents", source: "MIAO_MS_AGENTS", updated: "2026-10-07", engine: "",
       files: ["assets/data/ms-data.js", { glob: "assets/data/ms/agents-c*.js" }, "assets/data/ms-bodies.js"],
       mount: "MIAO_MS_MOUNT", examFiles: []
+    },
+    /* C++ 两门课：入门（源稿 1–81）/ 掌握（源稿 82–213）。考试全走笔试引擎（浏览器跑不了 C++），
+       占位正文先挂着，正文分部写一批顶掉一批。 */
+    {
+      id: "cpp", source: "MIAO_CPP", updated: "2026-10-10", engine: "paper",
+      files: ["assets/data/cpp/legacy.js", { glob: "assets/data/cpp/p*.js" }, "assets/data/cpp-data.js"],
+      examFiles: [{ glob: "assets/data/cpp-exam/p*.js" }, "assets/data/cpp-exam-data.js"]
+    },
+    {
+      id: "cppm", source: "MIAO_CPPM", updated: "2026-10-10", engine: "paper",
+      files: ["assets/data/cppm/legacy.js", { glob: "assets/data/cppm/p*.js" }, "assets/data/cppm-data.js"],
+      examFiles: [{ glob: "assets/data/cppm-exam/p*.js" }, "assets/data/cppm-exam-data.js"]
     }
   ],
 
-  /* 考场界面脚本：按 engine 分三套，进考场才拉。
+  /* 考场界面脚本：按 engine 分四套，进考场才拉。
      顺序有讲究 —— exam-grade.js / exam-ui.js 在浏览器里直接用沙箱挂在 window 上的全局名，
-     所以沙箱四份必须排在它们前面（写反了会当场 ReferenceError: require is not defined）。 */
+     所以沙箱四份必须排在它们前面（写反了会当场 ReferenceError: require is not defined）。
+     paper = 笔试（C++ 这类浏览器跑不了的），判分在 exam-paper.js，界面在 exam-paper-ui.js。 */
   engines: {
     code: ["assets/js/py-engine.js", "assets/js/py-runtime.js", "assets/js/py-builtin.js",
-      "assets/js/py-stdlib.js", "assets/js/exam-grade.js", "assets/js/exam-ui.js"],
+      "assets/js/py-stdlib.js", "assets/js/exam-grade.js", "assets/js/code-editor.js", "assets/js/exam-ui.js"],
     en: ["assets/js/exam-ui.js", "assets/js/exam-en.js"],
-    enword: ["assets/js/exam-ui.js", "assets/js/exam-en.js"]
+    enword: ["assets/js/exam-ui.js", "assets/js/exam-en.js"],
+    paper: ["assets/js/code-editor.js", "assets/js/exam-ui.js", "assets/js/exam-paper.js", "assets/js/exam-paper-ui.js"]
   },
 
   announcements: [

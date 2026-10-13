@@ -2,9 +2,12 @@
 # 喵站 · 全量测试（纯静态站，无后端）
 #   1) 静态站 UI E2E —— 自起一台只发文件的静态服务器，jsdom 里走一遍读者路径
 #   2) 主题闸门     —— 浅/深/粉三套令牌是否齐、36 组字底对比度、:root 外硬编码色
-#   3) 封面闸门     —— 7 张挂站封面的标志居中、安全区、对比度（covers.js --check）
-#   4) 沙箱对拍     —— 教程正文 433 段代码逐段与本机 CPython 比 stdout（需要 python3）
-#   5) 考卷自测     —— 45 场 Python 考试 + 3 章英语卷的参考解/合法写法/宽松写法/错解
+#   3) 封面闸门     —— 9 张挂站封面的标志居中、安全区、对比度（covers.js --check）
+#   4) 类名覆盖闸门 —— JS 发出去的语法/终端类，CSS 里必须真有规则（漏一个就静默掉色）
+#   4b) C++ 三把闸 + 双课 E2E —— 正文四条闸、考卷「源稿任务全覆盖」对账、笔试考场走通
+#   4c) 编辑器控件   —— 两把尺无损 round-trip、四层对齐、成对闭合/缩进/补全（code-editor.js）
+#   5) 沙箱对拍     —— 教程正文 433 段代码逐段与本机 CPython 比 stdout（需要 python3）
+#   6) 考卷自测     —— 45 场 Python 考试 + 3 章英语卷的参考解/合法写法/宽松写法/错解
 # 跑法：bash dev/tests/run.sh
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -33,11 +36,44 @@ echo
 echo "===== 封面闸门（标志居中 / 安全区 / 对比度 —— 产物只由 covers.js 拥有） ====="
 node "$HERE/../tools/covers.js" --check || EC=1
 echo
+echo "===== 类名覆盖闸门（JS 发出的每个 tk-/term-/tb-/en- 类，CSS 里都得有规则） ====="
+node "$HERE/../tools/class-coverage.js" || EC=1
+echo
+echo "===== 正文高光自测（全部 t:code 块过高光必须无损，陌生 lang / 全灰也要红） ====="
+node "$HERE/hl-test.js" || EC=1
+echo
+echo "===== 代码编辑器控件自测（两把尺无损 / 四层对齐 / 成对闭合 / 缩进 / 补全） ====="
+node "$HERE/editor-test.js" || EC=1
+echo
 echo "===== 正文三条闸（梗 / 交叉引用 / 构造首现，只查已重做的新稿） ====="
 node "$HERE/../tools/lesson-audit.cjs" || EC=1
 echo
 echo "===== 考题三条闸（读者可见字段同样不许提前接触） ====="
 node "$HERE/../tools/exam-audit.cjs" || EC=1
+echo
+echo "===== 闸的自检：C++ 两把尺对「故意写坏的样本」必须红 ====="
+BAD=0
+if node "$HERE/../tools/cpp-audit.cjs" --part dev/tools/cpp-gate-fixtures/bad-part.js >/dev/null 2>&1; then
+  echo "  ✘ cpp-audit 对坏样本返回了 0 —— 这把尺已经变成哑巴（正则被改松了？）"; BAD=1
+fi
+if node "$HERE/../tools/cpp-exam-check.cjs" --fixture >/dev/null 2>&1; then
+  echo "  ✘ cpp-exam-check 对坏样本返回了 0 —— 权重/任务对账/自测这三项没在判"; BAD=1
+fi
+if node "$HERE/../tools/cpp-audit.cjs" --part dev/tools/cpp-gate-fixtures/bad-part.js 2>/dev/null | grep -c "✘" | grep -qv "^0$"; then :; else echo "  ✘ cpp-audit 红了但没点名任何一条"; BAD=1; fi
+[ "$BAD" -eq 0 ] && echo "  ✔ 两把尺都会红，且逐条点名"
+[ "$BAD" -ne 0 ] && EC=1
+echo
+echo "===== 构造首现表的课号线自检（表 vs 源稿第一手事实） ====="
+node "$HERE/../tools/cpp-teach-audit.cjs" --strict || EC=1
+echo
+echo "===== C++ 正文四条闸（梗 / 反引号 / 前向引用 / 构造首现） ====="
+node "$HERE/../tools/cpp-audit.cjs" || EC=1
+echo
+echo "===== C++ 考卷闸（契约 / 源稿任务全覆盖对账 / 结构 / 参考解错解自测） ====="
+node "$HERE/../tools/cpp-exam-check.cjs" || EC=1
+echo
+echo "===== C++ 双课 E2E（笔试考场六种题型 / 代码高光 / 按需加载） ====="
+node "$HERE/cpp-e2e.js" || EC=1
 echo
 echo "===== 笔试引擎自测 ====="
 node "$HERE/paper-test.js" || EC=1

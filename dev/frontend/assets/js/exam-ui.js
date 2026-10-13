@@ -1,10 +1,10 @@
 /* 喵站 · 课末考试 · Python  IDE 界面
  *
  * 布局照 VS Code，但只留真能用的那几块：标题栏（退出 / 运行 / 重置 / 交卷 / 字号）
- * → 编辑区（题面就是文件顶部那几行 # 注释，只读、可折叠；下面是可写的代码）
+ * → 编辑区（题面就是文件顶部那几行 # 注释，跟代码同在编辑器里，想删就删；判分只取独行 # 之后）
  * → 屏幕正下方的面板（终端 / 判定清单 / 问题，可拖高、可收起）→ 底部状态栏。
- * 这一版只管「看得清」：着色自己扫源码、自己记偏移（引擎的 token 不带偏移，靠它拼会丢缩进和注释），
- * 判分与解释一概不动 —— 跑代码走 GRADE.runCode，交卷走 GRADE.grade。
+ * 编辑器本体（四层 + 键位 + 成对闭合 + 补全 + 着色）在 code-editor.js，与 C++ 笔试卷共用一件；
+ * 判分与运行一概不动 —— 跑代码走 GRADE.runCode，交卷走 GRADE.grade。
  */
 (function (root) {
   "use strict";
@@ -18,169 +18,17 @@
     });
   }
 
-  /* ---------------- 编辑器排版常量：四层（题面 / 行号 / 着色层 / textarea）共用一套 ---------------- */
-  var LH = 1.6;          /* 行距：四层必须一模一样，与 style.css 的 --ide-lh 是同一个数，差 0.1 行号就飘 */
-  var PAD_V = 10, PAD_H = 14;
+  /* ---------------- 编辑器与着色都在 code-editor.js ----------------
+     这件控件 Python 考场与 C++ 笔试卷共用：四层（行号 / 当前行 / 着色 / textarea）、
+     成对闭合、块缩进、自动缩进、补全都在那边。以前这把 py 尺（自己扫源码、自己记偏移）
+     整体搬进了控件，这里只留两个转发 —— 终端回显与「看参考写法」拿到的还是同一个高亮器。
+     注意别在文件顶上就把控件接住：英语那两套考场的清单里只有 exam-ui.js，它一旦先跑起来，
+     顶层的 root.MIAO_EDITOR 还是空的，Python 考场就会永远「编辑器没加载上」。用到时再取。 */
+  function highlight(code) { return root.MIAO_EDITOR ? root.MIAO_EDITOR.highlight(code, "py") : esc(code); }
+  function hlInline(code) { return root.MIAO_EDITOR ? root.MIAO_EDITOR.hlInline(code, "py") : esc(code); }
 
-  /* ---------------- 字号：Ctrl+滚轮 / Ctrl+−0，改的是 #ideRoot 上的 --ide-fs ---------------- */
+  /* 字号档位：Ctrl+滚轮 / Ctrl+−0 改的是 #ideRoot 上的 --ide-fs，控件四层跟着走 */
   var FS_MIN = 12, FS_MAX = 26, FS_0 = 15;
-
-  /* ---------------- 语法着色 ----------------
-   * 为什么不用引擎的 token：py-engine 的 tokenize() 只给 {t, v, line}，没有 start/end，
-   * 而且字符串的 v 是「解码后」的值（"\n" 变成真换行、引号没了）、注释直接不进 token、
-   * f-string 的 v 还是个数组 —— 照它拼 HTML 会把缩进和注释整段丢掉，末尾还要把源码重贴一遍。
-   * 所以这里自己扫一遍源码，位置由 scanner 自己记：原文一个字符都不动，只往上叠 class。 */
-  var KW = ENG && ENG.KEYWORDS ? ENG.KEYWORDS : {};
-  var CONST = { "True": 1, "False": 1, "None": 1 };
-  var SELFISH = { self: 1, cls: 1 };
-  var BUILTIN_NAMES = {
-    print: 1, len: 1, range: 1, input: 1, int: 1, str: 1, float: 1, bool: 1, list: 1, tuple: 1,
-    dict: 1, set: 1, type: 1, isinstance: 1, sum: 1, max: 1, min: 1, abs: 1, round: 1, sorted: 1,
-    open: 1, enumerate: 1, zip: 1, reversed: 1, repr: 1, any: 1, all: 1, map: 1, filter: 1, next: 1,
-    iter: 1, frozenset: 1, bytes: 1, id: 1, hash: 1, chr: 1, ord: 1, divmod: 1, pow: 1, format: 1
-  };
-  var PFX = "rRbBuUfF", OPS = "+-*/%<>=!&|^~@", PUNS = "([{)]},.;:";
-  var RE_NAME = /^[^\W\d][\w\u0080-\uffff]*/;
-  var RE_NUM = /^0[xXbBoO][0-9a-fA-F_]+|^\d[\d_]*\.(?:[\d_]+)?(?:[eE][+-]?\d+)?|^\.\d[\d_]*(?:[eE][+-]?\d+)?|^\d[\d_]*[eE][+-]?\d+|^\d[\d_]*/;
-  var RE_OP = /^[+\-*\/%<>=!&|^~@]+/;
-
-  /* 定位一个字符串字面量：只找边界，不改内容。没闭合就返回 0（不染色，免得后面整段跑偏） */
-  function strLen(code, i) {
-    var p = i, pre = 0;
-    while (p < code.length && PFX.indexOf(code.charAt(p)) >= 0 && pre < 3) { p++; pre++; }
-    var q = code.charAt(p);
-    if (q !== "'" && q !== '"') return 0;
-    var triple = code.charAt(p + 1) === q && code.charAt(p + 2) === q;
-    var close = triple ? q + q + q : q;
-    var j = p + close.length;
-    while (j < code.length) {
-      if (code.charAt(j) === "\\") { j += 2; continue; }
-      if (code.substr(j, close.length) === close) return j + close.length - i;
-      if (code.charAt(j) === "\n" && !triple) return 0;
-      j++;
-    }
-    return triple ? code.length - i : 0;      /* 三引号没关上：吃到文件尾，至少不断行 */
-  }
-
-  function highlight(code) {
-    code = String(code == null ? "" : code);
-    var html = '<div class="hl-row">', openCls = null, i = 0, n = code.length;
-    var atLineStart = true, lastKw = "", indLevel = 0;
-
-    function closeSpan() { if (openCls !== null) { html += "</span>"; openCls = null; } }
-    function openSpan(cls) { openCls = cls; html += '<span class="' + cls + '">'; }
-    /* 一次写入：内含换行就按行拆，拆完颜色接着上（三引号跨行不会串色） */
-    function add(cls, text) {
-      var parts = String(text).split("\n");
-      for (var k = 0; k < parts.length; k++) {
-        if (parts[k] !== "") {
-          if (cls) { if (openCls !== cls) { closeSpan(); openSpan(cls); } html += esc(parts[k]); }
-          else { closeSpan(); html += esc(parts[k]); }
-        }
-        if (k + 1 < parts.length) { closeSpan(); html += '</div><div class="hl-row">'; }
-      }
-    }
-
-    while (i < n) {
-      var c = code.charAt(i);
-
-      if (c === "\n") { closeSpan(); indLevel = 0; atLineStart = true; lastKw = ""; html += '</div><div class="hl-row">'; i++; continue; }
-
-      /* 行首空白 → 缩进参考线；整行只有空白就别画线 */
-      if (atLineStart && (c === " " || c === "\t")) {
-        var s0 = i;
-        while (i < n && (code.charAt(i) === " " || code.charAt(i) === "\t")) i++;
-        var ind = code.slice(s0, i);
-        var blank = i >= n || code.charAt(i) === "\n";
-        add(blank ? null : "tk-ind", ind);
-        indLevel = ind.replace(/\t/g, "    ").length;
-        atLineStart = false;
-        continue;
-      }
-      /* 词间空白 / 行尾空白（行尾的标出来：读者能看见自己多敲了几个空格） */
-      if (c === " " || c === "\t") {
-        var s1 = i;
-        while (i < n && (code.charAt(i) === " " || code.charAt(i) === "\t")) i++;
-        add((i >= n || code.charAt(i) === "\n") ? "tk-tws" : null, code.slice(s1, i));
-        continue;
-      }
-      if (c === "\f") { i++; continue; }
-      atLineStart = false;
-
-      if (c === "#") { var s2 = code.indexOf("\n", i); if (s2 < 0) s2 = n; add("tk-com", code.slice(i, s2)); i = s2; continue; }
-
-      var sl = strLen(code, i);
-      if (sl) {
-        var raw = code.slice(i, i + sl);
-        var fm = /^([rRbBuUfF]*)(['"]{1,3})/.exec(raw);
-        /* 只看引号前面的真前缀：用 raw.slice(0,3) 粗判会把引号后的内容字符算进去，
-           'f{x}' 这种普通字符串就被误判成 f-string，{x} 染上表达式的色 */
-        var isF = /[fF]/.test(fm[1]);
-        if (!isF) add("tk-str", raw);
-        else {
-          /* f-string：串本身跟着串色，{} 里的表达式单独一个色，读长串时能一眼看出哪段是代码 */
-          var bStart = fm[0].length, bEnd = raw.length - fm[2].length;
-          add("tk-str", raw.slice(0, bStart));
-          var seg = bStart, p = bStart;
-          while (p < bEnd) {
-            if (raw.charAt(p) === "\\") { p += 2; continue; }
-            if (raw.charAt(p) !== "{") { p++; continue; }
-            add("tk-str", raw.slice(seg, p));                 /* 表达式前面那段普通文字 */
-            var q = p + 1, dep = 1;
-            while (q < bEnd && dep > 0) {
-              if (raw.charAt(q) === "\\") { q += 2; continue; }
-              if (raw.charAt(q) === "{") dep++;
-              else if (raw.charAt(q) === "}") dep--;
-              q++;
-            }
-            add("tk-fex", raw.slice(p, Math.min(q, bEnd)));   /* {expr} 整段 */
-            p = seg = Math.min(q, bEnd);
-          }
-          add("tk-str", raw.slice(seg, bEnd));
-          add("tk-str", raw.slice(bEnd));                     /* 收尾的引号 */
-        }
-        i += sl; lastKw = ""; continue;
-      }
-
-      if (/[0-9]/.test(c) || (c === "." && /[0-9]/.test(code.charAt(i + 1)))) {
-        var mn = RE_NUM.exec(code.slice(i, i + 48));
-        if (mn && mn[0]) { add("tk-num", mn[0]); i += mn[0].length; lastKw = ""; continue; }
-      }
-
-      if (c === "@" && indLevel === 0 && /[\w.]/.test(code.charAt(i + 1) || "")) {
-        var md = /^@[\w\u0080-\uffff][\w.\u0080-\uffff]*/.exec(code.slice(i));
-        add("tk-dec", md[0]); i += md[0].length; continue;
-      }
-
-      var rname = RE_NAME.exec(code.slice(i));
-      if (rname && rname[0]) {
-        var word = rname[0], cls;
-        if (CONST[word]) cls = "tk-const";          /* True/False/None 也在必用关键字里，先给它们自己的色 */
-        else if (KW[word]) cls = "tk-kw";
-        else if (SELFISH[word]) cls = "tk-self";
-        else if (BUILTIN_NAMES[word]) cls = "tk-bi";
-        else if (lastKw === "def") cls = "tk-def";
-        else if (lastKw === "class") cls = "tk-cls";
-        else {
-          var after = code.slice(i + word.length).match(/^[ \t]*\(/);
-          cls = after ? "tk-call" : "tk-var";
-        }
-        add(cls, word);
-        i += word.length;
-        lastKw = KW[word] || CONST[word] ? word : (lastKw === "def" || lastKw === "class" ? "" : lastKw);
-        continue;
-      }
-
-      var mop = RE_OP.exec(code.slice(i));
-      if (mop) { add("tk-op", mop[0]); i += mop[0].length; lastKw = ""; continue; }
-      if (PUNS.indexOf(c) >= 0) { add("tk-pun", c); i++; continue; }
-
-      add(null, c); i++;                                /* 兜底：原样吐，绝不吞字符 */
-    }
-    closeSpan();
-    html += "</div>";
-    return html;
-  }
 
   /* ---------------- 主视图 ---------------- */
   function vExam(app, params) {
@@ -196,7 +44,12 @@
   }
 
   function render(app, tid, cid, exam, my) {
-    /* 英语那两套卷（字母音标卷 / 单词卷）不是写代码，交给另一套界面画 */
+    /* 英语那两套卷（字母音标卷 / 单词卷）不是写代码，交给另一套界面画；
+       笔试卷（C++ 这种浏览器跑不了的）也是 —— 判分本体在 exam-paper.js */
+    if (exam && exam.kind === "paper" && root.MIAO_EXAM_PAPER) {
+      root.MIAO_EXAM_PAPER.render(app, tid, cid, exam, my);
+      return;
+    }
     if (exam && (exam.kind === "en" || exam.kind === "enword") && root.MIAO_EXAM_EN) {
       root.MIAO_EXAM_EN.render(app, tid, cid, exam, my);
       return;
@@ -204,26 +57,27 @@
     var title = exam.title || ("第 " + cid.replace(/\D/g, "") + " 课考试");
     var fileName = exam.file || "main.py";
     var draft = loadDraft(tid, cid);
-    var code = draft !== null ? draft : (exam.starter || "");
     var stdinLines = (exam.stdin || []).join("\n");
 
-    /* ---- 题面就是文件顶部那几行 # 注释；「条件」直接取判定清单，两边不会说两套话 ----
-     * 结构（kind）决定这一行长什么样、染色怎么染；文字（text）还是原样的 # 注释，一个字不改。 */
-    var TASK = [{ kind: "title", text: "# " + title }];
-    TASK.push({ kind: "task", text: "# 任务题目：" + (exam.task || "") });
+    /* ---- 题面就是文件顶部那几行 # 注释，写在编辑器里，但不再锁 ----
+     * 「条件」直接取判定清单，两边不会说两套话。跑 / 判分取的是那条独行 "#" 之后的部分
+     * （codeNow()），报错行号的偏移也按同一条线算，所以整块题面删掉只是少了那几行注释，
+     * 不会把行号跳错一格。
+     * 为什么不再锁：上一版每次 input 都拿 TASK_TEXT 往回贴，全选重打、行首退格都会让题面
+     * 自己长回来，这份文件想清空都清不掉 —— 2026-10-13 他点名改成「允许整块删掉」。 */
+    var TASK = ["# " + title, "# 任务题目：" + (exam.task || "")];
     (exam.checks || []).forEach(function (c, i) {
-      TASK.push({
-        kind: "cond", ci: i, no: i + 1,
-        label: c.label || c.type, w: (c.weight || 0),
-        text: "# 条件" + (i + 1) + "：" + (c.label || c.type) + "（" + (c.weight || 0) + " 分）"
-      });
+      TASK.push("# 条件" + (i + 1) + "：" + (c.label || c.type) + "（" + (c.weight || 0) + " 分）");
     });
-    if (exam.hint) TASK.push({ kind: "hint", text: "# 提示：" + exam.hint });
+    if (exam.hint) TASK.push("# 提示：" + exam.hint);
     /* 原来「考试目录」那块列的就是这些文件；删了面板，名字得留在题面里，不然没人知道有预置文件 */
     var preset = Object.keys(exam.files || {});
-    if (preset.length) TASK.push({ kind: "file", text: "# 预置文件：" + preset.join("、") + "（用 open(\"" + preset[0] + "\") 读）" });
-    TASK.push({ kind: "blank", text: "#" });
-    var TL = TASK.length;
+    if (preset.length) TASK.push("# 预置文件：" + preset.join("、") + "（用 open(\"" + preset[0] + "\") 读）");
+    TASK.push("#");
+    var TASK_TEXT = TASK.join("\n") + "\n";
+    /* 草稿存的是整份 buffer（题面 + 代码一起）。改版之前的草稿存的是「只有代码」——
+       那种 buffer 开头不是 "# "，按新口径整份都算代码，判分与行号都不会错位，不用迁移。 */
+    var buffer = draft !== null ? draft : TASK_TEXT + (exam.starter || "");
 
     app.innerHTML =
       '<div class="ide" id="ideRoot">' +
@@ -243,30 +97,14 @@
       '<div class="ide-main">' +
       '<div class="ide-tabs"><span class="tab on">' + esc(fileName) +
       '<i class="dot" id="ideDirty"></i></span>' +
-      '<span class="tabs-hint">题面就是文件最上面那几行 # 注释（只读）</span></div>' +
+      '<span class="tabs-hint">题面就是文件最上面那几行 # 注释（判分只取独行 # 之后，删掉也行）</span></div>' +
 
       '<div class="ide-crumb">' +
-      '<span class="crumb-path">' + esc(tid) + " › " + esc(cid) + " › " + esc(fileName) + "</span>" +
-      '<span class="crumb-ops">' +
-      '<button class="crumb-btn" id="taskToggle" type="button" title="把题面收起来，编辑区大一截">收起题面</button>' +
-      '<button class="crumb-btn" id="wrapToggle" type="button" title="长行折回来看不用左右拖（默认关）">自动换行</button>' +
-      "</span></div>" +
+      '<span class="crumb-path">' + esc(tid) + " › " + esc(cid) + " › " + esc(fileName) + "</span></div>" +
 
-      /* 行号两段：题面那段跟着各自的文字行高走（题面要折行），代码那段跟着 textarea 同步滚 */
-      '<div class="ide-editor" id="ideEditor">' +
-      '<div class="ide-task" id="ideTaskWrap">' +
-      '<pre class="gt gt-task" id="gtTask" aria-hidden="true"></pre>' +
-      '<div class="ide-tasktext" id="ideTask" aria-label="本题题面"></div>' +
-      "</div>" +
-      '<div class="ide-code-row">' +
-      '<pre class="gt gt-code ide-gutter" id="gtCode" aria-hidden="true"></pre>' +
-      '<div class="ide-code">' +
-      '<div class="ide-cur" id="ideCur"></div>' +
-      '<pre class="ide-hl" id="ideHl" aria-hidden="true"></pre>' +
-      '<textarea class="ide-ta" id="ideTa" spellcheck="false" autocomplete="off" autocapitalize="off">' +
-      esc(code) + "</textarea>" +
-      "</div></div>" +
-      "</div>" +
+      /* 行号一列编到底：题面那几行 # 注释就在编辑器里，跟代码连着编号。
+         四层 DOM 由 code-editor.js 建，这里只给宿主。 */
+      '<div class="ide-editor" id="ideEditor"></div>' +
 
       /* ---- 屏幕正下方的面板：终端 / 判定清单 / 问题（上面那条能拖） ---- */
       '<div class="ide-panel" id="idePanel">' +
@@ -314,103 +152,69 @@
       '<span class="st" id="stLen"></span>' +
       '<span class="st st-opt">UTF-8</span><span class="st st-opt">空格: 4</span>' +
       '<span class="st st-opt">Python</span>' +
-      '<span class="st st-score" id="stScore">' +
+      '<span class="st st-score' + (my && my.passed ? " ok" : "") + '" id="stScore">' +
       (my && my.best ? "最高 " + my.best + " 分" + (my.passed ? "（已过）" : "") : "") +
       "</span>" +
       "</div></div>";
 
-    /* ---------- 题面：一行一对（行号 + 文字），文字折行了行号也跟着走，不会错位 ---------- */
-    var ta = $("#ideTa"), hl = $("#ideHl"), editor = $("#ideEditor"), ideRoot = $("#ideRoot");
-    var gtTask = $("#gtTask"), gtCode = $("#gtCode"), taskBox = $("#ideTask"), taskWrap = $("#ideTaskWrap");
-    var cur = $("#ideCur"), dirty = $("#ideDirty");
-
-    gtTask.innerHTML = TASK.map(function (_, i) {
-      return '<i class="ln">' + (i + 1) + "</i>";
-    }).join("\n");
-    taskBox.innerHTML = TASK.map(function (row, i) {
-      var inner;
-      if (row.kind === "cond") {
-        inner = '<span class="tl-punc"># </span><span class="tl-tag">条件' + row.no + "</span>" +
-          '<span class="tl-punc">：</span><span class="tl-body">' + esc(row.label) + "</span>" +
-          '<span class="tl-w">（' + row.w + " 分）</span><i class=\"tl-ck\" data-ci=\"" + row.ci + '">•</i>';
-      } else if (row.kind === "blank") {
-        inner = '<span class="tl-punc">#</span>';
-      } else {
-        var head = row.kind === "task" ? "# 任务题目：" : row.kind === "hint" ? "# 提示：" : row.kind === "file" ? "# 预置文件：" : "# ";
-        var rest = row.text.slice(head.length);
-        inner = '<span class="tl-punc"># </span>' + (head.length > 2 ? '<span class="tl-tag">' + esc(head.slice(2)) + "</span>" : "") +
-          '<span class="tl-body">' + esc(rest) + "</span>";
+    /* ---------- 编辑器：整件控件交给 code-editor.js（四层 + 键位 + 成对闭合 + 补全） ----------
+       题面不再锁：那几行 # 注释就躺在 buffer 最上面，随便删；跑与判分取的是独行 "#" 之后。 */
+    var editor = $("#ideEditor"), ideRoot = $("#ideRoot");
+    var dirty = $("#ideDirty");
+    var ED = root.MIAO_EDITOR;
+    if (!ED) {
+      editor.innerHTML = '<div class="ide-loading">编辑器控件没加载上：site.js 的 engines.code 里 code-editor.js 必须排在 exam-ui.js 前面。</div>';
+      return;
+    }
+    var ed = ED.create(editor, {
+      lang: "py", value: buffer,
+      onChange: function (v) { saveDraft(tid, cid, v); updDirty(); },
+      onCursor: function (c) {
+        $("#stPos").textContent = "Ln " + c.line + ", Col " + c.col;
+        $("#stLen").textContent = c.longest > 79
+          ? "最长 " + c.longest + " 列（第 " + c.longestAt + " 行）" : "共 " + c.rows + " 行";
+      },
+      /* Ctrl 组合键归考场自己（运行 / 字号 / 保存）；Tab、回车、成对闭合那些归控件 */
+      onKey: function (ev) {
+        var k = ev.key;
+        if (!(ev.ctrlKey || ev.metaKey)) return false;
+        if (k === "Enter") { ev.preventDefault(); doRun(); return true; }
+        if (k === "=" || k === "+") { ev.preventDefault(); setFs(fs + 1); return true; }
+        if (k === "-" || k === "_") { ev.preventDefault(); setFs(fs - 1); return true; }
+        if (k === "0") { ev.preventDefault(); setFs(FS_0); return true; }
+        if (k === "s" || k === "S") { ev.preventDefault(); saveDraft(tid, cid, ed.getValue()); toast("已保存到本机"); return true; }
+        return false;
       }
-      return '<div class="tl tl-' + row.kind + '" style="grid-row:' + (i + 1) + '">' + inner + "</div>";
-    }).join("");
-    $$(".gt-task .ln").forEach(function (el, i) { el.style.gridRow = String(i + 1); el.style.gridColumn = "1"; });
-    $$(".ide-tasktext .tl").forEach(function (el) { el.style.gridColumn = "2"; });
+    });
+    var ta = ed.ta, hl = ed.hlLayer, gtCode = ed.gutter;
+    var cur = ed.el.querySelector(".ed-cur");
+    /* 这几个 id 是测试与跳行共用的抓手；控件本身不带课专属的 id，建完再贴上去 */
+    ta.id = "ideTa"; gtCode.id = "gtCode"; hl.id = "ideHl"; cur.id = "ideCur";
 
-    /* ---------- 代码：着色层 + 透明 textarea 叠在一起，行号单独一列 ---------- */
-    var wrapOn = false;
-    try { wrapOn = localStorage.getItem("miao_ide_wrap") === "1"; } catch (e) { }
-
-    function syncSize() {
-      hl.innerHTML = highlight(ta.value);
-      var lines = ta.value.split("\n");
-      gtCode.innerHTML = lines.map(function (_, i) {
-        return '<i class="ln">' + (TL + i + 1) + "</i>";
-      }).join("\n");
-      hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft;
-      gtCode.scrollTop = ta.scrollTop;
-      /* 标签页上的点 =「内容与初始代码不一样」。草稿每次击键都自动存，
+    /* 题面与代码的分界 = TASK 收尾那条独行的 "#"。整块题面被删掉就没有这条线，
+       那时整份 buffer 都算代码 —— 判分与报错行号用的是同一个函数，不会两处两套话。 */
+    function splitAt(v) {
+      var lines = String(v == null ? "" : v).split("\n"), k;
+      for (k = 0; k < lines.length; k++) if (lines[k] === "#") return k + 1;
+      return 0;
+    }
+    function codeNow() { return String(ta.value).split("\n").slice(splitAt(ta.value)).join("\n"); }
+    function taskLines() { return splitAt(ta.value); }
+    function updDirty() {
+      /* 标签页上的点 =「代码与初始代码不一样」。草稿每次击键都自动存，
          「没保存」这个状态在考场里不存在，点不该表达一个不存在的状态 */
-      dirty.classList.toggle("on", ta.value !== (exam.starter || ""));
-      alignGutter(lines.length);
-      syncPos();
+      dirty.classList.toggle("on", codeNow() !== (exam.starter || ""));
     }
-    /* 换行开着的时候，一行占几个视觉行要量才知道，行号得跟着量出来的位置站 */
-    function alignGutter() {
-      if (!wrapOn) return;
-      var nums = gtCode.children, rows = hl.children;
-      for (var i = 0; i < nums.length; i++) if (rows[i]) nums[i].style.top = rows[i].offsetTop + "px";
-    }
-    function syncPos() {
-      var before = ta.value.slice(0, ta.selectionStart);
-      var idx = before.split("\n").length - 1;
-      var ln = idx + 1 + TL, col = before.length - before.lastIndexOf("\n");
-      $("#stPos").textContent = "Ln " + ln + ", Col " + col;
-      var all = ta.value.split("\n"), longest = 0, at = 0;
-      for (var i = 0; i < all.length; i++) if (all[i].length > longest) { longest = all[i].length; at = i; }
-      $("#stLen").textContent = longest > 79
-        ? "最长 " + longest + " 列（第 " + (TL + at + 1) + " 行）· 可点「自动换行」"
-        : "共 " + all.length + " 行";
-      /* 当前行高亮：跟着光标那一行走（量不到像素就退回按行距算） */
-      var row = hl.children[idx];
-      var top = (row && row.offsetTop ? row.offsetTop : PAD_V + idx * fsPx()) - ta.scrollTop;
-      cur.style.top = top + "px";
-      cur.style.height = fsPx() + "px";
-      cur.style.display = (idx >= 0 && idx < hl.children.length) ? "block" : "none";
-      $$(".gt-code .ln").forEach(function (el, i) { el.classList.toggle("cur", i === idx); });
-    }
-    ta.addEventListener("input", function () {
-      saveDraft(tid, cid, ta.value);
-      syncSize();
-    });
-    ta.addEventListener("keyup", syncPos);
-    ta.addEventListener("click", syncPos);
-    ta.addEventListener("select", syncPos);
-    ta.addEventListener("scroll", function () {
-      hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; gtCode.scrollTop = ta.scrollTop;
-      syncPos();
-    });
-    editor.addEventListener("keydown", function (ev) { if (ev.target === ta) syncPos(); });
+    function syncSize() { ed.refresh(); updDirty(); }
 
-    /* ---------- 字号 / 换行：四层一起变，行号才不会错位 ---------- */
+    /* ---------- 字号：四层一起变，行号才不会错位（行距常量住在控件里，两边必须是同一个数） ---------- */
     var fs = FS_0;
     try { var saved = Number(localStorage.getItem("miao_ide_fs")); if (saved >= FS_MIN && saved <= FS_MAX) fs = saved; } catch (e) { }
-    function fsPx() { return fs * LH; }
     function applyFs() {
       ideRoot.style.setProperty("--ide-fs", fs + "px");
-      ideRoot.style.setProperty("--ide-lhpx", (fs * LH) + "px");
+      ideRoot.style.setProperty("--ide-lhpx", (fs * ED.LH) + "px");
       $("#ideZoom").textContent = "字号 " + fs;
-      gtCode.scrollTop = ta.scrollTop;
-      syncPos();
+      ed.refresh();                     /* 重排当前行与行号：控件自己按新的 --ide-fs 量 */
     }
     function setFs(v) {
       fs = Math.max(FS_MIN, Math.min(FS_MAX, v));
@@ -423,58 +227,12 @@
       setFs(fs + (ev.deltaY < 0 ? 1 : -1));
     }, { passive: false });
 
-    function applyWrap() {
-      editor.classList.toggle("wrap", wrapOn);
-      ta.wrap = wrapOn ? "soft" : "off";          /* textarea 的折行最终听 wrap 属性的，两层都写才保险 */
-      var btn = $("#wrapToggle");
-      btn.textContent = wrapOn ? "自动换行：开" : "自动换行：关";
-      btn.classList.toggle("on", wrapOn);
-      try { localStorage.setItem("miao_ide_wrap", wrapOn ? "1" : "0"); } catch (e) { }
-      gtCode.scrollTop = ta.scrollTop;
-      syncSize();
-    }
     applyFs();
     $("#ideZoom").onclick = function () { setFs(FS_0); };
 
-    ta.addEventListener("keydown", function (ev) {
-      var k = ev.key;
-      if ((ev.ctrlKey || ev.metaKey) && k === "Enter") { ev.preventDefault(); doRun(); return; }
-      if ((ev.ctrlKey || ev.metaKey) && (k === "=" || k === "+")) { ev.preventDefault(); setFs(fs + 1); return; }
-      if ((ev.ctrlKey || ev.metaKey) && (k === "-" || k === "_")) { ev.preventDefault(); setFs(fs - 1); return; }
-      if ((ev.ctrlKey || ev.metaKey) && k === "0") { ev.preventDefault(); setFs(FS_0); return; }
-      if ((ev.ctrlKey || ev.metaKey) && (k === "s" || k === "S")) { ev.preventDefault(); saveDraft(tid, cid, ta.value); toast("已保存到本机"); return; }
-      if (k === "Tab") {
-        ev.preventDefault();
-        var s = ta.selectionStart, e2 = ta.selectionEnd, v = ta.value;
-        if (s !== e2) {                            /* 选中多行 → 整块缩进 */
-          var ls = v.lastIndexOf("\n", s - 1) + 1, seg = v.slice(ls, e2);
-          var ns = ev.shiftKey ? seg.replace(/^ {1,4}/gm, "") : seg.replace(/^/gm, "    ");
-          ta.value = v.slice(0, ls) + ns + v.slice(e2);
-          ta.selectionStart = ls; ta.selectionEnd = ls + ns.length;
-        } else if (ev.shiftKey) {
-          var l2 = v.lastIndexOf("\n", s - 1) + 1, head = v.slice(l2).match(/^ {1,4}/);
-          if (head) { ta.value = v.slice(0, l2) + v.slice(l2 + head[0].length); ta.selectionStart = ta.selectionEnd = Math.max(l2, s - head[0].length); }
-        } else {
-          ta.value = v.slice(0, s) + "    " + v.slice(e2);
-          ta.selectionStart = ta.selectionEnd = s + 4;
-        }
-        saveDraft(tid, cid, ta.value); syncSize();
-        return;
-      }
-      if (k === "Enter") {                          /* 自动缩进：跟上一行对齐，冒号后多进一层 */
-        var pos = ta.selectionStart, before = ta.value.slice(0, pos);
-        var lineStart = before.lastIndexOf("\n") + 1, cur2 = before.slice(lineStart);
-        var indent = (cur2.match(/^[ \t]*/) || [""])[0];
-        if (/\:\s*(#.*)?$/.test(cur2)) indent += "    ";
-        ev.preventDefault();
-        var add2 = "\n" + indent, val = ta.value;
-        ta.value = val.slice(0, pos) + add2 + val.slice(ta.selectionEnd);
-        ta.selectionStart = ta.selectionEnd = pos + add2.length;
-        saveDraft(tid, cid, ta.value); syncSize();
-      }
-    });
-    syncSize();
-    applyWrap();
+    /* Tab / Shift+Tab / 回车自动缩进 / 成对闭合 / 补全全部在控件里，考场不再自己抢键位。
+       上一版这里那串 ta.value = 的写法还会顺手清掉浏览器原生撤销栈。 */
+    updDirty();
 
     /* ---------- 终端 ---------- */
     var term = $("#term");
@@ -516,10 +274,14 @@
     function jumpBtn(n) {
       return '<button class="tb-jump" type="button" data-line="' + n + '">第 ' + n + " 行</button>";
     }
+    /* 沙箱跑的是独行 "#" 之后的代码（codeNow()），报的行号是「代码第几行」；屏上行号连题面
+       一起编，所以补的是「题面占了几行」—— 那几行被删掉之后偏移自动跟着变回 0。 */
+    function screenLine(n) { return Number(n) + taskLines(); }
     function frameHtml(l) {
       var m = RE_FRAME.exec(l);
       if (!m) return esc(l);
-      return esc(m[1]) + jumpBtn(m[2]) + esc(m[3] || "");
+      var n = /"main\.py"/.test(l) ? screenLine(m[2]) : Number(m[2]);
+      return esc(m[1]) + jumpBtn(n) + esc(m[3] || "");
     }
     /* 一份报错文本 → 逐行 {cls, html}：终端和「问题」页签共用同一套染法，不会两处两个样 */
     function errLines(text, extraLine) {
@@ -527,14 +289,18 @@
       if (lines.length && lines[lines.length - 1] === "") lines.pop();
       var hasFrame = lines.some(function (l) { return RE_FRAME.test(l); });
       var out = lines.map(function (l) {
-        return { cls: errCls(l), html: RE_FRAME.test(l) ? frameHtml(l) : esc(l) };
+        var cls = errCls(l);
+        /* 帧里回显的那行源码本身就是一段 Python —— 交给编辑器那把尺，字色跟在编辑器里
+           敲出来的一致；但 ^^^^ / ~~~~ 那种指示行不是代码，别拿运算符色去染它 */
+        var codeLine = cls === "tb-src" && !/^[ \t]*[~^]+[ \t]*$/.test(l);
+        return { cls: cls, html: RE_FRAME.test(l) ? frameHtml(l) : codeLine ? hlInline(l) : esc(l) };
       });
       /* 语法错的时候解释器只回「SyntaxError: …」不带行号（formatErr 里那几行 File 被丢了），
          但 error 对象上有 pyline —— 呈现层拿来补一条能点的提示，不改解释器一个字。 */
       if (extraLine && !hasFrame) {
         out.push({
           cls: "tb-hint",
-          html: "→ 出问题的应该是 " + jumpBtn(extraLine) + "（点一下跳过去）"
+          html: "→ 出问题的应该是 " + jumpBtn(screenLine(extraLine)) + "（点一下跳过去）"
         });
       }
       return out;
@@ -542,18 +308,11 @@
     function showErr(text, extraLine) {
       errLines(text, extraLine).forEach(function (l) { termHtml(l.html, l.cls); });
     }
+    /* 「第 N 行」跳行：N 已经是屏上行号（连题面一起编），编辑器同一套编号，直接交给控件选行 */
     function jumpToLine(total) {
-      var idx = Number(total) - TL;                 /* 屏上的行号含题面那几行，换成代码里的第几行 */
-      if (idx < 1) { flashEl($$(".ide-tasktext .tl")[Number(total) - 1]); return; }
-      var lines = ta.value.split("\n"), pos = 0;
-      for (var i = 0; i < idx - 1 && i < lines.length; i++) pos += lines[i].length + 1;
-      try {
-        ta.focus();
-        ta.setSelectionRange(pos, pos + (lines[idx - 1] || "").length);
-        var row = hl.children[idx - 1];
-        if (row && row.offsetTop) ta.scrollTop = Math.max(0, row.offsetTop - editor.clientHeight * 0.34);
-        syncPos();
-      } catch (e) { /* jsdom 量不到像素，忽略 */ }
+      var n = Number(total);
+      if (!(n >= 1) || n > ta.value.split("\n").length) return;
+      try { ed.jumpLine(n); } catch (e) { /* jsdom 量不到像素，忽略 */ }
       flashEl(cur);
     }
     function flashEl(el) {
@@ -575,7 +334,7 @@
     $("#termTail").onclick = function () { stickTail = true; $("#termTail").hidden = true; term.scrollTop = term.scrollHeight; };
 
     function doRun() {
-      var src = ta.value;
+      var src = codeNow();
       runBox = null;
       termLine("$ python3 " + fileName, "term-cmd");
       var t0 = Date.now();
@@ -614,7 +373,7 @@
 
     /* ---------- 交卷 ---------- */
     function doSubmit() {
-      var src = ta.value;
+      var src = codeNow();
       if (!src.trim()) { toast("先写点代码再交卷"); return; }
       runBox = null;
       termLine("$ python3 -m 判分 " + cid, "term-cmd");
@@ -640,17 +399,10 @@
           : '<button class="btn btn-ghost btn-sm" id="rsRef" type="button">看提示</button>' +
             '<button class="btn btn-primary btn-sm" id="rsAgain" type="button">回去改代码</button>') +
         "</div>" +
-        (res.passed && exam.reference ? '<pre class="rs-ref hidden">' + esc(exam.reference) + "</pre>" : "");
+        (res.passed && exam.reference ? '<pre class="rs-ref hidden">' + hlInline(exam.reference) + "</pre>" : "");
       $("#stScore").textContent = "得分 " + res.score + "（" + (res.passed ? "已过" : "未过") + "）";
       $("#stScore").classList.toggle("ok", res.passed);
       showPane("judge");
-      /* 题面里那几行「条件 N」跟着一起打勾/打叉 —— 两边说的是同一批条件 */
-      $$(".tl-ck").forEach(function (el) {
-        var c = res.checks[Number(el.dataset.ci)];
-        if (!c) return;
-        el.textContent = c.ok ? "✓" : "✗";
-        el.classList.add(c.ok ? "pass" : "fail");
-      });
       var refBtn = $("#rsRef");
       if (refBtn) refBtn.onclick = function () {
         var pre = $(".rs-ref", box);
@@ -672,15 +424,14 @@
 
     /* ---------- 绑定 ---------- */
     $("#ideExit").onclick = function () {
-      saveDraft(tid, cid, ta.value);
+      saveDraft(tid, cid, ed.getValue());
       if (doc.querySelector("#app") && root.MIAO_NAV) root.MIAO_NAV("#/read/" + tid + "/" + cid);
       else location.hash = "#/read/" + tid + "/" + cid;
     };
     $("#ideRun").onclick = doRun;
     $("#ideSubmit").onclick = doSubmit;
     $("#ideReset").onclick = function () {
-      ta.value = exam.starter || "";
-      saveDraft(tid, cid, ta.value); syncSize();
+      ed.setValue(TASK_TEXT + (exam.starter || ""));      /* setValue 走选区替换，Ctrl+Z 还能撤回来 */
       runBox = null; termLine("[已恢复成本课初始代码]", "term-dim");
     };
     $("#termClear").onclick = function () { term.innerHTML = ""; runBox = null; termLine("[终端已清空]", "term-dim"); };
@@ -699,18 +450,6 @@
       $("#panelHide").textContent = hide ? "展开面板" : "收起面板 ×";
     }
     $("#panelHide").onclick = function () { setPanelHidden(!$("#idePanel").classList.contains("hidden-panel")); };
-    $("#taskToggle").onclick = function () {
-      var off = taskWrap.classList.toggle("min");
-      $("#taskToggle").textContent = off ? "展开题面" : "收起题面";
-      try { localStorage.setItem("miao_ide_taskmin", off ? "1" : "0"); } catch (e) { }
-      syncPos();
-    };
-    try {
-      if (localStorage.getItem("miao_ide_taskmin") === "1") {
-        taskWrap.classList.add("min"); $("#taskToggle").textContent = "展开题面";
-      }
-    } catch (e) { }
-    $("#wrapToggle").onclick = function () { wrapOn = !wrapOn; applyWrap(); };
 
     /* 面板高度：拖那条缝，写进本机；窄屏给个够看的默认高 */
     var PH_MIN = 96, PH_MAX = Math.round((root.innerHeight || 800) * 0.72);
@@ -776,6 +515,7 @@
   root.MIAO_EXAM_UI = {
     vExam: vExam,
     highlight: highlight,     /* 自测用：着色器不碰 DOM，Node 里也能直接验 */
+    hlInline: hlInline,       /* 同一把尺的行内版：终端源码行与参考写法走的都是它 */
     onPassed: function () { }   /* app.js 会覆盖它，用来打完成标记与同步成绩 */
   };
 })(typeof window !== "undefined" ? window : globalThis);

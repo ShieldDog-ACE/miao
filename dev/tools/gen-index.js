@@ -76,6 +76,10 @@ function examIds(id, win) {
   }
   if (id === "english") return ((win.MIAO_EN_EXAM || {}).exams || []).map(e => e.cid);
   if (id === "enwords") return ((win.MIAO_ENW_EXAM || {}).papers || []).map(e => e.cid);
+  if (id === "cpp" || id === "cppm") {
+    const ce = win[id === "cpp" ? "MIAO_CPP_EXAM" : "MIAO_CPPM_EXAM"] || {};
+    return (ce.papers || []).map(e => e.cid);
+  }
   return [];
 }
 
@@ -99,7 +103,11 @@ const tutorials = SITE.tutorials.map(reg => {
     return null;
   }
   const t = pack.tutorial;
-  if (t.id !== reg.id) {
+  /* 包内自报 id 只对「多门课共用一份装配器」的课（微软那四门走 MIAO_MS_MOUNT）对账。
+     一课一包的课，包名 source 就是唯一身份：串包会先在上一条「window 上没有这个包」红掉，
+     而包里的 id 写的是给人看的分类口径（C++ 两门都写 "C++"），不该拿它 veto 整门课。
+     别指望拿章号唯一性兜串包 —— python 与 cpp 的 s01~s03 本来就重号。 */
+  if (reg.mount && t.id !== reg.id) {
     errors.push("教程 " + reg.id + " 的包里 tutorial.id 是 " + t.id + "，对不上");
     return null;
   }

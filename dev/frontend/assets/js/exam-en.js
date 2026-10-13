@@ -354,14 +354,14 @@
         pools = { letters: letterPool(en.letters || []), phonemes: phonemePool(en.phonemes || []) };
         if (!pools.letters.length && !pools.phonemes.length) throw new Error("字母与音标数据没下发，考卷出不了");
       }
-      draw(app, tid, cid, spec, pools);
+      draw(app, tid, cid, spec, pools, my);
     }).catch(function (e) {
       app.innerHTML = '<div class="ide"><div class="ide-loading"><h2>这场考试打不开</h2><p>' + esc(e.message || "") + "</p>" +
         '<a class="btn btn-primary" href="#/read/' + esc(tid) + "/" + esc(cid) + '">回到课文</a></div></div>';
     });
   }
 
-  function draw(app, tid, cid, spec, pools) {
+  function draw(app, tid, cid, spec, pools, my) {
     var qs = buildPaper(spec, pools);
     var answers = {};
     qs.forEach(function (q, i) { answers[i] = q.type === "match" ? {} : null; });
@@ -381,7 +381,7 @@
       '<div class="en-qs">' + qs.map(function (q, i) { return cardHtml(q, i); }).join("") + "</div>" +
       "</div>" +
       '<div class="ide-status"><span class="st branch">考试模式</span><span class="st" id="enProg">已答 0 / ' + qs.length + "</span>" +
-      '<span class="st st-score" id="enScore">' +
+      '<span class="st st-score' + (my && my.passed ? " ok" : "") + '" id="enScore">' +
       (my && my.best ? "最高 " + my.best + " 分" + (my.passed ? "（已过）" : "") : "") +
       "</span></div>" +
       "</div>";

@@ -441,6 +441,352 @@
   }
   function tipCls(b) { var c = tipColorOf(b); return c ? " tipc-" + c : ""; }
 
+  /* ---------------- 阅读页代码高光（rd-*） ----------------
+     考场 IDE 有一把高光尺，阅读页的 code 块以前是纯文本。这里补一把小尺：
+     在「原始文本」上扫描、按段 esc() 后包 span —— 绝不在已转义的字符串上动正则，
+     也不试图理解语义，认不出的字符原样吐。C++ / shell 两把尺，别的语言照旧纯文本。 */
+  var CPP_KW = {};
+  ("alignas alignof and asm auto bool break case catch char char8_t char16_t char32_t class co_await co_yield " +
+   "compl concept const consteval constexpr constinit const_cast continue co_return decltype default delete do " +
+   "double dynamic_cast else enum explicit export extern false float for friend goto if inline int long mutable " +
+   "namespace new noexcept not nullptr operator or private protected public register reinterpret_cast requires " +
+   "return short signed sizeof static static_assert static_cast struct switch template this thread_local throw " +
+   "true try typedef typeid typename union unsigned using virtual void volatile wchar_t while xor").split(" ").forEach(function (w) { CPP_KW[w] = 1; });
+  var CPP_TYPES = {};
+  ("size_t ssize_t int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t string_view ostream istream").split(" ").forEach(function (w) { CPP_TYPES[w] = 1; });
+  var SH_KW = {};
+  ("if then else elif fi for while until do done case esac in function return exit local export readonly").split(" ").forEach(function (w) { SH_KW[w] = 1; });
+
+  function hlSpan(cls, text) { return cls ? '<span class="' + cls + '">' + esc(text) + "</span>" : esc(text); }
+
+  function hlCpp(code) {
+    var out = "", i = 0, n = code.length;
+    function nameAt(p) {
+      var m = /^[A-Za-z_]\w*/.exec(code.slice(p));
+      return m ? m[0] : "";
+    }
+    while (i < n) {
+      var c = code[i];
+      /* 行注释 / 块注释 */
+      if (c === "/" && code[i + 1] === "/") { var e1 = code.indexOf("\n", i); if (e1 < 0) e1 = n; out += hlSpan("rd-com", code.slice(i, e1)); i = e1; continue; }
+      if (c === "/" && code[i + 1] === "*") { var e2 = code.indexOf("*/", i + 2); e2 = e2 < 0 ? n : e2 + 2; out += hlSpan("rd-com", code.slice(i, e2)); i = e2; continue; }
+      /* 预处理：行首（可有空白）的 # 整段吃到行尾 */
+      if (c === "#") {
+        var ls = code.lastIndexOf("\n", i - 1) + 1;
+        if (/^\s*$/.test(code.slice(ls, i))) { var e3 = code.indexOf("\n", i); if (e3 < 0) e3 = n; out += hlSpan("rd-pre", code.slice(i, e3)); i = e3; continue; }
+      }
+      /* 字符串 / 字符字面量（含转义；原始串 R"( )" 按普通串处理，界符内的 " 会截断 —— 课文代码不这么写） */
+      if (c === '"' || c === "'") {
+        var j = i + 1;
+        while (j < n && code[j] !== c && code[j] !== "\n") { if (code[j] === "\\") j++; j++; }
+        if (j < n && code[j] === c) { out += hlSpan("rd-str", code.slice(i, j + 1)); i = j + 1; continue; }
+      }
+      /* 数字（含 1.5f、0x1F、1e-3） */
+      if (/[0-9]/.test(c) || (c === "." && /[0-9]/.test(code[i + 1] || ""))) {
+        var m1 = /^(?:0[xX][0-9a-fA-F']+|\d[\d']*(?:\.[\d']*)?(?:[eE][+-]?\d+)?[uUlLfF]*)/.exec(code.slice(i));
+        if (m1 && m1[0]) { out += hlSpan("rd-num", m1[0]); i += m1[0].length; continue; }
+      }
+      /* 名字：关键字 / 类型 / 命名空间与类（后面跟 ::）/ 函数调用（后面跟 (） */
+      var nm = nameAt(i);
+      if (nm) {
+        var after = i + nm.length;
+        var rest = code.slice(after);
+        if (CPP_KW[nm]) out += hlSpan("rd-kw", nm);
+        else if (/^\s*::/.test(rest) || CPP_TYPES[nm]) out += hlSpan("rd-cls", nm);
+        else if (/^\s*\(/.test(rest)) out += hlSpan("rd-fn", nm);
+        else out += esc(nm);
+        i = after; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  function hlShell(code) {
+    return code.split("\n").map(function (line) {
+      var out = "", i = 0, n = line.length;
+      while (i < n) {
+        var c = line[i];
+        if (c === "#") { out += hlSpan("rd-com", line.slice(i)); break; }
+        if (c === '"' || c === "'") {
+          var j = i + 1;
+          while (j < n && line[j] !== c) { if (c === '"' && line[j] === "\\") j++; j++; }
+          if (j < n) { out += hlSpan("rd-str", line.slice(i, j + 1)); i = j + 1; continue; }
+        }
+        var m = /^[A-Za-z_][\w.-]*/.exec(line.slice(i));
+        if (m) {
+          var w = m[0];
+          if (SH_KW[w]) out += hlSpan("rd-kw", w);
+          else if (i === 0 || /^\s/.test(line[i - 1] || " ")) out += hlSpan("rd-fn", w);
+          else out += esc(w);
+          i += w.length; continue;
+        }
+        out += esc(c); i++;
+      }
+      return out;
+    }).join("\n");
+  }
+
+  /* ---------------- C 族语言共用一把刷子（Python / JavaScript 都走它） ----------------
+   * 只认四类东西：注释、字符串、数字、名字（关键字 / 类型 / 调用）。
+   * 剥掉 <span> 之后必须和原文逐字相等 —— 高光是往原文上叠色，不是重写。
+   * cfg: {line, block, triple, prefixes, tpl, kw, ty, bi} */
+  function hlCish(code, cfg) {
+    var out = "", i = 0, n = code.length, lastWord = "";
+    function put(cls, t) { out += hlSpan(cls, t); }
+    function strEnd(from) {
+      /* 返回字符串字面量的结束下标（认不到就回 -1，宁可不上色也别染错一片） */
+      var p = from, pre = 0;
+      if (cfg.prefixes) { while (p < n && cfg.prefixes.indexOf(code[p]) >= 0 && pre < 3) { p++; pre++; } }
+      var q = code[p];
+      if (q !== '"' && q !== "'" && !(q === "`" && cfg.tpl)) return -1;
+      var triple = cfg.triple && code[p + 1] === q && code[p + 2] === q;
+      var close = triple ? q + q + q : q, j = p + close.length;
+      while (j < n) {
+        if (code[j] === "\\") { j += 2; continue; }
+        if (code.substr(j, close.length) === close) return j + close.length;
+        if (code[j] === "\n" && !triple) return -1;
+        j++;
+      }
+      return triple ? n : -1;                       /* 三引号没关上：吃到结尾，至少不断行 */
+    }
+    while (i < n) {
+      var c = code[i];
+      if (cfg.line === "#" && c === "#") { var e1 = code.indexOf("\n", i); if (e1 < 0) e1 = n; put("rd-com", code.slice(i, e1)); i = e1; continue; }
+      if (cfg.line === "//" && c === "/" && code[i + 1] === "/") { var e2 = code.indexOf("\n", i); if (e2 < 0) e2 = n; put("rd-com", code.slice(i, e2)); i = e2; continue; }
+      if (cfg.block && c === "/" && code[i + 1] === "*") { var e3 = code.indexOf("*/", i + 2); e3 = e3 < 0 ? n : e3 + 2; put("rd-com", code.slice(i, e3)); i = e3; continue; }
+      var se = strEnd(i);
+      if (se > i) {
+        var raw = code.slice(i, se);
+        var fpre = /^([rRbBuUfF]*)(['"`]{1,3})/.exec(raw);
+        var isF = cfg.prefixes && /[fF]/.test(fpre[1]);        /* 只看引号前的真前缀，'f{x}' 这种普通串不算 */
+        var isTpl = cfg.tpl && raw.indexOf("${") >= 0;
+        if (!isF && !isTpl) { put("rd-str", raw); i = se; continue; }
+        var b0 = fpre[0].length, b1 = se - fpre[2].length;
+        put("rd-str", raw.slice(0, b0));
+        var seg = b0, p = b0;
+        while (p < b1) {
+          if (raw[p] === "\\") { p += 2; continue; }
+          if (raw[p] !== "{" && raw[p] !== "$") { p++; continue; }
+          var q = p, dep = 0;
+          if (raw[p] === "$" && raw[p + 1] === "{") q = p + 1; else if (raw[p] === "{") q = p + 1; else { p++; continue; }
+          dep = 1; q++;
+          while (q < b1 && dep > 0) { if (raw[q] === "\\") { q += 2; continue; } if (raw[q] === "{") dep++; else if (raw[q] === "}") dep--; q++; }
+          put("rd-str", raw.slice(seg, p));
+          put("rd-pre", raw.slice(p, Math.min(q, b1)));        /* {expr} / ${expr} 整段单独一个色 */
+          p = seg = Math.min(q, b1);
+        }
+        put("rd-str", raw.slice(seg, b1));
+        put("rd-str", raw.slice(b1));
+        i = se; continue;
+      }
+      if (/[0-9]/.test(c) || (c === "." && /[0-9]/.test(code[i + 1] || ""))) {
+        var mn = /^(?:0[xXbBoO][0-9a-fA-F_']+|(?:\d[\d_]*\.(?:[\d_]*)?|\.\d[\d_]*|\d[\d_]*)(?:[eE][+-]?\d+)?[jJlLfF]?)/.exec(code.slice(i));
+        if (mn && mn[0]) { put("rd-num", mn[0]); i += mn[0].length; continue; }
+      }
+      if (cfg.triple && c === "@" && /^\s*@[\w.]/.test(code.slice(Math.max(0, code.lastIndexOf("\n", i - 1) + 1), i + 40))) {
+        var md = /@[\w.\u0080-\uffff]+/.exec(code.slice(i));
+        if (md) { put("rd-fn", md[0]); i += md[0].length; continue; }
+      }
+      var nm = /^[^\W\d][\w\u0080-\uffff]*/.exec(code.slice(i));
+      if (nm) {
+        var w = nm[0], rest = code.slice(i + w.length), cls = null;
+        if (cfg.ty && cfg.ty[w]) cls = "rd-cls";
+        else if (cfg.kw && cfg.kw[w]) cls = "rd-kw";
+        else if (cfg.bi && cfg.bi[w]) cls = "rd-cls";          /* 语言自带的东西统一走类型色 */
+        else if (lastWord === "def" || lastWord === "class" || lastWord === "function") cls = "rd-fn";
+        else if (/^\s*\(/.test(rest)) cls = "rd-fn";
+        i += w.length; lastWord = (cfg.kw && cfg.kw[w]) || (cfg.ty && cfg.ty[w]) ? w : "";
+        put(cls, w);
+        continue;
+      }
+      out += esc(c); i++;                            /* 兜底：原样吐，绝不吞字符 */
+    }
+    return out;
+  }
+
+  var PY_KW = {}, PY_TY = {}, PY_BI = {};
+  ("and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case").split(" ").forEach(function (w) { PY_KW[w] = 1; });
+  ("True False None self cls").split(" ").forEach(function (w) { PY_TY[w] = 1; });
+  ("print len range input int str float bool list tuple dict set type isinstance issubclass sum max min abs round sorted reversed open enumerate zip repr any all map filter next iter frozenset bytes bytearray id hash chr ord divmod pow format super getattr setattr hasattr callable vars dir eval").split(" ").forEach(function (w) { PY_BI[w] = 1; });
+
+  function hlPy(code) {
+    return hlCish(code, { line: "#", block: false, triple: true, prefixes: "rRbBuUfF", kw: PY_KW, ty: PY_TY, bi: PY_BI });
+  }
+
+  var JS_KW = {}, JS_TY = {}, JS_BI = {};
+  ("break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield async await of static get set").split(" ").forEach(function (w) { JS_KW[w] = 1; });
+  ("true false null undefined NaN Infinity this super").split(" ").forEach(function (w) { JS_TY[w] = 1; });
+  ("console document window Math JSON Object Array String Number Promise Date fetch alert setTimeout setInterval require module exports process localStorage").split(" ").forEach(function (w) { JS_BI[w] = 1; });
+
+  function hlJs(code) {
+    return hlCish(code, { line: "//", block: true, tpl: true, kw: JS_KW, ty: JS_TY, bi: JS_BI });
+  }
+
+  /* ---------------- HTML：标签名 / 属性名 / 属性值 / 注释 / DOCTYPE ---------------- */
+  function hlHtml(code) {
+    var out = "", i = 0, n = code.length;
+    while (i < n) {
+      var lt = code.indexOf("<", i);
+      if (lt < 0) { out += esc(code.slice(i)); break; }
+      out += esc(code.slice(i, lt));
+      if (code.substr(lt, 4) === "<!--") {                        /* 注释吃到 --> */
+        var e = code.indexOf("-->", lt + 4); e = e < 0 ? n : e + 3;
+        out += hlSpan("rd-com", code.slice(lt, e)); i = e; continue;
+      }
+      var gt = code.indexOf(">", lt); if (gt < 0) gt = n;
+      var tag = code.slice(lt, gt + 1);
+      var head = /^<(\/?)(!?\w[\w-]*)/.exec(tag);
+      if (!head) { out += esc(tag); i = gt + 1; continue; }
+      out += esc(head[1] === "!" ? tag.slice(0, 2) : head[1] ? "</" : "<");
+      out += hlSpan(/^![A-Za-z]/.test(tag) ? "rd-pre" : "rd-tag", head[2]);
+      var p = (head[1] === "!" ? 2 : head[1] ? 2 : 1) + head[2].length;
+      while (p < tag.length) {
+        var ch = tag[p];
+        if (ch === '"' || ch === "'") {                            /* 属性值整串 */
+          var q = tag.indexOf(ch, p + 1); q = q < 0 ? tag.length : q + 1;
+          out += hlSpan("rd-str", tag.slice(p, q)); p = q; continue;
+        }
+        var an = /^[A-Za-z_:@.\-][\w:.\-@]*/.exec(tag.slice(p));
+        if (an) { out += hlSpan("rd-atr", an[0]); p += an[0].length; continue; }
+        out += esc(ch); p++;
+      }
+      i = gt + 1;
+    }
+    return out;
+  }
+
+  /* ---------------- CSS：at 规则 / 选择器 / 属性名 / 值里的数字串与函数 ---------------- */
+  function hlCss(code) {
+    return code.split("\n").map(function (line) {
+      if (/^\s*(\/\*|\*)/.test(line)) return hlSpan("rd-com", line);
+      var at = /^(\s*)(@[\w-]+)(.*)$/.exec(line);
+      if (at) return esc(at[1]) + hlSpan("rd-pre", at[2]) + hlCssValue(at[3]);
+      var m = /^(\s*)([^:{}]*?)(\s*)([:{}])(.*)$/.exec(line);
+      if (!m) return hlCssValue(line);
+      var head = m[2] + m[3], isProp = m[4] === ":";
+      var headHtml = isProp ? hlCssSelector(head, true) : hlCssSelector(head, false);
+      return esc(m[1]) + headHtml + esc(m[4]) + (isProp ? hlCssValue(m[5]) : esc(m[5]));
+    }).join("\n");
+  }
+  /* 选择器（.类 #id :伪类 标签）与属性名共用一把行内刷子；属性名整段走 rd-atr */
+  function hlCssSelector(s, asProp) {
+    if (asProp) { var t = s.replace(/\s+$/, ""); return (t ? hlSpan("rd-atr", t) : "") + esc(s.slice(t.length)); }
+    var out = "", i = 0, n = s.length;
+    while (i < n) {
+      var m = /^([.#][\w-]+|::?[\w-]+|[\w-]+|[*>+,~])/.exec(s.slice(i));
+      if (!m) { out += esc(s[i]); i++; continue; }
+      var t = m[0];
+      if (/^[.#]/.test(t)) out += hlSpan("rd-cls", t);
+      else if (/^:/.test(t)) out += hlSpan("rd-kw", t);
+      else if (/^[*>+,~]$/.test(t)) out += esc(t);
+      else out += hlSpan("rd-tag", t);
+      i += t.length;
+    }
+    return out;
+  }
+  function hlCssValue(s) {
+    var out = "", i = 0, n = s.length;
+    while (i < n) {
+      var m = /^('[^']*'|"[^"]*"|#[0-9a-fA-F]{3,8}|-?(?:\d+\.\d*|\.\d+|\d+)(?:px|rem|em|%|vh|vw|s|ms|deg|fr|ch)?|[A-Za-z_-][\w-]*)/.exec(s.slice(i));
+      if (!m) { out += esc(s[i]); i++; continue; }
+      var t = m[0];
+      if (/^['"]/.test(t)) out += hlSpan("rd-str", t);
+      else if (/^#[0-9a-fA-F]/.test(t) || /^-?[\d.]/.test(t)) out += hlSpan("rd-num", t);
+      else if (/^(var|calc|rgb|rgba|hsl|hsla|url|translate|translateX|translateY|translate3d|scale|rotate|linear-gradient|radial-gradient|clamp|min|max|attr|!important)$/.test(t)) out += hlSpan("rd-fn", t);
+      else out += esc(t);
+      i += t.length;
+    }
+    return out;
+  }
+
+  /* ---------------- JSON：键 / 串 / 数字 / true·false·null ---------------- */
+  function hlJson(code) {
+    var out = "", i = 0, n = code.length;
+    while (i < n) {
+      var c = code[i];
+      if (c === '"') {
+        var j = i + 1;
+        while (j < n && code[j] !== '"') { if (code[j] === "\\") j++; j++; }
+        var raw = code.slice(i, Math.min(j + 1, n));
+        var isKey = /^\s*:/.test(code.slice(j + 1));
+        out += hlSpan(isKey ? "rd-atr" : "rd-str", raw);
+        i = j + 1; continue;
+      }
+      if (/[0-9-]/.test(c)) {
+        var mn = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/.exec(code.slice(i));
+        if (mn) { out += hlSpan("rd-num", mn[0]); i += mn[0].length; continue; }
+      }
+      var w = /^[a-z]+/.exec(code.slice(i));
+      if (w && /^(true|false|null)$/.test(w[0])) { out += hlSpan("rd-pre", w[0]); i += w[0].length; continue; }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  /* ---------------- YAML / INI：按行认「键: 值」与注释 ---------------- */
+  function hlYaml(code) {
+    return code.split("\n").map(function (line) {
+      var m = /^(\s*(?:-\s+)?)([\w.@-]+)(\s*:)(.*)$/.exec(line);
+      if (m) return esc(m[1]) + hlSpan("rd-atr", m[2]) + esc(m[3]) + hlYamlValue(m[4]);
+      var c = /^(\s*)(#.*)$/.exec(line);
+      if (c) return esc(c[1]) + hlSpan("rd-com", c[2]);
+      return hlYamlValue(line);
+    }).join("\n");
+  }
+  function hlYamlValue(s) {
+    var cm = s.indexOf(" #");
+    var body = cm < 0 ? s : s.slice(0, cm), tail = cm < 0 ? "" : hlSpan("rd-com", s.slice(cm));
+    return body.replace(/('[^']*'|"[^"]*"|-?\d+(?:\.\d+)?|true|false|null|[\w][\w.-]*)/g, function (t) {
+      if (/^['"]/.test(t)) return hlSpan("rd-str", t);
+      if (/^-?\d/.test(t)) return hlSpan("rd-num", t);
+      if (/^(true|false|null)$/.test(t)) return hlSpan("rd-pre", t);
+      return esc(t);
+    }) + tail;
+  }
+  function hlIni(code) {
+    return code.split("\n").map(function (line) {
+      var s = line.replace(/^\s+/, ""), lead = line.slice(0, line.length - s.length);
+      if (/^;|^#/.test(s)) return esc(lead) + hlSpan("rd-com", s);
+      var sec = /^\[([^\]]*)\](.*)$/.exec(s);
+      if (sec) return esc(lead) + hlSpan("rd-cls", "[" + sec[1] + "]") + esc(sec[2]);
+      var kv = /^([^=]+)(=)(.*)$/.exec(s);
+      if (kv) return esc(lead) + hlSpan("rd-atr", kv[1]) + esc(kv[2]) + hlYamlValue(kv[3]);
+      return esc(line);
+    }).join("\n");
+  }
+
+  /* ---------------- text：这 27 块里全是 REPL 会话和终端记录，不是随便的说明文字
+     `>>>` / `...` 开头 → 后面按 Python 染；`$` 开头 → 按 shell 染；其余原样 ---------------- */
+  function hlText(code) {
+    return code.split("\n").map(function (line) {
+      var py = /^(\s*)(>>>|\.\.\.)(\s?)(.*)$/.exec(line);
+      if (py) return esc(py[1]) + hlSpan("rd-kw", py[2] + py[3]) + hlPy(py[4]);
+      var sh = /^(\s*)(\$|%|\(.*?\)\s*\$)\s(.*)$/.exec(line);
+      if (sh) return esc(sh[1]) + hlSpan("rd-kw", sh[2]) + " " + hlShell(sh[3]);
+      var out = /^(\s*)(Out\[\d+\]:|>>>)\s(.*)$/.exec(line);
+      if (out) return esc(out[1]) + hlSpan("rd-pre", out[2]) + " " + hlPy(out[3]);
+      return esc(line);
+    }).join("\n");
+  }
+
+  function hlCode(code, lang) {
+    var l = String(lang || "").toLowerCase();
+    if (l === "c++" || l === "cpp") return hlCpp(String(code || ""));
+    if (l === "shell" || l === "sh" || l === "bash" || l === "powershell" || l === "ps1") return hlShell(String(code || ""));
+    if (l === "python" || l === "py") return hlPy(String(code || ""));
+    if (l === "javascript" || l === "js") return hlJs(String(code || ""));
+    if (l === "html" || l === "xml" || l === "vue") return hlHtml(String(code || ""));
+    if (l === "css" || l === "scss" || l === "less") return hlCss(String(code || ""));
+    if (l === "json") return hlJson(String(code || ""));
+    if (l === "yaml" || l === "yml") return hlYaml(String(code || ""));
+    if (l === "ini" || l === "toml" || l === "cfg") return hlIni(String(code || ""));
+    if (l === "text" || l === "txt" || l === "console") return hlText(String(code || ""));
+    return esc(code);
+  }
+
+
+
 
   function blockHtml(b, i) {
     if (b.t === "p") return "<p>" + inlineHtml(b.text) + "</p>";
@@ -450,7 +796,7 @@
     if (b.t === "code") {
       return '<div class="code-block"><div class="code-head"><span class="lang">' + esc(b.lang) + "</span>" +
         '<button class="copy-btn" data-code="' + esc(b.code) + '">复制</button></div>' +
-        "<pre><code>" + esc(b.code) + "</code></pre></div>";
+        "<pre><code>" + hlCode(b.code, b.lang) + "</code></pre></div>";
     }
     if (b.t === "svg") {
       /* 图形化演示：正文里直接写内联 SVG（只允许 svg/g/rect/circle/path/text/line/tspan/defs/marker/
@@ -1125,5 +1471,11 @@
     window.addEventListener("hashchange", router);
     router();
   }
+  window.MIAO_HL = (function () {          /* 自测用：正文高光不碰 DOM，喂一段代码就能验「剥掉 span 必须逐字等于原文」 */
+    return { code: hlCode, py: hlPy, js: hlJs, html: hlHtml, css: hlCss, json: hlJson,
+      yaml: hlYaml, ini: hlIni, text: hlText, shell: hlShell, cpp: hlCpp,
+      /* 考场编辑器（code-editor.js）的 C++ 那把尺与共用的补全表读这两份词表 —— 关键字表只许这一处有 */
+      cppKw: CPP_KW, cppTy: CPP_TYPES };
+  })();
   document.addEventListener("DOMContentLoaded", init);
 })();

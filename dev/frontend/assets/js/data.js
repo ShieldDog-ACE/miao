@@ -89,7 +89,11 @@
     if (!reg) return null;
     var pack = root[reg.source];
     if (!pack || !pack.tutorial) return null;
-    if (pack.tutorial.id !== id) {
+    /* 包内自报的 id 只对「多门课共用一份装配器」的课（微软那四门走 MIAO_MS_MOUNT）对账 ——
+       那种场合谁顶了谁必须当场红。一课一包的课，包名 source 本身就是唯一身份，包里的 id
+       写的是给人看的口径（C++ 两门都写 "C++"，因为它们同属一个分类位），不该拿它 veto 正文。
+       真正的串包由离线闸 gen-index.js 的「两门课章节目录不许重叠」兜住。 */
+    if (reg.mount && pack.tutorial.id !== id) {
       console.error("[数据层] " + id + " 登记的包名 " + reg.source + " 装的是另一门课：" + pack.tutorial.id);
       return null;
     }
@@ -134,6 +138,13 @@
       var ew = root.MIAO_ENW_EXAM || null;
       if (ew) (ew.papers || []).forEach(function (e) {
         e.kind = "enword"; e.pass = e.pass == null ? ew.pass : e.pass;
+        out[e.cid] = e;
+      });
+    } else if (id === "cpp" || id === "cppm") {
+      /* C++ 两门课：考卷是静态笔试卷（kind:"paper"），主文件给 pass 兜底、分部给一场卷一份 */
+      var ce = root[id === "cpp" ? "MIAO_CPP_EXAM" : "MIAO_CPPM_EXAM"] || null;
+      if (ce) (ce.papers || []).forEach(function (e) {
+        e.kind = "paper"; e.pass = e.pass == null ? (ce.pass == null ? 60 : ce.pass) : e.pass;
         out[e.cid] = e;
       });
     }

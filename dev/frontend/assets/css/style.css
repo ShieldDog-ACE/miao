@@ -44,7 +44,7 @@
   /* 语义色：正文 tip 块自选的那四档 + 错误 + 收藏星 */
   --ok-bg: #e9f6ee; --ok-ink: #17734a; --ok-line: #bfe2cf;
   --info-bg: #eaf1fd; --info-ink: #1f5497; --info-line: #c5daf3;
-  --warn-bg: #fdf4e3; --warn-ink: #8a5a10; --warn-line: #f0dcb4;
+  --warn-bg: #fdf4e3; --warn-ink: #8a5a10; --warn-line: #f0dcb4; --warn: #8a5a10;
   --neutral-bg: #f2f3f5; --neutral-ink: #5f646e; --neutral-line: #dcdfe4;
   --danger: #c22f36; --danger-bg: #fdeeee; --danger-ink: #a3232a; --danger-line: #f2c7c9;
   --star: #e08c00; --star-bg: rgba(224, 140, 0, .12); --star-ink: #8a5a10; --star-line: #e8c58a;
@@ -58,6 +58,12 @@
   --cover-ink: #24131a;
   --cover-a: #dfe4f2; --cover-b: #eef1f9;
   --figure-paper: #ffffff; --figure-line: #e3e5ea; --figure-cap: #5f646e;
+  /* 阅读页代码高光：浅色取 VS Code Light 一路的色
+     rd-tag/rd-atr 是正文里 HTML/CSS/JSON/YAML 用的：标签名走 light_vs 的 entity.name.tag #800000，
+     属性名与键名走 light_vs 的 support.type.property-name.json #0451a5 */
+  --rd-kw: #a626a4; --rd-str: #a31515; --rd-com: #5a744c; --rd-num: #0b7a53;
+  --rd-pre: #7a5bc4; --rd-fn: #795e26; --rd-cls: #1b7482;
+  --rd-tag: #800000; --rd-atr: #0451a5;
 
   /* 杂项表面 */
   --qr-paper: #ffffff;          /* 收款码必须是白底，不然扫不出来，三套都不跟主题 */
@@ -98,7 +104,7 @@
 
   --ok-bg: rgba(62, 207, 142, .13); --ok-ink: #7fdcac; --ok-line: rgba(62, 207, 142, .34);
   --info-bg: rgba(122, 162, 247, .13); --info-ink: #a7c6ef; --info-line: rgba(122, 162, 247, .34);
-  --warn-bg: rgba(230, 175, 70, .13); --warn-ink: #e8c07a; --warn-line: rgba(230, 175, 70, .34);
+  --warn-bg: rgba(230, 175, 70, .13); --warn-ink: #e8c07a; --warn-line: rgba(230, 175, 70, .34); --warn: #e8c07a;
   --neutral-bg: rgba(255, 255, 255, .05); --neutral-ink: #a6a6ad; --neutral-line: #3c3c3c;
   --danger: #ff8f8f; --danger-bg: rgba(255, 143, 143, .12); --danger-ink: #ff9ea1; --danger-line: rgba(255, 143, 143, .34);
   --star: #f2b544; --star-bg: rgba(242, 181, 68, .14); --star-ink: #f2b544; --star-line: rgba(242, 181, 68, .42);
@@ -110,6 +116,10 @@
   --cover-ink: #efe9ec;
   --cover-a: #2a2e3a; --cover-b: #23252c;
   --figure-paper: #26282d; --figure-line: #3c3c3c; --figure-cap: #a6a6ad;
+  /* 代码高光：深色照 VS Code Dark+（rd-tag = entity.name.tag，rd-atr = entity.other.attribute-name） */
+  --rd-kw: #c586c0; --rd-str: #ce9178; --rd-com: #6a9955; --rd-num: #b5cea8;
+  --rd-pre: #9cdcfe; --rd-fn: #dcdcaa; --rd-cls: #4ec9b0;
+  --rd-tag: #569cd6; --rd-atr: #9cdcfe;
 
   --qr-paper: #ffffff;
   --eye-bg: rgba(10, 12, 20, .62); --eye-ink: #f2f2f5;
@@ -154,7 +164,7 @@
 
   --ok-bg: #eaf7f0; --ok-ink: #1e7a4f; --ok-line: #bfe6d2;
   --info-bg: #eaf2fc; --info-ink: #2f5fae; --info-line: #c5daf3;
-  --warn-bg: #fdf4e3; --warn-ink: #8a5a10; --warn-line: #f0dcb4;
+  --warn-bg: #fdf4e3; --warn-ink: #8a5a10; --warn-line: #f0dcb4; --warn: #8a5a10;
   --neutral-bg: #f4f4f6; --neutral-ink: #6c6c75; --neutral-line: #dcdce2;
   --danger: #c22f36; --danger-bg: #fdeeee; --danger-ink: #a3232a; --danger-line: #f2c7c9;
   --star: #d98f00; --star-bg: rgba(217, 143, 0, .14); --star-ink: #8a5a10; --star-line: #f0b95c;
@@ -166,6 +176,10 @@
   --cover-ink: #4a3a40;
   --cover-a: #ffb7c5; --cover-b: #f4c2cd;
   --figure-paper: #fffdfb; --figure-line: #f0dce4; --figure-cap: #75757e;
+  /* 代码高光：粉色版自己一套（暖色纸面，别沿用浅色那套冷紫） */
+  --rd-kw: #b03a90; --rd-str: #a3442c; --rd-com: #7c6a74; --rd-num: #1e7a5f;
+  --rd-pre: #7a5bc4; --rd-fn: #8a6215; --rd-cls: #1b7482;
+  --rd-tag: #12658f; --rd-atr: #7a5bc4;
 
   --qr-paper: #ffffff;
   --eye-bg: rgba(60, 20, 38, .46); --eye-ink: #ffffff;
@@ -790,10 +804,10 @@ footer .container > * { font-size: .82rem; color: var(--text-2); }
 :root {
   --ide-bg: #ffffff; --ide-chrome: #f3f3f4; --ide-chrome-2: #eaeaec;
   --ide-line: #e2e2e6; --ide-active: #ffffff; --ide-tab: #ececee;
-  --ide-term-bg: #fafafb; --ide-task-bg: #f5f6f7;
+  --ide-term-bg: #fafafb;
   --ide-key: #0b5fa8; --ide-str: #a31515; --ide-num: #098658;
   --ide-bi: #0778a8; --ide-call: #795e26; --ide-const: #0070c1;
-  --ide-self: #8b1f6b; --ide-com: #587a58; --ide-fex: #0b6e8f;
+  --ide-self: #8b1f6b; --ide-com: #527252; --ide-fex: #0b6e8f;
   --ide-op: #4a4a52; --ide-pun: #6b6b74; --ide-var: #1d1f24;
   --ide-guide: rgba(30, 32, 48, .08); --ide-tws: rgba(190, 60, 70, .14);
   --ide-curln: rgba(61, 92, 240, .08); --ide-flash: rgba(61, 92, 240, .26);
@@ -804,7 +818,7 @@ footer .container > * { font-size: .82rem; color: var(--text-2); }
 :root[data-theme="dark"] {
   --ide-bg: #1e1e1e; --ide-chrome: #252526; --ide-chrome-2: #2d2d30;
   --ide-line: #3c3c3c; --ide-active: #1e1e1e; --ide-tab: #2d2d30;
-  --ide-term-bg: #141414; --ide-task-bg: #232327;
+  --ide-term-bg: #141414;
   --ide-key: #c586c0; --ide-str: #ce9178; --ide-num: #b5cea8;
   --ide-bi: #4ec9b0; --ide-call: #dcdcaa; --ide-const: #4fc1ff;
   --ide-self: #9cdcfe; --ide-com: #7ea77e; --ide-fex: #d7ba7d;
@@ -819,10 +833,10 @@ footer .container > * { font-size: .82rem; color: var(--text-2); }
 :root[data-theme="pink"] {
   --ide-bg: #fdf9fb; --ide-chrome: #f1e6ec; --ide-chrome-2: #e8d7e0;
   --ide-line: #f0c9d6; --ide-active: #ffffff; --ide-tab: #f6e9ef;
-  --ide-term-bg: #ffffff; --ide-task-bg: #f7eef3;
+  --ide-term-bg: #ffffff;
   --ide-key: #a626a4; --ide-str: #0a7a4d; --ide-num: #b3590a;
-  --ide-bi: #2f6feb; --ide-call: #6f42c1; --ide-const: #0184bc;
-  --ide-self: #ca1243; --ide-com: #5f8a5f; --ide-fex: #0b6e8f;
+  --ide-bi: #1f5fd8; --ide-call: #6f42c1; --ide-const: #00719f;
+  --ide-self: #ca1243; --ide-com: #4c724c; --ide-fex: #0b6e8f;
   --ide-op: #5a5a66; --ide-pun: #6b6b74; --ide-var: #2c2c31;
   --ide-guide: rgba(60, 40, 55, .09); --ide-tws: rgba(190, 60, 70, .14);
   --ide-curln: rgba(251, 125, 168, .10); --ide-flash: rgba(251, 125, 168, .30);
@@ -880,7 +894,7 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 .ide-main { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
 
 /* ---- 标签页 + 面包屑 ---- */
-.ide-tabs { display: flex; align-items: stretch; height: 35px; background: var(--ide-chrome); border-bottom: 1px solid var(--ide-line); }
+.ide-tabs { flex: 0 0 auto; display: flex; align-items: stretch; height: 35px; background: var(--ide-chrome); border-bottom: 1px solid var(--ide-line); }
 .ide-tabs .tab {
   display: inline-flex; align-items: center; gap: 8px; padding: 0 14px;
   font-size: .8rem; color: var(--text-3); background: var(--ide-tab); border-right: 1px solid var(--ide-line);
@@ -903,29 +917,8 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 .crumb-btn:hover { color: var(--text); border-color: var(--border-strong); }
 .crumb-btn.on { color: var(--accent); border-color: var(--accent); }
 
-/* ---- 编辑器：纵向两截 —— 题面（只读、钉在顶部）+ 代码区（行号列 + 叠层） ---- */
+/* ---- 编辑器：题面那几行 # 注释就在 textarea 里（exam-ui.js 锁区），下面只有行号列 + 叠层 ---- */
 .ide-editor { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; background: var(--ide-bg); }
-/* 题面就是一个两列 grid：行号列 + 文字列；.gt-task 与 .ide-tasktext 用 display:contents
-   让各自的行直接变成 grid 项，文字折行时行号跟着同一行高走，绝不错位（JS 已把 grid-row 写在每一行上） */
-.ide-task {
-  flex: 0 0 auto; display: grid; grid-template-columns: auto minmax(0, 1fr);
-  padding: var(--ide-pad-v) 0; margin: 0; max-height: 42%; overflow: auto;
-  font-family: var(--mono); font-size: var(--ide-fs); line-height: var(--ide-lh);
-  background: var(--ide-task-bg); border-bottom: 1px solid var(--ide-line);
-}
-.ide-task.min { display: none; }
-.gt-task, .ide-tasktext { display: contents; }
-.gt-task .ln {
-  padding: 0 10px 0 14px; text-align: right; color: var(--text-3);
-  font-style: normal; user-select: none; white-space: pre;
-}
-.ide-tasktext .tl { padding-right: var(--ide-pad-h); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ide-com); }
-.tl-title { font-weight: 700; }
-.tl-tag { font-weight: 700; }
-.tl-w, .tl-punc { opacity: .75; }
-.tl-ck { font-style: normal; font-weight: 700; margin-left: 8px; opacity: .55; }
-.tl-ck.pass { color: var(--green); opacity: 1; }
-.tl-ck.fail { color: var(--danger); opacity: 1; }
 
 /* 代码区：行号列 + 相对定位的叠层（当前行 → 着色层 → 透明 textarea） */
 .ide-code-row { flex: 1 1 auto; display: flex; min-height: 0; }
@@ -958,11 +951,6 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 @keyframes ide-flash { 0% { background: var(--ide-flash); } 100% { background: transparent; } }
 .flash { animation: ide-flash .9s ease-out; }
 
-/* 自动换行：长行折回来看；行号改绝对定位，跟着 JS 量出来的每行实际高度站（exam-ui.js alignGutter） */
-.ide-editor.wrap .ide-hl, .ide-editor.wrap .ide-ta { white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; }
-.ide-editor.wrap .gt-code { position: relative; }
-.ide-editor.wrap .gt-code .ln { position: absolute; right: 0; left: 0; }
-
 /* ---- 语法着色（令牌在文件上方的 :root / dark / pink 三块 --ide-* 里） ---- */
 .tk-kw { color: var(--ide-key); }
 .tk-str { color: var(--ide-str); }
@@ -986,6 +974,22 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 }
 /* 行尾多敲的空格：给他看见，但不刺眼 */
 .tk-tws { background: var(--ide-tws); border-radius: 2px; }
+
+/* ---- 共用代码编辑器控件（code-editor.js）：IDE 与笔试代码题同一套四层 ----
+   四层（行号 / 当前行 / 着色 / textarea）复用上面 .gt-code / .ide-cur / .ide-hl / .ide-ta，
+   这里只补控件自己的外壳与补全弹框。卡片里那枚要自带边框，IDE 里外层已经框好了。 */
+.ed { display: flex; flex-direction: column; min-height: 0; background: var(--ide-bg); }
+.ed-box { border: 1px solid var(--border); border-radius: 9px; }
+.ed-box:focus-within { border-color: var(--accent); }
+/* 补全弹框贴在光标那一格下面，坐标由 JS 量（字体回落时按格宽乘会偏半个字） */
+.ed-pop {
+  position: absolute; z-index: 6; min-width: 132px; max-width: 320px; padding: 4px;
+  border: 1px solid var(--border-strong); border-radius: 8px; background: var(--panel);
+  box-shadow: var(--shadow-s); font-family: var(--mono); font-size: calc(var(--ide-fs) - 1px);
+}
+.ed-it { padding: 3px 9px; border-radius: 6px; color: var(--text-2); white-space: pre; cursor: pointer; }
+.ed-it b { color: var(--accent); font-weight: 700; }
+.ed-it.on { background: var(--bg-mute); color: var(--text); }
 
 /* ---- 屏幕正下方的面板：终端 / 判定清单 / 问题（顶上那条缝能拖高） ---- */
 .ide-panel {
@@ -1021,7 +1025,8 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
   color: var(--ide-term-out); background: var(--ide-term-bg);
 }
 .term-line { white-space: pre-wrap; word-break: break-word; }
-.term-run + .term-run { border-top: 1px dashed var(--ide-line); margin-top: 8px; padding-top: 2px; }
+/* 两次运行之间只留空，不画线：VS Code 的控制台没有分隔线，虚线看着像「内容被切了一刀」 */
+.term-run + .term-run { margin-top: 10px; }
 .term-cmd { color: var(--accent); margin-top: 8px; }
 .term-out { color: var(--ide-term-out); }
 .term-meta { color: var(--ide-meta); margin-bottom: 4px; }
@@ -1048,13 +1053,13 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 .term-tail:hover { color: var(--text); border-color: var(--border-strong); }
 
 /* ---- 考场里的细滚动条：照 VS Code 的窄滑块 ---- */
-.ide-ta::-webkit-scrollbar, .ide-hl::-webkit-scrollbar, .ide-task::-webkit-scrollbar,
+.ide-ta::-webkit-scrollbar, .ide-hl::-webkit-scrollbar,
 .term::-webkit-scrollbar, .pane::-webkit-scrollbar { width: 12px; height: 12px; }
-.ide-ta::-webkit-scrollbar-thumb, .ide-hl::-webkit-scrollbar-thumb, .ide-task::-webkit-scrollbar-thumb,
+.ide-ta::-webkit-scrollbar-thumb, .ide-hl::-webkit-scrollbar-thumb-thumb,
 .term::-webkit-scrollbar-thumb, .pane::-webkit-scrollbar-thumb {
   background: var(--ide-pun); border: 4px solid transparent; background-clip: content-box; border-radius: 8px; opacity: .5;
 }
-.ide-ta::-webkit-scrollbar-track, .ide-hl::-webkit-scrollbar-track, .ide-task::-webkit-scrollbar-track,
+.ide-ta::-webkit-scrollbar-track, .ide-hl::-webkit-scrollbar-track-track,
 .term::-webkit-scrollbar-track, .pane::-webkit-scrollbar-track { background: transparent; }
 .ide-ta::-webkit-scrollbar-corner, .ide-hl::-webkit-scrollbar-corner { background: transparent; }
 
@@ -1212,9 +1217,62 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 .en-review li { display: flex; gap: 9px; font-size: .8rem; line-height: 1.6; padding: 8px 10px; border-radius: 9px; background: var(--panel); border: 1px solid var(--border); }
 .en-review li.pass { border-color: var(--green); }
 .en-review li.fail { border-color: var(--danger); }
+.en-review li.half { border-color: var(--warn); }
 .en-review .ck-mark { font-weight: 800; }
 .en-review li.pass .ck-mark { color: var(--green); }
 .en-review li.fail .ck-mark { color: var(--danger); }
+.en-review li.half .ck-mark { color: var(--warn); }
+
+/* ---------------- 笔试卷（kind:"paper"）专属：题型标签 / 题面代码 / 补代码与写输出的作答区 / 排序题 ---------------- */
+.pp-type { display: inline-block; margin-right: 8px; padding: 1px 7px; border-radius: 6px; font-size: .72rem; background: var(--accent-soft); color: var(--accent); vertical-align: 1px; }
+.pp-tip { font-size: .76rem; color: var(--text-3); margin: -4px 0 8px; }
+.pp-code { margin: 4px 0 10px; padding: 10px 12px; border-radius: 9px; background: var(--code-bg); border: 1px solid var(--border); font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .8rem; line-height: 1.6; overflow-x: auto; white-space: pre; }
+.pp-code code { font-family: inherit; }
+.pp-sline { display: block; }
+.pp-cline { display: block; margin: 3px 0; padding: 2px 9px; border-radius: 7px; border: 1px solid var(--border); background: var(--code-bg); font-family: var(--mono); font-size: .8rem; font-weight: 400; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pp-area { width: 100%; box-sizing: border-box; resize: vertical; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: .85rem; line-height: 1.6; }
+.pp-area.mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+.pp-area:focus { outline: none; border-color: var(--accent); }
+/* 排序题：候选步骤（点一下进你的顺序）与你的顺序（再点撤下） */
+.pp-order { display: flex; flex-wrap: wrap; gap: 7px; }
+.pp-step { display: inline-flex; align-items: center; padding: 6px 11px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: .8rem; cursor: pointer; min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.pp-step:hover { border-color: var(--accent); }
+.pp-step.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); cursor: default; }
+.pp-seq { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; min-height: 1em; }
+.pp-pick { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 8px; border: 1px solid var(--accent); font-size: .78rem; cursor: pointer; min-width: 0; overflow-wrap: anywhere; }
+.pp-pick i { font-style: normal; font-weight: 800; color: var(--accent); }
+.pp-pick b { color: var(--text-3); font-weight: 400; }
+.pp-why { margin-top: 4px; color: var(--text-2); }
+/* 笔试卷的题目导航条：空圈 = 没答，实心 = 已答，红 = 交卷后还空着 */
+.pp-nav {
+  position: sticky; top: 8px; z-index: 3;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  max-width: 880px; margin: 0 auto 14px; padding: 8px 10px;
+  border-radius: 10px; background: var(--panel); border: 1px solid var(--border);
+}
+.pp-navdot {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; padding: 0; border-radius: 50%;
+  border: 1.5px solid var(--border); background: transparent; color: var(--text-3);
+  font-size: .74rem; font-weight: 700; cursor: pointer;
+}
+.pp-navdot:hover { border-color: var(--accent); color: var(--accent); }
+.pp-navdot.filled { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+.pp-navdot.miss { border-color: var(--danger); color: var(--danger); background: transparent; }
+.pp-nav-hint { margin-left: auto; font-size: .72rem; color: var(--text-3); }
+.en-card-q.miss { border-color: var(--danger); }
+/* 阅读页代码高光（rd-*）：块内 span 由 app.js 的 hlCode 生成，色值全部走主题令牌 */
+/* rd-* 高光色：阅读页代码块与笔试考场（.ide —— 题面代码行 / pp-code / 选项）共用同一套令牌，
+   底色同为 --code-bg，对比度同源。Python 考场的高光走 tk-*，类名不相交。 */
+.code-block pre code .rd-kw, .ide .rd-kw { color: var(--rd-kw); }
+.code-block pre code .rd-str, .ide .rd-str { color: var(--rd-str); }
+.code-block pre code .rd-com, .ide .rd-com { color: var(--rd-com); font-style: italic; }
+.code-block pre code .rd-num, .ide .rd-num { color: var(--rd-num); }
+.code-block pre code .rd-pre, .ide .rd-pre { color: var(--rd-pre); }
+.code-block pre code .rd-fn, .ide .rd-fn { color: var(--rd-fn); }
+.code-block pre code .rd-cls, .ide .rd-cls { color: var(--rd-cls); }
+.code-block pre code .rd-tag, .ide .rd-tag { color: var(--rd-tag); }
+.code-block pre code .rd-atr, .ide .rd-atr { color: var(--rd-atr); }
 
 @media (max-width: 720px) {
   .en-opts { grid-template-columns: minmax(0, 1fr); }
