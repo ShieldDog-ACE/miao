@@ -1,0 +1,48 @@
+{
+  "cid": "m128",
+  "note": "代码卷：只有 q2、q3 两道编辑器题。任务 1 要求「if 和 value_or 两种方式各取一次值」，if 那半边只被 output 题盖着；另外这只盒子怎么声明也没人写过，补两道。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：走 if 那条路 —— 拿 nickname(2) 交回来的盒子问一句有没有货，有货就用星号把真名取出来打印。",
+        "acceptRegex": [
+          "if\\s*\\(\\s*auto\\s+\\w+\\s*=\\s*nickname\\s*\\(",
+          "std\\s*::\\s*println\\s*\\(",
+          "\\*\\s*\\w+"
+        ],
+        "sample": "if (auto n = nickname(2)) std::println(\"2 号真名: {}\", *n);",
+        "why": "if 分流这一边拿到的是盒子本身，所以能写星号取值；value_or 那一边只会交出一个拷贝，改不到盒里 —— 这就是两条路的分工界线。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "if (auto n = nickname(2)) std::println(\"2 号真名: {}\", *n);",
+        "wrong": "std::println(\"2 号真名: {}\", nickname(2).value_or(\"匿名用户\"));",
+        "loose": "if ( auto nm = nickname ( 2 ) ) { std :: println ( \"2 号真名：{}\" , * nm ) ; }"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写出 nickname 的头一行：返回一只「可能装着别名的盒子」，参数是一个 int。",
+        "acceptRegex": [
+          "optional\\s*<\\s*std\\s*::\\s*string\\s*>",
+          "nickname\\s*\\(\\s*int\\b"
+        ],
+        "sample": "std::optional<std::string> nickname(int id) {",
+        "why": "返回类型里的 optional 是这一课全部的起点：签名上写着可能没有，函数里那句 return 一个 std::string 才会被自动装进盒子。",
+        "score": 18
+      },
+      "selftest": {
+        "ref": "std::optional<std::string> nickname(int id) {",
+        "wrong": "std::string nickname(int id) {",
+        "loose": "std :: optional < std :: string >  nickname ( int  who )  {"
+      }
+    }
+  ],
+  "drop": []
+}

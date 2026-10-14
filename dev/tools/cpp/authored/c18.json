@@ -1,0 +1,45 @@
+{
+  "cid": "c18",
+  "note": "代码卷：源稿任务 1（把 love 换成 hate，先数出起点和长度）只被 choice、blank、multi 盖着，没有编辑器题。补两道 code 题，各自数一遍起点和长度：一道 replace，一道 erase。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）已有 std::string s = I love math; 请写一行：用 replace 把里面的 love 换成 hate。起点和长度都要自己数出来，别照抄题面。",
+        "acceptRegex": [
+          "replace\\s*\\(\\s*2\\s*,\\s*4\\s*,\\s*\"hate\"\\s*\\)"
+        ],
+        "sample": "s.replace(2, 4, \"hate\");",
+        "why": "I 占 0 号格、空格占 1 号格，love 从 2 号起占 2、3、4、5 共 4 格，所以起点 2、长度 4；改完的就是 s 自己，不用变量接。",
+        "score": 25
+      },
+      "selftest": {
+        "ref": "s.replace(2, 4, \"hate\");",
+        "wrong": "s.replace(1, 4, \"hate\");",
+        "loose": "s . replace ( 2 ,4 ,  \"hate\"  ) ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）还是 std::string s = I love math; 请写一行：这次用 erase 把 love 那 4 格直接挖掉，不补任何东西。起点同样要自己数。",
+        "acceptRegex": [
+          "erase\\s*\\(\\s*2\\s*,\\s*4\\s*\\)"
+        ],
+        "sample": "s.erase(2, 4);",
+        "why": "erase 是 replace 的删除版：起点 2、长度 4 数的是同一段，只是第三个参数没有，挖完不补，后面的字符全体往左挪。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "s.erase(2, 4);",
+        "wrong": "s.erase(2, 5);",
+        "loose": "s.erase (  2 ,  4  ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

@@ -1,0 +1,48 @@
+{
+  "cid": "c55",
+  "note": "代码卷：任务 1 只验了函数头（average 的函数体没人写），任务 2 只验了那一句 if（加在哪个位置没人写）。补两道 code：一道亲手写累加除以个数，一道把 grade_of 整写一遍、逼出「新档必须挡在 90 前面」。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）average 的函数头已经写好。写出函数体里的三行：先备好一个小数格子 sum，初值 0；用 for 把 scores 里的分数逐个加进去；最后返回 sum 除以分数的个数。",
+        "acceptRegex": [
+          "double\\s+sum\\s*=\\s*0\\s*;",
+          "for\\s*\\(\\s*auto\\s+\\w+\\s*:\\s*scores\\s*\\)",
+          "return\\s+sum\\s*/[\\s\\S]{0,40}size\\s*\\(\\s*\\)\\s*;"
+        ],
+        "sample": "double sum = 0;\nfor (auto s : scores) sum += s;\nreturn sum / scores.size();",
+        "why": "累加的格子用 double 装，除法才不会把小数那一截砍掉；个数用 size() 现算，表长变了也不用改代码。",
+        "score": 24
+      },
+      "selftest": {
+        "ref": "double sum = 0;\nfor (auto s : scores) sum += s;\nreturn sum / scores.size();",
+        "wrong": "int sum = 0;\nfor (auto s : scores) sum += s;\nreturn sum;",
+        "loose": "double  sum  =  0  ;\n   for( auto  one  :  scores )  sum += one ;\n return  sum /  scores . size ( ) ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "stem": "（任务题）把 grade_of 整个写一遍：收一个 int 分数，从上往下依次挡四档 —— 95 以上返回「顶呱呱」，90 以上返回「优秀」，80 以上返回「良好」，其余返回「及格」。",
+        "acceptRegex": [
+          "string\\s+grade_of\\s*\\(\\s*int",
+          ">=\\s*95[\\s\\S]{0,80}顶呱呱[\\s\\S]{0,80}>=\\s*90[\\s\\S]{0,80}>=\\s*80"
+        ],
+        "sample": "std::string grade_of(int score) {\n    if (score >= 95) return \"顶呱呱\";\n    if (score >= 90) return \"优秀\";\n    if (score >= 80) return \"良好\";\n    return \"及格\";\n}",
+        "why": "命中就 return，函数当场结束，所以高一档必须写在低一档前面；夹在 90 后面，96 分早被前面拦走，新档永远轮不到。",
+        "score": 24
+      },
+      "selftest": {
+        "ref": "std::string grade_of(int score) {\n    if (score >= 95) return \"顶呱呱\";\n    if (score >= 90) return \"优秀\";\n    if (score >= 80) return \"良好\";\n    return \"及格\";\n}",
+        "wrong": "std::string grade_of(int score) {\n    if (score >= 90) return \"优秀\";\n    if (score >= 95) return \"顶呱呱\";\n    if (score >= 80) return \"良好\";\n    return \"及格\";\n}",
+        "loose": "string  grade_of ( int  s )  {  if ( s  >=  95 )  return  \"顶呱呱\" ;  if ( s  >=  90 )  return  \"优秀\" ;  if ( s  >=  80 )  return  \"良好\" ;  return  \"及格\" ;  }"
+      }
+    }
+  ],
+  "drop": []
+}

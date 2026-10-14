@@ -1,0 +1,20 @@
+{
+  "cid": "m153",
+  "note": "清掉越界的 coversTask：源稿只有一条任务（合并前打印 lo、hi 与两半内容），q4/q5/q6 声称的第 2、3、4 条是旧稿残留。这三道题本身考的是本课实测与稳定性的事实，留着当练习题，只是不再声称盖任务。",
+  "add": [],
+  "drop": [],
+  "retag": [
+    {
+      "id": "q4",
+      "coversTask": null
+    },
+    {
+      "id": "q5",
+      "coversTask": null
+    },
+    {
+      "id": "q6",
+      "coversTask": null
+    }
+  ]
+}

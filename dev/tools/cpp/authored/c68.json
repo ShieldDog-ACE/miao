@@ -1,0 +1,65 @@
+{
+  "cid": "c68",
+  "note": "代码卷只有 q3 一道编辑器题（函数头）。任务那条还要求真把 power 写出来并喊两声，补三道 code 题盖住连乘的循环、只递一位、递满两位。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行循环：从 0 数到 exp，每轮把 r 乘上一个 base。",
+        "acceptRegex": [
+          "for\\s*\\(\\s*int\\s+i\\s*=\\s*0\\s*;\\s*i\\s*<\\s*exp",
+          "r\\s*=\\s*r\\s*\\*\\s*base"
+        ],
+        "sample": "for (int i = 0; i < exp; i = i + 1) r = r * base;",
+        "why": "exp 无论来自实参还是备用值，在函数体里都只是一位普通的 int，循环照常数满它，r 就自乘了那么多回。",
+        "score": 25
+      },
+      "selftest": {
+        "ref": "int r = 1;\nfor (int i = 0; i < exp; i = i + 1) r = r * base;\nreturn r;",
+        "wrong": "int r = 1;\nfor (int i = 0; i < exp; i = i + 1) r = r + base;\nreturn r;",
+        "loose": "int r = 1;\nfor ( int  i = 0 ;  i <  exp ;  i = i + 1 )  r =  r *  base ;\nreturn r;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行调用：只递底数 5，指数那格不写，让备用值去补。",
+        "acceptRegex": [
+          "power\\s*\\(\\s*5\\s*\\)"
+        ],
+        "sample": "power(5);",
+        "why": "省略那一格不等于空着：实参表里只写一个 5，编译器在调用那一刻把备用值 2 塞进第二格，所以算出来是 25。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "power(5);",
+        "wrong": "power(5, 2);",
+        "loose": "power ( 5 ) ;"
+      }
+    },
+    {
+      "temp": "a3",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行调用：两位都递满 —— 底数 2、指数 10，这一声用不上备用值。",
+        "acceptRegex": [
+          "power\\s*\\(\\s*2\\s*,\\s*10\\s*\\)"
+        ],
+        "sample": "power(2, 10);",
+        "why": "你递了 10，函数收到的 exp 就是 10，函数头那句 = 2 一句都插不上嘴，所以算出 1024。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "power(2, 10);",
+        "wrong": "power(2);",
+        "loose": "power ( 2 ,  10 ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

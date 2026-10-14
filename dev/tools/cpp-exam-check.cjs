@@ -1,12 +1,14 @@
-/* 喵站 · C++ 考卷自检闸（第九轮 T-21）
+/* 喵站 · C++ 考卷自检闸（第九轮 T-21 · 第十轮 T-24 改单轨）
  *
- * 判什么（任务书 D-57/D-58，任何一条不过退出码 1）：
+ * 判什么（任务书 D-57/D-58/D-62，任何一条不过退出码 1）：
  *   1. 契约：exam-paper.js 的 validatePaper —— 题型合法、题有 id、权重和正好 100；
  *   2. 任务全覆盖：源稿每一条【任务】都有题带 coversTask 对着它（按 syllabus.json 逐条对账）；
- *   3. 结构：至少 2 道 choice、1 道 output；任务题（带 coversTask）合计 ≥50 分；6–10 题；
+ *   3. 单轨：每场卷只能是一种形状，且必须与 exam-mode.json 的分配一致
+ *        mode=code → 全部是 code 题（一题一枚编辑器），3–6 题，每题都得给 acceptRegex；
+ *        mode=quiz → 一道 code 题都不许有，6–10 题，≥2 choice + ≥1 output + ≥1 blank/match；
  *   4. 自测：selftest.refs 每题参考解判 ≥ 通过线（且必须 = 100，满分卷才算参考解写全了）、
  *      wrongs 判 < 通过线、loose 判 ≥ 通过线；
- *   5. 读者可见字段（task/hint/stem/options/steps/acceptLines/why）不许有梗、反引号、
+ *   5. 读者可见字段（task/hint/stem/options/steps/left/right/acceptLines/why）不许有梗、反引号、
  *      前向引用（「第 N 课」N > 本课号）或站内不存在的课号；题干代码同样受构造首现闸管。
  *
  * 跑法：
@@ -20,6 +22,11 @@ const vm = require("vm");
 const DEV = path.resolve(__dirname, "..");
 const DATA = path.join(DEV, "frontend", "assets", "data");
 const SYL = JSON.parse(fs.readFileSync(path.join(__dirname, "cpp", "syllabus.json"), "utf8"));
+/* 单轨分配表：判「这一课该走哪一轨」的唯一出处，重算命令见 cpp-exam-mode.cjs 头部 */
+const MODE_TABLE = {};
+JSON.parse(fs.readFileSync(path.join(__dirname, "cpp", "exam-mode.json"), "utf8")).papers.forEach(p => {
+  MODE_TABLE[p.cid] = p.mode;
+});
 const PAPER = require(path.join(DEV, "frontend", "assets", "js", "exam-paper.js"));
 
 const BY_N = {};
@@ -30,20 +37,22 @@ function courseOf(cid) { return lessonNo(cid) <= 81 ? "cpp" : "cppm"; }
 const argv = process.argv.slice(2);
 const onlyArg = argv.includes("--only") ? argv[argv.indexOf("--only") + 1].split(",").map(s => s.trim()) : null;
 const FIXTURE = argv.includes("--fixture");        /* 自检模式：扫坏样本，期望它一定红 */
-const EXAM_DIR = FIXTURE ? path.join(__dirname, "cpp-gate-fixtures", "exam") : path.join(DATA, "cpp-exam");
+/* --from <目录>：扫目录里的 pNN.js 草稿卷（改造器 --verify 用它把还没落盘的卷子拿来过闸） */
+const FROM = argv.includes("--from") ? path.resolve(argv[argv.indexOf("--from") + 1]) : null;
 
-/* ---------- 载卷：正常模式扫两门课的题包；--fixture 模式扫坏样本（期望它一定红） ---------- */
+/* ---------- 载卷：正常模式扫两门课的题包；--fixture 扫坏样本；--from 扫草稿目录 ---------- */
 function loadPapers() {
   const out = [];
-  const jobs = FIXTURE
-    ? [{ dir: path.join(__dirname, "cpp-gate-fixtures", "exam"), course: "fixture" }]
-    : [{ dir: path.join(DATA, "cpp-exam"), course: "cpp" }, { dir: path.join(DATA, "cppm-exam"), course: "cppm" }];
+  const jobs = FROM ? [{ dir: FROM, course: "draft" }]
+    : FIXTURE
+      ? [{ dir: path.join(__dirname, "cpp-gate-fixtures", "exam"), course: "fixture" }]
+      : [{ dir: path.join(DATA, "cpp-exam"), course: "cpp" }, { dir: path.join(DATA, "cppm-exam"), course: "cppm" }];
   jobs.forEach(({ dir, course }) => {
     if (!fs.existsSync(dir)) return;
     const ctx = { window: {}, console: { log: () => { }, error: () => { }, warn: () => { } } };
     ctx.self = ctx.window; ctx.globalThis = ctx.window;
     vm.createContext(ctx);
-    fs.readdirSync(dir).filter(f => /^p\d+\.js$/.test(f)).sort().forEach(f => {
+    fs.readdirSync(dir).filter(f => /^[\w-]+\.js$/.test(f)).sort().forEach(f => {
       try { vm.runInContext(fs.readFileSync(path.join(dir, f), "utf8"), ctx, { filename: f, timeout: 20000 }); }
       catch (e) { out.push({ file: course + "-exam/" + f, broken: "分部跑不起来：" + e.message }); }
     });
@@ -79,6 +88,13 @@ function visibleTexts(paper) {
     (q.steps || []).forEach((s, i) => out.push(["step:" + q.id + i, String(s)]));
     (q.acceptLines || []).forEach((s, i) => out.push(["line:" + q.id + i, String(s)]));
     (q.accept || []).forEach((s, i) => out.push(["accept:" + q.id + i, String(s)]));
+    if (q.type === "match") {
+      (q.left || []).forEach((s, i) => out.push(["left:" + q.id + i, String(s)]));
+      (q.right || []).forEach((s, i) => out.push(["right:" + q.id + i, String(s)]));
+      Object.keys(q.answer || {}).forEach(k => {
+        out.push(["mlink:" + q.id, String(k) + " → " + String(q.answer[k])]);
+      });
+    }
   });
   return out;
 }
@@ -112,7 +128,16 @@ loaded.forEach(item => {
   const covered = new Set();
   qs.forEach(q => {
     if (q.coversTask == null) return;
-    [].concat(q.coversTask).forEach(t => covered.add(Number(t)));
+    [].concat(q.coversTask).forEach(t => {
+      const n = Number(t);
+      /* 越界编号必须点名：它会把「任务题 ≥50 分」这条悄悄撑起来，而源稿根本没那条任务 */
+      if (!(n >= 1) || n > lesson.tasks.length) {
+        errors.push("〔" + cid + "〕任务对账：" + q.id + " 写着盖第 " + t + " 条任务，源稿这一课只有 " +
+          lesson.tasks.length + " 条 —— 越界的 coversTask 是旧稿残留或凭空编号，它会虚增任务题分数（清掉后这场的任务题分要重看）");
+        return;
+      }
+      covered.add(n);
+    });
   });
   /* 任务题总分：带 coversTask 的题相加（一条题盖多条任务时分只算一次） */
   const taskQScore = qs.filter(q => q.coversTask != null).reduce((a, q) => a + (Number(q.score) || 0), 0);
@@ -120,12 +145,41 @@ loaded.forEach(item => {
     if (!covered.has(i + 1)) errors.push("〔" + cid + "〕任务对账：源稿第 " + (i + 1) + " 条任务「" + t.slice(0, 28) + "…」没有任何题的 coversTask 对着它（D-57）");
   });
 
-  /* 3. 结构 */
+  /* 3. 单轨结构（D-62）：一场卷只许一种形状，形状由 exam-mode.json 逐课分配 */
+  const want = MODE_TABLE[cid];
+  if (!want) errors.push("〔" + cid + "〕单轨：分配表里没有这一课（跑 node dev/tools/cpp-exam-mode.cjs 重算表）");
+  if (paper.mode !== want) errors.push("〔" + cid + "〕单轨：卷里写的 mode 是 " + JSON.stringify(paper.mode) +
+    "，分配表判的是 " + JSON.stringify(want) + "（改卷还是改表？改表要写清为什么）");
+
+  const nCode = qs.filter(q => q.type === "code").length;
   const nChoice = qs.filter(q => q.type === "choice").length;
   const nOutput = qs.filter(q => q.type === "output").length;
-  if (qs.length < 6 || qs.length > 10) errors.push("〔" + cid + "〕结构：题目 " + qs.length + " 道，要求 6–10 道（D-58）");
-  if (nChoice < 2) errors.push("〔" + cid + "〕结构：choice 只有 " + nChoice + " 道，要求 ≥2");
-  if (nOutput < 1) errors.push("〔" + cid + "〕结构：没有 output 题（读代码写输出），要求 ≥1");
+  const nFill = qs.filter(q => q.type === "blank" || q.type === "match").length;
+  if (want === "code") {
+    if (qs.length - nCode > 0) errors.push("〔" + cid + "〕单轨：这一课是代码卷，却混进 " + (qs.length - nCode) +
+      " 道非代码题（" + [...new Set(qs.filter(q => q.type !== "code").map(q => q.type))].join("/") + "）—— 代码卷就只留编辑器");
+    if (qs.length < 3 || qs.length > 6) errors.push("〔" + cid + "〕单轨：代码卷 " + qs.length + " 道题，要求 3–6 道（D-62）");
+    qs.filter(q => q.type === "code").forEach(q => {
+      if (![].concat(q.acceptRegex || []).length) errors.push("〔" + cid + "〕单轨：代码题 " + q.id + " 没给 acceptRegex —— 只写字面 accept 会把等价写法判错");
+    });
+  } else if (want === "quiz") {
+    if (nCode > 0) errors.push("〔" + cid + "〕单轨：这一课是笔试卷，却还有 " + nCode + " 道 code 题（笔试卷不许出现编辑器）");
+    if (qs.length < 6 || qs.length > 10) errors.push("〔" + cid + "〕单轨：笔试卷 " + qs.length + " 题，要求 6–10 题（D-62）");
+    if (nChoice < 2) errors.push("〔" + cid + "〕单轨：choice 只有 " + nChoice + " 道，笔试卷要求 ≥2");
+    if (nOutput < 1) errors.push("〔" + cid + "〕单轨：没有 output 题（读代码写输出），笔试卷要求 ≥1");
+    if (nFill < 1) errors.push("〔" + cid + "〕单轨：一道填空/勾线都没有，笔试卷要求 ≥1（他点名的「词语填空、勾线题这种」）");
+  }
+  qs.filter(q => q.type === "match").forEach(q => {
+    /* 勾线题的两条形制：少于 3 对就是送分；「第 i 项连第 i 项」整卷对齐等于把答案写在题面上 */
+    const left = [].concat(q.left || q.items || []);
+    const right = [].concat(q.right || q.options || []);
+    const ans = q.answer || {};
+    const keys = Object.keys(ans);
+    if (keys.length < 3) errors.push("〔" + cid + "〕勾线：" + q.id + " 只有 " + keys.length + " 对，要求 ≥3 对");
+    if (left.length < 3 || right.length < 3) errors.push("〔" + cid + "〕勾线：" + q.id + " 两边项数不足 3（左 " + left.length + " / 右 " + right.length + "）");
+    const aligned = keys.length >= 3 && keys.every((k, i) => left.indexOf(String(k)) === i && right.indexOf(String(ans[k])) === i);
+    if (aligned) errors.push("〔" + cid + "〕勾线：" + q.id + " 每对都是「左边第 i 项 → 右边第 i 项」，不用想就能连完 —— 把右边顺序打乱");
+  });
   if (taskQScore < 50) errors.push("〔" + cid + "〕结构：任务题合计 " + taskQScore + " 分，要求 ≥50（考的就是本课任务）");
 
   /* 4. 自测 */
@@ -168,7 +222,8 @@ loaded.forEach(item => {
     });
   });
 
-  rows.push({ cid, no, qs: qs.length, taskQScore, covered: covered.size, of: lesson.tasks.length, passLine });
+  rows.push({ cid, no, mode: want, track: paper.mode === want ? "ok" : "bad", qs: qs.length, taskQScore,
+    covered: covered.size, of: lesson.tasks.length, passLine });
 });
 
 /* 汇总：正文写了、考卷没跟上的章必须点名（「每课都有一场考」是需求，不是愿望） */
@@ -196,7 +251,7 @@ function bodyCids() {
   });
   return set;
 }
-const bodies = FIXTURE ? new Set() : bodyCids();
+const bodies = (FIXTURE || FROM) ? new Set() : bodyCids();   /* 草稿目录过闸时别把「别人还没写的章」算成本批的红 */
 const scoped = onlyArg && !FIXTURE ? new Set(onlyArg) : null;   /* --only 只该查这几场，别把别人的缺卷也算进来 */
 const have = new Set(rows.map(r => r.cid));
 const noPaper = [...bodies].filter(cid => !have.has(cid) && (!scoped || scoped.has(cid))).sort();
@@ -204,10 +259,15 @@ noPaper.forEach(cid => errors.push("〔" + cid + "〕正文已经写完，但这
 
 const gotCpp = rows.filter(r => r.no <= 81).length;
 if (FIXTURE) console.log("[cpp-exam-check] 自检模式：扫的是 tools/cpp-gate-fixtures/exam 的坏样本");
+if (FROM) console.log("[cpp-exam-check] 草稿模式：扫的是 " + FROM);
 const gotCppm = rows.filter(r => r.no > 81).length;
 console.log("[cpp-exam-check] 本场检查 " + rows.length + " 场 · 错误 " + errors.length);
 rows.slice(0, 10).forEach(r => console.log("  · " + r.cid + " 题 " + r.qs + " · 任务题 " + r.taskQScore + " 分 · 盖住任务 " + r.covered + "/" + r.of));
-errors.slice(0, 60).forEach(e => console.log("  ✘ " + e));
-if (errors.length > 60) console.log("  …还有 " + (errors.length - 60) + " 条");
+const errCap = argv.includes("--all") ? errors.length : 60;
+errors.slice(0, errCap).forEach(e => console.log("  ✘ " + e));
+if (errors.length > errCap) console.log("  …还有 " + (errors.length - errCap) + " 条（加 --all 全打）");
+const done = rows.filter(r => r.track === "ok");
 console.log("[cpp-exam-check] 进度：入门 " + gotCpp + "/81 场 · 掌握 " + gotCppm + "/132 场 · 已写正文 " + bodies.size + " 章");
+console.log("[cpp-exam-check] 单轨改造：已就 " + done.length + " 场（代码卷 " + done.filter(r => r.mode === "code").length +
+  " · 笔试卷 " + done.filter(r => r.mode === "quiz").length + "）· 还差 " + (rows.length - done.length) + " 场");
 process.exit(errors.length ? 1 : 0);

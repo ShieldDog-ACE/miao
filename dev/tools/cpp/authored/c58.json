@@ -1,0 +1,65 @@
+{
+  "cid": "c58",
+  "note": "代码卷只有 q3 一道编辑器题。任务那条一次点了三件事（声明本人、用外号改本人、打印），补三道 code 题把它们各自都能动手写一遍，外加问地址。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：开出那个 int 变量 a，初始值给 10 —— 外号得挂在已经存在的盒子上。",
+        "acceptRegex": [
+          "int\\s+a\\s*=\\s*10"
+        ],
+        "sample": "int a = 10;",
+        "why": "引用不是新盒子，它必须有本人。先写 int a = 10; 把盒子开出来，后面那行起外号才有东西可指。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "int a = 10;",
+        "wrong": "int a = 66;",
+        "loose": "int   a  =  10 ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写两行：第一行给已经存在的 a 起外号 nickname，第二行用这个外号把本人那格改成 66。",
+        "acceptRegex": [
+          "int\\s*&\\s*nickname\\s*=\\s*a",
+          "nickname\\s*=\\s*66"
+        ],
+        "sample": "int& nickname = a; nickname = 66;",
+        "why": "类型那截带上 &，这一行才是起外号；起好之后再写 nickname = 66;，等号落在外号身上，改的就是 a 那一格。",
+        "score": 30
+      },
+      "selftest": {
+        "ref": "int a = 10;\nint& nickname = a;\nnickname = 66;",
+        "wrong": "int a = 10;\nint nickname = a;\nnickname = 66;",
+        "loose": "int a = 10;\nint &  nickname = a ;\n nickname =  66 ;"
+      }
+    },
+    {
+      "temp": "a3",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：问一句 a 和 nickname 是不是同一个盒子 —— 比较两个地址，把答案打印出来。",
+        "acceptRegex": [
+          "&\\s*a\\s*==\\s*&\\s*nickname"
+        ],
+        "sample": "std::println(\"{}\", &a == &nickname);",
+        "why": "取地址符 & 摆在名字前面，问的是门牌号。外号和本人指的是同一格，所以两个地址相等，打出来是 true。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "std::println(\"{}\", &a == &nickname);",
+        "wrong": "std::println(\"{}\", a == nickname);",
+        "loose": "std::println(\"{}\", & a  == &  nickname );"
+      }
+    }
+  ],
+  "drop": []
+}

@@ -1,0 +1,46 @@
+{
+  "cid": "c48",
+  "note": "代码卷：两条任务各只有一道编辑器题，而且都只验了表的一部分（补行、循环内换人）。补两道 code：一道验 range-for 的拆包头，一道验跨轮存活的记数格必须摆在循环外面。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）写一行 for 的循环头：把 scores 这张表一轮拆一行，方括号里两个名字自己起，左边接科目名、右边接分数。",
+        "acceptRegex": [
+          "for\\s*\\(\\s*auto\\s*\\[\\s*\\w+\\s*,\\s*\\w+\\s*\\]\\s*:\\s*scores\\s*\\)"
+        ],
+        "sample": "for (auto [subject, score] : scores)",
+        "why": "range-for 每轮递一只 pair 到拆包台，方括号里两个名字按顺序接住两格，冒号右边是被拆的那张表。",
+        "score": 22
+      },
+      "selftest": {
+        "ref": "for (auto [subject, score] : scores) {\n    std::println(\"{} {}\", subject, score);\n}",
+        "wrong": "for (int i = 0; i < 5; i++) {\n    std::println(\"{}\", i);\n}",
+        "loose": "for(  auto  [  ke  ,  fs  ]  :  scores  )"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "stem": "（任务题）在 for 循环的外面写两行声明：整数格子 best 初值 0，字符串格子 best_name 初值是空串 —— 它们要活过整个循环。",
+        "acceptRegex": [
+          "int\\s+best\\s*=\\s*0\\s*;",
+          "string\\s+best_name\\s*=\\s*\"\"\\s*;"
+        ],
+        "sample": "int best = 0;\nstd::string best_name = \"\";",
+        "why": "记数格摆在循环外面才跨轮存活；摆进循环里的话每轮开头都被抹回 0，最后只剩最后一行的比较结果。",
+        "score": 22
+      },
+      "selftest": {
+        "ref": "int best = 0;\nstd::string best_name = \"\";",
+        "wrong": "int best = 0;",
+        "loose": "int   best  =  0  ;\n   std::string   best_name  =  \"\"  ;"
+      }
+    }
+  ],
+  "drop": []
+}

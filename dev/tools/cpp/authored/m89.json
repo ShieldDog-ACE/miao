@@ -1,0 +1,46 @@
+{
+  "cid": "m89",
+  "note": "代码卷：任务 1 的「抽成函数」原卷只考了循环体那一坨（q2），函数头没人写；任务 2 的 q5 验了乘 base 加值，但「查表」那一步 digits.find(c) 没单独动手过。各补一道 code 题。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）把重复的两段循环抽成函数：写出 to_base 的函数头 —— 返回 std::string，收一个整数 n 和一个整数 base。",
+        "acceptRegex": [
+          "std\\s*::\\s*string\\s+to_base\\s*\\(\\s*int\\s+\\w+\\s*,\\s*int\\s+\\w+\\s*\\)"
+        ],
+        "sample": "std::string to_base(int n, int base) {",
+        "why": "还回来的是一串字符，所以返回值写 std::string；两个整数分别是要拆的数和进位制 —— 数字表是函数的私事，不用调用者递。",
+        "score": 18
+      },
+      "selftest": {
+        "ref": "std::string to_base(int n, int base) {",
+        "wrong": "void to_base(int n, int base) {",
+        "loose": "std :: string   to_base ( int   n , int   base ) {"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "stem": "（任务题）from_base 里把字符 c 换成它的数字值那一步：查表用 digits.find(c)，把查到的值并进 result 的个位（旧值先升一位）。",
+        "acceptRegex": [
+          "digits\\s*\\.\\s*find\\s*\\(\\s*c\\s*\\)",
+          "result\\s*\\*\\s*base\\s*\\+"
+        ],
+        "sample": "for (char c : s) result = result * base + digits.find(c);",
+        "why": "digits 那张表里「0123456789ABCDEF」的下标就是数字值，find(c) 报出 c 排在第几格，正好是它代表的数；乘 base 把读过的位整体左移一格，加号后面接上新个位。",
+        "score": 18
+      },
+      "selftest": {
+        "ref": "for (char c : s) result = result * base + digits.find(c);",
+        "wrong": "for (char c : s) result = result + base * c;",
+        "loose": "for (char c : s) result  =  result*base + digits . find ( c ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

@@ -1,0 +1,50 @@
+{
+  "cid": "c36",
+  "note": "代码卷：源稿两条任务，原卷只有一道编辑器题对着任务 1（倒计时），任务 2（i += 5 打 5 的倍数）只有选择题和输出题盖着。补两道 code，把两条任务都能动手写一遍。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "stem": "（任务题）写一个完整的 for 循环：从 0 起跳，每轮加 5，一直打到 100（含 100），每轮用 std::print 打一个数再加一个空格。",
+        "acceptRegex": [
+          "for\\s*\\(",
+          "\\+\\s*=\\s*5",
+          "<\\s*=\\s*100\\s*;"
+        ],
+        "sample": "for (int i = 0; i <= 100; i += 5) { std::print(\"{} \", i); }",
+        "why": "起点 0、步长 5、终点写成 <= 100 才把 100 这一格也收进来；三个格子合起来决定循环踩到的正好是 0、5、10 一直到 100。",
+        "score": 25
+      },
+      "selftest": {
+        "ref": "for (int i = 0; i <= 100; i += 5) {\n    std::print(\"{} \", i);\n}",
+        "wrong": "for (int i = 0; i < 100; i += 1) {\n    std::print(\"{} \", i);\n}",
+        "loose": "for(int x=0;x<=100 ;x+=5){std::print(\"{} \", x);}"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "只写 for 循环那一行头，三个格子写全：循环变量从 10 开始，每轮减 1，一直走到 1（含 1）。",
+        "acceptRegex": [
+          "for\\s*\\(",
+          "int\\s+\\w+\\s*=\\s*10",
+          ">\\s*=\\s*1\\s*;",
+          "-{2}"
+        ],
+        "sample": "for (int left = 10; left >= 1; left--)",
+        "why": "步进格往回走，条件格就得问「还没到底吗」写成 >= 1；方向不配套的话循环一次都不进，而且不报错。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "for (int left = 10; left >= 1; left--)",
+        "wrong": "for (int left = 1; left <= 10; left--)",
+        "loose": "for  (  int  s = 10 ;  s  >=  1 ;  s --  )"
+      }
+    }
+  ],
+  "drop": []
+}

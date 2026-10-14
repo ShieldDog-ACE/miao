@@ -1,0 +1,72 @@
+{
+  "cid": "m112",
+  "note": "C 类：删掉 q4、q6 两道编辑器题只剩 5 题（任务 1 由 q1 盖着，形制其余都够，只差题数）。补一道勾线题，问的正是任务 1 那件事：锁起来与摊开的区别，顺带把默认标签、声明处给默认值、每台机器各有一套零件串起来。　（后又清掉 q3/q5/q7 的越界编号：源稿这一课只有一条任务。）",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "match",
+        "score": 18,
+        "coversTask": 1,
+        "stem": "把左边关于这个类的写法，和它真正的后果连起来（右边顺序是打乱的）。",
+        "left": [
+          "class 里没写 public 或 private 标签的那几行",
+          "零件那一行写成 int done_ = 0",
+          "在标了 const 的按钮里给 done_ 赋值",
+          "Score a 和 Score b 两台机器，只按 a.add(30)"
+        ],
+        "right": [
+          "a 的 done_ 变成 30，b 的那一份一动不动",
+          "默认算 private，外面碰不到",
+          "对象一出生就带着这个值，不必再写别的初始化",
+          "编译当场拦住：const 已经承诺这个按钮只让看不让改"
+        ],
+        "answer": {
+          "class 里没写 public 或 private 标签的那几行": "默认算 private，外面碰不到",
+          "零件那一行写成 int done_ = 0": "对象一出生就带着这个值，不必再写别的初始化",
+          "在标了 const 的按钮里给 done_ 赋值": "编译当场拦住：const 已经承诺这个按钮只让看不让改",
+          "Score a 和 Score b 两台机器，只按 a.add(30)": "a 的 done_ 变成 30，b 的那一份一动不动"
+        },
+        "why": "class 不写标签默认全是 private（第 87 课那个 struct 默认全是 public）；零件在声明处给好默认值，对象一出生就带着；类是图纸、对象是造出来的机器，各有一套 done_；const 那份承诺是双向的，按钮里改零件当场过不去。"
+      },
+      "selftest": {
+        "ref": {
+          "class 里没写 public 或 private 标签的那几行": "默认算 private，外面碰不到",
+          "零件那一行写成 int done_ = 0": "对象一出生就带着这个值，不必再写别的初始化",
+          "在标了 const 的按钮里给 done_ 赋值": "编译当场拦住：const 已经承诺这个按钮只让看不让改",
+          "Score a 和 Score b 两台机器，只按 a.add(30)": "a 的 done_ 变成 30，b 的那一份一动不动"
+        },
+        "wrong": {
+          "class 里没写 public 或 private 标签的那几行": "对象一出生就带着这个值，不必再写别的初始化",
+          "零件那一行写成 int done_ = 0": "a 的 done_ 变成 30，b 的那一份一动不动",
+          "在标了 const 的按钮里给 done_ 赋值": "默认算 private，外面碰不到",
+          "Score a 和 Score b 两台机器，只按 a.add(30)": "编译当场拦住：const 已经承诺这个按钮只让看不让改"
+        },
+        "loose": {
+          "0": 1,
+          "1": 2,
+          "2": 3,
+          "3": 0
+        }
+      }
+    }
+  ],
+  "drop": [
+    "q4",
+    "q6"
+  ],
+  "retag": [
+    {
+      "id": "q3",
+      "coversTask": null
+    },
+    {
+      "id": "q5",
+      "coversTask": null
+    },
+    {
+      "id": "q7",
+      "coversTask": null
+    }
+  ]
+}

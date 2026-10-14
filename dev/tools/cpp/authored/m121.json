@@ -1,0 +1,49 @@
+{
+  "cid": "m121",
+  "note": "代码卷：只有 q4、q7 两道编辑器题，够不到 3 道下限；任务 1 说的「填 1/2/3」和「打印 arr[2]」各自都没有单独动手的题，补两道对上。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：用 arr 保管着三格 int 的数组，把 1、2、3 挨个填进这三格。",
+        "acceptRegex": [
+          "arr\\s*\\[\\s*0\\s*\\]\\s*=\\s*1",
+          "arr\\s*\\[\\s*1\\s*\\]\\s*=\\s*2",
+          "arr\\s*\\[\\s*2\\s*\\]\\s*=\\s*3"
+        ],
+        "sample": "arr[0] = 1; arr[1] = 2; arr[2] = 3;",
+        "why": "make_unique 造出来的数组是清零的，要什么内容得一格一格自己填；下标从 0 起，三格就是 0、1、2。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "arr[0] = 1; arr[1] = 2; arr[2] = 3;",
+        "wrong": "arr[0] = 1; arr[1] = 2;",
+        "loose": "arr [ 0 ] = 1 ;\narr [ 1 ] = 2 ;\narr [ 2 ] = 3 ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行打印：把 arr 第三格（下标 2 那格）的值打出来，前面带上「arr[2] = 」这几个字。",
+        "acceptRegex": [
+          "std\\s*::\\s*println\\s*\\(",
+          "\\{\\s*\\}",
+          "arr\\s*\\[\\s*2\\s*\\]"
+        ],
+        "sample": "std::println(\"arr[2] = {}\", arr[2]);",
+        "why": "数组版本的 unique_ptr 下标照用，arr[2] 就是第三格；填了 3 之后这一行打出 arr[2] = 3。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "std::println(\"arr[2] = {}\", arr[2]);",
+        "wrong": "std::println(\"arr[1] = {}\", arr[1]);",
+        "loose": "std :: println ( \"arr[2] = {}\" , arr [ 2 ] ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

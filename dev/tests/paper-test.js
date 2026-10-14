@@ -129,6 +129,17 @@ ok("code 非法正则不许静默判错，要报出来",
   it(one({ type: "code", acceptRegex: ["(["], score: 100 }, "x")).saw.indexOf("不合法的正则") >= 0,
   it(one({ type: "code", acceptRegex: ["(["], score: 100 }, "x")).saw);
 ok("code 没作答 = 0", pts(one(CODE, undefined)) === 0);
+/* 复盘不许把裸正则当「正确答案」甩给读者：题目带 sample 时改用具体参考写法 */
+const CODE_SAMPLE = Object.assign({}, CODE, { sample: 'std::println("你好");' });
+ok("code 带 sample：复盘的「正确答案」给参考写法，不给正则",
+  it(one(CODE_SAMPLE, "listen(8080)")).rightAnswer === "参考写法：std::println(\"你好\");",
+  it(one(CODE_SAMPLE, "listen(8080)")).rightAnswer);
+ok("code 带 sample：判错那句话也指着参考写法",
+  it(one(CODE_SAMPLE, "listen(8080)")).saw.indexOf("参考写法：std::println") >= 0, it(one(CODE_SAMPLE, "listen(8080)")).saw);
+ok("code 没带 sample：仍按正则说明（老卷子一条都不许被改坏）",
+  it(one(CODE, "listen(8080)")).rightAnswer.indexOf("0") >= 0);
+ok("blank 只给正则时也优先展示 sample",
+  it(one({ type: "blank", acceptRegex: ["println"], sample: 'std::println("x");', score: 100 }, "x")).rightAnswer.indexOf("参考写法") === 0);
 
 /* ================= 5. 读代码写输出 output ================= */
 group("5 读代码写输出 output（逐行宽松比对，行数不足按命中比例给）");
@@ -173,8 +184,55 @@ ok("order 复盘带「你的顺序 vs 正确顺序」两条 + 错在第几步",
 ok("order 少排一步 = 0（不算全对）", pts(one(ORDER, [0, 1, 2, 3, 4])) === 0, "实得 " + pts(one(ORDER, [0, 1, 2, 3, 4])));
 ok("order 没作答 = 0", pts(one(ORDER, undefined)) === 0);
 
-/* ================= 7. 一整卷 ================= */
-group("7 一整卷（Web Server 第 1 篇 · 六种题型，权重和正好 100）");
+/* ================= 7. 勾线配对 match ================= */
+group("7 勾线配对 match（按连对的对数给分，标签与索引两种写法都认）");
+const MATCH = {
+  type: "match", stem: "把左边的头文件和右边它管的事连起来：",
+  left: ["<print>", "<vector>", "<memory>", "<string>"],
+  right: ["动态数组", "智能指针", "标准输出", "字符串"],
+  answer: { "<print>": "标准输出", "<vector>": "动态数组", "<memory>": "智能指针", "<string>": "字符串" },
+  score: 100
+};
+const MATCH_PERFECT = { "<print>": "标准输出", "<vector>": "动态数组", "<memory>": "智能指针", "<string>": "字符串" };
+ok("match 全连对 = 100", pts(one(MATCH, MATCH_PERFECT)) === 100, "实得 " + pts(one(MATCH, MATCH_PERFECT)));
+ok("match 对 3 漏 1 = 按比例给 75", pts(one(MATCH, { "<print>": "标准输出", "<vector>": "动态数组", "<memory>": "智能指针" })) === 75,
+  "实得 " + pts(one(MATCH, { "<print>": "标准输出", "<vector>": "动态数组", "<memory>": "智能指针" })));
+ok("match 半对记 half（复盘要能看出是半对不是全错）",
+  it(one(MATCH, { "<print>": "标准输出", "<vector>": "动态数组", "<memory>": "智能指针" })).mark === "half");
+ok("match 全连错 = 0", pts(one(MATCH, { "<print>": "动态数组", "<vector>": "智能指针", "<memory>": "标准输出", "<string>": "动态数组" })) === 0);
+ok("match 用索引写答卷（{0:2,1:0,2:1,3:3}）同样满分", pts(one(MATCH, { 0: 2, 1: 0, 2: 1, 3: 3 })) === 100,
+  "实得 " + pts(one(MATCH, { 0: 2, 1: 0, 2: 1, 3: 3 })));
+ok("match 宽松比对：多余空格、全角、结尾句号都不该判错",
+  pts(one(MATCH, { "  <print>\u3000": "标准输出。", "<vector>": "动态数组", "<memory>": "智能指针", "<string>": "字符串" })) === 100,
+  "实得 " + pts(one(MATCH, { "  <print>\u3000": "标准输出。", "<vector>": "动态数组", "<memory>": "智能指针", "<string>": "字符串" })));
+ok("match 左边写了不存在的项：那点分拿不到，复盘点名",
+  (() => { const r = one(MATCH, { "<array>": "字符串", "<vector>": "动态数组", "<memory>": "智能指针", "<string>": "字符串" }); return r.score === 75 && it(r).saw.indexOf("不是左边的项") >= 0; })(),
+  JSON.stringify(it(one(MATCH, { "<array>": "字符串", "<vector>": "动态数组", "<memory>": "智能指针", "<string>": "字符串" })).saw));
+ok("match 没作答 = 0", pts(one(MATCH, {})) === 0 && pts(one(MATCH, undefined)) === 0);
+ok("match 复盘说清每一对该怎么连",
+  it(one(MATCH, { "<print>": "动态数组", "<vector>": "动态数组", "<memory>": "智能指针", "<string>": "字符串" })).rightAnswer.indexOf("<print> → 标准输出") >= 0,
+  it(one(MATCH, { "<print>": "动态数组" })).rightAnswer);
+/* 契约：两边不足 2 项、answer 落不到项里、标签撞车，都得当场报错 */
+ok("match 两边项数不足 2 要报错",
+  PAPER.validatePaper({ questions: [{ id: "q1", type: "match", stem: "连", left: ["a"], right: ["b"], answer: { a: "b" }, score: 100 }] })
+    .some((e) => e.indexOf("不足 2 个项") >= 0));
+ok("match 的 answer 写了 left/right 里没有的项要报错",
+  PAPER.validatePaper({
+    questions: [{
+      id: "q1", type: "match", stem: "连", left: ["a", "b"], right: ["c", "d"],
+      answer: { a: "c", b: "z" }, score: 100
+    }]
+  }).some((e) => e.indexOf("认得出来") >= 0));
+ok("match 同一栏里标签重复要报错（两个一样的按钮点哪个都算对，题就废了）",
+  PAPER.validatePaper({
+    questions: [{
+      id: "q1", type: "match", stem: "连", left: ["向量", "向量 "], right: ["动态数组", "智能指针"],
+      answer: { "向量": "动态数组", "向量 ": "智能指针" }, score: 100
+    }]
+  }).some((e) => e.indexOf("重复项") >= 0));
+
+/* ================= 8. 一整卷 ================= */
+group("8 一整卷（Web Server 第 1 篇 · 六种题型，权重和正好 100）");
 const FULL = {
   cid: "byox-ws-01", kind: "paper", title: "Web Server 第 1 篇考试 · 从 socket 到请求行", pass: 60,
   questions: [
@@ -247,7 +305,7 @@ ok("返回值能直接渲染：items/reviews/checks 是同一份，字段 ok/lab
 ok("已答题数/总题数报得出来", rEmpty.answered === 0 && rFull.answered === 6 && rFull.total === 6);
 
 /* ---------- 权重和不是 100 必须被抓出来（别静默） ---------- */
-group("8 考卷契约自检（不平的权重、坏题型、缺答案都要报出来）");
+group("9 考卷契约自检（不平的权重、坏题型、缺答案都要报出来）");
 const BROKEN = JSON.parse(JSON.stringify(FULL));
 BROKEN.questions[3].score = 17;              /* q4 从 20 改成 17，合计掉到 97 */
 const rBroken = PAPER.gradePaper(BROKEN, PERFECT);
@@ -280,9 +338,9 @@ const rNoAns = PAPER.gradePaper(FULL, undefined);
 ok("answers 整个没传也不炸，按空卷处理", rNoAns.score === 0 && rNoAns.total === 6);
 
 /* ---------- 双环境可用（这站没有打包器） ---------- */
-group("9 双环境：Node 的 require 与浏览器/沙箱的 window.MIAO_PAPER");
+group("10 双环境：Node 的 require 与浏览器/沙箱的 window.MIAO_PAPER");
 ok("require() 拿到的对象里有 gradePaper 函数", typeof PAPER.gradePaper === "function");
-ok("引擎报得出六种题型", PAPER.KINDS.join("/") === "choice/multi/blank/code/output/order", PAPER.KINDS.join("/"));
+ok("引擎报得出七种题型", PAPER.KINDS.join("/") === "choice/multi/blank/code/output/order/match", PAPER.KINDS.join("/"));
 ok("判分器零 DOM：源码里不碰 document/window 之外的东西",
   !/\bdocument\.|getElementById|querySelector/.test(fs.readFileSync(PAPER_JS, "utf8")));
 ok("判分器不执行任何代码：不出现 eval/new Function/沙箱 run",

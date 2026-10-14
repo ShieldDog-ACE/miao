@@ -1,0 +1,49 @@
+{
+  "cid": "m115",
+  "note": "代码卷：只有 q2、q6 两道编辑器题，够不到 3 道下限；而且源稿任务 1 的后半句「然后打印 (v[0] == v[1])」卷里没有题真的让人写出来。补两道，把打印这一半接上，再加一道 sort 的动手题。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行打印：这个排完序的 vector 里，下标 0 和下标 1 那两个对象相等吗？直接用 == 比较它们，把结果塞进 {} 里打出来。",
+        "acceptRegex": [
+          "std\\s*::\\s*println\\s*\\(",
+          "\\{\\s*\\}",
+          "\\[\\s*0\\s*\\]\\s*==\\s*\\w+\\s*\\[\\s*1\\s*\\]"
+        ],
+        "sample": "std::println(\"排完 v0 == v1 是 {}\", v[0] == v[1]);",
+        "why": "operator== 写完之后，v[0] == v[1] 这一句就是在调用它；打印出来是 true 还是 false，看的是你定的那条相等规则。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "std::println(\"排完 v0 == v1 是 {}\", v[0] == v[1]);",
+        "wrong": "std::println(\"{}\", v[0] < v[1]);",
+        "loose": "std :: println ( \"看： {}\" , v [ 0 ] == v [ 1 ] ) ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：把整批 Score 对象排一次序，排序用的就是类里那个 operator<，一个额外参数都不必给。",
+        "acceptRegex": [
+          "std\\s*::\\s*sort\\s*\\(",
+          "\\.\\s*begin\\s*\\(\\s*\\)",
+          "\\.\\s*end\\s*\\(\\s*\\)"
+        ],
+        "sample": "std::sort(v.begin(), v.end());",
+        "why": "std::sort 只要两个迭代器；它自己会去问 a < b，于是你在类里写下的 operator< 就是它用的那把尺子。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "std::sort(v.begin(), v.end());",
+        "wrong": "std::max(v.begin(), v.end());",
+        "loose": "std :: sort ( v . begin ( ) , v . end ( ) ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

@@ -1,0 +1,46 @@
+{
+  "cid": "c51",
+  "note": "代码卷：任务 2（把 say_hello 改成打印三行）只有输出题和填空题盖着，没有编辑器题。补两道 code：一道让读者亲手写那个函数体，一道验调用顺序就是输出顺序（任务 1 的另一半）。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "stem": "（任务题）写一个函数的定义：不需要输入、不交回东西，名字是 say_hello，函数体里用 std::println 打三行自我介绍（三行内容自己定）。",
+        "acceptRegex": [
+          "void\\s+say_hello\\s*\\(",
+          "println[\\s\\S]*println[\\s\\S]*println"
+        ],
+        "sample": "void say_hello() {\n    std::println(\"我叫王小明\");\n    std::println(\"我在学 C++\");\n    std::println(\"欢迎一起写代码\");\n}",
+        "why": "三行都写在这张值日表的花括号里，一次调用就打三行；以后想换内容只改这一处，想多打一遍只在 main 里多加一句调用。",
+        "score": 26
+      },
+      "selftest": {
+        "ref": "void say_hello() {\n    std::println(\"我叫王小明\");\n    std::println(\"我在学 C++\");\n    std::println(\"欢迎一起写代码\");\n}",
+        "wrong": "void say_hello() {\n    std::println(\"我叫王小明\");\n}",
+        "loose": "void  say_hello ( )  {  println ( \"我叫王小明\" ) ;  println ( \"我在学 C++\" ) ;  println ( \"欢迎一起写代码\" ) ;  }"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）两个函数都已经定义好了。写出对它们的调用，先喊 say_hello 再喊 say_goodbye，一行一句，括号别漏。",
+        "acceptRegex": [
+          "say_hello\\s*\\(\\s*\\)[\\s\\S]{0,40}say_goodbye\\s*\\(\\s*\\)"
+        ],
+        "sample": "say_hello();\nsay_goodbye();",
+        "why": "那对空括号才是「现在执行」的指令，写在前面还是后面决定谁先打印 —— 调用顺序就是输出顺序。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "say_hello();\nsay_goodbye();",
+        "wrong": "say_goodbye();\nsay_hello();",
+        "loose": "  say_hello  ( ) ;\n   say_goodbye();  "
+      }
+    }
+  ],
+  "drop": []
+}

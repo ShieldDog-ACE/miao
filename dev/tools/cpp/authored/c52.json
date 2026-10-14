@@ -1,0 +1,46 @@
+{
+  "cid": "c52",
+  "note": "代码卷：两条任务都只验了「写出定义」这一半，调用时怎么把料递进去（同一个函数喂两份料、变量也能当实参）没有编辑器题盖着。补两道 code，各接一条任务的调用侧。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）print_stars 已经定义好了。在 main 里写两行调用：先让它打 3 个星号，再让它打 8 个星号。",
+        "acceptRegex": [
+          "print_stars\\s*\\(\\s*3\\s*\\)[\\s\\S]{0,60}print_stars\\s*\\(\\s*8\\s*\\)"
+        ],
+        "sample": "print_stars(3);\nprint_stars(8);",
+        "why": "同一个函数喂两种料：括号里的数就是那一轮循环要走几步，函数体一个字都不用改 —— 这就是带参数的价值。",
+        "score": 18
+      },
+      "selftest": {
+        "ref": "print_stars(3);\nprint_stars(8);",
+        "wrong": "print_stars(8);\nprint_stars(3);",
+        "loose": "  print_stars  (  3  )  ;\n   print_stars ( 8 ) ;  "
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "stem": "（任务题）写两行：先在 main 里备好一个整数变量 years，值是 20；再把这个变量递给 print_age。",
+        "acceptRegex": [
+          "int\\s+years\\s*=\\s*20\\s*;",
+          "print_age\\s*\\(\\s*years\\s*\\)"
+        ],
+        "sample": "int years = 20;\nprint_age(years);",
+        "why": "实参不限于写死的数，变量同样能递进去 —— 递的仍然是那一刻值的复印件，years 本身留在 main 里不动。",
+        "score": 18
+      },
+      "selftest": {
+        "ref": "int years = 20;\nprint_age(years);",
+        "wrong": "int years = 20;\nprint_age(20);",
+        "loose": "int  years  =  20  ;\nprint_age  (  years  ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

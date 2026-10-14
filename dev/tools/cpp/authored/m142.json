@@ -1,0 +1,47 @@
+{
+  "cid": "m142",
+  "note": "代码卷只有 1 道编辑器题，缺 2 道。源稿那条任务点了三样（菜单声明、后厨实现、main 里打印），原卷的 code 题只盖住前两样，补两道：顾客侧的调用加打印、后厨自己请头文件。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务的最后一步）在 main.cpp 里按菜单点菜：造一个名字随意、分数 59.0 的 Student，再用标准库那个打印函数把 name 和 is_passed 的结果打到一行里。",
+        "acceptRegex": [
+          "Student\\s+\\w+\\s*\\(\\s*\"[^\"]*\"\\s*,\\s*59(?:\\.0)?\\s*\\)",
+          "\\w+\\s*\\.\\s*is_passed\\s*\\(\\s*\\)",
+          "std\\s*::\\s*println\\s*\\("
+        ],
+        "sample": "Student late(\"小刚\", 59.0);\nstd::println(\"{} 及格了吗：{}\", late.name(), late.is_passed());",
+        "why": "顾客这一侧只认签名：造对象、点方法，一句实现都不写。59.0 没过 60 的线，打印出来是 false。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "Student late(\"小刚\", 59.0);\nstd::println(\"{} 及格了吗：{}\", late.name(), late.is_passed());",
+        "wrong": "Student late(\"小刚\", 92.5);\nstd::println(\"{}\", late.name());",
+        "loose": "Student  late (  \"小刚\" ,  59.0 ) ;\nstd :: println ( \"{} 及格了吗：{}\" , late . name ( ) ,  late . is_passed ( ) ) ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写 student.cpp 的第一行：自己把自己依赖的那份清单请进来（别指望隔壁 main.cpp 顺手包过）。",
+        "acceptRegex": [
+          "#\\s*include\\s*\"\\s*student\\.h\\s*\""
+        ],
+        "sample": "#include \"student.h\"",
+        "why": "实现要用到 class 的样子，就得自己请清单。写成尖括号是找标准库那份路径，自己的头文件要用双引号。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "#include \"student.h\"",
+        "wrong": "#include <student.h>",
+        "loose": "#  include   \"student.h\""
+      }
+    }
+  ],
+  "drop": []
+}

@@ -1,0 +1,24 @@
+{
+  "cid": "m98",
+  "note": "笔试卷：q4 是 2 条正则的写作题（erase 删掉误创建的记录再打印 size），任务 2 只有它盖着。卷里没有题走这条收拾现场的流程，新写一道 output 把「[] 造出来 → erase 删掉 → size 回到 1」整段读一遍输出，正好是任务 2 动线的结果。再删掉编辑器题。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "output",
+        "score": 18,
+        "coversTask": 2,
+        "stem": "这段代码打印什么？（一行一条，按顺序写） ⏎ std::map<std::string, int> scores; ⏎ scores[\"小明\"] = 88; ⏎ std::println(\"新同学 = {}\", scores[\"新同学\"]); ⏎ scores.erase(\"新同学\"); ⏎ std::println(\"size = {}\", scores.size());",
+        "acceptLines": ["新同学 = 0", "size = 1"],
+        "why": "中间那句方括号凭空造出一条 新同学 0，erase 再把它删掉 —— 删的正是误创建的那一条，size 从 2 回到 1。"
+      },
+      "selftest": {
+        "ref": "新同学 = 0\nsize = 1",
+        "wrong": "新同学 = 0\nsize = 2",
+        "loose": " 新同学 =  0 \nsize = 1 "
+      }
+    }
+  ],
+  "drop": ["q4"],
+  "retag": []
+}

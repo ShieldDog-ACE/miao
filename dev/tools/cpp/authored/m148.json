@@ -1,0 +1,47 @@
+{
+  "cid": "m148",
+  "note": "代码卷只有 2 道编辑器题，补 2 道：一道写 5×5 的棋盘声明（任务一的声明那一处），一道写探路那一行（行配 dx、列配 dy）。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "score": 18,
+        "stem": "写出棋盘声明那一行：开一张 5 行 5 列的整型格子，名字叫 m，一开出来就全是 0。",
+        "acceptRegex": [
+          "int\\s+m\\s*\\[\\s*5\\s*\\]\\s*\\[\\s*5\\s*\\]",
+          "=\\s*\\{\\s*\\}"
+        ],
+        "sample": "int m[5][5] = {}, x = 0, y = 0, dir = 0;",
+        "why": "两个中括号一个是行数一个是列数，5 乘 5 才装得下 25 个数；后面的初值对子是给全表铺 0，程序靠 0 认哪个格子还没填过。"
+      },
+      "selftest": {
+        "ref": "int m[5][5] = {};",
+        "wrong": "int m[4][4] = {};",
+        "loose": "int  m [ 5 ][ 5 ]  =  {  } ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "score": 18,
+        "stem": "写出探路那一行：拿当前朝向 dir，从 x、y 算出下一格的行下标 nx 和列下标 ny。",
+        "acceptRegex": [
+          "int\\s+nx\\s*=\\s*x\\s*\\+\\s*dx\\s*\\[\\s*dir\\s*\\]",
+          "ny\\s*=\\s*y\\s*\\+\\s*dy\\s*\\[\\s*dir\\s*\\]"
+        ],
+        "sample": "int nx = x + dx[dir], ny = y + dy[dir];",
+        "why": "探的是下一格，所以要另开两个名字，不能直接改 x、y。行下标配 dx、列下标配 dy，同一个 dir 竖着读一对数，串了就往错的轴上走。"
+      },
+      "selftest": {
+        "ref": "int nx = x + dx[dir], ny = y + dy[dir];",
+        "wrong": "int nx = x + dir, ny = y + dir;",
+        "loose": "int  nx  =  x+dx [ dir ] ,\n        ny  =  y +  dy[dir] ;"
+      }
+    }
+  ],
+  "drop": []
+}

@@ -1,0 +1,46 @@
+{
+  "cid": "m137",
+  "note": "代码卷只有 q2（拼串加 return）和 q6（该开口的移动）两道编辑器题。任务那条的函数头和那条累加循环没人动手写，补两道 code 题盖住。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写出 summary 的函数头：不收参数，还一串文字。",
+        "acceptRegex": [
+          "std::string\\s+summary\\s*\\(\\s*\\)"
+        ],
+        "sample": "std::string summary() {",
+        "why": "返回类型写 std::string，调用处接的就是本格内存 —— 本课说的自动移动正是从这一行开始的：函数里的局部变量马上销毁，编译器直接把它挪到外面。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "std::string summary() {",
+        "wrong": "void summary() {",
+        "loose": "std::string  summary ( ){"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行循环：i 从 1 数到 10，每轮把 i 记进 sum。",
+        "acceptRegex": [
+          "for\\s*\\(\\s*int\\s+i\\s*=\\s*1\\s*;\\s*i\\s*<=\\s*10",
+          "(sum\\s*\\+=\\s*i|sum\\s*=\\s*sum\\s*\\+\\s*i)"
+        ],
+        "sample": "for (int i = 1; i <= 10; ++i) sum += i;",
+        "why": "先有 sum 这个数，才谈得上把它拼进文字。循环只管算数，交出去那一步留给后面那句直接 return。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "int sum = 0;\nfor (int i = 1; i <= 10; ++i) sum += i;",
+        "wrong": "int sum = 0;\nfor (int i = 1; i <= 10; ++i) sum = 0;",
+        "loose": "int sum = 0;\nfor ( int  i = 1 ;  i <=  10 ;  ++i )  sum  +=  i ;"
+      }
+    }
+  ],
+  "drop": []
+}

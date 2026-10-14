@@ -1,0 +1,24 @@
+{
+  "cid": "m103",
+  "note": "笔试卷：q6 是 3 条正则的写作题（top3 堆 push 后超 3 就 pop），任务 2「用优先队列维护实时前三名」只有它盖着。卷里没有题在走这条更新线，新写一道 output：正文演示 2 原样跑完，问最后弹出前三名是谁 —— 要答对就必须把「先进来占位、超员挤掉垫底」逐拍推一遍。再删掉编辑器题。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "output",
+        "score": 20,
+        "coversTask": 2,
+        "stem": "这段代码打印什么？（一行） ⏎ std::priority_queue<int, std::vector<int>, std::greater<int>> top3; ⏎ for (int score : {88, 95, 72, 91, 60, 83}) { ⏎     top3.push(score); ⏎     if (top3.size() > 3) top3.pop(); ⏎ } ⏎ std::print(\"前三名从小到大弹出: \"); ⏎ while (!top3.empty()) { std::print(\"{} \", top3.top()); top3.pop(); } ⏎ std::println(\"\");",
+        "acceptLines": ["前三名从小到大弹出: 88 91 95"],
+        "why": "小顶堆只养三个格子：91 进来时垫底的 72 被挤掉，60 自己一进来就垫底被挤掉，83 同样被挤掉 —— 最后留下 88、91、95，从小到大弹出。"
+      },
+      "selftest": {
+        "ref": "前三名从小到大弹出: 88 91 95",
+        "wrong": "前三名从小到大弹出: 95 91 88",
+        "loose": " 前三名从小到大弹出:  88  91  95 "
+      }
+    }
+  ],
+  "drop": ["q6"],
+  "retag": []
+}

@@ -57,8 +57,13 @@ if node "$HERE/../tools/cpp-audit.cjs" --part dev/tools/cpp-gate-fixtures/bad-pa
   echo "  ✘ cpp-audit 对坏样本返回了 0 —— 这把尺已经变成哑巴（正则被改松了？）"; BAD=1
 fi
 if node "$HERE/../tools/cpp-exam-check.cjs" --fixture >/dev/null 2>&1; then
-  echo "  ✘ cpp-exam-check 对坏样本返回了 0 —— 权重/任务对账/自测这三项没在判"; BAD=1
+  echo "  ✘ cpp-exam-check 对坏样本返回了 0 —— 权重/任务对账/自测/单轨这几项没在判"; BAD=1
 fi
+# 单轨与勾线的六条新红线，坏样本必须逐条被点名（少点一条就是那把尺写歪了）
+FXOUT=$(node "$HERE/../tools/cpp-exam-check.cjs" --fixture 2>&1)
+for K in "混进 1 道非代码题" "代码卷 2 道题" "没给 acceptRegex" "不许出现编辑器" "一道填空/勾线都没有" "每对都是「左边第 i 项" "分配表判的是"; do
+  echo "$FXOUT" | grep -qF "$K" || { echo "  ✘ 单轨闸没点名这条坏样本：$K"; BAD=1; }
+done
 if node "$HERE/../tools/cpp-audit.cjs" --part dev/tools/cpp-gate-fixtures/bad-part.js 2>/dev/null | grep -c "✘" | grep -qv "^0$"; then :; else echo "  ✘ cpp-audit 红了但没点名任何一条"; BAD=1; fi
 [ "$BAD" -eq 0 ] && echo "  ✔ 两把尺都会红，且逐条点名"
 [ "$BAD" -ne 0 ] && EC=1

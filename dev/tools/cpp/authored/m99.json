@@ -1,0 +1,24 @@
+{
+  "cid": "m99",
+  "note": "笔试卷：q2 是 2 条正则的写作题（map<char,int> 加 chars[c]++），任务 2「统计一句话里每个字符出现的次数」只有它盖着。卷里没有题在走按字符统计这条线，新写一道 output：把正文演示 2 的统计跑完，问 l 和 o 各计到几次 —— 要答对这行就得真把逐字符累加走一遍。再删掉编辑器题。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "output",
+        "score": 18,
+        "coversTask": 2,
+        "stem": "这段代码打印什么？（一行一条，按顺序写） ⏎ std::map<char, int> chars; ⏎ std::string s = \"hello world\"; ⏎ for (char c : s) chars[c]++; ⏎ std::println(\"l = {}\", chars['l']); ⏎ std::println(\"o = {}\", chars['o']);",
+        "acceptLines": ["l = 3", "o = 2"],
+        "why": "每个字符第一次遇到时方括号先建一条 0 再加一：hello world 里 l 出现 3 次、o 出现 2 次，空格也照样记了一笔但不影响这两行。"
+      },
+      "selftest": {
+        "ref": "l = 3\no = 2",
+        "wrong": "l = 2\no = 3",
+        "loose": " l =  3 \no = 2 "
+      }
+    }
+  ],
+  "drop": ["q2"],
+  "retag": []
+}

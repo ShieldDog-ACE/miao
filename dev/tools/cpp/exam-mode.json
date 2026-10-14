@@ -1,0 +1,866 @@
+{
+  "generated": "2026-10-14",
+  "note": "C++ 考卷单轨制分配表：mode=code 只许 code 题（每题一枚编辑器）；mode=quiz 禁 code 题，走 choice/multi/blank/output/order/match。判据与人工覆写理由见 dev/tools/cpp-exam-mode.cjs。",
+  "papers": [
+    {
+      "cid": "c01",
+      "mode": "code"
+    },
+    {
+      "cid": "c02",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c03",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c04",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c05",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c06",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c07",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c08",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c09",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c10",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c11",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c12",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c13",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c14",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c15",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c16",
+      "mode": "code"
+    },
+    {
+      "cid": "c17",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c18",
+      "mode": "code"
+    },
+    {
+      "cid": "c19",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c20",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c21",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c22",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c23",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c24",
+      "mode": "quiz",
+      "manual": "任务 1 的交付物是「先猜结果」，猜完再运行 —— 浏览器里没有编译器，这一半只能靠嘴答"
+    },
+    {
+      "cid": "c25",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c26",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c27",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c28",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c29",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c30",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c31",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c32",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c33",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c34",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c35",
+      "mode": "code"
+    },
+    {
+      "cid": "c36",
+      "mode": "code"
+    },
+    {
+      "cid": "c37",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c38",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c39",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c40",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c41",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c42",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c43",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c44",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c45",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c46",
+      "mode": "code"
+    },
+    {
+      "cid": "c47",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c48",
+      "mode": "code"
+    },
+    {
+      "cid": "c49",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c50",
+      "mode": "code"
+    },
+    {
+      "cid": "c51",
+      "mode": "code"
+    },
+    {
+      "cid": "c52",
+      "mode": "code"
+    },
+    {
+      "cid": "c53",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c54",
+      "mode": "code"
+    },
+    {
+      "cid": "c55",
+      "mode": "code"
+    },
+    {
+      "cid": "c56",
+      "mode": "code"
+    },
+    {
+      "cid": "c57",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c58",
+      "mode": "code"
+    },
+    {
+      "cid": "c59",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c60",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c61",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c62",
+      "mode": "code"
+    },
+    {
+      "cid": "c63",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c64",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c65",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c66",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c67",
+      "mode": "code"
+    },
+    {
+      "cid": "c68",
+      "mode": "code"
+    },
+    {
+      "cid": "c69",
+      "mode": "code"
+    },
+    {
+      "cid": "c70",
+      "mode": "code"
+    },
+    {
+      "cid": "c71",
+      "mode": "code"
+    },
+    {
+      "cid": "c72",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c73",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c74",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c75",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c76",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c77",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c78",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c79",
+      "mode": "code"
+    },
+    {
+      "cid": "c80",
+      "mode": "quiz"
+    },
+    {
+      "cid": "c81",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m82",
+      "mode": "code"
+    },
+    {
+      "cid": "m83",
+      "mode": "code"
+    },
+    {
+      "cid": "m84",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m85",
+      "mode": "code"
+    },
+    {
+      "cid": "m86",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m87",
+      "mode": "code"
+    },
+    {
+      "cid": "m88",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m89",
+      "mode": "code"
+    },
+    {
+      "cid": "m90",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m91",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m92",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m93",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m94",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m95",
+      "mode": "code"
+    },
+    {
+      "cid": "m96",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m97",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m98",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m99",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m100",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m101",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m102",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m103",
+      "mode": "quiz",
+      "manual": "任务 1「算出 {1,2,3,4} 合并的总代价」交的是一个数，不是代码"
+    },
+    {
+      "cid": "m104",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m105",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m106",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m107",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m108",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m109",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m110",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m111",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m112",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m113",
+      "mode": "code"
+    },
+    {
+      "cid": "m114",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m115",
+      "mode": "code"
+    },
+    {
+      "cid": "m116",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m117",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m118",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m119",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m120",
+      "mode": "quiz",
+      "manual": "任务问「文件还会被关吗」，是个是/否判断，写代码写不出这个结论"
+    },
+    {
+      "cid": "m121",
+      "mode": "code"
+    },
+    {
+      "cid": "m122",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m123",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m124",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m125",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m126",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m127",
+      "mode": "code"
+    },
+    {
+      "cid": "m128",
+      "mode": "code"
+    },
+    {
+      "cid": "m129",
+      "mode": "code"
+    },
+    {
+      "cid": "m130",
+      "mode": "code"
+    },
+    {
+      "cid": "m131",
+      "mode": "code"
+    },
+    {
+      "cid": "m132",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m133",
+      "mode": "quiz",
+      "manual": "「重做一遍实验」要看复制/移动之后原串变成什么，观测题"
+    },
+    {
+      "cid": "m134",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m135",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m136",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m137",
+      "mode": "code"
+    },
+    {
+      "cid": "m138",
+      "mode": "code"
+    },
+    {
+      "cid": "m139",
+      "mode": "code"
+    },
+    {
+      "cid": "m140",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m141",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m142",
+      "mode": "code"
+    },
+    {
+      "cid": "m143",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m144",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m145",
+      "mode": "code"
+    },
+    {
+      "cid": "m146",
+      "mode": "code"
+    },
+    {
+      "cid": "m147",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m148",
+      "mode": "code"
+    },
+    {
+      "cid": "m149",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m150",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m151",
+      "mode": "code"
+    },
+    {
+      "cid": "m152",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m153",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m154",
+      "mode": "code"
+    },
+    {
+      "cid": "m155",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m156",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m157",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m158",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m159",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m160",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m161",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m162",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m163",
+      "mode": "code"
+    },
+    {
+      "cid": "m164",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m165",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m166",
+      "mode": "quiz",
+      "manual": "「用四角公式算…对照 1+2+3=6」算的是数不是代码"
+    },
+    {
+      "cid": "m167",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m168",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m169",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m170",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m171",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m172",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m173",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m174",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m175",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m176",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m177",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m178",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m179",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m180",
+      "mode": "code"
+    },
+    {
+      "cid": "m181",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m182",
+      "mode": "quiz",
+      "manual": "「谁移动最多」问的是插入时搬家次数，结论型"
+    },
+    {
+      "cid": "m183",
+      "mode": "code"
+    },
+    {
+      "cid": "m184",
+      "mode": "code"
+    },
+    {
+      "cid": "m185",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m186",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m187",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m188",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m189",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m190",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m191",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m192",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m193",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m194",
+      "mode": "code"
+    },
+    {
+      "cid": "m195",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m196",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m197",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m198",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m199",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m200",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m201",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m202",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m203",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m204",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m205",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m206",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m207",
+      "mode": "quiz",
+      "manual": "「再 unite(0,1) 一次，函数返回 true 还是 false」交的是二选一，代码卷没法定这条"
+    },
+    {
+      "cid": "m208",
+      "mode": "quiz",
+      "manual": "「给 rels 加上 {4,5}，输出变成几」—— 加边是代码，但题眼在「变成几」"
+    },
+    {
+      "cid": "m209",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m210",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m211",
+      "mode": "quiz"
+    },
+    {
+      "cid": "m212",
+      "mode": "code"
+    },
+    {
+      "cid": "m213",
+      "mode": "quiz"
+    }
+  ]
+}

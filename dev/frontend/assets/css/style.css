@@ -1233,6 +1233,8 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 .pp-area { width: 100%; box-sizing: border-box; resize: vertical; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: .85rem; line-height: 1.6; }
 .pp-area.mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
 .pp-area:focus { outline: none; border-color: var(--accent); }
+/* 代码题的编辑器宿主：控件在里面自己排版，这一层只保证它别把卡片撑破 */
+.pp-ed { min-width: 0; }
 /* 排序题：候选步骤（点一下进你的顺序）与你的顺序（再点撤下） */
 .pp-order { display: flex; flex-wrap: wrap; gap: 7px; }
 .pp-step { display: inline-flex; align-items: center; padding: 6px 11px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: .8rem; cursor: pointer; min-width: 0; overflow-wrap: anywhere; text-align: left; }

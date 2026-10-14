@@ -1,0 +1,46 @@
+{
+  "cid": "m82",
+  "note": "代码卷：任务 1 是「用 transform 把 nums 变成平方再打印结果」，原卷 q3 只验了 transform 这一句，打印结果和读的范围两头没有 code 题对着。补两道 code 题。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）sq 里已经灌好了平方。写一句：把 sq 里每个数挨个打印出来，用 range-for 和 std::print。",
+        "acceptRegex": [
+          "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*sq\\s*\\)",
+          "print"
+        ],
+        "sample": "for (int v : sq) std::print(\"{} \", v);",
+        "why": "range-for 那对圆括号里写的是「每圈拿出来的那个元素」和「从哪个容器拿」；std::print 打完不换行，正好把六个数摊成一行。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "for (int v : sq) std::print(\"{} \", v);",
+        "wrong": "for (int v : nums) std::print(\"{} \", v);",
+        "loose": "for( int  q : sq ){   std :: print ( \"{}\", q ) ; }"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）transform 第一头要给「读哪段」：把 nums 整段的头和尾后写出来，两个位置用逗号排在一起。",
+        "acceptRegex": [
+          "nums\\s*\\.\\s*begin\\s*\\(\\s*\\)\\s*,\\s*nums\\s*\\.\\s*end\\s*\\(\\s*\\)"
+        ],
+        "sample": "std::transform(nums.begin(), nums.end(), std::back_inserter(sq), [](int v){ return v * v; });",
+        "why": "头是第一个属于 nums 的位置，尾后是第一个不属于它的位置 —— 「头 + 尾后」这对范围是标准算法全家的通用喂法，写成 nums.end() 在前就倒着读了。",
+        "score": 15
+      },
+      "selftest": {
+        "ref": "std::transform(nums.begin(), nums.end(), std::back_inserter(sq), [](int v){ return v * v; });",
+        "wrong": "std::transform(nums.begin(), sq.end(), std::back_inserter(sq), [](int v){ return v * v; });",
+        "loose": "transform( nums . begin ( ) ,  nums . end ( ) , back_inserter(sq), [](int v){return v*v;} );"
+      }
+    }
+  ],
+  "drop": []
+}

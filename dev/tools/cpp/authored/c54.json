@@ -1,0 +1,49 @@
+{
+  "cid": "c54",
+  "note": "代码卷：两条任务各有一道编辑器题盖着，但全场只有 2 道 code 题，够不上代码卷的 3 道下限。补两道：一道把演示 1 的闰年复合判断写成函数定义，一道把演示 3 的「存进 bool 变量再进 if」动手写一遍。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）写出判断闰年的函数定义：开头是 bool，名字 is_leap_year，收一个 int 参数 year，函数体只有一句 return —— 把「四年一闰、百年不闰、四百年又闰」这条规则写成与号、竖号串起来的复合判断。",
+        "acceptRegex": [
+          "is_leap_year\\s*\\(\\s*int",
+          "year\\s*%\\s*4\\s*==\\s*0",
+          "year\\s*%\\s*100\\s*!=\\s*0",
+          "year\\s*%\\s*400\\s*==\\s*0"
+        ],
+        "sample": "bool is_leap_year(int year) { return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0); }",
+        "why": "写法是 bool is_leap_year(int year) { return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0); } —— return 后面不需要自己拼 if else，与号把必须同时成立的条件串起来，竖号给出例外的那一支，整个复合表达式本身就是 bool。",
+        "score": 25
+      },
+      "selftest": {
+        "ref": "bool is_leap_year(int year) {\n    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);\n}",
+        "wrong": "bool is_leap_year(int year) {\n    return year % 4 == 0;\n}",
+        "loose": "bool   is_leap_year ( int   year ) { return ( year % 4   ==   0 &&  year % 100  !=  0 ) || ( year % 400 == 0 ) ; }"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "stem": "（任务题）在 main 里接住分数：先开一个 bool 变量 ok，把 is_pass(59) 交回的答案存进去；再写一句 if，括号里直接用这个函数调用当条件，成立就打印一行恭喜。",
+        "acceptRegex": [
+          "bool\\s+\\w+\\s*=\\s*is_pass\\s*\\(",
+          "if\\s*\\(\\s*is_pass\\s*\\("
+        ],
+        "sample": "bool ok = is_pass(59); if (is_pass(60)) { std::println(\"及格，恭喜\"); }",
+        "why": "同一个返回值有两种去处：赋给 bool 变量存着用，或者直接钻进 if 的括号。后者不用再写等于 true —— 门卫要的就是 bool，多比一次只是多一个写错的机会。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "int main() {\n    bool ok = is_pass(59);\n    if (is_pass(60)) {\n        std::println(\"60 分：及格，恭喜！\");\n    }\n    return 0;\n}",
+        "wrong": "int main() {\n    int ok = is_pass(59);\n    if (ok == true) {\n        std::println(\"恭喜\");\n    }\n    return 0;\n}",
+        "loose": "int main(){bool   ok= is_pass ( 59 ) ; if( is_pass  (  60  ) ){std::println(\"及格\");}return 0;}"
+      }
+    }
+  ],
+  "drop": []
+}

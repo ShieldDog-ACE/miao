@@ -157,7 +157,7 @@
     return i >= 0 && i < opts.length ? String(opts[i]) : "第 " + (i + 1) + " 项";
   }
 
-  /* ---------- 六种题型 ----------
+  /* ---------- 七种题型 ----------
      每个函数返回 { pts, mark, your, right, saw, extra }：
        pts  该题得分（0 ~ q.score）
        mark "ok" 对 / "half" 半对 / "no" 错
@@ -220,12 +220,18 @@
     };
   };
 
+  /* 复盘里「正确答案」那一栏：题目给了 sample（一条具体写法）就先展示它，
+     只给 acceptRegex 时展示正则 —— 裸正则给读者看等于没给答案，所以出题时该带上 sample。 */
+  function sampleText(q, fallback) {
+    return q && q.sample ? "参考写法：" + String(q.sample).replace(/\n/g, " ⏎ ") : fallback;
+  }
+
   /* 填空：accept 里任一答案宽松命中即满分 */
   TYPES.blank = function (q, raw) {
     var acc = listOf(q.accept !== undefined ? q.accept : (q.answers !== undefined ? q.answers : q.answer))
       .filter(function (x) { return x != null && normText(x) !== ""; });
     var reList = [].concat(q.acceptRegex || []);
-    var rightLabel = acc.length ? acc.join(" / ") : (reList.length ? "符合 " + patText(reList[0]) : "（考卷没给可接受答案）");
+    var rightLabel = sampleText(q, acc.length ? acc.join(" / ") : (reList.length ? "符合 " + patText(reList[0]) : "（考卷没给可接受答案）"));
     if (isBlank(raw)) {
       return { pts: 0, mark: "no", your: NO_ANSWER, right: rightLabel, saw: "没作答，这题 " + (q.score || 0) + " 分全丢了" };
     }
@@ -247,7 +253,7 @@
   TYPES.code = function (q, raw) {
     var pats = [].concat(q.acceptRegex !== undefined ? q.acceptRegex : (q.accept !== undefined ? q.accept : q.answer));
     pats = pats.filter(function (p) { return p != null && String(p.pattern !== undefined ? p.pattern : p) !== ""; });
-    var rightLabel = pats.length ? pats.map(patText).join(" 且 ") : "（考卷没给 acceptRegex）";
+    var rightLabel = sampleText(q, pats.length ? pats.map(patText).join(" 且 ") : "（考卷没给 acceptRegex）");
     if (isBlank(raw)) {
       return { pts: 0, mark: "no", your: NO_ANSWER, right: rightLabel, saw: "没作答，这题 " + (q.score || 0) + " 分全丢了" };
     }
@@ -262,7 +268,10 @@
       pts: ok ? (q.score || 0) : 0, mark: ok ? "ok" : "no",
       your: yourTxt, right: rightLabel,
       saw: ok ? "关键处写对了：命中 " + hits + "/" + pats.length + " 条特征（" + (q.matchAny ? "命中任一条即算对" : "要求条条都在") + "；空格、缩进、变量名一概不计较）"
-        : (miss.length ? "没找到这些关键写法：" + miss.join(" 且 ") + "；你写的是 " + yourTxt : "考卷数据有问题（没给 acceptRegex），这题没法判")
+        : (miss.length ? (q.sample
+          ? "没写到要点上。参考写法：" + String(q.sample).replace(/\n/g, " ⏎ ") + " —— 判分只认关键写法，空格、缩进、变量名都不计较"
+          : "没找到这些关键写法：" + miss.join(" 且 ")) + "；你写的是 " + yourTxt
+          : "考卷数据有问题（没给 acceptRegex），这题没法判")
     };
   };
 
@@ -319,6 +328,67 @@
     };
   };
 
+  /* 勾线配对：左边一项连右边一项，按连对的对数给分（与英语卷那套 wireMatch 同一交互）。
+     数据形状：left[] / right[] / answer{ 左标签: 右标签 }。
+     答卷可以是 {左标签: 右标签}，也可以写索引（"0": 2）—— 界面点选给的是标签，
+     索引那条路是给 Node 侧自测和手搓答卷留的。标签本身按 textEq 宽松认，
+     所以大小写、全半角、多打空格都不该判错。 */
+  TYPES.match = function (q, raw) {
+    var universe = matchUniverse(q);
+    var pairs = universe.pairs;
+    var rightLabel = pairs.map(function (p) { return p.l + " → " + p.r; }).join("；") || "（考卷没给配对答案）";
+    if (isBlank(raw)) {
+      return { pts: 0, mark: "no", your: NO_ANSWER, right: rightLabel, saw: "没作答，这题 " + (q.score || 0) + " 分全丢了" };
+    }
+    var mine = {}, junk = [];
+    Object.keys(raw).forEach(function (k) {
+      var l = resolveSide(universe.left, k);
+      var r = resolveSide(universe.right, raw[k]);
+      if (l == null) { junk.push(clip(normText(k), 24)); return; }
+      mine[l] = r == null ? clip(normText(raw[k]), 24) : r;
+    });
+    var hit = 0, bad = [];
+    pairs.forEach(function (p) {
+      if (mine[p.l] != null && textEq(mine[p.l], p.r)) { hit++; return; }
+      bad.push(p.l + " 应连 " + p.r + (mine[p.l] == null ? "（没连）" : "，你连了 " + mine[p.l]));
+    });
+    var n = pairs.length;
+    var pts = n ? Math.round((q.score || 0) * hit / n) : 0;
+    var mark = hit === n && n > 0 ? "ok" : (hit > 0 ? "half" : "no");
+    var yourLabel = Object.keys(mine).map(function (l) { return l + " → " + mine[l]; })
+      .concat(junk.map(function (j) { return j + "（左边没这一项）"; })).join("；") || "一条都没连";
+    return {
+      pts: pts, mark: mark, your: clip(yourLabel, 90), right: rightLabel,
+      saw: mark === "ok" ? "全连对（" + hit + "/" + n + " 对）"
+        : "连对 " + hit + "/" + n + " 对，给 " + pts + "/" + (q.score || 0) + " 分 —— " + (bad.concat(junk.length ? ["「" + junk.join("、") + "」不是左边的项"] : []).join("；") || "没有对上的配对")
+    };
+  };
+
+  /* 配对题的项表：left/right 别名一并认（steps/options/items 都可能是出题人顺手写的） */
+  function matchUniverse(q) {
+    var left = [].concat(q.left !== undefined ? q.left : (q.items !== undefined ? q.items : []));
+    var right = [].concat(q.right !== undefined ? q.right : (q.options !== undefined ? q.options : []));
+    var ans = q.answer !== undefined ? q.answer : (q.correct !== undefined ? q.correct : q.answers);
+    var pairs = [];
+    if (ans && typeof ans === "object" && !Array.isArray(ans)) {
+      Object.keys(ans).forEach(function (k) {
+        var l = resolveSide(left, k), r = resolveSide(right, ans[k]);
+        if (l != null && r != null) pairs.push({ l: l, r: r });
+      });
+    }
+    return { left: left, right: right, pairs: pairs };
+  }
+  /* 一个项可以是标签也可以是索引；认不出来返回 null（复盘里点名叫出「不是选项」） */
+  function resolveSide(list, v) {
+    if (v == null) return null;
+    if (typeof v === "number" || /^\s*-?\d+\s*$/.test(String(v))) {
+      var n = Number(normText(v));
+      return n >= 0 && n < list.length ? String(list[n]) : null;
+    }
+    for (var i = 0; i < list.length; i++) if (textEq(list[i], v)) return String(list[i]);
+    return null;
+  }
+
   /* 把「索引 / 文本」混着的顺序答案统一成人话标签序列 */
   function seqLabels(q, universe, seq) {
     return seq.map(function (v) {
@@ -361,9 +431,10 @@
     blank: ["accept", "answers", "answer", "acceptRegex"],
     code: ["acceptRegex", "accept", "answer"],
     output: ["acceptLines", "lines", "accept", "answer"],
-    order: ["answer", "correct", "answers"]
+    order: ["answer", "correct", "answers"],
+    match: ["answer", "correct", "answers"]
   };
-  var MUST_NAME = { choice: "answer", multi: "answers", blank: "accept", code: "acceptRegex", output: "acceptLines", order: "answer" };
+  var MUST_NAME = { choice: "answer", multi: "answers", blank: "accept", code: "acceptRegex", output: "acceptLines", order: "answer", match: "answer" };
 
   /* ---------- 考卷契约自检（D-13：权重和必须正好 100，不平就报出来别静默） ---------- */
   function validatePaper(exam) {
@@ -389,6 +460,22 @@
         errs.push(at + "（" + q.type + "）缺 " + (MUST_NAME[q.type] || "正确答案") + "，这题没法判分");
       }
       if ((q.type === "choice" || q.type === "multi") && !(q.options || []).length) errs.push(at + "没有 options");
+      if (q.type === "match") {
+        /* 配对题的三件事：两边都得有项、answer 得落在项里、标签不许撞车
+           （撞了就没法判断「该连哪一个」，界面上两个一样的按钮点哪个都算对） */
+        var mu = matchUniverse(q);
+        if (mu.left.length < 2 || mu.right.length < 2) errs.push(at + "（match）左边或右边不足 2 个项（左 " + mu.left.length + " / 右 " + mu.right.length + "）");
+        var wantN = q.answer && typeof q.answer === "object" ? Object.keys(q.answer).length : 0;
+        if (wantN && mu.pairs.length !== wantN) errs.push(at + "（match）answer 里 " + wantN + " 对只有 " + mu.pairs.length + " 对在 left/right 里认得出来");
+        [["left", mu.left], ["right", mu.right]].forEach(function (side) {
+          var seenL = {};
+          side[1].forEach(function (l) {
+            var key = normText(l).toLowerCase();
+            if (seenL[key]) errs.push(at + "（match）" + side[0] + " 有重复项：" + l);
+            seenL[key] = 1;
+          });
+        });
+      }
     });
     if (errs.length) return errs;
     if (sum !== 100) errs.push("各题分数相加是 " + sum + "，要求正好 100（D-13：100 分制、60 分及格，权重不平这张卷就是写坏了）");

@@ -1,0 +1,49 @@
+{
+  "cid": "c56",
+  "note": "代码卷：任务 1 只验了 lambda 的前半截、任务 2 只验了身体里那句比较，整条声明（右花括号后的分号）和「做好之后喊它」都没人写过。补两道 code，各把一条任务写成完整能跑的一句。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）写完整的一句声明：用 auto 接住一把小工具，它收一个 int，返回这个数乘它自己。",
+        "acceptRegex": [
+          "auto\\s+\\w+\\s*=\\s*\\[\\s*\\]\\s*\\(\\s*int\\s+\\w+\\s*\\)",
+          "return\\s+\\w+\\s*\\*\\s*\\w+",
+          "\\}\\s*;"
+        ],
+        "sample": "auto sq = [](int x) { return x * x; };",
+        "why": "中括号空着表示不拿外面的东西，圆括号是参数表，花括号里那句 return 就是它的身体；整句是一条声明语句，右花括号后面那个分号不能少。",
+        "score": 24
+      },
+      "selftest": {
+        "ref": "auto sq = [](int x) {\n    return x * x;\n};",
+        "wrong": "auto sq = [](int x) {\n    return x + x;\n};",
+        "loose": "auto   sq  =  [ ]  (  int  v  )  {  return  v * v ;  }  ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "stem": "（任务题）写两行：先做一把判断及格的小工具，收一个 int 分数，大于等于 60 就交还真；再用 std::println 把 59 递给它、把还回来的结果打出来。",
+        "acceptRegex": [
+          "auto\\s+\\w+\\s*=\\s*\\[\\s*\\]\\s*\\(\\s*int\\s+\\w+\\s*\\)",
+          ">=\\s*60",
+          "println[\\s\\S]{0,120}\\(\\s*\\d+\\s*\\)"
+        ],
+        "sample": "auto pass = [](int x) { return x >= 60; };\nstd::println(\"{}\", pass(59));",
+        "why": "身体里直接 return 那句比较，比较的结果本来就是真假；加上圆括号把 59 递进去，这把工具才真跑起来。",
+        "score": 22
+      },
+      "selftest": {
+        "ref": "auto pass = [](int x) { return x >= 60; };\nstd::println(\"{}\", pass(59));",
+        "wrong": "auto pass = [](int x) { return x > 60; };\nstd::println(\"{}\", pass(59));",
+        "loose": "auto  out  =  [ ]  (  int  score  )  {  return  score  >=  60 ;  } ;\nprintln ( \"{}\" ,  out ( 59 ) ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

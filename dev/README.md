@@ -34,7 +34,7 @@ dev/
 │       │   ├── py-stdlib.js  ← sys/io/json/os/pathlib/random/math… + run() ┘
 │       │   ├── exam-grade.js ← 代码卷判分器：检查项加权 + 轨迹判定（浏览器与 Node 共用）
 │       │   ├── exam-ui.js    ← VS Code 风格考场（题面就是文件顶部那几行 # 注释，终端在屏幕正下方）
-│       │   ├── exam-paper.js ← 笔试判分引擎（选择/多选/填空/补代码/写输出/排序），零 DOM
+│       │   ├── exam-paper.js ← 笔试判分引擎（选择/多选/填空/补代码/写输出/排序/勾线配对），零 DOM
 │       │   └── exam-en.js    ← 英语出题与判分：字母 / 音标 / 单词三种池子
 │       ├── data/
 │       │   ├── site.js       ← 登记清单：分类、每门课的骨架 boot 与正文 files、装配函数名、考场用哪套引擎、公告、页脚邮箱
@@ -55,7 +55,7 @@ dev/
 │   ├── engine-test.js       ← 正文 python 段逐段与本机 CPython 比 stdout
 │   ├── exam-test.js         ← Python 45 场 + 字母音标 3 场：参考解/合法写法/宽松写法/错解
 │   ├── enword-test.js       ← 英语入门 21 场：分值、题数、空卷 0 分、错一个字母必须挂、挖空不许有第二个答案
-│   ├── paper-test.js        ← 笔试引擎 6 种题型
+│   ├── paper-test.js        ← 笔试引擎 7 种题型 105 用例
 │   ├── static-server.js     ← 零依赖静态服务器（能记每一笔请求，供断言用）
 │   └── oracle/              ← CPython 基准输出
 └── tools/
@@ -78,7 +78,7 @@ dev/
 ```bash
 xdg-open dev/frontend/index.html          # 什么都不用起，双击就能看
 node dev/tests/static-server.js 8811      # 想走 HTTP 就起一台只会发文件的
-bash dev/tests/run.sh                     # 全量回归：UI 87 项 + 三条闸 + 笔试 89 + 对拍 205 + 考卷 45/3/21
+bash dev/tests/run.sh                     # 全量回归：UI 118 项 + 三条闸 + 笔试 105 + 对拍 205 + 考卷 45/3/21
 node dev/tests/enword-test.js             # 只查英语入门那 21 场
 node dev/tools/gen-index.js               # 改了任何一课的标题 / 章数 / 词表之后必跑
 ```

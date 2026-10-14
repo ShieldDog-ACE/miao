@@ -1,0 +1,46 @@
+{
+  "cid": "m129",
+  "note": "代码卷：整场只有 q3 一道编辑器题，缺两道下限。任务 1 的三件事（声明这只抽屉、先上学号、换成名字）都没人真写，补两道对上，剩下的取值打印 q3 已盖。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行声明：开一只只能在 int 和 std::string 之间选一格开的抽屉，名叫 v，先装上学号 20250001。",
+        "acceptRegex": [
+          "std\\s*::\\s*variant\\s*<\\s*int\\s*,\\s*std\\s*::\\s*string\\s*>\\s+\\w+\\s*=\\s*20250001"
+        ],
+        "sample": "std::variant<int, std::string> v = 20250001;",
+        "why": "尖括号里那张清单是编译期钉死的：int 是第 0 格、std::string 是第 1 格；先上学号，index() 就是 0。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "std::variant<int, std::string> v = 20250001;",
+        "wrong": "std::variant<int, std::string> v = \"xiaoming\";",
+        "loose": "std :: variant < int , std :: string >  who = 20250001 ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "接着上一题：写一行把那只 v 换成开 std::string 那一格，装进名字 xiaoming。",
+        "acceptRegex": [
+          "v\\s*=\\s*std\\s*::\\s*string\\s*\\(",
+          "xiaoming"
+        ],
+        "sample": "v = std::string(\"xiaoming\");",
+        "why": "赋值就是换格子：旧那一格的内容被销毁、新那一格被打开，index() 跟着从 0 跳到 1；清单外的类型会在这里被编译器拦下。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "v = std::string(\"xiaoming\");",
+        "wrong": "v = 42;",
+        "loose": "v  =  std :: string ( \"xiaoming\" ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

@@ -1,0 +1,16 @@
+{
+  "cid": "m109",
+  "note": "清掉越界的 coversTask：源稿只有两条任务，q5 却声称盖第 3 条、q7 声称盖第 4 条（旧稿残留编号，会把任务题分数虚撑到 73）。",
+  "add": [],
+  "drop": [],
+  "retag": [
+    {
+      "id": "q5",
+      "coversTask": 1
+    },
+    {
+      "id": "q7",
+      "coversTask": null
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "cid": "c71",
+  "note": "代码卷：源稿那条任务一次点了三样（写出函数头、写好出口、写好递归那一句），原卷只有 q3 对着递归句。补两道 code 题，把函数头和出口各自也能动手写一遍。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "补出 sum_to 的出口那一句：只有 1 个数时，和就是 1，直接交货，不再喊自己。",
+        "acceptRegex": [
+          "if\\s*\\(\\s*n\\s*(==|<=)\\s*1\\s*\\)\\s*return\\s+1\\s*;"
+        ],
+        "sample": "if (n == 1) return 1;",
+        "why": "出口就是那级最矮的楼梯：if 先问一句能不能直接答，能答就 return 交货，一句都不再往下问。漏了它，那叠欠条没有底，运行时栈被吃光。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "if (n == 1) return 1;",
+        "wrong": "if (n == 1) return 0;",
+        "loose": "if( n <= 1 ) return  1 ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写出 sum_to 的函数头：返回整数、名字叫 sum_to、收一个整数。",
+        "acceptRegex": [
+          "int\\s+sum_to\\s*\\(\\s*int"
+        ],
+        "sample": "int sum_to(int n) {",
+        "why": "还回来的是一份和，所以返回值写 int；收进来的那步数是原料，也写成 int。返回值一省，编译器就不认这个定义了。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "int sum_to(int n) {",
+        "wrong": "void sum_to(int n) {",
+        "loose": "int   sum_to ( int   n ) {"
+      }
+    }
+  ],
+  "drop": []
+}

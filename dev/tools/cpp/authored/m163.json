@@ -1,0 +1,49 @@
+{
+  "cid": "m163",
+  "note": "代码卷只有 1 道编辑器题，补 2 道：一道写右端扩张的循环头（长度得转成带符号整数），一道写本课任务那句判决打印（best 还站在初值上就说无解）。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "score": 20,
+        "coversTask": 1,
+        "stem": "写出外层那条 for 的循环头：right 从 0 起，一格一格走到数组末尾。容器长度是无符号的，条件里得把它转成整数再比。只写 for 这一行，循环体不用写。",
+        "acceptRegex": [
+          "for\\s*\\(\\s*int\\s+right\\s*=\\s*0\\s*;",
+          "right\\s*<",
+          "static_cast\\s*<\\s*int\\s*>"
+        ],
+        "sample": "for (int right = 0; right < static_cast<int>(v.size()); ++right) {",
+        "why": "size() 给的是无符号数，直接拿 int 的 right 去比，右边会被整体提升成无符号；一旦 left 或长度算穿到负数，比较结果就整个翻掉。先转成 int，两边才在同一把尺子上。"
+      },
+      "selftest": {
+        "ref": "for (int right = 0; right < static_cast<int>(v.size()); ++right) {",
+        "wrong": "for (int right = 0; right < v.size(); ++right) {",
+        "loose": "for  (  int right=0 ;  right  <  static_cast  <int>  ( v.size ( )  )  ; ++right  )"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "score": 20,
+        "coversTask": 1,
+        "stem": "写一行判决：窗口跑完之后，best 还站在初值 100 上就说明没有任何一段达标，打「无解」；否则把最短长度打出来。",
+        "acceptRegex": [
+          "best\\s*==\\s*100",
+          "无解",
+          "std\\s*::\\s*println\\s*\\("
+        ],
+        "sample": "std::println(\"{}\", best == 100 ? \"无解\" : std::to_string(best));",
+        "why": "best 一辈子没被 min 动过，就说明 while 的门一次都没开过 —— 整串数的和都够不着 target。判决读的就是「初值还在不在」这件事。"
+      },
+      "selftest": {
+        "ref": "std::println(\"{}\", best == 100 ? \"无解\" : std::to_string(best));",
+        "wrong": "std::println(\"和 ≥ {} 的最短长度 = {}\", target, best);",
+        "loose": "std  ::  println  (  \"{}\" ,  best==100 ?  \"无解\"  :  std::to_string(best)  )  ;"
+      }
+    }
+  ],
+  "drop": []
+}

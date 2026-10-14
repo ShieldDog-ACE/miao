@@ -1,0 +1,46 @@
+{
+  "cid": "m139",
+  "note": "代码卷只有 2 道编辑器题，缺 1 道才够形制。源稿那条任务其实点了三样（开区、写 triple、在 main 里调用），原卷的 code 题只写了零件那一侧，补两道：main 里的调用、清单头部的 #pragma once。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务的另一半）在 main 里把 my_tools 区的 triple 用上：拿它算 7 的三倍，用标准库那个打印函数把结果打到一行里。",
+        "acceptRegex": [
+          "std\\s*::\\s*println\\s*\\(",
+          "my_tools\\s*::\\s*triple\\s*\\(\\s*7\\s*\\)"
+        ],
+        "sample": "std::println(\"{}\", my_tools::triple(7));",
+        "why": "区名加双冒号是进那层壳的唯一走法；调用侧写全名，打印侧只递表达式，结果由 triple 自己算出来。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "std::println(\"{}\", my_tools::triple(7));",
+        "wrong": "std::println(\"{}\", triple(7));",
+        "loose": "std  ::  println ( \"{}\" ,  my_tools :: triple ( 7 ) ) ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行放在 my_tools.h 最上面：让这份清单在每个 .cpp 里只被抄一遍。",
+        "acceptRegex": [
+          "#\\s*pragma\\s+once"
+        ],
+        "sample": "#pragma once",
+        "why": "这份清单会被好几份 .cpp 请走，同一个 .cpp 绕着绕着也可能请两遍；这一行是给照抄的抄写员下的口令，同一份文件只抄一次。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "#pragma once",
+        "wrong": "#include \"my_tools.h\"",
+        "loose": "#  pragma   once"
+      }
+    }
+  ],
+  "drop": []
+}

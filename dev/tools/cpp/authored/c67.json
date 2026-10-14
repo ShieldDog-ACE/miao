@@ -1,0 +1,45 @@
+{
+  "cid": "c67",
+  "note": "代码卷只有 q3 一道编辑器题（函数头）。任务那条还要真把名单读一遍并交回商，补两道 code 题盖住循环和 return 这两步。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：把只读名单 v 从头到尾走一遍，这一轮那个数叫 x。",
+        "acceptRegex": [
+          "for\\s*\\(\\s*(const\\s+int\\s*&|int)\\s+x\\s*:\\s*v"
+        ],
+        "sample": "for (const int& x : v) {",
+        "why": "范围 for 念的是名单里的名字。循环变量前面挂上 const int&，一格值都不抄；名单本身是 const 引用，读它天经地义，写它才会被拦。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "for (const int& x : v) {",
+        "wrong": "for (int x = 0; x < 10; x++) {",
+        "loose": "for ( const  int &  x  :  v ){"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：把平均分交回外面 —— 累计好的 sum 除以名单的长度。",
+        "acceptRegex": [
+          "return\\s+sum\\s*/\\s*v\\s*\\.\\s*size\\s*\\(\\s*\\)"
+        ],
+        "sample": "return sum / v.size();",
+        "why": "只有合计还不够，除以长度才是平均。名单长度用 size() 问出来，这一行交出去的小数才留得住。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "return sum / v.size();",
+        "wrong": "return sum;",
+        "loose": "return  sum /  v . size ( ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

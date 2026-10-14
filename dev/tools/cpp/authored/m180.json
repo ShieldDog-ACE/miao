@@ -1,0 +1,48 @@
+{
+  "cid": "m180",
+  "note": "代码卷只有 2 道编辑器题，补 2 道：一道写搬完家往后半段空格里放新件的循环，一道写过户之后检查旧主人手里空不空的那行打印。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "score": 18,
+        "coversTask": 1,
+        "stem": "搬家完成、盒子已过户。写一行 for：从第 5 格（下标 4）起填到第 8 格，每格放 (i + 1) * 10。这些格子正是翻倍出来的新盒多出来的空格。",
+        "acceptRegex": [
+          "for\\s*\\(\\s*int\\s+i\\s*=\\s*4\\s*;",
+          "i\\s*<\\s*8\\s*;",
+          "box\\s*\\[\\s*i\\s*\\]\\s*="
+        ],
+        "sample": "for (int i = 4; i < 8; ++i) box[i] = (i + 1) * 10;",
+        "why": "旧盒的 4 件已经占住前 4 格，扩容多出来的就是下标 4 到 7 这四格；起点写成 0 会把刚搬过来的旧件覆盖掉，终点少写一格就还留着一格没放东西。"
+      },
+      "selftest": {
+        "ref": "for (int i = 4; i < 8; ++i) box[i] = (i + 1) * 10;",
+        "wrong": "for (int i = 0; i < 4; ++i) box[i] = (i + 1) * 10;",
+        "loose": "for  (  int i=4  ;i  <  8  ;  ++i  )  box [ i ]  =  ( i + 1 ) * 10 ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "score": 16,
+        "coversTask": 1,
+        "stem": "写一行：把「过户之后 bigger 手里还剩没剩盒子」这件事打到屏幕上 —— 判的是它等于不等于那个空指针。",
+        "acceptRegex": [
+          "bigger\\s*==\\s*nullptr",
+          "std\\s*::\\s*println\\s*\\("
+        ],
+        "sample": "std::println(\"{}\", bigger == nullptr);",
+        "why": "move 是换手不是复印：所有权交出去以后，bigger 只剩空指针，屏幕上打出来的是 true。旧盒子的内存由 unique_ptr 自己归还，全程不用写 delete。"
+      },
+      "selftest": {
+        "ref": "std::println(\"bigger 手里还有盒子吗: {}\", bigger == nullptr);",
+        "wrong": "std::println(\"bigger 手里还有盒子吗: {}\", bigger != nullptr);",
+        "loose": "std  ::  println  (  \"{}\"  ,  bigger==nullptr  )  ;"
+      }
+    }
+  ],
+  "drop": []
+}

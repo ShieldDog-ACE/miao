@@ -1,0 +1,46 @@
+{
+  "cid": "c62",
+  "note": "代码卷只有 q2、q3 两道编辑器题（都在函数那一头）。任务那条还要在调用处摆格子、递格子，补两道 code 题把 main 那一头也动手写一遍。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：在 main 里把三只答案格摆出来 —— lo、hi、新加的 sum，全部从 0 起步。",
+        "acceptRegex": [
+          "int\\s+lo\\s*=\\s*0",
+          "sum\\s*=\\s*0"
+        ],
+        "sample": "int lo = 0, hi = 0, sum = 0;",
+        "why": "格子不存在，函数就没有可写的那一格内存。第三只格子 sum 和另外两只一起声明出来，才是把总分带回外面的第一步。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "int lo = 0, hi = 0, sum = 0;",
+        "wrong": "int lo = 0, hi = 0;",
+        "loose": "int  lo = 0 , hi = 0 , sum  =  0 ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：把名单 nums 和 lo、hi、sum 三只格子一起递进 min_max_sum。",
+        "acceptRegex": [
+          "min_max_sum\\s*\\(\\s*nums\\s*,\\s*lo\\s*,\\s*hi\\s*,\\s*sum"
+        ],
+        "sample": "min_max_sum(nums, lo, hi, sum);",
+        "why": "签名多了一格，调用处就得多数一个名字。少了递进去的那只 sum，编译器会说实参不够；递错了顺序，写回来的就是别的格子。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "min_max_sum(nums, lo, hi, sum);",
+        "wrong": "min_max_sum(nums, lo, hi);",
+        "loose": "min_max_sum ( nums ,  lo , hi ,  sum ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

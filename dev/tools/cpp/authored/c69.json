@@ -1,0 +1,45 @@
+{
+  "cid": "c69",
+  "note": "代码卷只有函数头和 return 两道编辑器题。任务那条还点了文件顶部补头文件、以及真把字符串版喊一声，补两道 code 题盖住。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：在文件顶部把标准库里的文字工具箱搬进来 —— 少了它，std::string 是没人认识的名字。",
+        "acceptRegex": [
+          "#\\s*include\\s*<\\s*string\\s*>"
+        ],
+        "sample": "#include <string>",
+        "why": "字符串版 twice 的返回值和参数都写的是 std::string，这个类型住在那个文件里，得先搬进来编译器才认得。",
+        "score": 18
+      },
+      "selftest": {
+        "ref": "#include <string>",
+        "wrong": "#include <print>",
+        "loose": "#  include   < string >"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：喊一声 twice 递进去文字 ab，把打出来的结果打印在一对花括号那一位上。",
+        "acceptRegex": [
+          "twice\\s*\\(\\s*\"ab\""
+        ],
+        "sample": "std::println(\"{}\", twice(\"ab\"));",
+        "why": "递进去的是带引号的一串文字，只有字符串版收得了，于是同名的三扇窗里编译器挑中这一扇，打出 abab。",
+        "score": 18
+      },
+      "selftest": {
+        "ref": "std::println(\"{}\", twice(\"ab\"));",
+        "wrong": "std::println(\"{}\", twice(7));",
+        "loose": "std::println ( \"{}\" ,  twice ( \"ab\" ) ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

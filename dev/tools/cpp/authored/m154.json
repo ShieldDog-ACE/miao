@@ -1,0 +1,106 @@
+{
+  "cid": "m154",
+  "note": "代码卷只有 2 道编辑器题，补 2 道：一道把 std::sort 的第三个参数（比较器）连同调用一起写出来，一道写第二条规则的整行（不同才定案，平手才往下轮）。　（a3/a4 不挂 coversTask：源稿只有一条任务，底稿打出的「任务 3、4」是卷里旧稿的越界编号，不是真有这两条。）　原卷 q4 的「任务 3」、q5 的「任务 4」同为越界编号：q4 问的是把两条规则先后调换（正是任务 1 那条规则的另一种场合，仍算练习题，这里只收号）；q5 同时挂着 1 与 4，收成 1。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "score": 20,
+        "coversTask": 1,
+        "stem": "写一行：给这张榜调排序，三个参数一个不能少 —— 从哪到哪，再加那条由比较器填进去的排序规则（规则体用注释省略就行）。",
+        "acceptRegex": [
+          "std\\s*::\\s*sort\\s*\\(",
+          "\\.\\s*begin\\s*\\(\\s*\\)\\s*,",
+          "\\.\\s*end\\s*\\(\\s*\\)\\s*,",
+          "\\[\\s*\\]"
+        ],
+        "sample": "std::sort(ps.begin(), ps.end(), [](const Player& a, const Player& b) { /* 规则 */ });",
+        "why": "只给两个参数的 sort 按默认大小排，榜会按字段声明顺序走。规则是第三个参数，位置错不了；那个空的中括号加一对圆括号就是 lambda，比较器就写在它的花括号里。"
+      },
+      "selftest": {
+        "ref": "std::sort(ps.begin(), ps.end(), [](const Player& a, const Player& b) { return a.score > b.score; });",
+        "wrong": "std::sort(ps.begin(), ps.end());",
+        "loose": "std  ::  sort  (  ps . begin ( )  ,  ps . end ( )  ,  [ ] ( const Player & a ,  const Player & b )  {  }  )  ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "score": 20,
+        "coversTask": 1,
+        "stem": "写整行：第二条规则 —— 分数打平的人里，罚时少的排在前头；只有罚时也不一样时才当场定案。",
+        "acceptRegex": [
+          "a\\s*\\.\\s*penalty\\s*!=\\s*b\\s*\\.\\s*penalty",
+          "return\\s+a\\s*\\.\\s*penalty\\s*<\\s*b\\s*\\.\\s*penalty"
+        ],
+        "sample": "if (a.penalty != b.penalty) return a.penalty < b.penalty;",
+        "why": "!= 是这条规则的开关：罚时不同才把结论交出去，一样就继续往后轮。写成 == 的话同罚时的人永远轮不到第三条名字规则，而把小于写成大于会让罚时多的压在前面。"
+      },
+      "selftest": {
+        "ref": "if (a.penalty != b.penalty) return a.penalty < b.penalty;",
+        "wrong": "if (a.penalty == b.penalty) return a.penalty > b.penalty;",
+        "loose": "if  ( a.penalty  !=  b.penalty  )  return a . penalty< b . penalty ;"
+      }
+    },
+    {
+      "temp": "a3",
+      "q": {
+        "type": "code",
+        "score": 20,
+        "coversTask": 3,
+        "stem": "把两条规则的先后调换：先比罚时，罚时打平才比分。在比较器的花括号里写满两行，第一行判罚时不同就 return，第二行直接 return 比分那句。",
+        "acceptRegex": [
+          "if\\s*\\(\\s*a\\s*\\.\\s*penalty\\s*!=\\s*b\\s*\\.\\s*penalty\\s*\\)\\s*return\\s+a\\s*\\.\\s*penalty\\s*<\\s*b\\s*\\.\\s*penalty",
+          "return\\s+a\\s*\\.\\s*score\\s*>\\s*b\\s*\\.\\s*score"
+        ],
+        "sample": "if (a.penalty != b.penalty) return a.penalty < b.penalty;\nreturn a.score > b.score;",
+        "why": "比较器从上往下走，先写的那条先判 —— 顺序本身就是优先级。两条规则的写法一个字没动，只是换了先后，小红 280 分却因为罚时少而挤到前面去。"
+      },
+      "selftest": {
+        "ref": "if (a.penalty != b.penalty) return a.penalty < b.penalty;\nreturn a.score > b.score;",
+        "wrong": "if (a.score != b.score) return a.score > b.score;\nreturn a.penalty < b.penalty;",
+        "loose": "if ( a.penalty!=b.penalty )  return a.penalty  <  b.penalty ;\n   return a . score > b . score ;"
+      }
+    },
+    {
+      "temp": "a4",
+      "q": {
+        "type": "code",
+        "score": 20,
+        "coversTask": 4,
+        "stem": "同分的人想保住原来的先后：把记着原始位置的那个下标写成最后一条规则。写出那一句 return。",
+        "acceptRegex": [
+          "return\\s+a\\s*\\.\\s*idx\\s*<\\s*b\\s*\\.\\s*idx\\s*;"
+        ],
+        "sample": "return a.idx < b.idx;",
+        "why": "下标互不相等，任何两个人都能判出胜负，排序就不会再随手把同键的人打乱；把它写在最后，等于只在前面几条都打平时才启用。"
+      },
+      "selftest": {
+        "ref": "return a.idx < b.idx;",
+        "wrong": "return a.score < b.score;",
+        "loose": "return   a.idx<b.idx ;"
+      }
+    }
+  ],
+  "drop": [],
+  "retag": [
+    {
+      "id": "q4",
+      "coversTask": null
+    },
+    {
+      "id": "q5",
+      "coversTask": 1
+    },
+    {
+      "id": "a3",
+      "coversTask": null
+    },
+    {
+      "id": "a4",
+      "coversTask": null
+    }
+  ]
+}

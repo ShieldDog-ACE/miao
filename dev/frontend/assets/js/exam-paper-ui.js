@@ -3,14 +3,16 @@
  * 为什么要有这一份：C++ 在浏览器里跑不动，213 场课末考试全走笔试 —— 题目是出卷人写死的
  * （python 沙箱卷那种「现场跑代码判分」在 cpp 这门课没有对应物）。
  *
- * 六种题型的交互：
+ * 七种题型的交互：
  *   choice  单选 —— 再点一次已选中的可以取消（原生 radio 做不到，这是英语卷踩过的坑）；
  *   multi   多选 —— 普通勾选框；
  *   blank   填空 —— 单行输入；
  *   code    补代码 —— 与 Python 考场同一枚编辑器控件（code-editor.js：行号 / 着色 / 成对闭合 /
  *            块缩进 / 补全），判分只按 acceptRegex 找关键字，写法形状不卡；
  *   output  读代码写输出 —— 多行 textarea，逐行宽松比对；
- *   order   步骤排序 —— 点选项按点击顺序排成你的答案，再点已选的把它撤下来。
+ *   order   步骤排序 —— 点选项按点击顺序排成你的答案，再点已选的把它撤下来；
+ *   match   勾线配对 —— 左边点一项再点右边对应项，中间真画一条线（交互与样式沿用英语卷
+ *            exam-en.js 那套 wireMatch 和 .en-cols / .en-node / .en-lines）。
  *
  * 草稿：作答即存本机（miao_paprdraft_<tid>_<cid>），退出再进来不丢。
  * 交卷：有没答完的先拦一道确认；判分走 MIAO_PAPER.gradePaper，逐题复盘带「你答了什么 /
@@ -30,7 +32,7 @@
 
   var TYPE_CN = {
     choice: "单项选择", multi: "多项选择", blank: "填空",
-    code: "补代码", output: "读代码写输出", order: "步骤排序"
+    code: "补代码", output: "读代码写输出", order: "步骤排序", match: "勾线配对"
   };
   var TYPE_TIP = {
     choice: "选一个；再点一次可以取消",
@@ -38,7 +40,8 @@
     blank: "写一个词或一句话，大小写与多余空格不计较",
     code: "把缺的代码补上；判分看关键写法在不在，不管空格与变量名",
     output: "一行一个输出，写程序打印出来的内容",
-    order: "按正确顺序逐个点下面的步骤；点错了再点一遍撤下来"
+    order: "按正确顺序逐个点下面的步骤；点错了再点一遍撤下来",
+    match: "先点左边一项，再点右边跟它对应的那一项；连线下面点 × 可以撤"
   };
 
   /* 题面里的代码行识别：C++ 卷的 stem 是「人话 + 贴在下面的代码」混在一个字符串里，
@@ -71,8 +74,17 @@
   function unanswered(q, a) {
     if (q.type === "multi") return !a || !a.length;
     if (q.type === "order") return !a || !a.length;
+    if (q.type === "match") return Object.keys(a || {}).length < matchPairCount(q);
     if (a && typeof a === "object") return Object.keys(a).length === 0;
     return a == null || a === "";
+  }
+
+  /* 配对题该连几对：以 answer 的项数为准。answer 里写了 left/right 认不出的配对时，
+     validatePaper 会直接把这张卷判坏，所以这里不必再兜那一层 */
+  function matchPairCount(q) {
+    var ans = q && (q.answer !== undefined ? q.answer : (q.correct !== undefined ? q.correct : q.answers));
+    if (!ans || typeof ans !== "object" || Array.isArray(ans)) return 0;
+    return Object.keys(ans).length;
   }
 
   function render(app, tid, cid, exam, my) {
@@ -90,7 +102,8 @@
     var answers = {};
     qs.forEach(function (q, i) {
       var d = draft ? draft[i] : null;
-      answers[i] = d === undefined || d === null ? (q.type === "multi" || q.type === "order" ? [] : "") : d;
+      answers[i] = d === undefined || d === null
+        ? (q.type === "multi" || q.type === "order" ? [] : (q.type === "match" ? {} : "")) : d;
     });
 
     app.innerHTML =
@@ -119,6 +132,8 @@
       "</span></div>" +
       "</div>";
 
+    /* 换卷先清掉上一屏配对题的重画函数，否则 resize 时会去量已经不在文档里的盒子 */
+    matchRedraws = [];
     bind(app, tid, cid, qs, answers, HL_LANG);
     bindNav(app, qs, answers);
     updProgress(app, qs, answers);
@@ -169,6 +184,21 @@
         '<div class="pp-order">' + steps.map(function (s, si) {
           return '<button class="pp-step" type="button" data-si="' + si + '"><span>' + esc(s) + "</span></button>";
         }).join("") + "</div></div>";
+    }
+    if (q.type === "match") {
+      /* 两栏 + 中间画线：类名与英语卷共用一套（.en-cols 自带 position:relative，
+         .en-lines 是铺在它身上的绝对层 —— 参照系必须同一个，不然线画到盒子外被裁掉） */
+      var ml = q.left || q.items || [];
+      var mr = q.right || q.options || [];
+      return '<div class="en-card-q en-match" data-q="' + i + '">' + head +
+        '<div class="en-cols"><div class="en-col left">' + ml.map(function (l) {
+          return '<button class="en-node" type="button" data-side="l" data-v="' + esc(l) + '"><span>' + esc(l) + "</span></button>";
+        }).join("") + "</div>" +
+        '<svg class="en-lines"></svg>' +
+        '<div class="en-col right">' + mr.map(function (r) {
+          return '<button class="en-node" type="button" data-side="r" data-v="' + esc(r) + '"><span>' + esc(r) + "</span></button>";
+        }).join("") + "</div></div>" +
+        '<div class="en-pairs" data-pairs></div></div>';
     }
     return '<div class="en-card-q" data-q="' + i + '">' + head + '<div class="pp-tip">这种题型判不了，跳过吧</div></div>';
   }
@@ -228,6 +258,8 @@
         ta2.oninput = function () { answers[i] = ta2.value; saveDraft(tid, cid, answers); updProgress(app, qs, answers); };
       } else if (q.type === "order") {
         wireOrder(app, card, i, q, tid, cid, qs, answers);
+      } else if (q.type === "match") {
+        wireMatch(app, card, i, q, tid, cid, qs, answers);
       }
     });
   }
@@ -261,6 +293,91 @@
         saveDraft(tid, cid, answers); redraw(); updProgress(app, qs, answers);
       };
     });
+    redraw();
+  }
+
+  /* 勾线题：点左边一项 → 再点右边对应项，中间画一条线；连线下面的小牌点 × 撤掉。
+     画法与英语卷 exam-en.js 的 wireMatch 同一套（照着它搬，别再发明一遍）：
+     坐标一律按 .en-cols 量，因为铺在身上的 SVG 也以它为参照系。 */
+  var matchRedraws = [];      /* 当前这一屏所有配对题的重画函数；每次 render 清空重建 */
+  var matchResizeBound = false;
+  function bindMatchResize() {
+    if (matchResizeBound || !root.addEventListener) return;
+    matchResizeBound = true;
+    var run = function () {
+      matchRedraws = matchRedraws.filter(function (f) {
+        try { f(); return true; } catch (e) { return false; }   /* 卡片已经换掉了就把它摘下来 */
+      });
+    };
+    root.addEventListener("resize", run);
+    root.addEventListener("load", run);        /* 字体/图片晚到一步会改变盒子，补画一次 */
+  }
+
+  function wireMatch(app, card, i, q, tid, cid, qs, answers) {
+    var sel = null;
+    var cols = $(".en-cols", card), lines = $(".en-lines", card), pairsBox = $("[data-pairs]", card);
+    if (!answers[i] || typeof answers[i] !== "object" || Array.isArray(answers[i])) answers[i] = {};
+    function nodeAt(side, val) {
+      var hit = null;
+      $$(".en-node", card).forEach(function (x) {
+        if (x.getAttribute("data-side") === side && x.getAttribute("data-v") === String(val)) hit = x;
+      });
+      return hit;
+    }
+    function redraw() {
+      var map = answers[i] || {};
+      var cb = cols.getBoundingClientRect();
+      lines.innerHTML = "";
+      lines.setAttribute("viewBox", "0 0 " + cb.width + " " + cb.height);
+      lines.setAttribute("preserveAspectRatio", "none");
+      $$(".en-node", card).forEach(function (x) { x.classList.remove("linked", "sel"); x.style.borderColor = ""; });
+      if (sel) { var se = nodeAt("l", sel); if (se) se.classList.add("sel"); }
+      var colors = ["#fb7da8", "#2f6feb", "#2fbf71", "#e8833a", "#8e5cd9", "#c0392b"];
+      var n = 0;
+      Object.keys(map).forEach(function (l) {
+        var le = nodeAt("l", l), re = nodeAt("r", map[l]);
+        if (!le || !re) return;
+        var a = le.getBoundingClientRect(), b = re.getBoundingClientRect();
+        var c = colors[(n++) % colors.length];
+        var x1 = a.right - cb.left, y1 = a.top + a.height / 2 - cb.top;
+        var x2 = b.left - cb.left, y2 = b.top + b.height / 2 - cb.top;
+        var path = doc.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", "M" + x1 + " " + y1 + " C" + (x1 + 34) + " " + y1 + " " + (x2 - 34) + " " + y2 + " " + x2 + " " + y2);
+        path.setAttribute("stroke", c); path.setAttribute("fill", "none"); path.setAttribute("stroke-width", "2.5");
+        lines.appendChild(path);
+        le.style.borderColor = c; re.style.borderColor = c;
+        le.classList.add("linked"); re.classList.add("linked");
+      });
+      pairsBox.innerHTML = Object.keys(map).map(function (l) {
+        return '<span class="en-pair">' + esc(l) + " → " + esc(map[l]) + '<b data-un="' + esc(l) + '">×</b></span>';
+      }).join("");
+      $$("[data-un]", pairsBox).forEach(function (b) {
+        b.onclick = function () {
+          delete answers[i][b.getAttribute("data-un")];
+          saveDraft(tid, cid, answers); redraw(); updProgress(app, qs, answers);
+        };
+      });
+    }
+    $$(".en-node", card).forEach(function (nd) {
+      nd.onclick = function () {
+        var side = nd.getAttribute("data-side"), val = nd.getAttribute("data-v");
+        if (side === "l") {
+          /* 再点一次已选中的左边 = 取消选择（和单选那条同一个道理：不能只进不能退） */
+          if (sel === val) { sel = null; nd.classList.remove("sel"); return; }
+          $$('.en-node[data-side="l"]', card).forEach(function (x) { x.classList.remove("sel"); });
+          nd.classList.add("sel"); sel = val; return;
+        }
+        if (!sel) { toast("先点左边一项，再点右边跟它对应的那一项"); return; }
+        /* 一个左项只留一条线；右项被别的线占了就让给新连的这条（判分只看最终这张对照表） */
+        Object.keys(answers[i]).forEach(function (l) { if (answers[i][l] === val) delete answers[i][l]; });
+        answers[i][sel] = val;
+        sel = null;
+        saveDraft(tid, cid, answers); redraw(); updProgress(app, qs, answers);
+      };
+    });
+    matchRedraws.push(redraw);
+    bindMatchResize();
+    setTimeout(redraw, 30);
     redraw();
   }
 

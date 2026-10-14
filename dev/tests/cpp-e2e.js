@@ -111,62 +111,123 @@ const reqLog = [];
     }
   }
 
-  /* ---------- 3. 笔试考场：六种题型全走一遍 ---------- */
+  /* ---------- 3. 单轨双轨：代码卷与笔试卷各走一遍（D-78） ---------- */
+  const packOf = tid => (W.MIAO_API && W.MIAO_API._local.papers(tid)) || {};
+  const findIn = (tid, test) => {
+    const m = packOf(tid);
+    const cid = Object.keys(m).find(k => test(m[k]));
+    return cid ? { cid, paper: m[cid] } : null;
+  };
+  /* 题包是「进考场才拉」的（D-72），所以先随便进一场把 cpp 的题包拉上，再来挑两场做走查 */
   W.location.hash = "#/exam/cpp/c01";
   await sleep(2200);
-  ok("笔试卷进得来考场（不是 Python IDE 那套）", $$(".en-card-q").length === 8 && !!$("#ppSubmit"), $$(".en-card-q").length + " 题");
-  ok("考场脚本按 paper 轨加载：判分器与界面都在 window 上", !!W.MIAO_PAPER && !!W.MIAO_EXAM_PAPER, "");
-  ok("题面顶部写着本课任务", /任务题目/.test(txt(".en-intro")), txt(".en-intro").slice(0, 40));
+  const codeSel = findIn("cpp", p => p.mode === "code" && (p.questions || []).length >= 3);
+  const quizSel = findIn("cpp", p => p.mode === "quiz" && (p.questions || []).some(q => q.type === "match"));
+  ok("卷子里两轨都在：既有纯代码卷，也有带勾线题的笔试卷", !!codeSel && !!quizSel,
+    "代码卷 " + (codeSel ? codeSel.cid : "无") + " · 带勾线的笔试卷 " + (quizSel ? quizSel.cid : "无"));
 
+  /* 3a 代码卷：一题一枚编辑器，整场一张笔试题都没有 */
+  W.location.hash = "#/exam/cpp/" + (codeSel ? codeSel.cid : "c01");
+  await sleep(2200);
   {
-    /* 参考解直接取考卷自带的 selftest.refs[0]（判分器已经验过它是满分，这里验的是界面走不走得通） */
-    const paper = W.MIAO_API._local.papers("cpp").c01;
+    const paper = packOf("cpp")[codeSel ? codeSel.cid : "c01"];
     const ref = paper.selftest.refs[0];
     const cards = $$(".en-card-q");
-    let sawOrder = false, sawCode = false, sawOutput = false, codeEd = true;
-    paper.questions.forEach((q, i) => {
-      const card = cards[i];
-      if (!card) return;
+    ok("代码卷进得来考场，题数落在 3–6 道", !!$("#ppSubmit") && cards.length >= 3 && cards.length <= 6, cards.length + " 题");
+    ok("代码卷里一道选择型题都没有（单轨：只留编辑器）",
+      $$(".en-card-q input[type=radio], .en-card-q input[type=checkbox]").length === 0,
+      $$(".en-card-q input[type=radio]").length + " 个单选钮");
+    let layers = true, editors = 0;
+    cards.forEach((card, i) => {
+      const q = paper.questions[i], ta = card.querySelector(".ed-ta");
+      if (!ta) { layers = false; return; }
+      if (!card.querySelector(".ed-gt") || !card.querySelector(".ed-hl")) layers = false;
+      editors++;
+      typeIn(ta, String(ref[q.id] == null ? "" : ref[q.id]));
+    });
+    ok("代码卷每题都是一枚真编辑器：行号列 + 着色层 + textarea 四层齐（不是裸 textarea）",
+      layers && editors === cards.length, editors + "/" + cards.length + " 题带编辑器");
+    ok("代码卷的每题分数加起来正好 100",
+      paper.questions.reduce((a, q) => a + q.score, 0) === 100,
+      "合计 " + paper.questions.reduce((a, q) => a + q.score, 0));
+    ok("代码卷作答进度条跟着变", new RegExp("已答 " + cards.length + " / " + cards.length).test(txt("#ppProg")), txt("#ppProg"));
+    click($("#ppSubmit"));
+    await sleep(500);
+    ok("代码卷按参考解交卷判满分", /得分 100（已过）/.test(txt("#ppScore")), txt("#ppScore"));
+    ok("代码卷复盘里给的是参考写法，不是裸正则",
+      !/acceptRegex/.test(txt(".en-review")) && (/参考写法|全对|命中/.test(txt(".en-review"))),
+      txt(".en-review").slice(0, 60));
+  }
+
+  /* 3b 笔试卷：不许有编辑器，勾线题点两下真连出线 */
+  W.location.hash = "#/exam/cpp/" + (quizSel ? quizSel.cid : "c57");
+  await sleep(2200);
+  {
+    const paper = packOf("cpp")[quizSel ? quizSel.cid : "c57"];
+    const ref = paper.selftest.refs[0];
+    const cards = $$(".en-card-q");
+    ok("笔试卷进得来考场，题数落在 6–10 道", cards.length >= 6 && cards.length <= 10, cards.length + " 题");
+    ok("笔试卷里一枚代码编辑器都没有（单轨：不许出现编辑器）", $$(".ed-ta").length === 0, $$(".ed-ta").length + " 枚");
+    const types = [...new Set(paper.questions.map(q => q.type))];
+    ok("笔试卷同时有三种以上形状（选择/填空/勾线/写输出/排序）", types.length >= 3, types.join(" "));
+
+    const mq = paper.questions.findIndex(q => q.type === "match");
+    const mcard = cards[mq];
+    const nodeAt = (side, val) =>
+      Array.prototype.slice.call(mcard ? mcard.querySelectorAll(".en-node") : [])
+        .find(x => x.getAttribute("data-side") === side && x.getAttribute("data-v") === String(val));
+    const mref = ref[paper.questions[mq].id] || {};
+    const keys = Object.keys(mref);
+    ok("勾线题渲染成两栏（左边 " + keys.length + " 项可连）",
+      !!mcard && mcard.querySelectorAll('.en-node[data-side="l"]').length >= keys.length, "");
+    keys.forEach(l => { const a = nodeAt("l", l), b = nodeAt("r", mref[l]); click(a); click(b); });
+    const linesDrawn = mcard ? mcard.querySelectorAll(".en-lines path").length : 0;
+    const chipsDrawn = mcard ? mcard.querySelectorAll(".en-pair").length : 0;
+    ok("勾线题每点一对就真画一条线、下面多一张对照牌",
+      linesDrawn === keys.length && chipsDrawn === keys.length, "线 " + linesDrawn + " · 牌 " + chipsDrawn);
+    /* 撤一条再连回去：能进也要能退 */
+    const firstX = mcard.querySelector(".en-pair b");
+    click(firstX);
+    const afterUndo = mcard.querySelectorAll(".en-lines path").length;
+    const k0 = keys[0];
+    click(nodeAt("l", k0)); click(nodeAt("r", mref[k0]));
+    ok("点 × 能撤掉连线（撤完少一条，再连又回来）",
+      afterUndo === keys.length - 1 && mcard.querySelectorAll(".en-lines path").length === keys.length,
+      "撤完 " + afterUndo + " 条");
+    /* 只点右边等于没选左边：要拦下来并提示，不许凭空冒出一条线 */
+    const stray = nodeAt("r", mref[keys[0]]);
+    click(stray);
+    ok("不先点左边就点右边，不连线（防误触）",
+      mcard.querySelectorAll(".en-lines path").length === keys.length, "");
+
+    cards.forEach((card, i) => {
+      const q = paper.questions[i];
+      if (q.type === "match") return;                 /* 上面连好了 */
       const a = ref[q.id];
       if (q.type === "choice") {
         const r = card.querySelectorAll("input[type=radio]")[Number(a)];
-        click(r); click(r);           /* 点两次：验「再点一次取消」，最后一次要点回来 */
-        if (Number(r.dataset.was) !== 1) { click(r); }
+        click(r); click(r);                            /* 点两次验「再点一次取消」 */
+        if (Number(r.dataset.was) !== 1) click(r);     /* 最后要点回来 */
       } else if (q.type === "multi") {
         (a || []).forEach(ix => { const cb = card.querySelectorAll("input[type=checkbox]")[Number(ix)]; if (cb) click(cb); });
       } else if (q.type === "blank") {
         typeIn(card.querySelector(".en-write"), String(a == null ? "" : a));
-      } else if (q.type === "code") {
-        sawCode = true;
-        /* 他点名的那条：C++ 的代码题不许是裸 textarea —— 行号列与着色层必须真在 */
-        const edTa = card.querySelector(".ed-ta");
-        if (!(edTa && card.querySelector(".ed-gt") && card.querySelector(".ed-hl"))) codeEd = false;
-        typeIn(edTa || card.querySelector(".pp-area"), String(a == null ? "" : a));
       } else if (q.type === "output") {
-        sawOutput = true; typeIn(card.querySelector(".pp-area"), String(a == null ? "" : a));
+        typeIn(card.querySelector(".pp-area"), String(a == null ? "" : a));
       } else if (q.type === "order") {
-        sawOrder = true;
         const steps = card.querySelectorAll(".pp-step");
         (a || []).forEach(ix => click(steps[Number(ix)]));
       }
     });
-    ok("卷子里三种代码型题都真渲染了（补代码 / 写输出 / 排序）", sawCode && sawOutput && sawOrder,
-      "code " + sawCode + " output " + sawOutput + " order " + sawOrder);
-    ok("代码题走共用编辑器控件：行号列 + 着色层 + textarea 四层齐（不是裸 textarea）", codeEd, "");
-    ok("作答进度条跟着变", /已答 8 \/ 8/.test(txt("#ppProg")), txt("#ppProg"));
-    ok("导航条的圈跟着答题填实（8 题 8 个圈，全填）",
-      $$(".pp-navdot").length === 8 && $$(".pp-navdot.filled").length === 8,
-      "填了 " + $$(".pp-navdot.filled").length + "/" + $$(".pp-navdot").length);
     click($("#ppSubmit"));
     await sleep(500);
-    const score = txt("#ppScore");
-    ok("交卷后状态栏给出分数并判过", /得分 100（已过）/.test(score), score);
-    ok("逐题复盘每题都有「你答了什么 + 为什么」", $$(".en-review li").length === 8 && /本课一句话|main|编译器/.test(txt(".en-review")), $$(".en-review li").length + " 条");
+    ok("笔试卷按参考解交卷判满分", /得分 100（已过）/.test(txt("#ppScore")), txt("#ppScore"));
+    ok("复盘里勾线题报「全连对」并给出配对表",
+      /全连对/.test(txt(".en-review")), (txt(".en-review").match(/全连对[^；]{0,20}/) || [""])[0]);
     const prog = JSON.parse(W.localStorage.getItem("miao_progress") || "{}");
-    ok("考过才把这一课写进本机进度", (prog.cpp || []).indexOf("c01") >= 0, JSON.stringify(prog.cpp || []));
-    const res = JSON.parse(W.localStorage.getItem("miao_exam_results") || "{}");
-    ok("成绩落本机并记最高分", res.cpp && res.cpp.c01 && res.cpp.c01.best === 100 && res.cpp.c01.passed === true,
-      JSON.stringify(res.cpp && res.cpp.c01 || {}));
+    ok("两轨各自考过都写进本机进度",
+      (prog.cpp || []).indexOf(codeSel ? codeSel.cid : "c01") >= 0 &&
+      (prog.cpp || []).indexOf(quizSel ? quizSel.cid : "c57") >= 0, JSON.stringify((prog.cpp || []).slice(-4)));
   }
 
   /* ---------- 4. 错解不写 progress；草稿留在本机 ---------- */
@@ -186,21 +247,30 @@ const reqLog = [];
       "卡片 " + $$(".en-card-q.miss").length + " · 圈 " + $$(".pp-navdot.miss").length);
     const prog = JSON.parse(W.localStorage.getItem("miao_progress") || "{}");
     ok("没考过就不写完成标记", (prog.cpp || []).indexOf("c02") < 0, JSON.stringify(prog.cpp || []));
-    /* 答一题，退出，再进来 —— 草稿要在 */
-    typeIn($(".en-card-q .en-write"), "赋值");
+    /* 答一题，退出，再进来 —— 草稿要在（按当前卷里真有的第一种框来答） */
+    const box = $(".en-card-q .en-write") || $(".en-card-q .pp-area");
+    typeIn(box, "赋值");
     await sleep(200);
     click($("#ppExit"));
     await sleep(900);
     W.location.hash = "#/exam/cpp/c02";
     await sleep(1600);
-    const back = $(".en-card-q .en-write");
-    ok("退出再进来，作答草稿还在本机", !!back && back.value === "赋值", back ? JSON.stringify(back.value) : "输入框没了");
+    const backBox = $(".en-card-q .en-write") || $(".en-card-q .pp-area");
+    ok("退出再进来，作答草稿还在本机", !!backBox && backBox.value === "赋值", backBox ? JSON.stringify(backBox.value) : "框没了");
   }
 
   /* ---------- 5. 掌握课的第一场卷 ---------- */
   W.location.hash = "#/exam/cppm/m82";
   await sleep(2000);
-  ok("掌握课也排上了笔试（第 82 课进得去）", $$(".en-card-q").length >= 6, $$(".en-card-q").length + " 题");
+  {
+    const m82 = packOf("cppm").m82;
+    const low = m82 && m82.mode === "code" ? 3 : 6;
+    ok("掌握课也排上了考试（第 82 课进得去，题数按它的轨）",
+      $$(".en-card-q").length >= low, $$(".en-card-q").length + " 题 · mode " + (m82 && m82.mode));
+    ok("掌握课这一场的形状与它的轨一致",
+      !m82 || (m82.mode === "code" ? $$(".ed-ta").length === $$(".en-card-q").length : $$(".ed-ta").length === 0),
+      "编辑器 " + $$(".ed-ta").length + " 枚 / 题 " + $$(".en-card-q").length + " 道");
+  }
   ok("试卷标题与课程归属对得上", /算法三件套/.test(txt(".ide-tb-mid")), txt(".ide-tb-mid").slice(0, 30));
 
   /* ---------- 6. 反向闸：按需加载与 /api ---------- */

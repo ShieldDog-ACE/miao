@@ -1,0 +1,45 @@
+{
+  "cid": "c50",
+  "note": "代码卷：两条任务各只有一道「三行一起写」的大编辑器题，别名真正吃香的那一步（把别名当类型名用）没被单独验过。补两道 code，一条验 Height 装小数、一条验 ScoreList 装三个整数。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "（任务题）上一行已经写好 using Height = double;。写一行：用 Height 当类型，声明一个变量存 1.75。",
+        "acceptRegex": [
+          "Height\\s+\\w+\\s*=\\s*1\\.75\\s*;"
+        ],
+        "sample": "Height my_height = 1.75;",
+        "why": "别名一旦立好，Height 就是 double 的另一个拼写，声明变量时直接把它写在类型那一格，小数那一截也留得住。",
+        "score": 18
+      },
+      "selftest": {
+        "ref": "Height my_height = 1.75;",
+        "wrong": "std::string my_height = 1.75;",
+        "loose": "Height   h1  =  1.75  ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 2,
+        "stem": "（任务题）上一行已经写好 using ScoreList = std::vector<int>;。写一行：用 ScoreList 当类型，声明一个变量，花括号里按顺序给三个整数分数。",
+        "acceptRegex": [
+          "ScoreList\\s+\\w+\\s*=\\s*\\{\\s*-?\\d+\\s*,\\s*-?\\d+\\s*,\\s*-?\\d+\\s*\\}"
+        ],
+        "sample": "ScoreList three = {95, 145, 88};",
+        "why": "那一长串嵌套类型已经在 using 那行写完了，这里只需要把 ScoreList 当类型名用，花括号里三个数按顺序进容器。",
+        "score": 22
+      },
+      "selftest": {
+        "ref": "ScoreList three = {95, 145, 88};",
+        "wrong": "std::vector<int> three = {95, 145};",
+        "loose": "ScoreList   s  =  {  95 , 145 ,  88  }  ;"
+      }
+    }
+  ],
+  "drop": []
+}

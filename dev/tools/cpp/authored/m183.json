@@ -1,0 +1,48 @@
+{
+  "cid": "m183",
+  "note": "代码卷只有 2 道编辑器题，补 2 道：一道写节点结构体本身（一样宝藏加一张纸条），一道写建链头一跳那一行。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "score": 18,
+        "coversTask": 1,
+        "stem": "写出这个节点长什么样的声明：名字是 Node，里面装一个整数宝藏 value，再加一张写着下一站地址的纸条 next（纸条由独占的智能指针打理，类型指向 Node 自己）。",
+        "acceptRegex": [
+          "struct\\s+Node\\s*\\{",
+          "int\\s+value\\s*;",
+          "std\\s*::\\s*unique_ptr\\s*<\\s*Node\\s*>\\s+next\\s*;"
+        ],
+        "sample": "struct Node { int value; std::unique_ptr<Node> next; };",
+        "why": "链表节点的全部家当就这两行：一个值、一张指向同类型节点的纸条。纸条用独占指针管，所以下一站销毁时不会漏内存，也不用自己写释放。"
+      },
+      "selftest": {
+        "ref": "struct Node {\n    int value;\n    std::unique_ptr<Node> next;\n};",
+        "wrong": "struct Node {\n    int value;\n    Node* next;\n};",
+        "loose": "struct  Node\n{\n  int  value  ;\n  std  ::  unique_ptr < Node >  next  ;\n}  ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "score": 16,
+        "coversTask": 1,
+        "stem": "a 已经是装着 10 的头节点。写一行：在堆上造一个装着 20 的新节点，并把 a 的纸条指向它。",
+        "acceptRegex": [
+          "a\\s*->\\s*next\\s*=",
+          "make_unique\\s*<\\s*Node\\s*>\\s*\\(\\s*20\\s*\\)"
+        ],
+        "sample": "a->next = std::make_unique<Node>(20);",
+        "why": "箭头是纸条的用法：a->next 就是「a 那张纸条」，右边造出新节点交进去，所有权随之过户；这一跳接上了，后面才能一路穿到 30、40。"
+      },
+      "selftest": {
+        "ref": "a->next = std::make_unique<Node>(20);",
+        "wrong": "a->next->next = std::make_unique<Node>(20);",
+        "loose": "a  ->  next  =  std  ::  make_unique <  Node  >(  20  )  ;"
+      }
+    }
+  ],
+  "drop": []
+}

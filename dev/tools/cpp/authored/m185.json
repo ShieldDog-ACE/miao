@@ -1,0 +1,24 @@
+{
+  "cid": "m185",
+  "note": "D 类：删掉 q6 这道编辑器题后一道填空/勾线都没有。三步舞的顺序卷里已经有 q5 的排序题在问，勾线会跟它撞车，所以补一道填空：问第 1 步为什么非写 std::move 不可 —— 这是画图那件事绕不过去的所有权口径。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "blank",
+        "score": 18,
+        "coversTask": 1,
+        "stem": "三步舞的第 1 步写成 auto next = head->next，漏掉 std::move 就编译过不去：unique_ptr 独占手里那份所有权，它不能被____。（填一个词）",
+        "accept": ["复制", "拷贝", "复印", "copy", "克隆"],
+        "why": "move 交出去的是所有权：下一站被搬进 next 这个变量，head->next 那一处就不再攥着它了。直接复印会造出两个都以为 owns 同一个节点的 unique_ptr，语言层面就禁止，所以每往手里接一次都必须写 std::move。"
+      },
+      "selftest": {
+        "ref": "拷贝",
+        "wrong": "移动",
+        "loose": " COPY "
+      }
+    }
+  ],
+  "drop": ["q6"],
+  "retag": []
+}

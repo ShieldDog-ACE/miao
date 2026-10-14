@@ -1,0 +1,67 @@
+{
+  "cid": "m138",
+  "note": "代码卷只有 q2 一道编辑器题（reserve 那一行）。任务那条的现场还要先开空容器、再装满、最后看两个数，补三道 code 题把这条链补齐。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：开出一个还空着的 int 容器 data，一个元素都还没装。",
+        "acceptRegex": [
+          "std::vector\\s*<\\s*int\\s*>\\s+data\\s*;"
+        ],
+        "sample": "std::vector<int> data;",
+        "why": "先有容器才谈得上给它租地皮。这一行只是把地皮合同签下来，size 是 0 —— reserve 之后照样是 0，椅子多、坐的人少。",
+        "score": 15
+      },
+      "selftest": {
+        "ref": "std::vector<int> data;",
+        "wrong": "std::vector<int> data(10000);",
+        "loose": "std::vector < int >  data ;"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行循环：往 data 里一个接一个装 i，从 0 装到 9999，一共一万个。",
+        "acceptRegex": [
+          "for\\s*\\(\\s*int\\s+i\\s*=\\s*0\\s*;\\s*i\\s*<\\s*10000",
+          "data\\s*\\.\\s*push_back\\s*\\(\\s*i\\s*\\)"
+        ],
+        "sample": "for (int i = 0; i < 10000; ++i) data.push_back(i);",
+        "why": "这一万声 push_back 就是 reserve 要省掉的那笔搬家钱：地皮提前租够，这一次次往里放东西就一次都不挪窝。",
+        "score": 15
+      },
+      "selftest": {
+        "ref": "data.reserve(10000);\nfor (int i = 0; i < 10000; ++i) data.push_back(i);",
+        "wrong": "data.reserve(10000);\nfor (int i = 0; i < 9999; ++i) data.push_back(i);",
+        "loose": "data.reserve(10000);\nfor ( int  i = 0 ;  i <  10000 ;  ++i )  data . push_back ( i ) ;"
+      }
+    },
+    {
+      "temp": "a3",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写一行：把 data 坐了几个人、摆了几把椅子一起打印出来。",
+        "acceptRegex": [
+          "println",
+          "data\\s*\\.\\s*size\\s*\\(\\s*\\)",
+          "data\\s*\\.\\s*capacity\\s*\\(\\s*\\)"
+        ],
+        "sample": "std::println(\"size = {}, capacity = {}\", data.size(), data.capacity());",
+        "why": "size 是元素个数，capacity 是租到的位置数。装满之后两个数才追上彼此，这正是验收这次预留有没有生效的那一眼。",
+        "score": 15
+      },
+      "selftest": {
+        "ref": "std::println(\"size = {}, capacity = {}\", data.size(), data.capacity());",
+        "wrong": "std::println(\"size = {}\", data.size());",
+        "loose": "std::println ( \"size = {}, capacity = {}\" , data . size ( ) ,  data . capacity ( ) ) ;"
+      }
+    }
+  ],
+  "drop": []
+}

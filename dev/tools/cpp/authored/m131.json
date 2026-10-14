@@ -1,0 +1,49 @@
+{
+  "cid": "m131",
+  "note": "代码卷：只有 q2、q6 两道编辑器题。任务 1 要的是「写 parse(s) 返回 expected<int, std::string>」，签名那一行和成功侧怎么把数交回去都没人真写，补两道。",
+  "add": [
+    {
+      "temp": "a1",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写出 parse 的头一行：成功时给一个 int、失败时给一句 std::string 的原因，参数是那个待解析的字符串（常量引用，名叫 s）。",
+        "acceptRegex": [
+          "expected\\s*<\\s*int\\s*,\\s*std\\s*::\\s*string\\s*>",
+          "parse\\w*\\s*\\(\\s*const\\s+std\\s*::\\s*string\\s*&"
+        ],
+        "sample": "std::expected<int, std::string> parse(const std::string& s) {",
+        "why": "尖括号里前一个类型是成功侧的 int、后一个是失败侧的 std::string，写反了就成了「成功给句子、失败给数」；上一课 optional 只有一个类型，这里要多交代一个。",
+        "score": 20
+      },
+      "selftest": {
+        "ref": "std::expected<int, std::string> parse(const std::string& s) {",
+        "wrong": "std::expected<int, std::string> parse(int s) {",
+        "loose": "std :: expected < int , std :: string >  parse_int ( const  std :: string &  s )  {"
+      }
+    },
+    {
+      "temp": "a2",
+      "q": {
+        "type": "code",
+        "coversTask": 1,
+        "stem": "写出把一串数字攒成整数的那三行：int 变量 n 先记 0，用 for 挨个取 s 里的字符，把 n 乘 10 再加上这一位（字符减掉零那个字符），最后一行把 n 直接交回去。",
+        "acceptRegex": [
+          "int\\s+n\\s*=\\s*0",
+          "for\\s*\\(\\s*char\\s+\\w+\\s*:\\s*s\\s*\\)",
+          "n\\s*\\*\\s*10",
+          "return\\s+n\\s*;"
+        ],
+        "sample": "int n = 0;\nfor (char c : s) n = n * 10 + (c - '0');\nreturn n;",
+        "why": "最后那句 return n 不套任何壳：直接 return 一个 int 就被装进成功那一侧 —— 只有失败才需要 std::unexpected 明说。",
+        "score": 18
+      },
+      "selftest": {
+        "ref": "int n = 0;\nfor (char c : s) n = n * 10 + (c - '0');\nreturn n;",
+        "wrong": "int n = 0;\nreturn n;",
+        "loose": "int  n = 0 ;\nfor ( char ch : s ) { n = n *  10 + ( ch - '0' ) ; }\nreturn n ;"
+      }
+    }
+  ],
+  "drop": []
+}
