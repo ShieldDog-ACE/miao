@@ -1,0 +1,80 @@
+{
+  "cid": "m118",
+  "note": "特殊五件套改单编辑器：源稿真实任务只有 1 条（把 ~Notebook() = default 改成会打印，观察 a、b 谁先析构），coversTask 全部只打 1。拆成「string 成员带默认值 + 拷贝构造交给编译器 + 析构写成带函数体并 println + 内层作用域里拷贝出第二个对象」，观察结论按规矩五收进一条 buffer 注释档。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱（#include <print>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "类写在 main 外面；析构要在对象离开作用域时自己跑，不用谁去叫。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "先立一个类：class 起头，private 里放一个 std::string 成员并在声明处直接给默认值。",
+      "acceptRegex": ["class\\s+\\w+", "std\\s*::\\s*string\\s+\\w+\\s*=\\s*\"[^\"]*\"\\s*;"],
+      "sample": "class Notebook {\nprivate:\n    std::string owner_ = \"我\";",
+      "why": "成员都是这种自己会打扫的类型，五件套才能整件交给编译器。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：把析构从 = default 改成会说话 —— 波浪号加类名那一句后面接函数体，里面用一条 println 把成员打出来。",
+      "acceptRegex": ["~\\w+\\s*\\(\\s*\\)\\s*\\{", "std\\s*::\\s*println\\s*\\("],
+      "sample": "~Notebook() { std::println(\"打扫卫生：{} 的 {} 页\", owner_, pages_.size()); }",
+      "why": "析构负责还：谁离开作用域谁当场报名，屏幕上谁先出现就是谁先走。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "拷贝构造这件交给编译器：写一句收本类型 const 引用、后面直接 = default 的构造声明。",
+      "acceptRegex": ["\\w+\\s*\\(\\s*const\\s+\\w+\\s*&\\s*\\)\\s*=\\s*default\\s*;"],
+      "sample": "Notebook(const Notebook&) = default;",
+      "why": "= default 是让编译器替你把每个成员各抄各的；成员能自己管自己时这样写最省事。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：造一个对象，再另开一对花括号，在这个更小的作用域里用等号从它拷贝出第二个对象。",
+      "acceptRegex": ["\\n\\s*\\{[^{}]{0,200}\\w+\\s+\\w+\\s*=\\s*\\w+\\s*;"],
+      "sample": "Notebook a;\n{\n    Notebook b = a;\n}",
+      "why": "等号左边是个新的名字，走的是拷贝构造；b 活的那一段比 a 短，正好看出谁先析构。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用一行注释写下你观察到的顺序：a、b 谁先析构（至少四个字，正则只验你写了注释）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 内层的 b 先打扫，外层的 a 等 main 结束才走：后造的先生还",
+      "why": "注释内容判不了；这一条只确认你把跑出来的顺序记下来了。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "析构函数在对象离开作用域、被删掉时自动调用，负责还；成员都能自己管自己时，五件全写 = default。",
+    "拷贝构造是拿另一个同类型的对象造一个新的：Notebook b = a;；拷贝赋值是把右边整个盖到一个已经存在的对象上：b = a;。",
+    "移动构造与移动赋值的右边是个不要了的对象，东西直接搬过来，不用再造一份。",
+    "内层作用域先结束，里面的那个对象就先析构，外层的后走 —— 屏幕上先出现的打扫话，属于先进圈的那个。",
+    "成员是裸指针时默认拷贝会照抄地址：两份守的是同一块内存，这就是 = default 不能瞎用的一站。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n#include <vector>\n\nclass Notebook {\npublic:\n    Notebook() = default;\n    Notebook(const Notebook&) = default;\n    ~Notebook() { std::println(\"打扫卫生：{} 的 {} 页\", owner_, pages_.size()); }\n    void add(const std::string& s) { pages_.push_back(s); }\nprivate:\n    std::string owner_ = \"我\";\n    std::vector<std::string> pages_;\n};\n\nint main() {\n    Notebook a;\n    a.add(\"C++\");\n    {\n        Notebook b = a;\n        b.add(\"数学\");\n        std::println(\"—— 内层作用域要结束了 ——\");\n    }\n    std::println(\"—— 外层 main 要结束了 ——\");\n    return 0;\n}\n// b 先打扫（它先离开作用域），a 要等 main 结束才走\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n\nclass Notebook {\npublic:\n    Notebook(const Notebook&) = default;\n    ~Notebook() = default;\n    int pages() const { return 0; }\nprivate:\n    std::string owner_ = \"我\";\n};\n\nint main() {\n    Notebook a;\n    Notebook b = a;\n    std::println(\"{}\", b.pages());\n    return 0;\n}\n",
+      "#include <print>\n\nclass Box {\npublic:\n    ~Box() { std::println(\"走啦\"); }\nprivate:\n    int n_ = 0;\n};\n\nint main() {\n    Box x;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\n\nclass  Book\n{\n  public :\n      Book ( const Book & )  =  default ;\n      ~ Book ( ) { std::println(\"打扫 {}\", name_); }\n  private :\n      std :: string  name_ = \"本子\" ;\n};\n\nint  main ( )\n{\n  Book  outer ;\n  {\n      Book  inner = outer ;\n      std::println(\"内层要结束了\");\n  }\n  std::println(\"外层要结束了\");\n  return 0;\n}\n// 里层那个先打扫完，外层的最后才走\n"
+    ]
+  }
+}

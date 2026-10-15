@@ -1,0 +1,68 @@
+{
+  "cid": "c32",
+  "note": "带初始化的 if 这场的旧题在判「score 改 80 走哪一支、取消注释报什么错」，编辑器判不了走哪支，就把任务 1 摊成分号前声明 answer 分号后写条件再加 else 一支，任务 2 摊成在那段大括号之后真写一条用 answer 的打印（注释剥掉之后它得在代码里），再补一条 buffer 抄报错；作用域与同名遮蔽只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一只 int 盒子装分数，值就给 80。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*80\\s*;"],
+      "sample": "int score = 80;",
+      "why": "任务 1 要的就是把 85 换成 80 再看走哪一支：80 的两倍是 160，大于 150，走 if 那一支。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写一条带初始化的 if：括号里分号前声明一只 int 临时盒子，名字就叫 answer，右边是分数乘 2；分号后才是真正的条件，问 answer 大不大于 150。",
+      "acceptRegex": ["if\\s*\\(\\s*int\\s+answer\\s*=[^;]*;\\s*answer\\s*>\\s*150\\s*\\)"],
+      "sample": "if (int answer = score * 2; answer > 150) {",
+      "why": "形状的全部信息量就在那个分号上：分号前是临时准备，分号后是真正的条件，两件事由分号分工。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "给它补上 else 一支：写 } else { ，两支里各用一条 std::println 把 answer 打进占位坑。",
+      "acceptRegex": ["\\}\\s*else\\s*\\{", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*answer\\s*\\)"],
+      "sample": "} else {\n        std::println(\"双倍分数 {} 没超过 150\", answer);",
+      "why": "answer 在 else 分支里照样能用：if 和 else 合起来是一条语句，同一块地盘。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：在这整段 if 的右花括号后面，再写一条 std::println 也用 answer —— 这一行编译不过，要的就是你亲眼见它。",
+      "acceptRegex": ["\\}\\s*std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*answer\\s*\\)\\s*;"],
+      "sample": "    }\n\n    std::println(\"出界还想用它: {}\", answer);",
+      "why": "名字绝对不可能泄漏到外面被误用：出界使用被当场抓住，而不是悄悄跑出一个怪数。",
+      "coversTask": 2,
+      "score": 25
+    },
+    {
+      "stem": "编译一次，用一行注释抄下报错里那个说法（至少写四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 报错说 answer 在这一层地盘里没声明过",
+      "why": "这一条只能判「你写了一行像样的注释」，抄的报错对不对这块编辑器判不了 —— 这是它判不动的部分。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "一个变量能被发现的地盘，专业名词叫它的作用域；大括号就是地盘边界，出界即查无此人。",
+    "这种临时变量出了地盘是真的销毁了，不是活着但被编译器禁掉。",
+    "外面已有一个 answer，if 的括号里再声明一个同名 answer，里面那个是独立的新变量，改它不动外面那个。",
+    "换成 auto answer = score * 2 一样好使：右边是整数，它就猜成 int。",
+    "带初始化的写法把寿命缩到最短，代价是出界不能用；那个数在 if 结束之后还要接着用，就该退回在外面声明的老写法。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int score = 80;\n\n    if (int answer = score * 2; answer > 150) {\n        std::println(\"双倍分数 {} 超过 150\", answer);\n    } else {\n        std::println(\"双倍分数 {} 没超过 150\", answer);\n    }\n\n    std::println(\"出界还想用它: {}\", answer);   // 报错说 answer 在这一层地盘里没声明过\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int score = 80;\n    int answer = score * 2;\n    if (answer > 150) {\n        std::println(\"超过 {}\", answer);\n    }\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int score = 80;\n    if (int answer = score * 2; answer > 150) {\n        std::println(\"超过 {}\", answer);\n    }\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  int  pts = 80 ;\n  if ( int answer = pts * 2 ; answer > 150 )\n  {\n    std::println( \"够了 {}\", answer ) ;\n  }\n  else {\n    std::println( \"不够 {}\", answer ) ;\n  }\n  std::println ( \"外面再用 {}\" , answer ) ;\n  // 编译器说这个名字没声明过\n}\n"
+    ]
+  }
+}

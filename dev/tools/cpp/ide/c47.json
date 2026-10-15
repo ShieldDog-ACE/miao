@@ -1,0 +1,67 @@
+{
+  "cid": "c47",
+  "note": "结构化绑定拆 pair 改单编辑器：任务 1 拆成「utility 头文件 + 长 3 宽 4 的 pair + auto 一方括号拆两个名字 + 打面积」；任务 2 是「先混个脸熟」的纯概念（tuple 本课没教，写不出可判的代码），按规矩第五条落成一条 buffer 注释条件，只验读者把那个名记进了注释，结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：请进 pair 住的那个头文件 utility，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*utility\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <utility>\n\nint main() {",
+      "why": "pair 住的头文件是 utility；结构化绑定自己不需要额外的头文件，要头文件的是那只箱子。",
+      "score": 20
+    },
+    {
+      "stem": "建一只 pair 存「长 3 宽 4」：尖括号里两格都写 int，花括号按顺序给 3 和 4。",
+      "acceptRegex": ["std::pair\\s*<\\s*int\\s*,\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{\\s*3\\s*,\\s*4\\s*\\}"],
+      "sample": "std::pair<int, int> rect = {3, 4};",
+      "why": "pair 天生固定两格，第一格是长、第二格是宽，装进去的顺序就是站位顺序。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "一次拆出两个有名有姓的变量：写一行 auto，方括号里给两个名字，等号右边是那两只格子所在的箱子。",
+      "acceptRegex": ["auto\\s*\\[\\s*\\w+\\s*,\\s*\\w+\\s*\\]\\s*=\\s*\\w+\\s*;"],
+      "sample": "auto [chang, kuan] = rect;",
+      "why": "名字个数必须和格数严丝合缝：三个名字对两格是「绑定的声明太多」，一个名字对两格是「绑定的声明太少」，都编译不过；那串方括号只配跟在 auto 后面。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "用一条 std::println 把面积打出来：格式串里一个占位坑，逗号后面给那两个名字相乘，别再写 .first 和 .second。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\*\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"面积 = {}\", chang * kuan);",
+      "why": "结构化绑定按站位分货：第一个名字拿第一格 3、第二个名字拿第二格 4，相乘得 12 —— 这正是它替你说人话的地方。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务第 2 条：格数不止两个的箱子不归 pair 管 —— 用一行注释写下那种箱子叫什么。",
+      "acceptRegex": ["//[^\\n]{0,40}tuple"],
+      "sample": "// 三个值装一箱要换 tuple，pair 固定只有两格",
+      "why": "这一条只能验你把那个名字写进了注释，验不了你说得完整不完整 —— 本课 pair 只教了两格，三格的箱子这一场判不了代码。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "结构化绑定按站位分货：第一个名字拿第一格（也就是 .first 那个值），第二个名字拿第二格，从此不再写 .first 和 .second。",
+    "auto 拆出来的是副本：绑定是真的，拷贝也是真的，改 name 不动箱子里那一份；想同步得用别的写法（以后再讲）。",
+    "名字个数必须和被拆的东西的格数一致，多一个少一个都编译不过；方括号那串必须跟在 auto 后面，写 int [name, age] 会被当场拦下。",
+    "名字随便起、不必沿用原来的成员名，这正是它治「.first 说不出人话」的地方；可名字写反了没人管 —— 个数对得上就合法，编译器不看含义，只会安静地打出一句荒诞的话。",
+    "pair 固定两格，三样东西（科目名、得分、满分）装一箱归 tuple 管，那是以后再讲的课；用两只 pair 凑、或者塞一整串文本进第二格，都是能跑但把三件事拆散。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n#include <utility>\n\nint main() {\n    std::pair<int, int> rect = {3, 4};\n\n    auto [chang, kuan] = rect;\n    std::println(\"面积 = {}\", chang * kuan);\n\n    // 三个值装一箱要换 tuple，pair 固定只有两格\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <utility>\n\nint main() {\n    std::pair<int, int> rect = {3, 4};\n    std::println(\"面积 = {}\", rect.first * rect.second);\n    return 0;\n}\n",
+      "int main() {\n    std::pair<int, int> r = {3, 4};\n    auto [a, b] = r;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n#  include < utility >\n\nint  main ( )\n{\n  std::pair< int , int >  box = { 3 , 4 } ;\n  auto [ c1 , c2 ] = box ;\n  std::println( \"{}\" , c1 * c2 ) ;\n  // 三样东西一箱：pair 两格不够，得换 tuple\n  return 0;\n}\n"
+    ]
+  }
+}

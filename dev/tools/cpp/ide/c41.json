@@ -1,0 +1,75 @@
+{
+  "cid": "c41",
+  "note": "访问元素改单编辑器：任务 1 拆成「五格的盒子 + 打 [1] + 打 [3]」，任务 2 按规矩第五条摊成一对（真写一行 at(5) 的 code 条件 + 一条记录报错字样的 buffer 条件），旧七道笔试题的结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "用花括号造一只装 int 的盒子，往里列五个数。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{[^}]*,[^}]*,[^}]*,[^}]*\\}"],
+      "sample": "std::vector<int> scores = {85, 92, 78, 96, 88};",
+      "why": "花括号那条是「列内容」，格子数跟着内容自动定下来，这盒是 5 格。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一条 std::println 打印第 2 个元素：方括号里写的编号要减一。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\[\\s*1\\s*\\]"],
+      "sample": "std::println(\"第 2 个: {}\", scores[1]);",
+      "why": "编号是「离起点差几格」，第一格在 0 号，所以第 2 个在 1 号格，值是 92。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再用一条 std::println 打印第 4 个元素。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\[\\s*3\\s*\\]"],
+      "sample": "std::println(\"第 4 个: {}\", scores[3]);",
+      "why": "第 N 个写 N 减 1，这条换算跟盒子多大无关；写 scores[4] 取到的是第 5 个（88），不是第 4 个。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把这份程序写成能跑的形：请进 vector 的头文件，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*vector\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <vector>\n\nint main() {",
+      "why": "盒子不住在打印那个头文件里；少了这一行编译就报错，大意是 std 里没有叫 vector 的名字。",
+      "score": 10
+    },
+    {
+      "stem": "任务第 2 条：故意取一格不存在的门牌 —— 写一行用 at 取 5 号格（这盒只有 0 到 4 号）。",
+      "acceptRegex": ["\\.\\s*at\\s*\\(\\s*5\\s*\\)"],
+      "sample": "std::println(\"{}\", scores.at(5));",
+      "why": "size() 是「几格」不是「最大编号」，5 格的最后一格在 4 号，5 号格不存在。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "程序会当场停下来：在它旁边用一行注释写下报错信息里带的那个字样。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 报错信息里带着 out_of_range 这个字样",
+      "why": "at() 先查门牌存不存在，查不到就立刻停下来把话说清楚；这一条只能验你确实记了一行笔记，验不了笔记内容对不对。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "「第 N 个元素」和方括号里的编号永远是差一：编号写 N 减 1，跟盒子大小无关；循环里不用减，是因为计数器本来就从 0 数。",
+    "5 格的盒子编号是 0 到 4：scores[4] 取到的是最后一格 88，scores[scores.size()] 天生越界。",
+    "front() 等于 scores[0]，back() 等于最后一格但不用你自己拿 size() 去减；空盒子既没有头也没有尾，front 和 back 都无处可取。",
+    "at() 越界会当场终止并把 out_of_range 说清楚，方括号越界则闷声不响地把程序弄坏 —— 调试期该用 at()。",
+    "用循环安全走完整只盒子：计数器从 0 起，条件写 i 小于 size() 不带等于号；带上等于号就多走一步，那一步正是越界。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96, 88};\n\n    std::println(\"第 2 个: {}\", scores[1]);\n    std::println(\"第 4 个: {}\", scores[3]);\n\n    std::println(\"{}\", scores.at(5));   // 报错信息里带着 out_of_range 这个字样\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96, 88};\n    std::println(\"第一个: {}\", scores[0]);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96, 88};\n    std::println(\"第 2 个: {}\", scores[1]);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n#  include <vector>\nint main ( )\n{\n  std::vector<int>  ss = {85,92,78,96,88} ;\n  std::println(\"第二个 {}\" , ss [ 1 ] ) ;\n  std::println( \"第四个 {}\" , ss[3] ) ;\n  std::println( \"{}\" , ss . at ( 5 ) ) ;  // 程序当场终止，说的是 out_of_range\n  return 0;\n}\n"
+    ]
+  }
+}

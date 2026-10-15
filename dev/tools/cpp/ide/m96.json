@@ -1,0 +1,81 @@
+{
+  "cid": "m96",
+  "note": "视图不复制数据改单编辑器：任务 1 拆成「先在原件上架窗 + std::ranges::to 落地成真容器 + 落地后改原件再走一遍副本」，任务 2 是思考题，按 code + buffer 办：真写一遍窗框比房子活得久那段（可以注释掉留着）再加一行回答；悬垂未定义这种说理判不了内容。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "先在原件上架一扇窗：一竖线后面接 std::views 那族里的任意一段（drop、take、filter 都行）。",
+      "acceptRegex": ["\\w+\\s*\\|\\s*std::views::(filter|drop|take|reverse)"],
+      "sample": "auto even = nums | std::views::filter([](int x) { return x % 2 == 0; });",
+      "why": "打印一遍正是视图最擅长的：一次遍历、零拷贝；要留一份各走各的才得落地。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条的答案：把那扇窗落地成真容器 —— 交给 std::ranges::to 后面跟尖括号里的 std::vector，再补一对圆括号，用一只 std::vector<int> 接住。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\w+\\s*\\|\\s*std::ranges::to\\s*<\\s*std::vector\\s*>\\s*\\(\\s*\\)"],
+      "sample": "std::vector<int> keep = even | std::ranges::to<std::vector>();",
+      "why": "C++23 这一句把看法变成数据：真复制出一份独立副本，此后改原件动不到它。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "证明副本真的独立：落地之后再改原件某一格（下标赋值），再用 range-for 把副本走一遍打出来。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*=\\s*\\d+\\s*;", "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std::print\\s*\\("],
+      "sample": "nums[1] = 100;\nfor (int v : keep) std::print(\"{} \", v);",
+      "why": "副本不动、原件跟着窗一起变，这两件事摆在一起才看得清谁复制了谁没复制。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条的反例：写一个回一份新数据的函数（还 std::vector<int>），再把它的调用结果直接架一扇窗，跑一遍看读的是什么，然后注释掉留在文件里。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s+\\w+\\s*\\(\\s*\\)\\s*\\{[^}]*return", "auto\\s+\\w+\\s*=\\s*\\w+\\s*\\(\\s*\\)\\s*\\|"],
+      "sample": "std::vector<int> make_nums() { return {1, 2, 3, 4, 5}; }\n// auto view = make_nums() | std::views::take(3);   临时 vector 语句一结束就销毁",
+      "why": "窗框比房子活得久：底下的容器早没了，读这扇窗是未定义行为，而且标准库拦不住，因为它不知道底下那份什么时候没。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "用一行注释回答任务第 2 条：nums 被销毁之后，还留着的那扇窗能不能看。",
+      "acceptRegex": ["//[^\\n]*(不能|悬空|未定义|没了|早没|销毁)"],
+      "sample": "// 不能：窗户的命挂在原数据上，它的寿命必须严格短于原件，读它就是悬空",
+      "why": "这一条为什么这么出：正则只验注释里点到了这些说法，答得对不对得人来读，判不严格。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：视图那一族的头和 vector 的头都请进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*ranges\\s*>", "#\\s*include\\s*<\\s*vector\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <ranges>\n#include <vector>\n\nint main() {",
+      "why": "std::ranges::to 住在 ranges 那一族里，只包 vector 拿不到它。",
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "视图不持有元素：它不复制，所以又快又省；也正因为它不复制，它跟着原件一起变、跟着原件一起死。",
+    "架好窗户之后写 nums[6] = 100，窗户里那个 7 跟着变成 100 —— 看到的还是 nums，两行之间 tail 一个字没动。",
+    "通过窗户去改元素是办得到的：圈变量写成 int& 再给它赋值，改的就是原件；隔着窗不等于隔着玻璃。",
+    "该落地的三个场合：加工很贵而同一段结果要反复用、要对结果重排（排序是动存储的活）、结果要带到别的作用域去。",
+    "加工完只打印一遍就别落地：想留一份各走各的，才用 std::ranges::to 落地成真容器，那是 C++23 的东西。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <ranges>\n#include <vector>\n\nstd::vector<int> make_nums() { return {1, 2, 3, 4, 5}; }    // 回一份新数据\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5, 6, 7};\n    auto even = nums | std::views::filter([](int x) { return x % 2 == 0; });\n    std::vector<int> keep = even | std::ranges::to<std::vector>();   // C++23：视图变容器\n    nums[1] = 100;                              // 改原件\n    for (int v : keep) std::print(\"{} \", v);     // 副本不动\n    std::println(\"\");\n    for (int v : even) std::print(\"{} \", v);      // 窗里看到的跟着变\n    std::println(\"\");\n    // auto view = make_nums() | std::views::take(3);   临时 vector 语句一结束就销毁\n    // nums 被销毁之后 tail 不能看：窗户的命挂在原数据上，读它是未定义行为，而且不报错\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5, 6, 7};\n    auto tail = nums | std::views::drop(5);\n    for (int v : tail) std::print(\"{} \", v);\n    nums[6] = 100;\n    for (int v : tail) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4};\n    auto view = nums | std::views::take(2);\n    std::vector<int> keep = view | std::ranges::to<std::vector>();\n    for (int v : keep) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4};\n    std::vector<int> copy = nums;\n    nums[0] = 100;\n    for (int v : copy) std::print(\"{} \", v);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < ranges >\n# include < vector >\n# include < print >\n\nstd::vector< int >  make_list ( ) { return {1, 2, 3, 4, 5}; }\n\nint  main ( )\n{\n    std::vector<int> data = {1, 2, 3, 4, 5, 6, 7};\n    auto  picked = data | std::views::filter ( []( int  x ) { return x % 2 == 0; } ) ;\n    std::vector< int >  saved = picked | std::ranges::to < std::vector > ( ) ;\n    data [ 5 ] = 200;\n    for (int  one : saved) std::print( \"{} \", one );\n    std::println(\"\");\n    // auto  dangling = make_list() | std::views::take(3);   房子早没了\n    // 原件被销毁之后 tail 不能看：窗框记着的位置已经悬空，读它是未定义行为，编译器拦不住\n    return 0;\n}\n"
+    ]
+  }
+}

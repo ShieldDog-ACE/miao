@@ -1,0 +1,100 @@
+{
+  "cid": "m195",
+  "title": "第 195 课考试 · 前中后序遍历",
+  "task": "任务题目：给一棵三个节点的二叉树写出中序那个走法，再照它仿出先打印根、再走左走右的前序，最后把点自己那行挪到最后写出后序 —— 看看同一棵树在三种顺序下各打出什么。",
+  "hint": "卡住了先回看本课「本课一句话」那条与课末【任务】—— 这一课的演示代码还没落稿（正文里那几节还是空的），三种序的差别先按任务里说的「点自己那行的位置」想。",
+  "note": "这一课从来没排过考，正文三段演示还是占位（只有小标题、目标和本课一句话是真话），题面按源稿那条任务加本课一句话搭：中序写成模型一条，前序按任务单独一条，后序与三次调用各一条；这一场没有旧题，notes 从标题与本课一句话里压出来。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "先有一个树节点的样子：写一个 struct Node，里面装一个 int value，再装左孩子和右孩子两张纸条（各用一个 unique_ptr 管一个 Node）。",
+      "acceptRegex": [
+        "struct\\s+Node",
+        "\\bint\\s+value",
+        "unique_ptr\\s*<\\s*Node\\s*>\\s+left",
+        "unique_ptr\\s*<\\s*Node\\s*>\\s+right"
+      ],
+      "sample": "struct Node {\n    int value;\n    std::unique_ptr<Node> left;\n    std::unique_ptr<Node> right;\n};",
+      "why": "节点比链表多一张纸条：左边一个、右边一个，整棵树就是靠这两张纸条挂起来的。",
+      "score": 15
+    },
+    {
+      "stem": "搭出那棵树：造一个装着 4 的根，左边挂一个 2，右边挂一个 6。",
+      "acceptRegex": [
+        "make_unique\\s*<\\s*Node\\s*>\\s*\\(",
+        "->\\s*left\\s*=",
+        "->\\s*right\\s*=",
+        "\\bvalue\\s*=\\s*4"
+      ],
+      "sample": "auto head = std::make_unique<Node>();\nhead->value = 4;\nhead->left = std::make_unique<Node>();\nhead->left->value = 2;\nhead->right = std::make_unique<Node>();\nhead->right->value = 6;",
+      "why": "空有一副骨架看不出顺序差：先把这棵三节点的树立起来，三种走法打出来的数才比得出。",
+      "score": 15
+    },
+    {
+      "stem": "写出中序那个函数：手里是空节点就返回（这一行写在最前面），然后走左边、打印自己、再走右边。",
+      "acceptRegex": [
+        "void\\s+inorder\\s*\\(",
+        "inorder\\s*\\([^)]*\\)\\s*\\{\\s*if[^;]*;\\s*inorder\\s*\\(\\s*\\w+\\s*->\\s*left[\\s\\S]{0,80}?std\\s*::\\s*print",
+        "inorder\\s*\\(\\s*\\w+\\s*->\\s*right"
+      ],
+      "sample": "void inorder(const Node* p) {\n    if (p == nullptr) return;\n    inorder(p->left.get());\n    std::print(\"{} \", p->value);\n    inorder(p->right.get());\n}",
+      "why": "空指针出口永远第一行，递归才走得停；点自己那行夹在左右中间，就是中序。",
+      "score": 20
+    },
+    {
+      "stem": "任务第 1 条：仿着中序写出前序 —— 出口照旧第一行，但打印自己那一行挪到走左之前，之后才走左、走右。",
+      "acceptRegex": [
+        "void\\s+preorder\\s*\\(",
+        "preorder\\s*\\([^)]*\\)\\s*\\{\\s*if[^;]*;\\s*std\\s*::\\s*print[\\s\\S]{0,80}?preorder\\s*\\(\\s*\\w+\\s*->\\s*left",
+        "preorder\\s*\\(\\s*\\w+\\s*->\\s*right"
+      ],
+      "sample": "void preorder(const Node* p) {\n    if (p == nullptr) return;\n    std::print(\"{} \", p->value);\n    preorder(p->left.get());\n    preorder(p->right.get());\n}",
+      "why": "骨架一帧没动，只是点自己那行提到最前 —— 所以前序打出来的第一个数就是根。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "同一棵树走三遍：在 main 里把三个走法各调用一次，每走完一种就用一条不填内容的 std::println 换行，三行结果并排比着看。",
+      "acceptRegex": [
+        "inorder\\s*\\(\\s*\\w+\\s*\\)\\s*;\\s*std\\s*::\\s*println\\s*\\(\\s*\"\"\\s*\\)",
+        "preorder\\s*\\(\\s*\\w+\\s*\\)\\s*;\\s*std\\s*::\\s*println\\s*\\(\\s*\"\"\\s*\\)",
+        "postorder\\s*\\(\\s*\\w+\\s*\\)\\s*;\\s*std\\s*::\\s*println\\s*\\(\\s*\"\"\\s*\\)"
+      ],
+      "sample": "std::print(\"中序: \"); inorder(root); std::println(\"\");\nstd::print(\"前序: \"); preorder(root); std::println(\"\");\nstd::print(\"后序: \"); postorder(root); std::println(\"\");",
+      "why": "三种序只差点自己那行的位置：同树走三遍打在一起，顺序怎么挪的一眼就看出来。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "最后用一行注释记下三种顺序各打出来什么数（至少四个字）。",
+      "acceptRegex": [
+        "//[^\\n]{4,}"
+      ],
+      "sample": "// 前序 4 2 6，中序 2 4 6，后序 2 6 4",
+      "why": "这一步只判你确实留了一行注释，注释里的数这块编辑器判不了；本机实测就是这三行。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "三种序同一副骨架，只有点自己那行的位置在挪 —— 最前是前序、中间是中序、最后是后序。",
+    "空指针出口永远写在第一行，手里是空节点就直接返回，这是三种走法共同的收尾。",
+    "中序走搜索树顺手就从小到大，因为左边那一支都比根小、右边那一支都比根大。",
+    "不是搜索树，中序就不排序：顺序好看靠的是树的形状，不是走法。",
+    "前序第一个报出来的是根，后序把根留到最后 —— 想找回一棵树长什么样，前序加中序够用。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <memory>\n#include <utility>\n\nstruct Node {\n    int value;\n    std::unique_ptr<Node> left;\n    std::unique_ptr<Node> right;\n};\n\nvoid inorder(const Node* p) {\n    if (p == nullptr) return;\n    inorder(p->left.get());\n    std::print(\"{} \", p->value);\n    inorder(p->right.get());\n}\n\nvoid preorder(const Node* p) {\n    if (p == nullptr) return;\n    std::print(\"{} \", p->value);\n    preorder(p->left.get());\n    preorder(p->right.get());\n}\n\nvoid postorder(const Node* p) {\n    if (p == nullptr) return;\n    postorder(p->left.get());\n    postorder(p->right.get());\n    std::print(\"{} \", p->value);\n}\n\nint main() {\n    auto head = std::make_unique<Node>();\n    head->value = 4;\n    head->left = std::make_unique<Node>();\n    head->left->value = 2;\n    head->right = std::make_unique<Node>();\n    head->right->value = 6;\n    const Node* root = head.get();\n\n    std::print(\"中序: \"); inorder(root); std::println(\"\");\n    std::print(\"前序: \"); preorder(root); std::println(\"\");\n    std::print(\"后序: \"); postorder(root); std::println(\"\");\n    // 前序 4 2 6，中序 2 4 6，后序 2 6 4\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <memory>\nstruct Node {\n    int value;\n    std::unique_ptr<Node> left;\n    std::unique_ptr<Node> right;\n};\n",
+      "#include <print>\n#include <memory>\n#include <utility>\n\nstruct Node {\n    int value;\n    std::unique_ptr<Node> left;\n    std::unique_ptr<Node> right;\n};\n\nvoid inorder(const Node* p) {\n    if (p == nullptr) return;\n    inorder(p->left.get());\n    std::print(\"{} \", p->value);\n    inorder(p->right.get());\n}\n\nint main() {\n    auto head = std::make_unique<Node>();\n    head->value = 4;\n    head->left = std::make_unique<Node>();\n    head->right = std::make_unique<Node>();\n    inorder(head.get());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\n# include <memory>\n\nstruct Node\n{\n  int value;\n  std::unique_ptr<Node> left;\n  std::unique_ptr<Node> right;\n};\n\nvoid inorder ( const Node * n )\n{\n  if ( ! n ) return;\n  inorder( n -> left.get ( ) );\n  std::print(\"{} \", n->value);\n  inorder(n -> right.get());\n}\n\nvoid preorder( const Node* n )\n{\n  if ( n == nullptr ) return;\n  std::print(\"{}\", n->value);\n  preorder(n->left.get());\n  preorder( n->right.get ( ) );\n}\n\nvoid postorder(const Node* n)\n{\n  if (!n) return;\n  postorder(n->left.get());\n  postorder(n->right.get());\n  std::print(\"{} \", n->value);\n}\n\nint main ( )\n{\n  auto t = std::make_unique<Node>();\n  t->value = 4;\n  t->left = std::make_unique<Node>();\n  t->left->value = 2;\n  t->right = std::make_unique<Node>();\n  t->right->value = 6;\n  const Node* root = t.get();\n  inorder(root); std::println( \"\" );\n  preorder(root); std::println(\"\");\n  postorder(root); std::println(\"\");\n  // 三种顺序打印的位置不一样\n  return 0;\n}\n"
+    ]
+  }
+}

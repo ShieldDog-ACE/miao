@@ -1,0 +1,75 @@
+{
+  "cid": "c13",
+  "note": "std::string 初见改单编辑器：任务 1 拆成「双引号声明 + 用 + 接成一句新的 + 打印那句（反向引用咬住拼出来的盒子）」，任务 2 拆成「把双引号换成单引号那一行 + 旁边一行报错注释」，#include <string> 单独一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务 1：写一行 std::string 声明，右边用双引圈住一段文字，内容换成你自己的名字。",
+      "acceptRegex": ["std::string\\s+\\w+\\s*=\\s*\"[^\"]+\"\\s*;"],
+      "sample": "std::string name = \"小明\";",
+      "why": "一段文字用 std::string 加双引号：char 只装一个字符，int 那个盒子跟文本没关系。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用 + 把几段文字接成一句完整的话，存进一个新的 std::盒子。",
+      "acceptRegex": ["std::string\\s+\\w+\\s*=\\s*\\w+\\s*\\+\\s*\""],
+      "sample": "std::string full = name + \"在\" + school + \"上学\";",
+      "why": "加号在这里是拼接：得有一边是真 string，两边都只是双引号时那是号牌加号牌，编译器不给你拼。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把刚拼好的那一句打出来：逗号后面跟的就是那个新盒子。",
+      "acceptRegex": ["std::string\\s+(\\w+)\\s*=\\s*\\w+\\s*\\+[^;]*;[\\s\\S]*std::println\\s*\\([^)]*\\1\\s*\\)"],
+      "sample": "std::println(\"{}\", full);",
+      "why": "拼接造的是新盒子，原来那个名字原地不动；长大的是新盒子，所以打印的是它。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务 2：把那一行的双引号换成单引号写出来（'小明' 这种），这一行编译不过，就是要你亲手撞一次。",
+      "acceptRegex": ["std::string\\s+\\w+\\s*=\\s*'[^']+'\\s*;"],
+      "sample": "std::string name = '小明';",
+      "why": "单引号是 char 的身份证，圈的是恰好一个字符；一段文字必须用双引号，这个错在编译阶段就被拦下。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "在这一行旁边留一行注释（至少四个字），写下报错里的说法。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 报错说 单引号只能装一个字符",
+      "why": "正则只能验你写了注释，抄得对不对要复盘核对 —— 这块编辑器判不了注释内容。",
+      "coversTask": 2,
+      "score": 10,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把两个工具箱都请进来：打印用的 #include 和 string 用的 #include 各写一行，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*string\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <string>\n\nint main() {",
+      "why": "std::string 住在标准库的 string 工具箱里，不先请进来编译器就不认这个名字。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "一段文字用 std::string 加双引号；char 只装一个字符，单引号只能圈一个字符，双引号圈的是一串文本。",
+    "用 std::string 之前先写 #include <string> 把工具箱请进来，否则编译器不认这个名字。",
+    "拼接造的是新盒子：std::string b = a + \"同学\"; 之后 a 一个字没变；想让 a 变长得把结果存回它自己。",
+    "两段文本换个先后接，结果就变了：同学小明 不等于 小明同学 —— 文本的意义长在顺序里。",
+    "两边都只是双引号时那个 + 是号牌加号牌，编译器不给你拼；得有一边是真 string。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nint main() {\n    std::string name = \"阿明\";\n    std::string school = \"职高\";\n    std::string full = name + \"在\" + school + \"上学\";\n    std::println(\"{}\", full);\n\n    std::string broken = '小明';   // 报错说 单引号只能装一个字符\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    std::string name = \"小明\";\n    std::println(\"{}\", name);\n    return 0;\n}\n",
+      "std::string a = \"a\";\n"
+    ],
+    "loose": [
+      "# include < string >\n#  include  < print >\nint  main ( )\n{\n  std::string  myName = \"Fuka\";\n  std::string  place = \"school\";\n  std::string   sentence = myName + \" is at \" + place;\n  std::println( \"{}\", sentence );\n  std::string one = 'a b';   // 报错提到 single quotes\n}\n"
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "cid": "m172",
+  "title": "第 172 课考试 · BFS 数字变换",
+  "task": "任务题目：把 0 到 99 这些数铺成一块块地砖，-1、+1、×2 是三扇门，用队列从 5 往外淹；先把 dist[10] 与 dist[18] 各打一行出来，想想路线是不是 5→10→9→18，再给门加第四扇 +3，看看 5 到 17 要几步。",
+  "hint": "卡住了回看本课「原理讲解」与「它被设计成什么样」那两节 —— 这一课的三段演示还没落稿（正文里是占位），队列与 dist 的口径按这两节想。",
+  "note": "这一课从来没排过考、也没有旧题：任务一拆成「打印 dist[10] 与 dist[18]」加一条观察记录（buffer），任务二拆成门列表补一个数；一维 dist、装 int 的队列、入队即标数各占一条，notes 从正文的原理段与设计段里压出来。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把地图铺出来：开一张 100 格的一维整数表当 dist，还没被淹到的格子先填 -1 当记号。",
+      "acceptRegex": [
+        "std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s*\\w+\\s*\\(\\s*\\w+\\s*,\\s*-\\s*1\\s*\\)"
+      ],
+      "sample": "std::vector<int> dist(LIM, -1);   // LIM = 100",
+      "why": "一维地图省事：下标就是数本身，dist[17] 那一格装的就是答案；这张表一人分饰两角，既是答案册又是签到表，省掉另一份 visited。",
+      "score": 15
+    },
+    {
+      "stem": "写出队列并把起点请进去：队列里装一个整数就够，把 5 推进队，同时把它的圈数记成 0。",
+      "acceptRegex": [
+        "std\\s*::\\s*queue\\s*<\\s*int\\s*>",
+        "\\w+\\s*\\.\\s*push\\s*\\(\\s*5\\s*\\)"
+      ],
+      "sample": "std::queue<int> q;\nq.push(5);\ndist[5] = 0;",
+      "why": "数本身就是坐标，不用再装行列一对；队列管的就是「一圈处理完才轮到下一圈」的秩序，起点不欠步数，进队那一刻记 0。",
+      "score": 15
+    },
+    {
+      "stem": "把新淹到的数标上圈数再入队：那一格等于当前格加一，标完就推进队。",
+      "acceptRegex": [
+        "(\\w+)\\s*\\[[^\\]\\n]*\\]\\s*=\\s*\\1\\s*\\[[^\\]\\n]*\\]\\s*\\+\\s*1\\s*;",
+        "\\w+\\s*\\.\\s*push\\s*\\(\\s*\\w+\\s*\\)"
+      ],
+      "sample": "dist[nxt] = dist[cur] + 1;\nq.push(nxt);",
+      "why": "标记必须打在入队那一刻：一个数只许进队一次，第一次淹到它的圈数就是最少的；等出队再标，同一个数会被反复塞进队列。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务第 2 条：给门加第四扇 +3 —— 让轮流试门的那一串里多出一个 3，算出新数时真的加上 3。",
+      "acceptRegex": [
+        "\\{[^}\\n]*,[^}\\n]*3[^}\\n]*\\}",
+        "\\w+\\s*=\\s*\\w+\\s*\\+\\s*3\\s*;"
+      ],
+      "sample": "for (int d : {-1, 1, 2, 3})   // 第四个数字就是新加的 +3 那扇门",
+      "why": "三扇门摆进花括号列表让范围 for 轮流试，比写三个 if 干净；多一扇门只是列表多一个数，越界判断照旧只管两条：nxt 小于 0 或不小于栅栏就跳过。",
+      "coversTask": 2,
+      "score": 20,
+      "matchAny": true
+    },
+    {
+      "stem": "任务第 1 条：各用一条 std::println 把下标 10 那一格和下标 18 那一格打出来，格式串里留一个占位坑。",
+      "acceptRegex": [
+        "std\\s*::\\s*println\\s*\\(\\s*\"[^\"\\n]*\\{\\}[^\"\\n]*\"\\s*,\\s*\\w+\\s*\\[\\s*10\\s*\\]",
+        "std\\s*::\\s*println\\s*\\(\\s*\"[^\"\\n]*\\{\\}[^\"\\n]*\"\\s*,\\s*\\w+\\s*\\[\\s*18\\s*\\]"
+      ],
+      "sample": "std::println(\"dist[10] = {}\", dist[10]);\nstd::println(\"dist[18] = {}\", dist[18]);",
+      "why": "这两格正好卡在那条路线的两头：实测 dist[10] 是 1、dist[18] 是 3，5→10→9→18 每步都恰好跨一扇门，圈数对得上就说明表是照规矩长出来的。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一行注释记下你看到的：加第四扇门之后 dist[17] 变成几步，跟没有这扇门时差几圈。",
+      "acceptRegex": [
+        "//[^\\n]*[0-9][^\\n]*[0-9]",
+        "//[^\\n]{8,}"
+      ],
+      "sample": "// 三扇门时 17 要 4 步，加 +3 后缩成 3 步：5→8→16→17",
+      "why": "判的是你确实两版都跑过并记下来：记的步数对不对这块编辑器核对不了 —— 实测三扇门时 17 在第 4 圈，加一扇门后提前一圈被淹到。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "把「格子」换成「数字」：0 到 99 每块地砖是一个数，-1、+1、×2 就是三个方向，从 5 走到 17 最少跨几格就是最少操作次数。",
+    "BFS 的最短性不挑地形：只要每一步代价一样、状态能一个个枚举，第一次淹到目标时的圈数就是答案。",
+    "dist 一张表兼做答案册与签到表，-1 表示这个数还没被淹到；跑完还是 -1 的数才是真到不了。",
+    "三扇门摆进花括号列表让范围 for 轮流试，比写三个 if 干净；越界检查从四条缩成两条，nxt 小于 0 或不小于栅栏就跳过。",
+    "栅栏是给 ×2 这扇门围的：100 以上的数在这张地图上不存在，没有栅栏它能把下标一路翻出数组，实测程序当场被中止。每个数至多入队一次、出队一次，总工作量跟栅栏大小成正比。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <queue>\n#include <vector>\n\nint main() {\n    const int LIM = 100;\n    std::vector<int> dist(LIM, -1);\n    std::queue<int> q;\n    q.push(5); dist[5] = 0;\n    while (!q.empty()) {\n        int cur = q.front(); q.pop();\n        for (int d : {-1, 1, 2, 3}) {\n            int nxt = cur + d;\n            if (d == 2) nxt = cur * 2;\n            if (nxt < 0 || nxt >= LIM || dist[nxt] != -1) continue;\n            dist[nxt] = dist[cur] + 1;\n            q.push(nxt);\n        }\n    }\n    std::println(\"dist[10] = {}\", dist[10]);\n    std::println(\"dist[18] = {}\", dist[18]);\n    std::println(\"加了 +3 这扇门，dist[17] = {}\", dist[17]);\n    return 0;\n}\n// 三扇门时 17 在第 4 圈，加了 +3 提前一圈，dist[17] 缩成 3\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <queue>\n#include <vector>\n\nint main() {\n    int LIM = 100;\n    std::vector<int> dist(LIM, -1);\n    std::queue<int> q;\n    q.push(5); dist[5] = 0;\n    while (!q.empty()) { }\n    std::println(\"淹完了\");\n    return 0;\n}\n",
+      "#include <print>\n#include <queue>\n#include <vector>\n\nint main() {\n    int LIM = 100;\n    std::vector<int> dist(LIM, -1);\n    std::queue<int> q;\n    q.push(5); dist[5] = 0;\n    while (!q.empty()) {\n        int cur = q.front(); q.pop();\n        for (int d : {-1, 1, 2}) {\n            int nxt = cur + d;\n            if (d == 2) nxt = cur * 2;\n            if (nxt < 0 || nxt >= LIM || dist[nxt] != -1) continue;\n            dist[nxt] = dist[cur] + 1;\n            q.push(nxt);\n        }\n    }\n    std::println(\"dist[17] = {}\", dist[17]);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < queue >\n#  include < vector >\nint  main ( )\n{\n  const int  EDGE = 100 ;\n  std :: vector < int >  seen ( EDGE , - 1 ) ;\n  std :: queue < int >  wave ;\n  wave . push ( 5 ) ;\n  seen [ 5 ] = 0 ;\n  while ( ! wave . empty ( ) ) {\n    int  now = wave . front ( ) ;  wave . pop ( ) ;\n    for ( int  door :  { - 1 , 1 , 2 , 3 } ) {\n      int  later = now + door ;\n      if ( door == 2 )  later = now * 2 ;\n      if ( later < 0 ||  later >= EDGE ||  seen [ later ] != - 1 )  continue ;\n      seen [ later ] = seen [ now ] + 1 ;\n      wave . push ( later ) ;\n    }\n  }\n  std :: println ( \" 第 10 格 = {} \" , seen [ 10 ] ) ;\n  std :: println ( \" 第 18 格 = {} \" , seen [ 18 ] ) ;\n  // 没这扇门时 17 是 4 步 ， 现在 3 步\n  return 0 ;\n}\n"
+    ]
+  }
+}

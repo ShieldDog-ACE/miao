@@ -25,7 +25,10 @@ const MODE = {};
 JSON.parse(fs.readFileSync(path.join(__dirname, "cpp", "exam-mode.json"), "utf8")).papers.forEach(p => { MODE[p.cid] = p.mode; });
 
 /* 人工题目录：底稿必须「带着已落盘的人工题」去问改造器，否则 --todo 会把已经补好的场次再列一遍 */
-const AUTH = path.join(__dirname, "cpp", "authored");
+/* --ide：底稿改成「单编辑器」那一套（第二十轮）—— 报告问的是 cpp-exam-ide.cjs，题稿目录换成 cpp/ide */
+const IDE = process.argv.slice(2).includes("--ide");
+const TOOL = IDE ? "cpp-exam-ide.cjs" : "cpp-exam-single-track.cjs";
+const AUTH = path.join(__dirname, "cpp", IDE ? "ide" : "authored");
 const AUTHARGS = fs.existsSync(AUTH) ? ["--authored", AUTH] : [];
 const argv = process.argv.slice(2);
 const COURSE = argv.includes("--course") ? argv[argv.indexOf("--course") + 1] : null;
@@ -79,7 +82,7 @@ function dump(cid) {
   const { paper, file } = paperOf(cid);
   const L = [];
   L.push("═".repeat(78));
-  L.push("【" + cid + "】" + (lesson ? lesson.title : "（源稿课表里没有这一课）") + "　轨道：" + (MODE[cid] || "未分配") +
+  L.push("【" + cid + "】" + (lesson ? lesson.title : "（源稿课表里没有这一课）") + "　形状：" + (IDE ? "要改成单编辑器" : (MODE[cid] || "未分配")) +
     "　考卷文件：" + courseOf(cid) + "-exam/" + file);
   if (!lesson) { console.log(L.join("\n")); return; }
   L.push("");
@@ -139,7 +142,7 @@ function dump(cid) {
 /* 改造器对这一场的判断（同一份代码、同一份口径，别再数一遍题数） */
 function pendingReport(cid) {
   const out = cp.execFileSync(process.execPath,
-    [path.join(__dirname, "cpp-exam-single-track.cjs"), "--dry", "--only", cid].concat(AUTHARGS),
+    [path.join(__dirname, TOOL), "--dry", "--only", cid].concat(AUTHARGS),
     { encoding: "utf8" });
   return out.split("\n").filter(l => l.includes("· " + cid + "："))
     .map(l => l.replace(/^.*?·\s*/, "")).join("　");
@@ -147,7 +150,7 @@ function pendingReport(cid) {
 
 if (argv.includes("--todo")) {
   const out = cp.execFileSync(process.execPath,
-    [path.join(__dirname, "cpp-exam-single-track.cjs"), "--dry"].concat(AUTHARGS).concat(COURSE ? ["--course", COURSE] : []),
+    [path.join(__dirname, TOOL), "--dry"].concat(AUTHARGS).concat(COURSE ? ["--course", COURSE] : []),
     { encoding: "utf8" });
   const rows = out.split("\n").filter(l => /^\s+·\s/.test(l));
   console.log("〔要人工出题的场次〕共 " + rows.length + " 条报告（一场可能不止一条）");

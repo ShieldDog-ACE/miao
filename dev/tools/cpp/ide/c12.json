@@ -1,0 +1,67 @@
+{
+  "cid": "c12",
+  "note": "char 与 bool 改单编辑器：任务 1 拆成「char 装 'C' + static_cast 打出它的编号（反向引用咬住同一个盒子）+ 编号加一」，任务 2 拆成「bool 给 false + 打印那个 bool 盒子」，先猜编号那半步收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务 1：写一行 char 声明，右边给单引号圈住的 C（把原来的 'A' 换成它）。",
+      "acceptRegex": ["\\bchar\\s+\\w+\\s*=\\s*'C'\\s*;"],
+      "sample": "char grade = 'C';",
+      "why": "char 是只装一个字符的迷你盒，单引号圈它；'C' 在字母表里的编号是 67。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 打出这个字符的真身编号：用 static_cast 把同一个 char 盒子当 int 来看再打印。",
+      "acceptRegex": ["\\bchar\\s+(\\w+)\\s*=\\s*'C'\\s*;[\\s\\S]*std::println\\s*\\([^)]*static_cast\\s*<\\s*int\\s*>\\s*\\(\\s*\\1\\s*\\)"],
+      "sample": "std::println(\"grade 的编号 = {}\", static_cast<int>(grade));",
+      "why": "直接打印得到的是字符；当 int 来看才露出编号。先在心里猜一个数，运行对上了才算真懂。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "写一行：把那个 char 盒子加 1 存进另一个 char 盒子 —— 编号加一就是字母表往后挪一格。",
+      "acceptRegex": ["\\bchar\\s+\\w+\\s*=\\s*\\w+\\s*\\+\\s*1\\s*;"],
+      "sample": "char next = grade + 1;",
+      "why": "char 参与加法时是按编号来算的：'C' 的 67 加 1 得 68，打出来是 'D'。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务 2：写一行 bool 声明，值给 false（把原来的 true 改成它）。",
+      "acceptRegex": ["\\bbool\\s+\\w+\\s*=\\s*false\\s*;"],
+      "sample": "bool is_student = false;",
+      "why": "bool 是开关不是分数，只有 true 和 false 两个值；写 1 或 0 编译器勉强接受，但那不是本课要的形状。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "用一条 std::println 把这个 bool 盒子打出来：坑后面逗号跟的就是它，屏幕上出现的是 false 这两个人话字样。",
+      "acceptRegex": ["\\bbool\\s+(\\w+)\\s*=\\s*false\\s*;[\\s\\S]*std::println\\s*\\([^)]*\\1\\s*\\)"],
+      "sample": "std::println(\"是学生吗 = {}\", is_student);",
+      "why": "println 认得 bool，打的是 true / false 而不是 1 和 0；把 true 换成 false，屏幕上跟着换。",
+      "coversTask": 2,
+      "score": 20
+    }
+  ],
+  "notes": [
+    "'A' 的编号是 65、'a' 是 97：大小写编号差 32，绝不是同一个值；字母表里相邻字符的编号连着。",
+    "编号加 1 就是字母表往后挪一格：char next = grade + 1，'C' 打出来是 'D'。",
+    "'7' 当字符打是 7，它的编号是 55；digit - '0' 得到的才是它代表的数值 7。",
+    "char 是 1 字节的迷你盒，装不下一个汉字：单引号圈一个字符，双引号圈的是一串文本。",
+    "bool 只占 1 个字节，只有两种值；想看清编号要用 static_cast 把它当 int，sizeof 量不出来。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    char grade = 'C';\n    std::println(\"grade = {}\", grade);\n    std::println(\"grade 的编号 = {}\", static_cast<int>(grade));\n    char next = grade + 1;\n    std::println(\"下一个 = {}\", next);\n\n    bool is_student = false;\n    std::println(\"是学生吗 = {}\", is_student);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    char grade = 'A';\n    std::println(\"{}\", grade);\n    bool is_student = true;\n    std::println(\"{}\", is_student);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    char grade = \"C\";\n    int n = grade + 1;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include   < print >\nint  main ( )\n{\n  char  mark = 'C';\n  std::println( \"编号 {}\", static_cast < int > ( mark ) );\n  char  later = mark + 1;\n  bool  light_on  =  false;\n  std::println( \"{}\", light_on );\n}\n"
+    ]
+  }
+}

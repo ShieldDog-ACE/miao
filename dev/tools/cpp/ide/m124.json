@@ -1,0 +1,72 @@
+{
+  "cid": "m124",
+  "note": "三种持有方式改单编辑器：源稿真实任务只有 1 条（把以前裸 new/delete 的地方改成 unique_ptr），coversTask 全部只打 1。拆成「make_unique 造纸条」「值类型那一路先走」「裸指针只当眼睛：收 const 指针的函数 + up.get()」，改了哪一处按规矩五收进 buffer 注释档。决策顺序、收尾义务、纸条字节数进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把持有方式那条工具箱（#include <memory>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*memory\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <memory>\n\nint main() {",
+      "why": "make_unique 与 make_shared 都住在 memory 里；没有 main 就没入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：把那一处裸 new 改成纸条 —— 用 std::make_unique 造一个对象，交给一个 auto 变量，后面不再自己 delete。",
+      "acceptRegex": ["auto\\s+\\w+\\s*=\\s*std\\s*::\\s*make_unique\\s*<", "std\\s*::\\s*println\\s*\\("],
+      "sample": "auto up = std::make_unique<int>(10);\nstd::println(\"② unique_ptr: {}\", *up);",
+      "why": "独占纸条替你记住那一次释放：纸条出作用域就收尾，不用再有一行 delete。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条先走第一步：能用在栈上活到作用域结束就够 —— 直接声明一个 std::string 值类型变量并给初值，再用一条 println 打它。",
+      "acceptRegex": ["std\\s*::\\s*string\\s+\\w+\\s*=\\s*\"[^\"]*\"\\s*;", "std\\s*::\\s*println\\s*\\("],
+      "sample": "std::string best = \"值类型\";\nstd::println(\"① 值: {}\", best);",
+      "why": "顺序是按你还要额外操多少心排的：值类型自己扫尾，九成场景就到这一格为止。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条的最后一条路：裸指针只当眼睛 —— 写一个参数是 const 指针的函数，再把纸条用 .get() 借给它。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*const\\s+\\w+\\s*\\*\\s*\\w+\\s*\\)", "\\.get\\s*\\(\\s*\\)"],
+      "sample": "void peek(const int* p) { if (p) std::println(\"看一眼: {}\", *p); }\n// main 里：peek(up.get());",
+      "why": "get() 借出去的是地址，保管权不动；谁也不许拿这只眼睛去 delete。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用一行注释写下你把哪一处从裸 new 与 delete 改成了 unique_ptr，还有没有剩下的（至少四个字，正则只验你写了注释）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 原来是 new 一个 int 再 delete，现在交给 make_unique：谁出作用域谁收尾",
+      "why": "自查这一件只能靠你把它写下来：判分器读不懂注释内容，也扫不到你另一个文件。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "问自己那一句再排顺序：值 → unique_ptr → shared_ptr，裸指针只用来看一眼，不负责收尾。",
+    "收尾义务各家不同：值类型由类型自己扫尾，独占纸条在那张纸条出作用域时释放，共享纸条等计数落到 0 的那一刻。",
+    "本机实测成本：unique_ptr 纸条 8 字节，shared_ptr 16 字节，裸指针 8 字节。",
+    "非纸条不可的一排不同形状：派生对象装进装基类纸条的 vector，靠基类的虚函数统一调用，加一个新图形那段循环一个字都不用改。",
+    "取地址与 get() 都是借出去看一眼；空地址那一路靠 if 挡掉，什么都不打。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <memory>\n#include <string>\n\nvoid peek(const int* p) { if (p) std::println(\"看一眼: {}\", *p); }\n\nint main() {\n    std::string best = \"值类型\";\n    auto up = std::make_unique<int>(10);\n    std::println(\"① 值: {}\", best);\n    std::println(\"② unique_ptr: {}\", *up);\n    peek(up.get());\n    peek(nullptr);\n    return 0;\n}\n// 以前这里是 int* p = new int(10); 用完 delete p;，现在换成 make_unique，收尾不用再操心\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    int* p = new int(10);\n    std::println(\"{}\", *p);\n    delete p;\n    return 0;\n}\n",
+      "#include <print>\n#include <memory>\n\nint main() {\n    auto up = std::make_unique<int>(10);\n    std::println(\"{}\", *up);\n    return 0;\n}\n",
+      "#include <print>\n#include <memory>\n#include <string>\n\nint main() {\n    std::string s = \"值\";\n    auto sp = std::make_shared<int>(5);\n    std::println(\"{}\", *sp);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < memory >\n#  include < print >\n\nvoid  look ( const int * q ) { if ( q ) std::println(\"看一眼 {}\", *q); }\n\nint  main ( )\n{\n  std :: string  label = \"先看值\" ;\n  auto  holder = std :: make_unique < int > ( 3 ) ;\n  std::println(\"{}\", label);\n  std::println(\"{}\", *holder);\n  look(holder.get());\n  return 0;\n}\n// 这一处原来是 new 加 delete，改成 make_unique 之后没人再管收尾\n"
+    ]
+  }
+}

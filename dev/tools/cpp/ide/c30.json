@@ -1,0 +1,73 @@
+{
+  "cid": "c30",
+  "note": "switch 这场的旧题在判「穿透现场打几行、case 3 加在哪」，编辑器判不了运行到哪张牌，就把任务 2 摊成一张 case 3 加你选了数学那句打印，任务 1 摊成 case 2 底下只留一句 println、让执行流直接滑到 case 3（注释剥掉之后两张牌中间不许有活的 break），再补一条 buffer 记下多看到的那行；牌面类型与 default 只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一只 int 盒子装选项，值给 2，再用 switch 拿它对号码牌。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*2\\s*;", "switch\\s*\\(\\s*\\w+\\s*\\)\\s*\\{"],
+      "sample": "int choice = 2;\nswitch (choice) {",
+      "why": "switch 是拿值去对号码牌、对上就跳进去，不是从上往下挨个问条件；括号里放的就是那只盒子。",
+      "score": 15
+    },
+    {
+      "stem": "先挂两张号码牌：case 1 和 case 2，各自底下一句 std::println，末尾配 break。",
+      "acceptRegex": ["case\\s+1\\s*:", "case\\s+2\\s*:", "std::println\\s*\\(\\s*\"[^\"]*Python\"\\s*\\)\\s*;?\\s*break\\s*;"],
+      "sample": "case 1:\n            std::println(\"你选了 Python\"); break;\ncase 2:\n            std::println(\"你选了 C++\"); break;",
+      "why": "case 想挂几张挂几张，这正是 switch 比一长串 else if 省事的地方；牌面必须是编译期就定得下来的整数常量。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：再加一张 case 3，底下用一条 std::println 打出你选了数学，再配 break。",
+      "acceptRegex": ["case\\s+3\\s*:", "std::println\\s*\\(\\s*\"[^\"]*你选了数学"],
+      "sample": "case 3:\n            std::println(\"你选了数学\"); break;",
+      "why": "对上报 3 就从 case 3 进场，打印一句、break 离场，default 那张兜底牌一次都没轮到。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "补上兜底牌：写一张 default，底下一句 std::println，也别漏了它自己的 break。",
+      "acceptRegex": ["default\\s*:", "break\\s*;"],
+      "sample": "default:\n            std::println(\"没有这个选项\"); break;",
+      "why": "default 可写可不写、位置也能放前放后，但漏了它，非法输入就静悄悄地什么也不做；它自己底下同样要配 break。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：让穿透发生 —— case 2 底下只留一句 std::println，把那句 break 注释掉或删掉，让执行流直接滑到 case 3。",
+      "acceptRegex": ["case\\s+2\\s*:\\s*std::println\\s*\\(\\s*\"[^\"]*\"\\s*\\)\\s*;?\\s*case\\s+3\\s*:"],
+      "sample": "case 2:\n            std::println(\"你选了 C++\");\n            // break;\n        case 3:",
+      "why": "case 只是停车位置不是围栏：跳进 case 2 办完没离场，就顺着滑进 case 3 继续执行，直到那里的 break 才离开整块 switch。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "跑一遍，用一行注释写下这一趟你多看到了哪一行（至少写四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 多看到一行 你选了数学，两行一起打出来",
+      "why": "这一条只能判「你写了一行像样的注释」，抄的那一行对不对这块编辑器判不了 —— 这是它判不动的部分。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "穿透（fallthrough）是设计好的机制，不是编译错误：C++ 有意留这个口子让几张牌共用同一段代码，代价是忘写 break 不会被拦，只会多执行几行。",
+    "牌面必须是编译期就能定下来的整数或字符常量：小数不收、case score >= 90 这种区间语法错、拿变量当牌面也不行，要判区间得用 else if 链。",
+    "连着写 case 1: case 2: 底下不配语句再只写一句打印，是让两个值共用同一段代码的正经写法。",
+    "运行顺序是：算出 switch 括号里的值，拿它对号码牌找到匹配那张，从那张牌底下开始一行行往下执行，遇到 break 才离开整块 switch。",
+    "default 忘了 break，也可能被前面漏 break 的分支顺路执行掉，兜底牌同样要收尾。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int choice = 2;\n\n    switch (choice) {\n        case 1:\n            std::println(\"你选了 Python\"); break;\n        case 2:\n            std::println(\"你选了 C++\");\n            // break; 注释掉它，看穿透现场\n        case 3:\n            std::println(\"你选了数学\"); break;\n        default:\n            std::println(\"没有这个选项\"); break;\n    }\n    // 这一次打了两行，你选了数学是顺路滑出来的\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int choice = 2;\n    switch (choice) {\n        case 1: std::println(\"你选了 Python\"); break;\n        case 2: std::println(\"你选了 C++\"); break;\n        default: std::println(\"没有这个选项\"); break;\n    }\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int choice = 3;\n    switch (choice) {\n        case 2: std::println(\"你选了 C++\"); break;\n        case 3: std::println(\"你选了数学\"); break;\n        default: std::println(\"没有这个选项\"); break;\n    }\n    return 0;   // 每张牌都要 break\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  int  pick = 2 ;\n  switch ( pick )\n  {\n    case 1 : std::println( \"你选了 Python\" ) ; break ;\n    case 2 : std::println( \"你选了 C++\" ) ;\n    // 这里把 break 拿掉了\n    case 3 : std::println( \"你选了数学\" ) ; break ;\n    default : std::println( \"没有这个选项\" ) ; break ;\n  }\n  // 顺路多打了一行数学\n}\n"
+    ]
+  }
+}

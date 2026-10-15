@@ -1,0 +1,67 @@
+{
+  "cid": "c19",
+  "note": "字符串比大小这场的旧题全是「谁大 / 结果是什么」的选择题，摊成代码就三条能动的手：把 apple 对 banana 的比较真打出来、把 Zoo 对 apple 的比较真打出来、把 == 补一次；任务 2 后半句「想想为什么」只能落到注释，判不了内容。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开两个 std::string，一个装 apple，一个装 banana，用一条 std::println 把「前者小于后者」这个比较的结果打出来。",
+      "acceptRegex": ["std::string\\s+\\w+\\s*=\\s*\"apple\"", "std::string\\s+\\w+\\s*=\\s*\"banana\"", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*<\\s*\\w+"],
+      "sample": "std::string x = \"apple\";\nstd::string y = \"banana\";\nstd::println(\"apple < banana ? {}\", x < y);",
+      "why": "从第 0 格就开始比字符编号，a 是 97、b 是 98，第一格已经分出胜负，后面看都不看，轮不到长度说话。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "同一对串再问一次：用一条 std::println 打出它们 == 的结果。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*==\\s*\\w+"],
+      "sample": "std::println(\"apple == banana ? {}\", x == y);",
+      "why": "== 要求每一格都一样、长度也一样才 true；比的动作不改任何串，它只是回答一个是真是假的问题。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "开第三个串装 Zoo，用一条 std::println 把 Zoo 和 apple 比大小打出来。",
+      "acceptRegex": ["std::string\\s+\\w+\\s*=\\s*\"Zoo\"", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*<\\s*\\w+"],
+      "sample": "std::string z = \"Zoo\";\nstd::println(\"{}\", z < x);",
+      "why": "编号表把大写整段排在小写之前（A 到 Z 是 65 到 90，a 到 z 是 97 到 122），Z 的 90 比 a 的 97 小，所以这行打出 true。",
+      "coversTask": 2,
+      "score": 25
+    },
+    {
+      "stem": "在 Zoo 那一行旁边写一行注释，记下你看到的和字典直觉是不是一回事（至少写四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "std::println(\"{}\", z < x);   // 反直觉，Zoo 竟然更小",
+      "why": "这一条只能判「你写了一行像样的注释」，写没想通判不了 —— 这是这块编辑器判不动的部分。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印和字符串两个工具箱都搬进来（两行 #include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*string\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <string>\n\nint main() {",
+      "why": "缺 #include <print> 就没人认识 std::println，缺 #include <string> 就没人认识 std::string；没有 main，链接器找不到入口。",
+      "score": 25
+    }
+  ],
+  "notes": [
+    "这套比法叫字典序：从前往后逐格比字符编号，先分出大小的那一格说了算。",
+    "大写整段排在小写之前，所以 Zoo 小于 apple，人的字典直觉在这里正好反。",
+    "长度只在前面一路都一样的时候才派得上用场：abc 小于 abcd；abz 和 ac 比，第二格 b 已经赢了 c，尾巴上的 z 救不回来。",
+    "一模一样时 < 不成立，那种情况要问的是 ==；== 还要长度也一样才 true。",
+    "比较不改任何串，它只是回答一个问题，回答是一个真假值，可以交给 bool 盒子装。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nint main() {\n    std::string x = \"apple\";\n    std::string y = \"banana\";\n    std::string z = \"Zoo\";\n\n    std::println(\"apple < banana ? {}\", x < y);\n    std::println(\"apple == banana ? {}\", x == y);\n    std::println(\"Zoo < apple ? {}\", z < x);   // 反直觉，Zoo 竟然更小\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\nint main() {\n    std::string x = \"apple\";\n    std::string y = \"banana\";\n    std::println(\"{}\", x.length());\n    std::println(\"{}\", y.length());\n    return 0;\n}\n",
+      "std::string x = \"apple\";\nstd::string y = \"banana\";\nstd::println(\"{}\", x + y);\n"
+    ],
+    "loose": [
+      "#  include < string >\n#  include <print>\n\nint main ( )\n{\n  std::string  a = \"apple\";\n  std::string  b = \"banana\";\n  auto c = std::string( \"Zoo\" );\n  std::println( \"谁小 {}\", a < b );\n  std::println( \"相等吗 {}\", a == b );\n  std::println( \"大写 {}\", c < a );\n  // 大写的编号比小写还小，和直觉不一样\n}\n"
+    ]
+  }
+}

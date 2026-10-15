@@ -1,0 +1,75 @@
+{
+  "cid": "c45",
+  "note": "清空与判空改单编辑器：任务 1 拆成「有初值的盒子 + clear() + 倒空后 push_back(7) + 一条 println 同时问 empty 和 size」，任务 2 拆成「出生就空的盒子 + 计数循环往里装 1 到 5 + 遍历打印」，旧六道笔试题的结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "用花括号造一只装 int 的盒子，先给它三个数。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{[^}]*,[^}]*\\}"],
+      "sample": "std::vector<int> temp = {1, 2, 3};",
+      "why": "花括号那条是「列内容」：先装满三格，才看得出倒空把什么带走了。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "一键倒空：写一行问句之外的动作，用 clear()。",
+      "acceptRegex": ["\\.\\s*clear\\s*\\(\\s*\\)\\s*;"],
+      "sample": "temp.clear();",
+      "why": "clear() 让元素全没、size 归 0，但盒子本身还在 —— 它不把变量删掉。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：倒空之后再往同一只盒子排进一个 7，看它能不能复活。",
+      "acceptRegex": ["\\.\\s*push_back\\s*\\(\\s*7\\s*\\)\\s*;"],
+      "sample": "temp.push_back(7);",
+      "why": "倒空不等于报废：盒子还能装，但编号从 0 重新发，这个 7 站的是 0 号格，它不记得自己曾经有过三个数。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "动手前后各问一句：用一条 std::println 同时打出这只盒子的 empty() 和 size()，格式串里留两个占位坑。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}", "\\.\\s*empty\\s*\\(\\s*\\)", "\\.\\s*size\\s*\\(\\s*\\)"],
+      "sample": "std::println(\"清空后空吗？{}，剩 {} 个\", temp.empty(), temp.size());",
+      "why": "empty() 回的是 true / false 这种真假字，不是数字；size() 才回个数，两个说法必须一起成立。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：再声明一只出生就是空的盒子 —— 名字后面什么初值都不给。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*;"],
+      "sample": "std::vector<int> box;",
+      "why": "空盒子是合法状态，size() 得 0、empty() 为 true，而且能加不能删。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "用三格 for 让 i 从 1 走到 5，一轮往空盒子里装一个；装完再用 range-for 把整盒遍历打印出来。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*1\\s*;[^\\n]*<=\\s*5\\s*;", "\\.\\s*push_back\\s*\\(", "for\\s*\\(\\s*auto\\s+\\w+\\s*:\\s*\\w+\\s*\\)"],
+      "sample": "for (int i = 1; i <= 5; ++i) {\n    box.push_back(i);\n}\nfor (auto v : box) std::print(\"{} \", v);",
+      "why": "「来一条加一条」是空盒子的起手式；走完再遍历打印，确认 1 到 5 真的装到位了。",
+      "coversTask": 2,
+      "score": 20
+    }
+  ],
+  "notes": [
+    "empty() 是问句，回答真假：盒子空的时候给 true；要数个数问 size()，要判有没有问 empty()，两个别混着用。",
+    "clear() 只是把里面清干净，变量活得好好的；真正的「变量没了」要等它所在的花括号走完。",
+    "倒空之后同一只盒子照样能 push_back，第一个装进去的元素站在 0 号格。",
+    "判空的正规问法：先 empty()（有没有），再 size()（几个），最后才碰格子；对空盒子取 temp[0] 编译器不会拦，后果自负。",
+    "从空盒子出发装东西的自查表：先问一句 empty() 确认真是空的，再动手装，最后再问 empty() 并遍历打印 —— 一头一尾两句中间出错一眼就能看出来。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> temp = {1, 2, 3};\n\n    std::println(\"清空前空吗？{}\", temp.empty());\n    temp.clear();\n    std::println(\"清空后空吗？{}，剩 {} 个\", temp.empty(), temp.size());\n    temp.push_back(7);\n    std::println(\"复活后剩 {} 个，0 号格是 {}\", temp.size(), temp[0]);\n\n    std::vector<int> box;\n    for (int i = 1; i <= 5; ++i) {\n        box.push_back(i);\n    }\n    for (auto v : box) std::print(\"{} \", v);\n    std::println(\"\");\n    std::println(\"现在空吗？{}，共 {} 个\", box.empty(), box.size());\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> temp = {1, 2, 3};\n    temp.clear();\n    std::println(\"清空后空吗？{}，剩 {} 个\", temp.empty(), temp.size());\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> temp = {1, 2, 3};\n    temp.push_back(7);\n    std::println(\"剩 {} 个\", temp.size());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n#  include <vector>\nint  main ( )\n{\n  std::vector< int > t = { 1 , 2 , 3 } ;\n  t . clear ( ) ;\n  std::println( \"空吗 {} 几个 {}\" , t.empty ( ) , t.size ( ) ) ;\n  t.push_back(7);\n\n  std::vector<int> b ;\n  for( int i=1; i<=5; i++ ) { b.push_back(i) ; }\n  for ( auto v : b ) { std::println( \"{}\" , v ) ; }\n  return 0;\n}\n"
+    ]
+  }
+}

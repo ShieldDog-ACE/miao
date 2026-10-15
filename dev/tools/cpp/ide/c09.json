@@ -1,0 +1,76 @@
+{
+  "cid": "c09",
+  "note": "整数除法与取余改单编辑器：任务 1 拆成「/ 60 + % 60 + 一条两个坑的打印」，任务 2 拆成「10 除整数的打印 + 10.0 除整数的对照 + 旁边一行观察注释」，旧七题知识点收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务 1 的第一半：写一行赋值，用一个盒子（或直接一个数）除以 60，算出能凑出几个整小时。",
+      "acceptRegex": ["=\\s*\\w+\\s*/\\s*60\\s*;"],
+      "sample": "int hours = minutes / 60;",
+      "why": "两个 int 相除结果还是 int：100 / 60 得 1，小数尾巴当场被砍掉。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务 1 的第二半：再写一行赋值，对 60 取余，把凑不满一小时的零头取出来。",
+      "acceptRegex": ["=\\s*\\w+\\s*%\\s*60\\s*;"],
+      "sample": "int rest = minutes % 60;",
+      "why": "/ 管分出去多少，% 管没分掉的零头：100 % 60 得 40，两个合起来才是一次完整的换算。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把换算结果打出来：格式串里至少两个占位坑，逗号后面按顺序给小时和余数。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\""],
+      "sample": "std::println(\"{} 分钟 = {} 小时 {} 分\", minutes, hours, rest);",
+      "why": "验算一下就知道两个各司一半：商乘 60 加余数正好回到 100。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务 2 那一改：写一条 std::println，占位坑里放「10 除以一个 int 盒子」—— 两边都是整数的那种写法。",
+      "acceptRegex": ["std::println\\s*\\([^)]*\\b10\\s*/\\s*\\w+"],
+      "sample": "std::println(\"{}\", 10 / b);",
+      "why": "把 10.0 改成 10，两边都成了 int，就按整数除法算，打出 3 这样的整数结果 —— 编译器一声不响。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "留一行对照：再写一条 std::println，把上面那个除法用 10.0 写一遍，看到它按小数除。",
+      "acceptRegex": ["std::println\\s*\\([^)]*10\\.0\\s*/\\s*\\w+"],
+      "sample": "std::println(\"{:.4f}\", 10.0 / b);",
+      "why": "只要有一边是 double，整个除法就按小数做；:.4f 是只保留 4 位小数。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "在这两行旁边留一行注释（至少四个字），写下你看到的输出变化。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 10.0 改成 10 之后从 3.3333 变成 3",
+      "why": "正则只能验你写了注释，写得对不对要复盘核对 —— 「观察输出」这一步这块编辑器判不动。",
+      "coversTask": 2,
+      "score": 10,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "10 / 3 得 3：两边都是 int 就按整数除，小数部分在除的那一刻被砍掉，事后补 .0 补不回来。",
+    "% 管没分掉的零头：10 % 3 得 1；验算规矩是 商 * 除数 + 余数 == 被除数。",
+    "截断是向零不是向小：-7 / 2 得 -3，跟着 -7 % 2 得 -1，余数的符号跟着被除数。",
+    "想要小数结果就主动给一个 double：10.0 / 3 才是 3.3333。",
+    "% 只服务整数，10.5 % 3 编译就报错；除数是 0 编译器不拦，那是运行时才炸的严重错误。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int minutes = 100;\n    int hours = minutes / 60;\n    int rest = minutes % 60;\n    std::println(\"{} 分钟 = {} 小时 {} 分\", minutes, hours, rest);\n\n    int b = 3;\n    // 10.0 改成 10 之后输出从 3.3333 变成 3\n    std::println(\"{}\", 10 / b);\n    std::println(\"{:.4f}\", 10.0 / b);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int a = 100;\n    std::println(\"{}\", a / 60);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int b = 3;\n    std::println(\"{}\", 10.0 / b);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include   < print >\nint  main ( )\n{\n  int  total_min = 100;\n  int  h = total_min/60;\n  int  r = total_min%60;\n  std::println( \"小时 {} 分 {}\", h, r );\n  int n = 3;\n  // 换成整数除法以后从 3.3333 掉到 3\n  std::println(\"{}\",  10 /n );\n  std::println( \"{}\", 10.0 / n );\n}\n"
+    ]
+  }
+}

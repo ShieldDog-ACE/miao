@@ -1,0 +1,80 @@
+{
+  "cid": "m109",
+  "note": "集合运算改单编辑器：源稿真实任务只有两条，coversTask 只打 1 与 2（旧卷那些 3、4 号是虚号，不跟）。任务 1 拆成「有序名单 + 空容器接结果 + set_difference 配 back_inserter + 打印」，任务 2（为什么要已排序）按规矩五配成「真跑一次乱序输入」加一条 buffer 注释档。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把算法工具箱（#include <algorithm>）和插口工具箱（#include <iterator>）都搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*algorithm\\s*>", "#\\s*include\\s*<\\s*iterator\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <algorithm>\n#include <iterator>\n\nint main() {",
+      "why": "这三样运算是 algorithm 里的自由算法，back_inserter 住在 iterator 里，缺一个都编译不过。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：备好两份已经排好序的名单（装 int 的 vector，初值从小到大），再开一个空的装 int 的 vector 专门接结果。",
+      "acceptRegex": ["vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{[^{}]*\\}", "vector\\s*<\\s*int\\s*>\\s+\\w+\\s*(?:;|=\\s*\\{\\s*\\})"],
+      "sample": "std::vector<int> a = {1, 2, 3, 4, 5}, b = {3, 4, 5, 6, 7};\nstd::vector<int> diff;",
+      "why": "算法落下第一个结果之前不知道会有几个，所以接结果的容器先是空的，靠输出位置自己长大。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：算 a 减 b —— 调 std::set_difference，两对区间按顺序给全，输出位置写 std::back_inserter 交给那个空容器。",
+      "acceptRegex": ["set_difference\\s*\\(", "back_inserter\\s*\\(\\s*\\w+\\s*\\)", "\\.begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.end\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.end\\s*\\(\\s*\\)"],
+      "sample": "std::set_difference(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(diff));",
+      "why": "形状就是 a 的区间、b 的区间、结果请追加到尾巴；直接递 diff.begin() 是照着一段长度为 0 的区间往外写，属于越界。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用一条 for 把算出的差集逐个打出来，再用一条 println 收尾（预测先写在心里，跑完对一遍）。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std\\s*::\\s*print"],
+      "sample": "for (int v : diff) std::print(\"{} \", v);\nstd::println(\"← a 减 b\");",
+      "why": "差集只收 a 这边落单的那几个：1 2 3 4 5 减 3 4 5 6 7 就剩 1 和 2。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：动手试一次乱序现场 —— 另开两份故意没排序的名单，把 std::set_intersection 的结果也写进一个空容器并打出来。",
+      "acceptRegex": ["set_intersection\\s*\\(", "back_inserter\\s*\\(\\s*\\w+\\s*\\)", "\\bfor\\s*\\("],
+      "sample": "std::vector<int> p = {3, 1, 5, 2, 4}, q = {4, 5, 1, 7, 3};\nstd::vector<int> inter;\nstd::set_intersection(p.begin(), p.end(), q.begin(), q.end(), std::back_inserter(inter));\nfor (int v : inter) std::println(\"{}\", v);",
+      "why": "这一步要的是你亲眼看见：编译和运行都没意见，答案却少了好几个元素。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：用一行注释写清为什么这两个算法要求输入已排序（至少四个字，正则只验你写了注释，验不了内容）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 双指针靠「对面剩下的只会更大」才敢当场判掉较小那格，乱序时这个推断失效，元素被误杀",
+      "why": "这是这块编辑器判不动的部分：结论得你自己跑出来对照 —— 先 sort，或者改用天生有序的 set。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "std::set_intersection、std::set_union、std::set_difference 是住在 algorithm 里的自由算法，收两对迭代器表示的区间，结果写进第三个容器，跟 std::set 那个容器只是撞名。",
+    "输出位置一般写 std::back_inserter，等于每产生一个值就替你 push_back 一次；递空容器的 begin 去接是越界。",
+    "乱序时少掉的是被误杀的元素，不是顺序：i 停在 3、j 停在 4，3 被当场判死，而 b 的尾巴里还躺着一个 3 没读到。",
+    "名单里有重复项时，交集按两边出现次数取小的那个收，不是有就算。",
+    "要算 b 减 a，靠的是交换两对区间的先后，跟输出位置无关；拿名单自己的 begin 去接结果还会把它写脏。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <algorithm>\n#include <iterator>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {1, 2, 3, 4, 5}, b = {3, 4, 5, 6, 7};\n    std::vector<int> diff;\n    std::set_difference(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(diff));\n    for (int v : diff) std::print(\"{} \", v);\n    std::println(\"← a 减 b\");\n    std::vector<int> p = {3, 1, 5, 2, 4}, q = {4, 5, 1, 7, 3};\n    std::vector<int> inter;\n    std::set_intersection(p.begin(), p.end(), q.begin(), q.end(), std::back_inserter(inter));\n    for (int v : inter) std::println(\"{}\", v);\n    // 不排序时双指针敢把 3 当场判死，对面尾巴里那个 3 就没读到\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <algorithm>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {5, 3, 1}, b = {4, 2};\n    std::vector<int> inter;\n    std::set_intersection(a.begin(), a.end(), b.begin(), b.end(), inter.begin());\n    return 0;\n}\n",
+      "#include <print>\n#include <algorithm>\n#include <iterator>\n#include <set>\n\nint main() {\n    std::set<int> a = {1, 2, 3}, b = {3, 4};\n    for (int v : a) if (!b.contains(v)) std::print(\"{} \", v);\n    std::println(\"\");\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < algorithm >\n#  include < iterator >\n#  include < vector >\n\nint  main ( )\n{\n  std :: vector < int >  left = { 1 , 2 , 3 , 4 } , right = { 3 , 4 , 5 } ;\n  std::vector<int> out;\n  std::set_difference(left.begin(), left.end(), right.begin(), right.end(), std::back_inserter(out));\n  for (int v : out) std::print(\"{} \", v);\n  std::println(\"← 差集\");\n  std::vector<int> x = {2, 1, 4}, y = {4, 2, 9};\n  std::vector<int> mix = { };\n  std::set_intersection(x.begin(), x.end(), y.begin(), y.end(), std::back_inserter(mix));\n  for (auto v : mix) std::println(\"{}\", v);\n  // 乱序时它提前把公共元素判死，结果少了人\n  return 0;\n}\n"
+    ]
+  }
+}

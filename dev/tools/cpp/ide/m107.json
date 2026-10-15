@@ -1,0 +1,79 @@
+{
+  "cid": "m107",
+  "note": "最值与统计改单编辑器：任务 1 拆成「accumulate 求总和 + 强转 double 再除 size + 起点换成 0.0 再算一次」，任务 2 拆成「第四个参数 std::multiplies<>() 且起点给 1」；count_if 作附加条件，头文件归属、起点类型这些概念题进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把求和工具箱（#include <numeric>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*numeric\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <numeric>\n\nint main() {",
+      "why": "accumulate 名字听着像算法，家却在 numeric；包错了会得到一句 accumulate is not a member of std。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用 std::accumulate 把一列分数的总和求出来 —— 区间给 begin 与 end，第三个参数（起点）写 0。",
+      "acceptRegex": ["std\\s*::\\s*accumulate\\s*\\(", "\\.begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.end\\s*\\(\\s*\\)", ",\\s*0\\s*[,)]"],
+      "sample": "int sum = std::accumulate(sc.begin(), sc.end(), 0);",
+      "why": "起点既是第一次累计的底座，也是空区间唯一合理的答案；它的类型决定整条累计链的类型。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：把总和除以人数得到平均分 —— 用 static_cast<double> 先把总和转成 double 再除以 size，并用一条 println 打出来。",
+      "acceptRegex": ["static_cast\\s*<\\s*double\\s*>", "/\\s*\\w+\\.size\\s*\\(\\s*\\)", "std\\s*::\\s*println\\s*\\("],
+      "sample": "std::println(\"强转再除 {}\", static_cast<double>(sum) / sc.size());",
+      "why": "不转就是整数除整数，小数当场被砍掉；转成 double 之后才是真的 78.8。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：换个办法再做一次 —— 把 accumulate 的起点直接写成 0.0，让整条累计链变成 double。",
+      "acceptRegex": ["accumulate\\s*\\([^;]*,\\s*0\\.0\\s*\\)"],
+      "sample": "std::println(\"换个起点 {}\", std::accumulate(sc.begin(), sc.end(), 0.0) / sc.size());",
+      "why": "起点是 0.0 这一类小数，累计链就顺着它是 double，平均分不再被砍掉小数 —— 跟强转是同一件事的两条路。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：用上 accumulate 的第四个参数 —— 把它写成 std::multiplies<>() 求这一列数的连乘，起点同时要改成 1。",
+      "acceptRegex": ["accumulate\\s*\\(", "multiplies\\s*<\\s*>?\\s*\\(", ",\\s*1\\s*,"],
+      "sample": "std::println(\"连乘 {}\", std::accumulate(a.begin(), a.end(), 1, std::multiplies<>()));",
+      "why": "第四个参数决定每一格怎么并进累计值，不写就是相加；想换成乘，起点必须连着 0 一起换成 1，因为 0 乘任何数都是 0。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "顺手把统计也做一遍：用 std::count_if 数一数列里有几个偶数，谓词写成只收一个 int、返回 bool 的 lambda。",
+      "acceptRegex": ["count_if\\s*\\(", "\\]\\s*\\(\\s*int\\s+\\w+\\s*\\)"],
+      "sample": "std::println(\"偶数 {} 个\", std::count_if(a.begin(), a.end(), [](int v) { return v % 2 == 0; }));",
+      "why": "谓词回答的是这一格算不算；两个参数那是 sort 的比较器，写成那样会撞一整屏模板报错。",
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "minmax_element 返回一对位置，最小那格在前、最大那格在后，用 auto [mn, mx] 拆开来正好。",
+    "accumulate 的第三个参数是起点，整条累计链用它那个类型；不写第四个参数就是按加法累加。",
+    "求积就得让起点是 1 —— 起点写 0 时乘什么都还是 0，「第三个参数必须写 0」是 accumulate 最坑人的误会。",
+    "count_if 交出去的谓词是一个元素进去、bool 出来。",
+    "在空的区间上调用 accumulate，返回的就是起点值，所以空表求和天然是 0；空表上的 minmax_element 两个位置都等于 begin。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <algorithm>\n#include <numeric>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> sc = {88, 72, 95, 60, 79};\n    int sum = std::accumulate(sc.begin(), sc.end(), 0);\n    std::println(\"总和 {}\", sum);\n    std::println(\"直接除 {}\", sum / sc.size());\n    std::println(\"强转再除 {}\", static_cast<double>(sum) / sc.size());\n    std::println(\"换个起点 {}\", std::accumulate(sc.begin(), sc.end(), 0.0) / sc.size());\n    std::vector<int> a = {5, 2, 8, 1, 9, 3};\n    std::println(\"连乘 {}\", std::accumulate(a.begin(), a.end(), 1, std::multiplies<>()));\n    std::println(\"偶数 {} 个\", std::count_if(a.begin(), a.end(), [](int v) { return v % 2 == 0; }));\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> sc = {88, 72};\n    int sum = 0;\n    for (int v : sc) sum += v;\n    std::println(\"{}\", sum / sc.size());\n    return 0;\n}\n",
+      "#include <algorithm>\n#include <numeric>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> sc = {88, 72, 95};\n    int sum = std::accumulate(sc.begin(), sc.end(), 0);\n    std::println(\"{}\", sum / sc.size());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < numeric >\n#  include < print >\n#  include < vector >\n#  include < algorithm >\n\nint  main ( )\n{\n  std :: vector < int >  marks = { 88 , 72 , 95 , 60 } ;\n  int  total = std :: accumulate ( marks.begin ( ) , marks.end ( ) , 0 ) ;\n  std::println(\"整除 {}\", total / marks.size());\n  std::println(\"平均 {}\", static_cast<double>(total) / marks.size());\n  double by_seed = std::accumulate(marks.begin(), marks.end(), 0.0) / marks.size();\n  std::println(\"起点换成小数 {}\", by_seed);\n  std::vector<int> nums = {2, 3, 4, 5};\n  std::println(\"乘积 {}\", std::accumulate(nums.begin(), nums.end(), 1, std::multiplies<>()));\n  std::println(\"偶数 {}\", std::count_if(nums.begin(), nums.end(), [](int x) { return x % 2 == 0; }));\n}\n"
+    ]
+  }
+}

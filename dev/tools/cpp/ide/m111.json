@@ -1,0 +1,71 @@
+{
+  "cid": "m111",
+  "note": "数值算法与前缀和改单编辑器：任务 1 拆成「开 n+1 格加哨兵 + partial_sum 写到 begin()+1 + 下标循环摊开整张表」再补一条 buffer「注释说说每格存什么」，任务 2 就是那条一次减法 pre[5] - pre[2]。表怎么读、越界写、辗转相除进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把数值工具箱（#include <numeric>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*numeric\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <numeric>\n\nint main() {",
+      "why": "partial_sum、gcd、lcm 都住在 numeric 里；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：先把表建起来 —— 开一个装 int 的 vector 当 pre，长度给元素个数加一（a.size() + 1）、初值 0，再用 std::partial_sum 从 pre.begin() + 1 起往外写。",
+      "acceptRegex": ["vector\\s*<\\s*int\\s*>\\s+\\w+\\s*\\(\\s*\\w+\\.size\\s*\\(\\s*\\)\\s*\\+\\s*1\\s*,\\s*0\\s*\\)", "partial_sum\\s*\\(", "begin\\s*\\(\\s*\\)\\s*\\+\\s*1\\s*\\)"],
+      "sample": "std::vector<int> pre(a.size() + 1, 0);\nstd::partial_sum(a.begin(), a.end(), pre.begin() + 1);",
+      "why": "第 0 格留给哨兵，代表一个数都没加；表只开 n 格就是越界写，程序可能照跑，然后崩在一脸无辜的地方。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：把整张表摊开打印一遍 —— 用一条按下标走的 for，条件比到 pre.size()，圈里用 print 把每格打出来。",
+      "acceptRegex": ["for\\s*\\(\\s*(size_t|int)\\s+\\w+\\s*=", "\\.size\\s*\\(\\s*\\)", "std\\s*::\\s*print"],
+      "sample": "for (size_t i = 0; i < pre.size(); ++i) std::print(\"pre[{}]={} \", i, pre[i]);",
+      "why": "一格一格数是 0、1、1加2、1加2加3……最后一格恰好等于全部数的总和，两个不一样就是偏移写错了。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在旁边用一行注释说说每个位置存的是什么（至少四个字，正则只验你写了注释，验不了内容）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// pre[i] 存的是前 i 个数加完的结果，第 0 格是 0",
+      "why": "这一档只能确认你把读表口径写下来了；判分器读不懂注释内容，说法对不对要看你自己写的。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务第 2 条：只许用一次减法求第 3 到第 5 个元素的和 —— 用一条 println 把 pre[5] 减 pre[2] 那个式子和结果一起打出来。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(", "\\w+\\s*\\[\\s*5\\s*\\]\\s*-\\s*\\w+\\s*\\[\\s*2\\s*\\]"],
+      "sample": "std::println(\"第 3~5 个的和 = {} - {} = {}\", pre[5], pre[2], pre[5] - pre[2]);",
+      "why": "下标比第几个多 1：第 l 到第 r 个等于 pre[r] 减 pre[l-1]；要铲掉的头一段是前 2 个，写成 pre[3] 就连第 3 个一起铲掉了。",
+      "coversTask": 2,
+      "score": 30,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "整张前缀和表只有一种读法：下标 i 那格是前 i 个数加完的结果；表有 n+1 格，最后一格等于全部数的总和。",
+    "partial_sum 从 pre.begin() + 1 起往外写 n 个结果，所以表必须比元素多开一格。",
+    "通用式：第 l 到第 r 个等于 pre[r] 减 pre[l-1]，下标比第几个多 1，别记混。",
+    "先花一遍加法建表、之后每次查询只做一次减法 —— 这笔买卖在查很多次时才划算。",
+    "std::gcd 靠辗转相除：能同时整除两个数就能整除它们的差，换成除数与余数这一对时公因子集合一个没变。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <numeric>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {1, 2, 3, 4, 5};\n    std::vector<int> pre(a.size() + 1, 0);\n    std::partial_sum(a.begin(), a.end(), pre.begin() + 1);\n    for (size_t i = 0; i < pre.size(); ++i) std::print(\"pre[{}]={} \", i, pre[i]);\n    std::println(\"\");\n    std::println(\"第 3~5 个：{} - {} = {}\", pre[5], pre[2], pre[5] - pre[2]);\n    // pre[i] 存的是前 i 个数加完的结果，第 0 格是 0 那个哨兵\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <numeric>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {1, 2, 3, 4, 5};\n    std::vector<int> pre(a.size(), 0);\n    std::partial_sum(a.begin(), a.end(), pre.begin());\n    std::println(\"{}\", pre[4]);\n    return 0;\n}\n",
+      "#include <print>\n#include <numeric>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {1, 2, 3, 4, 5};\n    int sum = 0;\n    for (int i = 2; i < 5; ++i) sum += a[i];\n    std::println(\"{}\", sum);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < numeric >\n#  include < print >\n#  include < vector >\n\nint  main ( )\n{\n  std :: vector < int >  data = { 4 , 6 , 2 , 1 , 8 } ;\n  std::vector<int> ps(data.size() + 1, 0);\n  std::partial_sum(data.begin(), data.end(), ps.begin() + 1);\n  for (int k = 0; k < ps.size(); ++k) std::print(\"ps[{}]={} \", k, ps[k]);\n  std::println(\"\");\n  std::println(\"3 到 5 {} - {} = {}\", ps[5], ps[2], ps[5] - ps[2]);\n  // 第 k 格就是前 k 个数加起来的和\n  return 0;\n}\n"
+    ]
+  }
+}

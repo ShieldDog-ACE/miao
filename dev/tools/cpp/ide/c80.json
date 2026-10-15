@@ -1,0 +1,73 @@
+{
+  "cid": "c80",
+  "note": "捕获改单编辑器：任务只有一条（把 [&counter] 改成 [counter] 看它怎么拦），按 code + buffer 办：按值那一删用 buffer 收（跑完可以注释掉留在原位），再要一条注释写拦人的理由；原件、按引用那把引线、能跑的形各一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务那条：把中括号里的 & 抹掉写一次（写成 [counter] 那种），身体里照旧给它加一，编译一遍让它拦你，然后把那行注释掉留在原位。",
+      "acceptRegex": ["\\[\\s*(\\w+)\\s*\\][^{]*\\{[^}]*\\b\\1\\s*(\\+\\+|=[^=])"],
+      "sample": "// auto bump = [counter] { counter++; };   ← 只改了中括号，编译当场拦下",
+      "why": "中括号不带 & 就是复印一份进包里，那份是只读的；counter++ 读出来、加一、最后一步要写回包里那盒，写不动。",
+      "coversTask": 1,
+      "score": 30,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "先在外面写好原件：声明一只 int 并给它 0。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*0\\s*;"],
+      "sample": "int counter = 0;",
+      "why": "盒子先存在，线才有得指：外面那只盒子就是按引用带进去时真正被写的那一只。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "再写一把留线的：中括号里那个名字前面挂 &，身体里给它加一。",
+      "acceptRegex": ["\\[\\s*&\\s*(\\w+)\\s*\\][^{]*\\{[^}]*\\b\\1\\s*(\\+\\+|=[^=])"],
+      "sample": "auto bump = [&counter] { counter++; };",
+      "why": "包里没有第二个盒子，两次 counter++ 写的都是外面那个 0，所以攒得到 2。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "在那行旁边留一行注释，写下编译器拦你的理由：点到它抱怨的是包里那一份（只读、复印件、const 都算）。",
+      "acceptRegex": ["//[^\\n]*(只读|复印|const|capture|拦)"],
+      "sample": "// 报错是 cannot assign to variable counter in lambda capture of type const int：说的是包里那份复印件",
+      "why": "关键在半句 in lambda capture of type：抱怨的是捕获进来的那一份，不是外面原件；正则只能验注释里点到词，写的内容对不对得人来读，这一条判不严格。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：搬进打印工具箱（#include <print>），开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "按值带进来的那份被当成常量：拿它做加减、拼字符串都行，唯独不能给它赋值，所以报错里有 in lambda capture of type 'const int' 那半句。",
+    "外面 int counter = 0 一点不是 const，只读的是包里那份复印件；没在中括号里点名报的是 use of undeclared identifier，那是另一条错。",
+    "[x] 在定义那一刻复印一份，之后原件怎么改都不关它的事；[&x] 读到的是外面那个变量的最新值，给它赋值改的就是外面那个盒子本身。",
+    "一把 [&] 全带上是省事，但外面哪几个盒子被动过一眼看不出来，哪天某个盒子先没了就难查。",
+    "中括号里点名可以一次带好几个：[&calls, &open] 各挂各的 &，带进去的线就各指各的原件。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int counter = 0;\n    auto bump = [&counter] { counter++; };      // 留一根线：写的就是外面那只盒子\n    bump();\n    bump();\n    std::println(\"counter = {}\", counter);\n\n    // auto bad = [counter] { counter++; };   ← 把 & 抹掉再编译：拦在编译期\n    // 报错是 cannot assign to variable counter in lambda capture of type const int：只读的是包里那份复印件\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    int counter = 0;\n    auto bump = [&counter] { counter++; };\n    bump();\n    std::println(\"counter = {}\", counter);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int counter = 0;\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int base = 100;\n    int counter = 0;\n    auto add_base = [base](int x) { return base + x; };\n    std::println(\"{}\", add_base(5));\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\nint  main ( )\n{\n  int  tally = 0;                                  // 原件先存在，线才有得指\n  auto  tick = [&  tally ]  {  tally ++ ; };\n  tick();\n  tick();\n  std::println( \"tally = {}\", tally );\n  // auto cross = [tally] { tally = tally + 1; };   抹掉 & 之后编译不过\n  // 按值抄进包里的是一份只读复印件，最后那一步要写它，就被 const 拦下\n  return 0;\n}\n"
+    ]
+  }
+}

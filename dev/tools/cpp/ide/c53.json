@@ -1,0 +1,74 @@
+{
+  "cid": "c53",
+  "note": "返回值交作业改单编辑器：任务 1 拆成「写一个返回自乘的函数 + 打印它的 5 + 打印它的 12」，任务 2 拆成「写一个返回两差（前减后）的函数 + 用 10 和 4 验一次」，正则用回指认「参数自己乘自己 / 前一格减后一格」，不绑名字；旧六道笔试题的结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一个交回 int 的函数：圆括号里只收一个 int，函数体里用 return 把那个参数乘它自己交回来。",
+      "acceptRegex": ["int\\s+\\w+\\s*\\(\\s*int\\s+(\\w+)\\s*\\)\\s*\\{\\s*return\\s+\\1\\s*\\*\\s*\\1\\s*;"],
+      "sample": "int square(int x) {\n    return x * x;\n}",
+      "why": "开头写了 int，函数里每条能走到的路径都必须 return 一个 int；return 算出值、递回调用处、当场结束函数，三件事一口气做完。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在 main 里用一条 std::println 打印 5 的平方：格式串留一个占位坑，逗号后面直接拿那个函数调用 5。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\(\\s*5\\s*\\)\\s*\\)"],
+      "sample": "std::println(\"5 的平方 = {}\", square(5));",
+      "why": "函数体里一句打印都没有，打印全在 main：调用处那一整串从值上看就是 25，能直接塞进打印里。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "再用一条 std::println 打印 12 的平方。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\(\\s*12\\s*\\)\\s*\\)"],
+      "sample": "std::println(\"12 的平方 = {}\", square(12));",
+      "why": "同一个函数调用两次就计算两次，它不替你存着上次的结果，也不记得上一次。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：写一个交回 int 的函数，圆括号里收两个 int，函数体里用 return 把前一格减后一格交回来。",
+      "acceptRegex": ["int\\s+\\w+\\s*\\(\\s*int\\s+(\\w+)\\s*,\\s*int\\s+(\\w+)\\s*\\)\\s*\\{\\s*return\\s+\\1\\s*-\\s*\\2\\s*;"],
+      "sample": "int sub(int a, int b) {\n    return a - b;\n}",
+      "why": "两个进料口按位置对号入座：写反成 b - a 也编译得过，只是交回的是 -6。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 验一次：逗号后面拿那个减法函数调用 10 和 4，屏幕上就该出现 6。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\(\\s*10\\s*,\\s*4\\s*\\)"],
+      "sample": "std::println(\"10 - 4 = {}\", sub(10, 4));",
+      "why": "交回值比打印一句有用得多：它能打印、能存进变量、能继续参加运算，函数才搭得成积木。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "把这份程序写成能跑的形：请进打印那个头文件，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺头文件就没人认识 std::println；main 是程序的入口，函数定义写在它外面。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "调用处那一整串（比如 add(3, 5)）从值上看就等于交回来的那个数：能打印、能存进变量、能继续参加运算，这是函数能搭积木的原因。",
+    "return 干两件事：交货、当场结束函数。它后面的语句一次也轮不到，而且编译器不一定提醒你这行到不了。",
+    "开头写 int 却一句 return 都没有，编译器不报错、只给一条「非 void 函数没有返回语句」的警告；漏交货时调用处拿到的是没人负责的垃圾值，换台机器就可能变样。",
+    "同一个函数调用两次就计算两次，结果既没被存起来也没被上次影响。",
+    "把结果打印在函数里，不如交回一个值灵活：打印只能给人看，值能存、能比、能继续算；void 函数的调用不能当值用，int x = say_hello(); 会被编译器拦下。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint square(int x) {\n    return x * x;\n}\n\nint sub(int a, int b) {\n    return a - b;\n}\n\nint main() {\n    std::println(\"5 的平方 = {}\", square(5));\n    std::println(\"12 的平方 = {}\", square(12));\n    std::println(\"10 - 4 = {}\", sub(10, 4));\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nvoid square(int x) {\n    std::println(\"{}\", x * x);\n}\n\nint main() {\n    square(5);\n    return 0;\n}\n",
+      "#include <print>\n\nint square(int x) {\n    return x * x;\n}\n\nint main() {\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\nint  square ( int v )\n{\n    return v * v ;\n}\nint minus ( int p , int q ) { return p - q ; }\nint  main ( )\n{\n  std::println( \"5 平方 {}\" , square ( 5 ) ) ;\n  std::println( \"12 平方 {}\" , square(12) ) ;\n  std::println( \"差是 {}\" , minus ( 10 , 4 ) ) ;\n  return 0;\n}\n"
+    ]
+  }
+}

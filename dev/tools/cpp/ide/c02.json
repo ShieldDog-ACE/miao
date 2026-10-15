@@ -1,0 +1,67 @@
+{
+  "cid": "c02",
+  "note": "样板：声明变量这一课改单编辑器。两条任务各拆成「写得出那两行 + 打印 + 那个不许混的引号」，旧七道题的知识点原话收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一行：用一个 double 装你的身高（值要带小数点）。",
+      "acceptRegex": ["\\bdouble\\s+\\w+\\s*[={]"],
+      "sample": "double height = 172.5;",
+      "why": "double 是小数盒子；同一个数写进 int 盒会被砍掉小数部分，那是另一课的坑。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写一行：用一个 bool 装「是否住校」，值只能是 true 或 false。",
+      "acceptRegex": ["\\bbool\\s+\\w+\\s*=\\s*(true|false)\\s*;"],
+      "sample": "bool is_boarder = true;",
+      "why": "bool 只有两个值。写 1 或 0 编译器会勉强接受，但那不是本课要的形状。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把这两样一起打出来：格式串里要有两个占位坑，逗号后面按顺序给那两个变量。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+"],
+      "sample": "std::println(\"身高 {}，住校 {}\", height, is_boarder);",
+      "why": "几个坑就给几个值，坑和值对不上在编译期就报错 —— 这正是 {} 占位比拼接省事的地方。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：把 char 那一行的单引号换成双引号写出来（它编译不过，就是要你亲眼见），再在它旁边用一行注释写下你看到的报错里那个词。",
+      "acceptRegex": ["\\bchar\\s+\\w+\\s*=\\s*\"[^\"]*\"\\s*;", "//[^\\n]{4,}"],
+      "sample": "char grade = \"A\";   // 报错第一行说 cannot convert",
+      "why": "单引号是一个字符，双引号是一段字符串，两样东西不同：char 盒拒绝装字符串，这类错在编译阶段就被拦下。",
+      "coversTask": 2,
+      "score": 30,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "int 盒只装整数：3.14 归 double，'你' 归 char（还超一个），true 归 bool。",
+    "声明定身份，赋值改内容；声明只许一次，赋值可以随便多少次。",
+    "名字大小写敏感，age 与 Age 是两个变量；标识符不能拿数字开头。",
+    "等号是「右算左装」：hp = hp - 30 先把右边算成 70，再装回 hp。",
+    "两个盒子换东西要第三个帮忙：先借放一份，再互相接。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    double height = 172.5;\n    bool is_boarder = true;\n    char grade = \"A\";   // 报错第一行说 cannot convert\n    std::println(\"身高 {}，住校 {}\", height, is_boarder);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "double height = 172.5;\n",
+      "#include <print>\nint main() {\n    int height = 172.5;\n    bool b = 1;\n    std::println(\"{}\", height);\n}\n"
+    ],
+    "loose": [
+      "#  include   < print >\nint  main ( )\n{\n  double my_height=172.5;\n  bool boarder = false;\n  char g = \"A\";  // 编译器说 cannot convert from string literal to char\n  std::println( \"高 {} 校{}\" , my_height , boarder );\n}\n"
+    ]
+  }
+}

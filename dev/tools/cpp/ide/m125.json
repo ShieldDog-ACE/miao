@@ -1,0 +1,80 @@
+{
+  "cid": "m125",
+  "note": "unique_ptr 链表改单编辑器：源稿真实任务只有 1 条（在尾部再接一个节点 4，重跑看遍历输出），coversTask 全部只打 1。拆成「Node 图纸 + 串前三节 + 尾部接第 4 节（三级 next 链赋值）+ 观察指针走链 + 报走过的个数」。拥有而非指向、reset 骨牌、递归深度代价进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把独占指针工具箱（#include <memory>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*memory\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <memory>\n\nint main() {",
+      "why": "unique_ptr 与 make_unique 住在 memory 里；没有 main 就没入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条的图纸：写一个 struct Node，里面一个装 int 的成员，再加一个下一节点的 std::unique_ptr 成员。",
+      "acceptRegex": ["struct\\s+\\w+", "unique_ptr\\s*<\\s*(?:std\\s*::\\s*)?\\w+\\s*>\\s+\\w+"],
+      "sample": "struct Node {\n    int value;\n    std::unique_ptr<Node> next;\n    explicit Node(int v) : value(v) {}\n};",
+      "why": "next 不再是「指向」而是「拥有」：这个节点被析构时把下一个也一并处置掉。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：先把链串起来 —— 用 make_unique 造头一节（值给 1），再对 next 赋值接上后面的节点。",
+      "acceptRegex": ["make_unique\\s*<\\s*(?:std\\s*::\\s*)?\\w+\\s*>\\s*\\(\\s*1\\s*\\)", "->\\s*next\\s*=\\s*std\\s*::\\s*make_unique"],
+      "sample": "auto head = std::make_unique<Node>(1);\nhead->next = std::make_unique<Node>(2);\nhead->next->next = std::make_unique<Node>(3);",
+      "why": "对 next 赋值就是转移，旧的那条自动释放；全程没写一个 delete。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在尾部再接一个值为 4 的节点 —— 一路写到底那一格的 next，再把它赋成 std::make_unique 造出来的 4 号。",
+      "acceptRegex": ["next\\s*->\\s*next\\s*->\\s*next\\s*=\\s*std\\s*::\\s*make_unique", "make_unique\\s*<\\s*(?:std\\s*::\\s*)?\\w+\\s*>\\s*\\(\\s*4\\s*\\)"],
+      "sample": "head->next->next->next = std::make_unique<Node>(4);",
+      "why": "第四格的 next 原本是空的 unique_ptr，接上新节点之后它才不再是尾巴。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：走一遍这条链 —— 一条 for，观察指针用 get() 起步，条件是不等于 nullptr，每轮往前挪一格也用 next.get()。",
+      "acceptRegex": ["for\\s*\\(\\s*\\w+\\s*\\*\\s*\\w+\\s*=", "!=\\s*nullptr", "->\\s*next\\.get\\s*\\(\\s*\\)"],
+      "sample": "for (Node* c = head.get(); c != nullptr; c = c->next.get())\n    std::print(\"{} → \", c->value);",
+      "why": "到头那一格交出的是 nullptr，循环自己收住，不用你写判断尾巴的 if。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：圈里备一个从 0 起步的 int 计数器，每走过一节加一，走完了用一条 println 把走了几个节点报出来。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*0\\s*;", "\\+\\+\\s*\\w+\\s*;", "std\\s*::\\s*println\\s*\\("],
+      "sample": "int count = 0;\n++count;\nstd::println(\"到头了，一共走过 {} 个节点\", count);",
+      "why": "接上 4 号之后这一行应该从 3 变成 4 —— 这就是任务要你重跑对照的输出。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "裸指针链表 new 出来必须记着逐个 delete，删中间节点还要手动补前一个的 next；换成 unique_ptr 之后忘了也没人骂你。",
+    "next 是 std::unique_ptr 时，所有权沿链单向传下去：这个节点析构就把下一个一并处置掉。",
+    "head.reset() 一行 delete 都没写就把整条链还干净：那是推倒第一张骨牌，后面的跟着自己倒。",
+    "只有 reset 和整链销毁，谈不上顺序问题；delete 顺序错了留下的悬垂指针这一路碰不到。",
+    "这条自动释放的链在特别长时藏着代价：多米诺的递归深度等于链长，一百万个节点 reset 时那一行永远走不到。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <memory>\n#include <print>\n\nstruct Node {\n    int value;\n    std::unique_ptr<Node> next;\n    explicit Node(int v) : value(v) {}\n};\n\nint main() {\n    auto head = std::make_unique<Node>(1);\n    head->next = std::make_unique<Node>(2);\n    head->next->next = std::make_unique<Node>(3);\n    head->next->next->next = std::make_unique<Node>(4);\n    int count = 0;\n    for (Node* c = head.get(); c != nullptr; c = c->next.get()) {\n        std::print(\"{} → \", c->value);\n        ++count;\n    }\n    std::println(\"到头了，一共走过 {} 个节点\", count);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nstruct Node { int value; Node* next; Node(int v) : value(v) { next = nullptr; } };\n\nint main() {\n    Node a(1);\n    Node b(2);\n    a.next = &b;\n    for (Node* c = &a; c != nullptr; c = c->next) std::print(\"{} \", c->value);\n    std::println(\"\");\n    return 0;\n}\n",
+      "#include <memory>\n#include <print>\n\nstruct Node { int value; std::unique_ptr<Node> next; explicit Node(int v) : value(v) {} };\n\nint main() {\n    auto head = std::make_unique<Node>(1);\n    std::println(\"{}\", head->value);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < memory >\n#  include < print >\n\nstruct  Node\n{\n  int  data ;\n  std :: unique_ptr < Node >  next ;\n  Node ( int v ) : data ( v ) { }\n};\n\nint  main ( )\n{\n  auto  top = std :: make_unique < Node > ( 1 ) ;\n  top -> next = std::make_unique<Node>(2);\n  top->next->next = std::make_unique<Node>(3);\n  top -> next -> next -> next = std::make_unique<Node>( 4 );\n  int  walked = 0;\n  for ( Node * cur = top.get(); cur != nullptr; cur = cur -> next.get ( ) ) {\n      std::print(\"{} | \", cur->data);\n      ++ walked ;\n  }\n  std::println(\"一共 {} 节\", walked);\n  return 0;\n}\n"
+    ]
+  }
+}

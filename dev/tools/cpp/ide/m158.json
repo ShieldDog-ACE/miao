@@ -1,0 +1,68 @@
+{
+  "cid": "m158",
+  "note": "任务两半都落在眼力和一句话上：跑 3 张的贪心表与枚举手柄用 code 判，两张拿法和敢不敢用贪心各配一条 buffer 注释。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这套坑人的面额摆出来：一个 int 数组写 4、3、1，再用一圈范围 for 挨个拿它凑 6 元。",
+      "acceptRegex": ["int\\s+\\w+\\s*\\[\\s*\\]\\s*=\\s*\\{\\s*4\\s*,\\s*3\\s*,\\s*1\\s*\\}", "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)"],
+      "sample": "int coins[] = {4, 3, 1};\nfor (int c : coins) { used += n / c; n %= c; }",
+      "why": "实测它给 3 张，就是 4 + 1 + 1：第一步抓了 4，余额落到 2，3 元塞不下，只能两张 1 元收尾。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "拿枚举当尺子：两层循环各试 4 元和 3 元拿几张，一路用小于号把最少张数记下来。",
+      "acceptRegex": ["\\w+\\s*\\*\\s*4\\s*<=\\s*\\w+", "if\\s*\\(\\s*\\w+\\s*<\\s*\\w+\\s*\\)\\s*\\w+\\s*=\\s*\\w+\\s*;"],
+      "sample": "for (int a = 0; a * 4 <= n; ++a)\n    for (int b = 0; b * 3 <= n - a * 4; ++b) {\n        int tot = a + b + (n - a * 4 - b * 3);\n        if (tot < r) r = tot;\n    }",
+      "why": "best 先记一个一定更差的值，剩下的全用 1 元填；跑出来 6 元的最优确实是 2 张。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务前半：只用眼睛找出那个两张的拿法，把它写在注释里（两个面值都写出来）。",
+      "acceptRegex": ["//[^\\n]*3[^\\n]*3[^\\n]*"],
+      "sample": "// 只用眼睛找出：3 + 3 = 6，两张",
+      "why": "判的是你写出了这一对面值；是不是真的 3 + 3 这块编辑器核对不了 —— 上一条例可以把张数跑出来对一遍。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务后半：用一行注释写下什么时候敢用贪心、什么时候不敢（一句话，八个字以上）。",
+      "acceptRegex": ["//[^\\n]{8,}"],
+      "sample": "// 要么拿枚举在真实金额范围里逐笔验过，要么能说出大的那张永远不亏的理由；两条都拿不出来就别把它的输出当最优解交上去",
+      "why": "这一条判不出道理对不对，只判你确实写下了一句话；本机两组证据：100/50/20/10/5/1 扫 1 到 200 元与枚举 0 笔不一致，4/3/1 在 1 到 60 元有 14 笔不对。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把翻车的金额一笔一笔数出来：一个循环让金额从 1 走到 60，里头比较两个函数给出的张数不相等。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*1\\s*;\\s*\\w+\\s*<=\\s*60\\s*;", "if\\s*\\(\\s*\\w+\\s*\\(\\s*\\w+\\s*\\)\\s*!=\\s*\\w+\\s*\\(\\s*\\w+\\s*\\)\\s*\\)"],
+      "sample": "for (int n = 1; n <= 60; ++n)\n    if (greedy(n) != best(n)) bad.push_back(n);",
+      "why": "实测 14 笔，全是除以 4 余 2 的金额，每一笔只多 1 张 —— 数字要比口号管用。",
+      "score": 20
+    }
+  ],
+  "notes": [
+    "不回头是贪心的定义，也正是它的死穴：除法版一次就把 4 元拿满，同样落到余额 2。",
+    "面额 5/4/3/1 找 7 元：贪心 3 张，枚举最优 2 张；25/10/5/1 扫 1 到 40 元实测 0 笔不对。",
+    "删掉 1 元兜底，程序照样跑完并说用了 1 张，可余额还是 2 —— 那段代码从不主动报告余额。",
+    "眼睛找出来之后，还要像枚举那把尺子一样把它跑成一个数字核对，本课不认口算。",
+    "代码够短、跑得够快都不是判据；证据要么来自逐笔验证，要么来自你说得出的理由。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint greedy(int n) {\n    int coins[] = {4, 3, 1};\n    int used = 0;\n    for (int c : coins) { used += n / c; n %= c; }\n    return used;\n}\n\nint best(int n) {\n    int r = n + 1;\n    for (int a = 0; a * 4 <= n; ++a)\n        for (int b = 0; b * 3 <= n - a * 4; ++b) {\n            int tot = a + b + (n - a * 4 - b * 3);\n            if (tot < r) r = tot;\n        }\n    return r;\n}\n\nint main() {\n    std::vector<int> bad;\n    for (int n = 1; n <= 60; ++n)\n        if (greedy(n) != best(n)) bad.push_back(n);\n    std::println(\"面额 4/3/1，1 到 60 元：贪心翻车 {} 笔\", bad.size());\n    std::println(\"6 元：贪心 {} 张，最优 {} 张\", greedy(6), best(6));\n    // 只用眼睛找出的两张拿法：3 + 3 = 6\n    // 敢用贪心的时候：拿枚举在真实金额范围里逐笔验过，或说得出大的那张永远不亏的理由\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    int coins[] = {4, 3, 1};\n    int amount = 6, used = 0;\n    for (int c : coins)\n        while (amount >= c) { amount -= c; ++used; }\n    std::println(\"贪心用了 {} 张\", used);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int n = 6, r = 7;\n    for (int a = 0; a * 4 <= n; ++a)\n        for (int b = 0; b * 3 <= n; ++b) {\n            int tot = a + b;\n            if (tot < r) r = tot;\n        }\n    std::println(\"最优 {} 张\", r);\n    int coins[] = {4, 3, 1};\n    int used = 0;\n    for (int c : coins) used += 1;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\n\nint  take_greedy ( int  n )\n{\n  int  face [ ]  =  { 4 , 3 , 1 } ;\n  int  got  =  0 ;\n  for ( int  f : face ) { got  +=  n / f ;  n  %=  f ; }\n  return  got ;\n}\nint  take_best ( int  n )\n{\n  int  r  =  n + 1 ;\n  for ( int  i  =  0 ;  i  *  4  <=  n ;  ++ i )\n    for ( int  j  =  0 ;  j  *  3  <=  n ;  ++ j )\n    {\n      int  sum  =  i + j + ( n - i * 4 - j * 3 ) ;\n      if ( sum < r )  r = sum ;\n    }\n  return  r ;\n}\nint  main ( )\n{\n  std :: vector < int >  bad ;\n  for ( int  v  =  1 ;  v  <=  60 ;  ++ v )\n      if ( take_greedy ( v ) != take_best ( v ) )  bad . push_back ( v ) ;\n  std :: println ( \" 翻车 {} 笔\" , bad . size ( ) ) ;\n  // 那两张是 3 和 3 凑出来的\n  // 不敢用贪心的时候：没拿枚举逐笔验过也说不出理由\n}\n"
+    ]
+  }
+}

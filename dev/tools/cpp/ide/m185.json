@@ -1,0 +1,73 @@
+{
+  "cid": "m185",
+  "note": "反转链表这课：画图题改成每轮把 prev 走一遍再报 head，三步舞拆成三条各判一个动作；旧八题的知识点压成 5 条 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "先有一个节点的样子：写一个 struct Node，里面装一个 int value，再装一张指向下一站的纸条（用 unique_ptr 管下一个 Node）。",
+      "acceptRegex": ["struct\\s+Node", "\\bint\\s+value", "unique_ptr\\s*<\\s*Node\\s*>\\s+next"],
+      "sample": "struct Node {\n    int value;\n    std::unique_ptr<Node> next;\n};",
+      "why": "纸条就是 next：整条链靠它一节挂一节，反转动的全是这些纸条，节点本身一个也不挪。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条的主体：开出 prev 这个空盒子装已倒好的部分，再用 while (head) 一路走完；每一轮第一步先把下一站抄进一个变量，抄的时候必须用 std::move。",
+      "acceptRegex": ["std::unique_ptr\\s*<\\s*Node\\s*>\\s+prev", "while\\s*\\(\\s*head\\s*\\)", "auto\\s+\\w+\\s*=\\s*std::move\\s*\\(\\s*head\\s*->\\s*next\\s*\\)"],
+      "sample": "std::unique_ptr<Node> prev;\nwhile (head) {\n    auto next = std::move(head->next);",
+      "why": "纸条一改指回去，通往后面的路就断了，所以第一步必须先把它抄在手里；head 走空就是全部处理完的信号。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "第二步：把当前节点那张纸条改成指回已倒好的那一段。",
+      "acceptRegex": ["head\\s*->\\s*next\\s*=\\s*std::move\\s*\\(\\s*prev\\s*\\)"],
+      "sample": "head->next = std::move(prev);",
+      "why": "这一步就是倒着接上：当前节点从此指向已经倒好的那头，prev 起初为空，第一站的纸条正好变成空。",
+      "score": 15
+    },
+    {
+      "stem": "第三步：prev 收编当前节点，head 再前进到刚抄在手里的那一站，两处都用 std::move 交接。",
+      "acceptRegex": ["prev\\s*=\\s*std::move\\s*\\(\\s*head\\s*\\)", "head\\s*=\\s*std::move\\s*\\(\\s*\\w+\\s*\\)"],
+      "sample": "prev = std::move(head); head = std::move(next);",
+      "why": "unique_ptr 独占手里那份所有权，不能被拷贝，所以每往手里接一次都必须写 std::move。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条的电子版：每轮跳完，从 prev 那头开始把已倒好的这一段挨个打出来（用 Node 指针 p 沿 next.get() 往前走），再把 head 这一轮指着多少也打出来。",
+      "acceptRegex": ["for\\s*\\(\\s*Node\\s*\\*\\s*\\w+\\s*=\\s*prev\\.get\\s*\\(\\s*\\)", "->\\s*next\\.get\\s*\\(\\s*\\)", "head\\s*->\\s*value"],
+      "sample": "for (Node* p = prev.get(); p; p = p->next.get()) std::print(\"{} \", p->value);\nif (head) std::println(\"{}\", head->value); else std::println(\"空\");",
+      "why": "本机实跑三行是 prev=1 head=2、prev=2 1 head=3、prev=3 2 1 head=空 —— 画上那两张箭头图，打出来就是同一份账。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "走完之后再补一行注释，写下最后一轮 head 指的是什么、新链的头落在哪个变量里（至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 最后一轮 head 走空，新头在 prev",
+      "why": "这一步只判你确实留了一行注释，注释内容这块编辑器判不了；每轮 prev 收编一个节点，head 空时它攥着全部。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "纸条一改指回去，通往后面的路就断了，得先抄在手里，这是三步舞第一步的理由。",
+    "每轮 prev 收编一个节点，head 走空时它攥着全部，正是倒好后的头；这时再用 head 接着走链已经晚了。",
+    "循环条件误写成 head->next，走到最后一站时它的纸条是空的，循环提前收工，输出停在 2 到 1。",
+    "整条反转一个新节点都不造、一个都不销毁，动的全是纸条。",
+    "unique_ptr 独占手里那份所有权，不能拷贝；直接复印会造出两个都以为攥着同一个节点的 unique_ptr，语言层面就禁止。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <memory>\n#include <utility>\n\nstruct Node {\n    int value;\n    std::unique_ptr<Node> next;\n};\n\nstd::unique_ptr<Node> make_node(int v) {\n    auto p = std::make_unique<Node>();\n    p->value = v;\n    return p;\n}\n\nint main() {\n    auto head = make_node(1);\n    head->next = make_node(2);\n    head->next->next = make_node(3);\n\n    std::unique_ptr<Node> prev;\n    while (head) {\n        auto next = std::move(head->next);\n        head->next = std::move(prev);\n        prev = std::move(head);\n        head = std::move(next);\n\n        std::print(\"本轮后 prev=\");\n        for (Node* p = prev.get(); p; p = p->next.get()) std::print(\"{} \", p->value);\n        std::print(\" head=\");\n        if (head) std::println(\"{}\", head->value); else std::println(\"空\");\n    }\n\n    for (Node* p = prev.get(); p; p = p->next.get()) std::print(\"{} -> \", p->value);\n    std::println(\"null\");\n    // 最后一轮 head 走空，新头在 prev\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <memory>\nstruct Node {\n    int value;\n    std::unique_ptr<Node> next;\n};\n",
+      "#include <print>\n#include <memory>\n#include <utility>\n\nstruct Node {\n    int value;\n    std::unique_ptr<Node> next;\n};\n\nint main() {\n    auto head = std::make_unique<Node>();\n    head->value = 1;\n    std::unique_ptr<Node> prev;\n    while (head) {\n        prev = std::move(head);\n        head->next = std::move(prev);\n    }\n    for (Node* p = prev.get(); p; p = p->next.get()) std::print(\"{} \", p->value);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\n# include <memory>\n# include <utility>\n\nstruct Node\n{\n  int value;\n  std::unique_ptr<Node> next;\n};\n\nint main ()\n{\n  std::unique_ptr<Node> head = std::make_unique<Node>();\n  head -> value = 1;\n  head->next = std::make_unique<Node>();\n  head->next->value = 2;\n  head->next->next = std::make_unique<Node>();\n  head->next->next->value = 3;\n\n  std::unique_ptr<Node> prev;\n  while ( head )\n  {\n    auto nxt = std::move ( head -> next );\n    head->next = std::move( prev );\n    prev = std::move(head); head = std::move(nxt);\n    std::print(\"prev 这一段：\");\n    for ( Node * walk = prev.get ( ) ; walk ; walk = walk -> next.get ( ) ) std::print(\"{} \", walk->value);\n    std::println(\" head 现在: {}\", head ? head->value : 0);\n  }\n  // 走完时 head 是空，倒好的头交给 prev\n  return 0;\n}\n"
+    ]
+  }
+}

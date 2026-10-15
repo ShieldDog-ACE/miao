@@ -1,0 +1,75 @@
+{
+  "cid": "m178",
+  "note": "任务二走换词、表随长度开大、抄左上加一、取上左较好那格四条；任务一走按宽度打整张表加观察记录（buffer）。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 2 条：把两个词换成 dynamic 与 programming 写出来。",
+      "acceptRegex": ["std\\s*::\\s*string\\s+\\w+\\s*=\\s*\"dynamic\"\\s*,\\s*\\w+\\s*=\\s*\"programming\""],
+      "sample": "std::string x = \"dynamic\", y = \"programming\";",
+      "why": "词一换，两条串各长到 7 与 11 个字，接下来表和循环的上界都得跟着长度走；实测这两条的最长公共子序列是 3，比如 ami。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "让容器跟着长度一起长大：行数用第一条串的长度加一、列数用第二条串的长度加一开出来，初值全 0。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s*>\\s*\\w+\\s*\\(\\s*\\w+\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*\\+\\s*1\\s*,\\s*std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s*\\(\\s*\\w+\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*\\+\\s*1\\s*,\\s*0\\s*\\)\\s*\\)"],
+      "sample": "std::vector<std::vector<int>> dp(x.size() + 1, std::vector<int>(y.size() + 1, 0));",
+      "why": "6 和 4 是上一组数据的长度加一，硬写在这就是越界或少一圈：第 0 行第 0 列代表某条串一个字都没取，答案是 0，整张表踩着这圈地基长。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "两条串尾巴相同时那一支：抄左上角那一格再加一。",
+      "acceptRegex": ["(\\w+)\\s*\\[[^\\]\\n]*\\]\\s*\\[[^\\]\\n]*\\]\\s*=\\s*\\1\\s*\\[[^\\]\\n]*-\\s*1[^\\]\\n]*\\]\\s*\\[[^\\]\\n]*-\\s*1[^\\]\\n]*\\]\\s*\\+\\s*1\\s*;"],
+      "sample": "if (x[i-1] == y[j-1]) dp[i][j] = dp[i-1][j-1] + 1;",
+      "why": "这对相同字母一定能同时收进公共子序列，剩下的问题恰好是两条都去掉尾巴的更小同一问题，直接加一，不必在上、左、左上三个邻居里挑。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "尾巴不同那一支：扔掉其中一条串的尾巴，取上边与左边两个邻居里较好的那个。",
+      "acceptRegex": ["std\\s*::\\s*max\\s*\\(\\s*(\\w+)\\s*\\[[^\\]\\n]*-\\s*1[^\\]\\n]*\\]\\s*\\[[^\\]\\n]*\\]\\s*,\\s*\\1\\s*\\[[^\\]\\n]*\\]\\s*\\[[^\\]\\n]*-\\s*1[^\\]\\n]*\\]"],
+      "sample": "else dp[i][j] = std::max(dp[i-1][j], dp[i][j-1]);",
+      "why": "两条路各试一次挑好的：dp[i][j-1] 是第二条串退一个字那个邻居；子序列不要求连续，挑着删字剩下的就算数。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把整张表打出来看每个格子的数从哪来 —— 用 std::print 逐格打，格式串里给每格带上宽度。",
+      "acceptRegex": ["std\\s*::\\s*print\\s*\\(\\s*\"[^\"\\n]*\\{\\s*:\\s*[0-9]+\\s*\\}"],
+      "sample": "for (auto& row : dp) { for (int v : row) std::print(\"{:3}\", v); std::println(\"\"); }",
+      "why": "带上宽度才看得出阶梯：实测 abcde 对 ace 那张表最后一行是 0 1 2 3，中间大片相等全是取上、左邻居复制来的，加一只出现在尾巴配成对的那些格。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一行注释记下你在整张表里看到的：右下角那格是多少，沿对角加一出现了几次。",
+      "acceptRegex": ["//[^\\n]*[0-9][^\\n]*[0-9]", "//[^\\n]{8,}"],
+      "sample": "// 右下角 3，对角线加一在 a 与 e 两处，共 2 次",
+      "why": "判的是你真的把表打出来看过：记的对不对这块编辑器核对不了 —— 每配成一对尾巴就是一次「更小同一问题」上加一，右下角那个数就是答案。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "dp 表的第 0 行与第 0 列全是 0：它们代表其中一条串一个字都没取，空串与任何串的公共子序列长度就是 0，里子的每个格子都踩着这圈地基长出来。",
+    "实测 abcde 对 ace 的 6 行 4 列表：0 0 0 0、0 1 1 1、0 1 1 1、0 1 2 2、0 1 2 2、0 1 2 3 —— 对角加一的痕迹在第 1 行第 1 列与第 5 行第 3 列两处。",
+    "尾巴相同时不必在三个邻居里挑：这对相同字母同时收进公共子序列不亏，配对后的答案不可能比左、上邻居差。",
+    "子序列不要求连续，挑着删字剩下的就算数；这组数据里 ace 恰好连续只是巧合，a 与 c 之间隔着 b 也照样算。",
+    "换两个新词的重跑顺序：先换数据，再用长度算出两个上界，表的行列数与两层循环的上界跟着换，最后读右下角那一格。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n#include <vector>\n#include <algorithm>\n\nint main() {\n    std::string x = \"dynamic\", y = \"programming\";\n    std::vector<std::vector<int>> dp(x.size() + 1, std::vector<int>(y.size() + 1, 0));\n    for (int i = 1; i <= (int)x.size(); ++i)\n        for (int j = 1; j <= (int)y.size(); ++j)\n            if (x[i-1] == y[j-1]) dp[i][j] = dp[i-1][j-1] + 1;\n            else dp[i][j] = std::max(dp[i-1][j], dp[i][j-1]);\n    for (auto& row : dp) {\n        for (int v : row) std::print(\"{:3}\", v);\n        std::println(\"\");\n    }\n    std::println(\"LCS 长度 = {}\", dp[x.size()][y.size()]);\n    return 0;\n}\n// 右下角是 3，沿对角加一出现 3 次\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n#include <vector>\n#include <algorithm>\n\nint main() {\n    std::string a = \"abcde\", b = \"ace\";\n    std::vector<std::vector<int>> dp(6, std::vector<int>(4, 0));\n    for (int i = 1; i <= 5; ++i)\n        for (int j = 1; j <= 3; ++j)\n            if (a[i-1] == b[j-1]) dp[i][j] = dp[i-1][j-1] + 1;\n            else dp[i][j] = std::max(dp[i-1][j], dp[i][j-1]);\n    std::println(\"长度 = {}\", dp[5][3]);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\n#  include < vector >\n#  include < algorithm >\nint  main ( )\n{\n  std :: string  s1 = \"dynamic\" ,  s2 = \"programming\" ;\n  std :: vector < std :: vector < int > >  tab ( s1 . size ( ) + 1 , std :: vector < int > ( s2 . size ( ) + 1 , 0 ) ) ;\n  for ( int  r  =  1 ;  r  <=  ( int ) s1 . size ( ) ;  ++ r )\n      for ( int  c  =  1 ;  c  <=  ( int ) s2 . size ( ) ;  ++ c )\n          if ( s1 [ r - 1 ] == s2 [ c - 1 ] ) tab [ r ] [ c ] = tab [ r - 1 ] [ c - 1 ] + 1 ;\n          else tab [ r ] [ c ] = std :: max ( tab [ r - 1 ] [ c ] , tab [ r ] [ c - 1 ] ) ;\n  for ( auto & line  :  tab ) {\n      for ( int  one  :  line ) std :: print ( \" {:4} \" , one ) ;\n      std :: println ( \"\" ) ;\n  }\n  // 右下角 3 ， 沿对角加一有 3 处\n  return 0 ;\n}\n"
+    ]
+  }
+}

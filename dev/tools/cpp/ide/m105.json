@@ -1,0 +1,80 @@
+{
+  "cid": "m105",
+  "note": "sort 改单编辑器：任务 1 拆成「两个 const Student 引用的 lambda + 主键分数降序 + 次键名字升序」，任务 2 拆成「换成 stable_sort 排同一段区间」加一条 buffer「把观察到的同分先后写进注释」。严格弱序、比较器问句这些概念题进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把排序工具箱（#include <algorithm>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*algorithm\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <algorithm>\n\nint main() {",
+      "why": "std::sort 住在 algorithm 里，不包这一行编译器不认识它。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：写一个自定义规则交给 std::sort —— 那个 lambda 收两个 const Student 引用当参数。",
+      "acceptRegex": ["sort\\s*\\(", "\\]\\s*\\(", "const\\s+Student\\s*&?\\s*\\w+"],
+      "sample": "std::sort(v.begin(), v.end(), [](const Student& a, const Student& b) {",
+      "why": "第三个参数就是自定义规则；按 const 引用收两个元素，既不复制也不必怕改坏原件。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：主键先问分数 —— 分数不相等就按分数排，让分数高的那一位排在前面。",
+      "acceptRegex": ["\\.score\\s*!=", "\\.score\\s*>"],
+      "sample": "if (a.score != b.score) return a.score > b.score;",
+      "why": "比较器答的是「a 该不该排在 b 前面」，所以分数降序要用大于号；主键分不出胜负，才轮到次键。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：次键接着问名字 —— 同分的那几个人按名字字典序从小到大，把那句 return 补进来。",
+      "acceptRegex": ["\\.name\\s*<"],
+      "sample": "return a.name < b.name;",
+      "why": "分数打平时两个方向都答 false 就没人保证先后；写上名字这一问，同分的名次才定得下来。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：把排同一张表的那句调用换成 std::stable_sort，区间参数照旧给 begin 与 end。",
+      "acceptRegex": ["stable_sort\\s*\\([^;]{0,80}begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.end\\s*\\(\\s*\\)"],
+      "sample": "std::stable_sort(v.begin(), v.end(), [](const Student& a, const Student& b) {\n    return a.score > b.score;\n});",
+      "why": "stable_sort 的调用形状和 sort 一模一样，只是换个函数名 —— 买的是相等绝不互换这个承诺。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：把排完的成绩单一行一条打出来，再在旁边用一行注释写下你观察到同分的那两位先后换没换。",
+      "acceptRegex": ["std\\s*::\\s*print", "//[^\\n]{4,}"],
+      "sample": "for (const Student& s : v) std::println(\"{} {}\", s.name, s.score);\n// 同分的两人排完还是原来的顺序",
+      "why": "这一步只能验你写了注释，验不了注释的内容 —— 换序与否要你自己跑出来看：普通 sort 不保证，stable_sort 保证不相换。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "比较器回答的是「a 该不该排在 b 前面」，不是「a 是不是比 b 大」；读成前者，升序、降序、自定义就全通了。",
+    "两个元素完全相当时，比较器必须两个方向都答 false；用 true 来表达平局会破坏严格弱序，可能乱序甚至越界崩掉。",
+    "a 与 b 平局时，普通 sort 不保证谁先出现；想遍历顺序稳定，就得换 stable_sort。",
+    "stable_sort 一般要多付一份内存或一点时间，它不会把相等的元素合并成一个。",
+    "两把关键字先后有讲究：主键分不出胜负，才轮到次键说话。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <algorithm>\n#include <print>\n#include <string>\n#include <vector>\n\nstruct Student {\n    std::string name;\n    int score;\n};\n\nint main() {\n    std::vector<Student> v = {{\"Ann\", 88}, {\"Bob\", 72}, {\"Cid\", 88}, {\"Dot\", 95}};\n    std::sort(v.begin(), v.end(), [](const Student& a, const Student& b) {\n        if (a.score != b.score) return a.score > b.score;\n        return a.name < b.name;\n    });\n    for (const Student& s : v) std::println(\"{} {}\", s.name, s.score);\n    std::stable_sort(v.begin(), v.end(), [](const Student& a, const Student& b) {\n        return a.score > b.score;\n    });\n    std::println(\"stable_sort 之后:\");   // 同分的两位仍然保持原来的先后\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <algorithm>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {5, 2, 8, 1};\n    std::sort(nums.begin(), nums.end());\n    for (int v : nums) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <algorithm>\n#include <print>\n#include <vector>\n#include <string>\n\nint main() {\n    std::vector<Student> v = {{\"Ann\", 88}, {\"Bob\", 72}};\n    std::sort(v.begin(), v.end(), [](const Student& a, const Student& b) {\n        return a.score >= b.score;\n    });\n    for (const Student& s : v) std::println(\"{}\", s.name);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < algorithm >\n#  include < print >\n#  include < vector >\n#  include < string >\n\nstruct  Student\n{\n  std :: string  name ;\n  int score ;\n} ;\n\nint  main ( )\n{\n  std :: vector < Student >  rows = { { \"Ann\" , 88 } , { \"Cid\" , 88 } , { \"Dot\" , 95 } } ;\n  std :: sort ( rows.begin ( ) , rows.end ( ) , [ ] ( const  Student & x , const Student & y ) {\n      if (x.score != y.score) return x.score > y.score;\n      return x.name < y.name;\n  } );\n  std::stable_sort(rows.begin(), rows.end(), [](const Student& x, const Student& y) {\n      return x.score > y.score;\n  });\n  for (const Student& one : rows) std::println(\"{} {}\", one.name, one.score);\n  // 同分的 Ann 与 Cid 排完仍然没换位置\n  return 0;\n}\n"
+    ]
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "cid": "c27",
+  "note": "第一次 if 这场的旧题在判「score 是 85 和 100 各打哪几行」，编辑器判不了放行还是跳过，就把任务 1 摊成装 100 的盒子加两位门卫（>= 60 与 == 100 各一段花括号），任务 2 摊成把 == 真写成 = 的那一段加一条 buffer 注释记下编译器的态度；空语句那个分号坑只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一只 int 盒子装 100 当分数，再写第一位门卫：if 的括号里判它大于等于 60，跟上一对花括号。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*100\\s*;", "if\\s*\\(\\s*\\w+\\s*>=\\s*60\\s*\\)\\s*\\{"],
+      "sample": "int score = 100;\nif (score >= 60) {",
+      "why": "if 的括号里放的是一张真假值，比较表达式天生就是它；100 >= 60 是 true，这段就被放行。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写第二位门卫：另一个 if 用 == 问这只盒子是不是 100，也跟上花括号。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*==\\s*100\\s*\\)\\s*\\{"],
+      "sample": "if (score == 100) {",
+      "why": "两个 if 是两位各自站岗的门卫，互不影响；把 score 改成 100 之后两段同时被放行。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "在第二位门卫的花括号里写一条 std::println，打出来的话里带上满分两个字。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*满分"],
+      "sample": "std::println(\"满分！\");",
+      "why": "这一行就是任务 1 要你对照的那句：改之前的 85 它整段跳过，改成 100 才轮到它执行。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：再写一段 if，把里面的 == 故意写成一个等号（左边是那只盒子，右边装 100），后面照样跟花括号；这一句要真写进代码里，不许留成注释。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*=\\s*100\\s*\\)\\s*\\{"],
+      "sample": "if (score = 100) {\n    std::println(\"满分！\");\n}",
+      "why": "它语法合法，所以编译器不报错；赋值表达式自己带值，100 非 0 一律当 true，那段每次都执行，而且 score 已经被改成 100。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "编译一次，用一行注释写下编译器给的态度和你看到的后果（至少写四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 只有一条警告，没拦下来，这段每次都执行",
+      "why": "这一条只能判「你写了一行像样的注释」，抄的到底是警告还是错误这块编辑器判不了 —— 这是它判不动的部分。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include <print> 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "条件为 false 时花括号那段整段被跳过，程序继续往后走，被跳过不影响后面那一行照常执行。",
+    "把 score 改成 100 时两个条件同时为 true，两段都被放行，屏幕上会出现三行。",
+    "if (score = 100) 的代价不只是多打一行：score 已经被改掉，后面所有拿它做的运算全乱。",
+    "if (score >= 60); 后面那个分号本身就是一条空语句，花括号于是脱离 if 的管辖，打印变成无条件执行，编译器既不报错也不警告。",
+    "60 <= score <= 90 判断区间是错的写法，它永远为真；要判区间得用 && 把两个条件连起来。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int score = 100;\n\n    if (score >= 60) {\n        std::println(\"{} 分，及格，恭喜！\", score);\n    }\n    if (score == 100) {\n        std::println(\"满分！\");\n    }\n    if (score = 100) {\n        std::println(\"又进了一次满分！\");   // 只有一条警告，这段每次都执行\n    }\n\n    std::println(\"程序照常走到最后一行\");\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int score = 85;\n    if (score >= 60) {\n        std::println(\"及格\");\n    }\n    return 0;\n}\n",
+      "int score = 100;\nif (score = 100) {\n    std::println(\"满分\");\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  int  pts = 100;\n  if ( pts >= 60 ) { std::println( \"{} 分过了\", pts ); }\n  if ( pts == 100 )\n  {\n    std::println( \"这次是真满分\" );\n  }\n  if ( pts = 100 ) { std::println( \"每次都进来\" ); }\n  // 编译只警告了一句，分数也被改成 100 了\n}\n"
+    ]
+  }
+}

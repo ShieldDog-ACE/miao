@@ -1,0 +1,87 @@
+{
+  "cid": "m101",
+  "note": "queue 改单编辑器：任务 1（front 与 back 各是谁）拆成「排三个人 + 两条 println 分别打头尾」，任务 2（模拟银行）拆成「for 里 push 并报 size」和「while 先判 empty 再 pop」。pop 返回 void 那类概念题只进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把队列工具箱（#include <queue>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": [
+        "#\\s*include\\s*<\\s*queue\\s*>",
+        "\\bint\\s+main\\s*\\("
+      ],
+      "sample": "#include <queue>\n\nint main() {",
+      "why": "缺 #include <queue> 就没人认识 std::queue；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：开一条装着字符串的队伍，把三位客人依次 push 排进去（push 是从队尾进的）。",
+      "acceptRegex": [
+        "queue\\s*<\\s*(std::)?string\\s*>\\s+\\w+",
+        "\\w+\\.push\\s*\\(\\s*\""
+      ],
+      "sample": "std::queue<std::string> line;\nline.push(\"小明\");\nline.push(\"小红\");",
+      "why": "queue 的门只有两扇：push 从队尾进，front 与 pop 在队首出；下标和遍历都不给。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用两条 println 分别把 front 和 back 打出来，看清排头是谁、排尾是谁（back 返回最后被放进队伍的那个元素）。",
+      "acceptRegex": [
+        "\\w+\\.front\\s*\\(\\s*\\)",
+        "\\w+\\.back\\s*\\(\\s*\\)"
+      ],
+      "sample": "std::println(\"排头: {}\", line.front());\nstd::println(\"排尾: {}\", line.back());",
+      "why": "front 管队首、back 管队尾，两边各一个只看不拿的访问器 —— queue 确实有 back()。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：写一个 for，每转一圈 push 一位新客人进来，并用一条 println 把刚进来的人号和厅内人数（size）一起打出来。",
+      "acceptRegex": [
+        "\\bfor\\s*\\(",
+        "\\w+\\.size\\s*\\(\\s*\\)",
+        "\\w+\\.push\\s*\\("
+      ],
+      "sample": "for (int i = 1; i <= 5; ++i) {\n    hall.push(i);\n    std::println(\"{} 号进门，厅内 {} 人\", i, hall.size());\n}",
+      "why": "push 之后 size 立刻涨一，打出来的就是厅里此刻等着一共几位。",
+      "coversTask": 2,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：窗口办完一位就 pop 送走 —— 写一句 while，条件先问队伍不空（!q.empty()），循环体里打印叫号再 pop。",
+      "acceptRegex": [
+        "while\\s*\\(\\s*!\\s*\\w+\\.empty\\s*\\(\\s*\\)\\s*\\)",
+        "\\w+\\.pop\\s*\\(\\s*\\)"
+      ],
+      "sample": "while (!hall.empty()) {\n    std::println(\"叫号: {}\", hall.front());\n    hall.pop();\n}",
+      "why": "先问有没有人再动手：空队伍上做 front 或 pop 是未定义行为；pop 只删队首，返回 void。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "queue 从队尾进、从队首出，先来的人先办事；下标、遍历、排序、从中间删全都做不到。",
+    "pop 的返回类型是 void：如果它要返回元素，就得先复制再删，复制中途失败会让数据既删了又没送到，所以标准库把看和删拆开。",
+    "每次 front 或 pop 之前先判 !q.empty()，空队伍上做这些是未定义行为。",
+    "queue 没有 begin 和 end，想遍历整条队伍只能复制一份、一边 pop 一边抄进 vector。",
+    "queue 是值类型：把它赋给另一条队伍，得到的是整份复制，不是共享同一条队伍。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <queue>\n#include <string>\n\nint main() {\n    std::queue<std::string> line;\n    line.push(\"小明\");\n    line.push(\"小红\");\n    line.push(\"小强\");\n    std::println(\"排头: {}\", line.front());\n    std::println(\"排尾: {}\", line.back());\n    std::queue<int> hall;\n    for (int i = 1; i <= 5; ++i) {\n        hall.push(i);\n        std::println(\"{} 号进门，厅内 {} 人\", i, hall.size());\n        if (i % 2 == 0) {\n            std::println(\"窗口办理 {} 号\", hall.front());\n            hall.pop();\n        }\n    }\n    while (!line.empty()) {\n        std::println(\"叫号: {}\", line.front());\n        line.pop();\n    }\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <queue>\n\nint main() {\n    std::queue<int> hall;\n    hall.push(1);\n    std::println(\"{}\", hall.front());\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<std::string> line;\n    line.push_back(\"小明\");\n    std::println(\"{}\", line[0]);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < queue >\n#  include < string >\n\nint  main ( )\n{\n  std :: queue < string >  team ;\n  team.push(\"甲\");\n  team.push(\"乙\");\n  team.push(\"丙\");\n  std::println(\"头 {}\", team.front());\n  std::println(\"尾 {}\", team.back());\n  std::queue<int> hall;\n  for (int i = 1; i <= 4; ++i) {\n      hall.push(i);\n      std::println(\"{} 号到，厅内 {} 人\", i, hall.size());\n      if (i % 2 == 0) hall.pop();\n  }\n  while ( ! team.empty ( ) ) {\n      std::println(\"办 {}\", team.front());\n      team.pop();\n  }\n}\n"
+    ]
+  }
+}

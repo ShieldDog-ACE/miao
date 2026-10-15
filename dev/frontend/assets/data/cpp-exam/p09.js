@@ -18,83 +18,89 @@
 window.MIAO_CPP_EXAM_P09 = {
   papers: [
     {
-      cid: "c39", kind: "paper", mode: "quiz", pass: 60, title: "第 39 课考试 · 嵌套循环", task: "任务题目：把九九表内层的条件改成 j <= 9，看清它变成完整方阵；再用嵌套循环打印 5 行星号，第 i 行有 i 个星号", hint: "想不起来就回看本课【演示 1】的次数对照、【演示 3】的方阵改造和【演示 4】的星号三角。",
+      cid: "c39", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 39 课考试 · 嵌套循环", task: "任务题目：把九九表内层的条件改成 j <= 9，看清它变成完整方阵；再用嵌套循环打印 5 行星号，第 i 行有 i 个星号", hint: "想不起来就回看本课【演示 1】的次数对照、【演示 3】的方阵改造和【演示 4】的星号三角。",
+      notes: ["「外层走一步，内层跑满一圈」的准确意思：内层的初始化就写在外层的循环体里，外层每挪一格它都从自己的初值完整跑一遍，所以每一行的内容一模一样。", "总执行次数 = 外层步数 × 每步内层圈数；外层 3 步、内层每步 4 次，内层那一行共执行 12 次。", "j 到 i 时内层总次数是 1+2+……+9 = 45。", "换行那句 std::println 空串应该写在内层的花括号外面，否则每个算式各占一行。", "内外层用同一个变量名会编译报错；内层的计数器每轮都从它的初值重新开始。"],
       questions: [
-        { id: "q1", type: "choice", score: 17, coversTask: 1, stem: "源稿九九表的内层写的是 j 小于等于 i。把它改成 j 小于等于 9，屏幕上的形状会变成什么？", options: ["每行都打满 9 个算式，成 9 行 9 列的长方形", "形状不变，只是得数变大", "只打第九行，其余行空着", "程序当场终止"], answer: 0, why: "内层的上限决定这一行有几个算式：跟着 i 走是下三角（共 45 个），写死 9 就每行都满，共 81 个。" },
-        { id: "q2", type: "choice", score: 15, stem: "「外层走一步，内层跑满一圈」这句话的准确意思是？", options: ["外层每执行一次，内层都从自己的初值完整跑一遍", "内层跑满一圈之后整个程序就结束了", "内外层交替各走一步", "内层只在外层的第一步才跑，后面几轮不再跑"], answer: 0, why: "内层的初始化就写在外层的循环体里，外层每挪一格它就重新来一遍 —— 所以三行 j 的内容是一模一样的。" },
-        { id: "q3", type: "output", score: 17, coversTask: 2, stem: "这段代码打印什么？（一行一条）\nfor (int i = 1; i <= 5; i++) {\n    for (int j = 1; j <= i; j++) {\n        std::print(\"*\");\n    }\n    std::println(\"\");\n}", acceptLines: ["*", "**", "***", "****", "*****"], why: "内层上限是 i，所以第 i 行贴 i 个星号；换行那句在内层外面，一行贴完才另起一行。" },
-        { id: "q4", type: "blank", score: 12, coversTask: 2, stem: "要打印「第 i 行有 i 个星号」，内层的上限应该写成 j 小于等于 ____。（填那个跟着外层走的变量名）", accept: ["i", "j<=i", "i（外层变量）"], why: "内层上限用外层的计数器 i，行数就自动等于每行的星号数；写成固定数字就不再是三角形。" },
-        { id: "q5", type: "multi", score: 16, coversTask: [1, 2], stem: "下面关于嵌套循环的说法，哪些是对的？（多选，错勾任何一项整题 0 分）", options: ["内层的计数器每轮都从它的初值重新开始", "内外层用同一个变量名会编译报错", "换行那句 std::println(\"\") 应该写在内层的花括号里面", "外层 3 步、内层每步 4 次，内层那一行共执行 12 次"], answers: [0, 1, 3], why: "换行必须待在内层之外，否则每个算式各占一行；其余三条正是本课的三条结论，总次数是两层相乘。" },
-        { id: "q6", type: "order", score: 12, coversTask: 2, stem: "把「用嵌套循环打出第 i 行 i 个星号的三角」的步骤排成正确顺序。", answer: [0, 1, 2, 3], steps: ["外层 for 管行数：i 从 1 走到 5", "内层 for 管每行几个：j 从 1 走到 i", "内层里用 std::print 往同一行贴一个星号", "内层跑完之后用 std::println 空串换行"], why: "先定行、再定每行几个、然后贴、最后换行；第 4 步的位置就是九九表那条「谁管换行谁在外面」。" },
-        { id: "q7", type: "choice", score: 11, stem: "如果把 std::println(\"\") 误写进内层的花括号里，5 行星号会变成什么？", options: ["每个星号各占一行，一共 15 行", "一行都不打", "照旧 5 行，只是跑得慢一点", "编译报错，根本跑不起来"], answer: 0, why: "内层总共执行 1+2+3+4+5 = 15 次，每次贴一个星号就换行，三角就塌成一竖条，而且没有任何报错。" }
+        { id: "q1", type: "code", score: 20, coversTask: 1, stem: "写外层 for：int i 从 1 起，条件走到 9 为止，每轮加一 —— 它管第几行。", acceptRegex: ["for\\s*\\(\\s*int\\s+i\\s*=\\s*1\\s*;\\s*i\\s*<=\\s*9\\s*;"], acceptOn: "code", sample: "for (int i = 1; i <= 9; i++) {", why: "外层走 9 步就是 9 行；它每挪一格，塞在它循环体里的内层就重新从初值跑一遍。" },
+        { id: "q2", type: "code", score: 25, coversTask: 1, stem: "把内层 for 的上限写死成 9（原来是 j <= i），外层的花括号里再塞这一个完整的 for。", acceptRegex: ["for\\s*\\(\\s*int\\s+j\\s*=\\s*1\\s*;\\s*j\\s*<=\\s*9\\s*;"], acceptOn: "code", sample: "for (int j = 1; j <= 9; j++) {", why: "内层的上限决定这一行有几个：跟着 i 走是下三角共 45 个，写死 9 就每行都满，成 9 行 9 列的长方形共 81 个。" },
+        { id: "q3", type: "code", score: 15, coversTask: 1, stem: "内层里用 std::print 往同一行贴一个算式：格式串里留三个占位坑，逗号后面按顺序给 j、i，再给 i 乘 j 的积。", acceptRegex: ["std::print\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\*\\s*\\w+"], acceptOn: "code", sample: "std::print(\"{}×{}={}  \", j, i, i * j);", why: "std::print 不换行，几个算式才贴得成一行；三个坑就三个值，顺序错了乘法表就串位。" },
+        { id: "q4", type: "code", score: 15, coversTask: 1, stem: "一行打完换行：用 std::println 只给一个空串，位置要在内层花括号的外面、外层花括号的里面。", acceptRegex: ["std::println\\s*\\(\\s*\"\\s*\"\\s*\\)"], acceptOn: "code", sample: "        std::println(\"\");", why: "换行那句待在内层之外才一行贴完才另起一行；误写进内层，每个星号各占一行、共 15 行，而且不会有任何报错。" },
+        { id: "q5", type: "code", score: 25, coversTask: 2, stem: "任务第 2 条：再写一坨嵌套，外层 i 从 1 走到 5，内层 j 从 1 走到 i，内层里用 std::print 贴一个星号 —— 第 i 行正好 i 个。", acceptRegex: ["for\\s*\\(\\s*int\\s+i\\s*=\\s*1\\s*;\\s*i\\s*<=\\s*5\\s*;", "for\\s*\\(\\s*int\\s+j\\s*=\\s*1\\s*;\\s*j\\s*<=\\s*i\\s*;", "std::print\\s*\\(\\s*\"\\s*\\*"], acceptOn: "code", sample: "for (int i = 1; i <= 5; i++) {\n    for (int j = 1; j <= i; j++) {\n        std::print(\"*\");\n    }\n    std::println(\"\");\n}", why: "内层上限用外层的计数器 i，星号数就自动等于行号；写成固定数字就不再是三角形。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: 0, q3: "*\n**\n***\n****\n*****", q4: "i", q5: [0, 1, 3], q6: [0, 1, 2, 3], q7: 0}],
+          "#include <print>\n\nint main() {\n    for (int i = 1; i <= 9; i++) {\n        for (int j = 1; j <= 9; j++) {\n            std::print(\"{}×{}={}  \", j, i, i * j);\n        }\n        std::println(\"\");\n    }\n\n    for (int i = 1; i <= 5; i++) {\n        for (int j = 1; j <= i; j++) {\n            std::print(\"*\");\n        }\n        std::println(\"\");\n    }\n\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 1, q2: 2, q3: "*\n**\n***\n****", q4: "5", q5: [2, 3], q6: [1, 0, 3, 2], q7: 1}],
+          "",
+          "#include <print>\n\nint main() {\n    for (int i = 1; i <= 9; i++) {\n        for (int j = 1; j <= i; j++) {\n            std::print(\"{}×{}={}  \", j, i, i * j);\n        }\n        std::println(\"\");\n    }\n\n    return 0;\n}\n",
+          "#include <print>\n\nint main() {\n    for (int i = 1; i <= 5; i++) {\n        for (int j = 1; j <= i; j++) {\n            std::print(\"*\");\n        }\n        std::println(\"\");\n    }\n\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: "0", q3: " * \n ** \n *** \n **** \n ***** ", q4: "  i  ", q5: [3, 1, 0], q6: ["0", "1", "2", "3"], q7: "0"}]
+          "#  include <print>\nint main ( )\n{\n  for(int i=1; i <= 9; i ++)\n  {\n    for(int j=1; j<=9; j++)\n    {\n      std::print( \"{} {}={}  \" , j , i , i*j ) ;\n    }\n    std::println ( \"\" ) ;\n  }\n\n  for ( int i=1; i<=5; i++ )\n  {\n    for ( int j=1; j<=i; j++ ) { std::print (\"*\") ; }\n    std::println(\"\") ;\n  }\n  return 0;\n}\n"]
       }
     },
     {
-      cid: "c40", kind: "paper", mode: "quiz", pass: 60, title: "第 40 课考试 · 初识 vector", task: "任务题目：建一个装 double 的盒子放三门课的分数并打印 size；再把 zeros 那两个数字换成 3 和 9，看清盒子变成什么样", hint: "想不起来就回看本课「它被设计成什么样」那三条造法、【演示 2】的小数盒和【演示 3】的个数与内容。",
+      cid: "c40", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 40 课考试 · 初识 vector", task: "任务题目：建一个装 double 的盒子放三门课的分数并打印 size；再把 zeros 那两个数字换成 3 和 9，看清盒子变成什么样", hint: "想不起来就回看本课「它被设计成什么样」那三条造法、【演示 2】的小数盒和【演示 3】的个数与内容。",
+      notes: ["尖括号里写的是类型，不是值也不是个数：它规定这一整盒每格装什么，装几个由花括号里的内容决定。", "圆括号那条的顺序是「先几格、后每格放什么」；把两个数字说反成 (0, 5) 会得到一只空盒子。", "一格不装的空盒子是合法状态，size() 得 0。", "房型必须整盒统一：往装 int 的盒子里塞小数会被编译期的 narrowing 拦下，编译器不会自己调和 int 和 double。", "看到「std 里没有 vector 这个名字」先回去请头文件，别去改尖括号；size 后面那对圆括号也不能省略。"],
       questions: [
-        { id: "q1", type: "choice", score: 15, coversTask: 1, stem: "std::vector<double> homework = {92.5, 88.0, 79.5}; 这一行里尖括号中的 double 是什么意思？", options: ["这只盒子的房型：每一格统一装一个 double", "盒子里现在装着三个小数", "格子数由 double 的大小决定", "打印时保留两位小数"], answer: 0, why: "尖括号里写的是类型，不是值，也不是个数；它规定这一整盒每格装什么，装几个由花括号里的内容决定。" },
-        { id: "q2", type: "choice", score: 15, stem: "std::vector<int> zeros(5, 0); 造出来的盒子长什么样？", options: ["5 个格子，每格里都是 0", "0 个格子，每格是 5", "5 个格子，每格是 5", "1 个格子，里面同时放着 5 和 0"], answer: 0, why: "圆括号那条的顺序是「先几格、后每格放什么」，所以是 5 个 0；把两个数字说反会得到一只空盒子。" },
-        { id: "q3", type: "output", score: 17, coversTask: 2, stem: "这段代码打印什么？（一行一条）\nstd::vector<int> zeros(5, 0);\nstd::vector<int> nines(3, 9);\nfor (int one : nines) { std::print(\"{} \", one); }\nstd::println(\"\");\nstd::println(\"{}\", zeros.size());", acceptLines: ["9 9 9", "5"], why: "nines 是 3 格、每格 9，range-for 挨个打出来；zeros 按第一个数字算，5 格，size() 报 5。" },
-        { id: "q4", type: "blank", score: 11, coversTask: 2, stem: "std::vector<int> a(3, 9); 里两个数字的顺序是：先写____，再写每格放什么。", accept: ["格子数", "个数", "有几个格子", "格数"], why: "圆括号版本的口诀就是「先几个，后什么」；写成 (9, 3) 得到 9 个 3，写成 (0, 5) 得到空盒。" },
-        { id: "q5", type: "multi", score: 17, coversTask: [1, 2], stem: "下面关于 std::vector 的说法，哪些是对的？（多选，错勾任何一项整题 0 分）", options: ["花括号那条是「列内容」，格子数跟着内容自动定下来", "空盒子的 size() 是 0，这是一种合法状态", "想装小数就在尖括号里写 double，一盒里混着写 int 和 double 编译器会自己调和", "size 后面的那对圆括号可以省略不写"], answers: [0, 1], why: "第三、第四条都是坑：房型必须统一，往装 int 的盒子里塞小数会被编译期的 narrowing 拦下；size 是盒子自己的动作，加点、名字、空括号一样不能少。" },
-        { id: "q6", type: "order", score: 14, coversTask: 1, stem: "把「用一只盒子装三门课分数并问出有几门」的步骤排成正确顺序。", answer: [0, 1, 2, 3], steps: ["请进头文件：include vector", "尖括号定房型：std::vector<double>", "花括号列出三门分数并起名字", "打印它的 size() 问有几个"], why: "少了头文件第一行就编译不过；房型定在名字之前；内容决定格子数；最后才问 size()。" },
-        { id: "q7", type: "choice", score: 11, stem: "程序里用了 std::vector，却只写了 include print 那一行头文件，会发生什么？", options: ["编译报错，大意是命名空间 std 里没有叫 vector 的名字", "能编译，但 size() 永远给 0", "运行时会得到一只空盒子", "编译器自动把头文件补上，什么也不说"], answer: 0, why: "盒子不住在打印那个头文件里；看到「std 里没有 vector 这个名字」先回去请头文件，别去改尖括号。" }
+        { id: "q1", type: "code", score: 15, coversTask: 1, stem: "把 vector 这只盒子请进来：文件顶上写一行 include vector 的头文件（打印那个头文件不算）。", acceptRegex: ["#\\s*include\\s*<\\s*vector\\s*>"], acceptOn: "code", sample: "#include <vector>", why: "盒子不住在打印那个头文件里；少了这一行编译报错，大意是命名空间 std 里没有叫 vector 的名字。" },
+        { id: "q2", type: "code", score: 20, coversTask: 1, stem: "造一只装小数的盒子：尖括号里定房型为 double，名字后面用花括号列出三门课的分数，三个值都带小数点。", acceptRegex: ["std::vector\\s*<\\s*double\\s*>\\s*\\w+\\s*=\\s*\\{[^}]*\\.[^}]*,[^}]*\\.[^}]*,[^}]*\\.[^}]*\\}"], acceptOn: "code", sample: "std::vector<double> homework = {92.5, 88.0, 79.5};", why: "尖括号里写的是类型，不是值也不是个数；格子数跟着花括号里的内容自动定下来。" },
+        { id: "q3", type: "code", score: 20, coversTask: 1, stem: "用一条 std::println 问出这只盒子现在装了几个：格式串里留一个占位坑，逗号后面给它的 size()。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*\\)"], acceptOn: "code", sample: "std::println(\"一共 {} 门课\", homework.size());", why: "size 是盒子自己的动作，点、名字、后面那对空圆括号一样不能少，写成 size 会被当成别的名字。" },
+        { id: "q4", type: "code", score: 15, coversTask: 2, stem: "把源稿那行圆括号造法照写出来：一只装 int 的盒子，括号里先写 5 再写 0。", acceptRegex: ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*\\(\\s*5\\s*,\\s*0\\s*\\)"], acceptOn: "code", sample: "std::vector<int> zeros(5, 0);", why: "圆括号那条的口诀是「先几格、后每格放什么」，所以这一行是 5 个 0。" },
+        { id: "q5", type: "code", score: 15, coversTask: 2, stem: "按任务把那两个数字换成 3 和 9，再造一只盒子：括号里先写 3 再写 9。", acceptRegex: ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*\\(\\s*3\\s*,\\s*9\\s*\\)"], acceptOn: "code", sample: "std::vector<int> nines(3, 9);", why: "个数改 3、内容改 9，得到的是 3 格每格 9；写成 (9, 3) 就变成 9 个 3，完全是另一只盒子。" },
+        { id: "q6", type: "code", score: 15, coversTask: 2, stem: "用两格的 range-for 把新造的这只盒子挨个端出来打一遍，亲眼看看它变成什么样。", acceptRegex: ["for\\s*\\(\\s*(?:int|auto|double)\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std::print(?:ln)?\\s*\\(\\s*\"[^\"]*\\{\\}"], acceptOn: "code", sample: "for (int one : nines) {\n    std::print(\"{} \", one);\n}", why: "盒子能直接遍历，每轮递上来一格的内容；打出来是 9 9 9，一共三格。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: 0, q3: "9 9 9\n5", q4: "格子数", q5: [0, 1], q6: [0, 1, 2, 3], q7: 0}],
+          "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<double> homework = {92.5, 88.0, 79.5};\n    std::println(\"一共 {} 门课\", homework.size());\n\n    std::vector<int> zeros(5, 0);\n    std::vector<int> nines(3, 9);\n    for (int one : nines) {\n        std::print(\"{} \", one);\n    }\n    std::println(\"   ← 共 {} 格\", nines.size());\n\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 1, q2: 2, q3: "5 5 5 5 5\n3", q4: "内容", q5: [2, 3], q6: [1, 0, 3, 2], q7: 1}],
+          "",
+          "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<double> homework = {92.5, 88.0, 79.5};\n    std::println(\"一共 {} 门课\", homework.size());\n    return 0;\n}\n",
+          "#include <print>\n\nint main() {\n    std::vector<int> zeros(5, 0);\n    std::vector<int> nines(3, 9);\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: "0", q3: "9  9  9\n\n 5 ", q4: "个数", q5: [1, 0], q6: ["0", "1", "2", "3"], q7: "0"}]
+          "#  include <print>\n#  include < vector >\n\nint main ( )\n{\n  std::vector<double>  fs = {92.5, 88.0, 79.5} ;\n  std::println( \"共 {} 门\" , fs.size ( ) ) ;\n\n  std::vector<int> old_box ( 5 , 0 ) ;\n  std::vector<int>  new_box ( 3 , 9 ) ;\n  for ( auto one : new_box ) { std::print ( \"{} \" , one ) ; }\n  return 0;\n}\n"]
       }
     },
     {
-      cid: "c41", kind: "paper", mode: "quiz", pass: 60, title: "第 41 课考试 · 下标取元素与越界", task: "任务题目：打印盒子里第 2 个和第 4 个元素（下标该写几要自己数出来）；再拿 scores[5] 去撞一只只有 0 到 4 号的盒子，看清越界是怎么回事", hint: "想不起来就回看本课那张「5 个格子的编号是 0 到 4」的图、【演示 2】的做减法，还有【演示 3】方括号与 at() 的两种下场。",
+      cid: "c41", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 41 课考试 · 下标取元素与越界", task: "任务题目：打印盒子里第 2 个和第 4 个元素（下标该写几要自己数出来）；再拿 scores[5] 去撞一只只有 0 到 4 号的盒子，看清越界是怎么回事", hint: "想不起来就回看本课那张「5 个格子的编号是 0 到 4」的图、【演示 2】的做减法，还有【演示 3】方括号与 at() 的两种下场。",
+      notes: ["「第 N 个元素」和方括号里的编号永远是差一：编号写 N 减 1，跟盒子大小无关；循环里不用减，是因为计数器本来就从 0 数。", "5 格的盒子编号是 0 到 4：scores[4] 取到的是最后一格 88，scores[scores.size()] 天生越界。", "front() 等于 scores[0]，back() 等于最后一格但不用你自己拿 size() 去减；空盒子既没有头也没有尾，front 和 back 都无处可取。", "at() 越界会当场终止并把 out_of_range 说清楚，方括号越界则闷声不响地把程序弄坏 —— 调试期该用 at()。", "用循环安全走完整只盒子：计数器从 0 起，条件写 i 小于 size() 不带等于号；带上等于号就多走一步，那一步正是越界。"],
       questions: [
-        { id: "q1", type: "choice", score: 16, coversTask: 1, stem: "std::vector<int> scores = {85, 92, 78, 96, 88}; 想打印第 2 个元素，方括号里该写几？", options: ["1", "2", "0", "3"], answer: 0, why: "编号是「离起点差几格」，第一格在 0 号，所以第 N 个要写 N 减 1：第 2 个就在 1 号格，值是 92。" },
-        { id: "q2", type: "choice", score: 14, stem: "同一只盒子，scores[4] 取到的是什么？", options: ["88：最后一格", "96：第四格", "越界，那一格不存在", "0：盒子补的空格"], answer: 0, why: "5 格的盒子编号是 0 到 4，4 号正是最后一格，等于 back()；写成 5 才越界。" },
-        { id: "q3", type: "output", score: 16, coversTask: 1, stem: "这段代码打印什么？（一行一条）\nstd::vector<int> scores = {85, 92, 78, 96, 88};\nstd::println(\"{}\", scores[1]);\nstd::println(\"{}\", scores[3]);", acceptLines: ["92", "96"], why: "第 2 个在 1 号格是 92，第 4 个在 3 号格是 96 —— 源稿任务 1 考的就是这一道减法。" },
-        { id: "q4", type: "blank", score: 15, coversTask: 2, stem: "把 scores[5] 换成 scores.at(5)，程序会当场终止，报错信息里带着____这个字样。（填那段英文）", accept: ["out_of_range", "out of range", "越界"], why: "at() 会先查门牌存不存在，查不到就立刻停下来把话说清楚；这正是它比方括号可靠的地方，也是调试期该用它的原因。" },
-        { id: "q5", type: "multi", score: 17, coversTask: [1, 2], stem: "下面这些写法里，哪些会碰到越界？（多选，错勾任何一项整题 0 分。盒子初值是那五个数，另一只是空盒）", options: ["5 格的盒子里写 scores[5]", "5 格的盒子里写 scores[scores.size()]", "5 格的盒子里写 scores.back()", "空盒子里写 front() 或 back()"], answers: [0, 1, 3], why: "size() 是「几格」不是「最大编号」，5 格的最后一格在 4 号，所以第二条天生越界；0 格的盒子既没有头也没有尾，front 和 back 都无处可取。" },
-        { id: "q6", type: "order", score: 13, stem: "把「用循环安全地走完整只盒子」的步骤排成正确顺序。", answer: [0, 1, 2, 3], steps: ["计数器 i 从 0 起", "条件写 i 小于 size()，不带等于号", "循环体里用方括号取当前这一格", "要最后一格时改问 back()，别自己拿 size() 去减"], why: "从 0 起、小于 size()，正好走 5 步、编号 0 到 4；一旦带上等于号就多走一步，那一步正是越界。" },
-        { id: "q7", type: "choice", score: 9, stem: "「第 N 个元素」和方括号里要写的编号，关系是哪种？", options: ["编号写 N 减 1", "编号照写 N", "编号写 N 加 1", "要看盒子多大才能定"], answer: 0, why: "这条换算跟盒子大小无关，永远是减一；循环里之所以不用减，是因为计数器本来就从 0 数。" }
+        { id: "q1", type: "code", score: 15, coversTask: 1, stem: "用花括号造一只装 int 的盒子，往里列五个数。", acceptRegex: ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{[^}]*,[^}]*,[^}]*,[^}]*\\}"], acceptOn: "code", sample: "std::vector<int> scores = {85, 92, 78, 96, 88};", why: "花括号那条是「列内容」，格子数跟着内容自动定下来，这盒是 5 格。" },
+        { id: "q2", type: "code", score: 20, coversTask: 1, stem: "用一条 std::println 打印第 2 个元素：方括号里写的编号要减一。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\[\\s*1\\s*\\]"], acceptOn: "code", sample: "std::println(\"第 2 个: {}\", scores[1]);", why: "编号是「离起点差几格」，第一格在 0 号，所以第 2 个在 1 号格，值是 92。" },
+        { id: "q3", type: "code", score: 20, coversTask: 1, stem: "再用一条 std::println 打印第 4 个元素。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\[\\s*3\\s*\\]"], acceptOn: "code", sample: "std::println(\"第 4 个: {}\", scores[3]);", why: "第 N 个写 N 减 1，这条换算跟盒子多大无关；写 scores[4] 取到的是第 5 个（88），不是第 4 个。" },
+        { id: "q4", type: "code", score: 10, stem: "把这份程序写成能跑的形：请进 vector 的头文件，再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*vector\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <vector>\n\nint main() {", why: "盒子不住在打印那个头文件里；少了这一行编译就报错，大意是 std 里没有叫 vector 的名字。" },
+        { id: "q5", type: "code", score: 20, coversTask: 2, stem: "任务第 2 条：故意取一格不存在的门牌 —— 写一行用 at 取 5 号格（这盒只有 0 到 4 号）。", acceptRegex: ["\\.\\s*at\\s*\\(\\s*5\\s*\\)"], acceptOn: "code", sample: "std::println(\"{}\", scores.at(5));", why: "size() 是「几格」不是「最大编号」，5 格的最后一格在 4 号，5 号格不存在。" },
+        { id: "q6", type: "code", score: 15, coversTask: 2, stem: "程序会当场停下来：在它旁边用一行注释写下报错信息里带的那个字样。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 报错信息里带着 out_of_range 这个字样", why: "at() 先查门牌存不存在，查不到就立刻停下来把话说清楚；这一条只能验你确实记了一行笔记，验不了笔记内容对不对。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: 0, q3: "92\n96", q4: "out_of_range", q5: [0, 1, 3], q6: [0, 1, 2, 3], q7: 0}],
+          "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96, 88};\n\n    std::println(\"第 2 个: {}\", scores[1]);\n    std::println(\"第 4 个: {}\", scores[3]);\n\n    std::println(\"{}\", scores.at(5));   // 报错信息里带着 out_of_range 这个字样\n\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 1, q2: 1, q3: "85\n92", q4: "-1", q5: [2], q6: [1, 0, 3, 2], q7: 1}],
+          "",
+          "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96, 88};\n    std::println(\"第一个: {}\", scores[0]);\n    return 0;\n}\n",
+          "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96, 88};\n    std::println(\"第 2 个: {}\", scores[1]);\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: "0", q3: " 92 \n\n  96 ", q4: "out of range", q5: [3, 1, 0], q6: ["0", "1", "2", "3"], q7: "0"}]
+          "#  include <print>\n#  include <vector>\nint main ( )\n{\n  std::vector<int>  ss = {85,92,78,96,88} ;\n  std::println(\"第二个 {}\" , ss [ 1 ] ) ;\n  std::println( \"第四个 {}\" , ss[3] ) ;\n  std::println( \"{}\" , ss . at ( 5 ) ) ;  // 程序当场终止，说的是 out_of_range\n  return 0;\n}\n"]
       }
     },
     {
-      cid: "c42", kind: "paper", mode: "quiz", pass: 60, title: "第 42 课考试 · 尾部添加与删除", task: "任务题目：从一只空盒子出发连续 push_back 三个数字并逐个打印，看清 size 与 back 怎么跟着变；再回答对空盒子 pop_back 会怎样、动手前该先问哪一句", hint: "想不起来就回看本课【演示 2】的空盒起手式、【演示 3】的 if 守卫，还有那张队尾进出的图。",
+      cid: "c42", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 42 课考试 · 尾部添加与删除", task: "任务题目：从一只空盒子出发连续 push_back 三个数字并逐个打印，看清 size 与 back 怎么跟着变；再回答对空盒子 pop_back 会怎样、动手前该先问哪一句", hint: "想不起来就回看本课【演示 2】的空盒起手式、【演示 3】的 if 守卫，还有那张队尾进出的图。",
+      notes: ["push_back 永远在尾巴加一格：size() 多 1，back() 换成刚进来的那个值。", "pop_back 请走的是最近一次 push_back 进来的那一格，它没有参数，只请尾巴那一个；想删掉第一个元素不是这一对动作管的活。", "空盒子（0 格）没有尾巴，pop_back 和 back() 都无处可取，属于未定义行为，不该去试；它不会返回被删掉的那个值，也不会自动补一个 0 占位。", "动手删之前先问一句 size() 是不是大于 0，这是本课唯一的护身符；空盒子能加不能删，所以「来一条加一条」才是安全方向。", "push_back 60 紧接着 pop_back 会互相抵消：还是 3 格、back() 回到 78，前面那些格从头到尾没动过。"],
       questions: [
-        { id: "q1", type: "choice", score: 12, stem: "scores.push_back(100); 这一句做了什么？", options: ["在队尾排进一格 100，size() 多 1，back() 变成 100", "把 100 插到最前面，后面的往后挪", "把第 100 格写成 100", "把队尾那一格的旧值改成 100，格子数不变"], answer: 0, why: "push_back 永远在尾巴加一格，格子数跟着加一；它不接受位置参数，也不动前面那些格。" },
-        { id: "q2", type: "choice", score: 14, coversTask: 2, stem: "对一只 size() 为 0 的空盒子调用 pop_back()，最准确的说明是哪个？", options: ["越界级别的错误：0 格没有尾巴可请，属于未定义行为，不该去试", "什么也不会发生，程序绝对安全", "它会返回被删掉的那个值", "它会自动补一个 0 进去占位"], answer: 0, why: "空盒子没有尾部，请谁走都无从谈起；标准不作保证，所以正确做法是先用 size() 守卫，而不是指望它提醒你。" },
-        { id: "q3", type: "output", score: 17, coversTask: 1, stem: "这段代码打印什么？（一行一条）\nstd::vector<int> fav;\nfav.push_back(7);\nstd::println(\"{}\", fav.size());\nfav.push_back(42);\nstd::println(\"{}\", fav.back());\nfav.pop_back();\nstd::println(\"{}\", fav.back());", acceptLines: ["1", "42", "7"], why: "空盒加一个就是 1 格；再加一个尾巴换成 42；把 42 请出去之后 back() 退回 7 —— 后加的先走。" },
-        { id: "q4", type: "blank", score: 14, coversTask: 2, stem: "想在删之前先确认盒子里还有人，if 里应该问一句这只盒子的____（填那个报格子数的成员动作名）。", accept: ["size()", "size", "size() 的返回值", "格子数"], sample: "size()", why: "size() 是盒子自己报的格数，判它大于 0 再 pop_back，就是本课唯一的护身符。" },
-        { id: "q5", type: "multi", score: 16, coversTask: [1, 2], stem: "下面关于 push_back 与 pop_back 的说法，哪些是对的？（多选，错勾任何一项整题 0 分）", options: ["pop_back 请走的是最近一次 push_back 进来的那一格", "加完之后 back() 就是刚进来的那个值", "想删掉第一个元素就写 pop_back(0)", "空盒子也能 push_back，这是「来一条加一条」的起手式"], answers: [0, 1, 3], why: "pop_back 没有参数，只请尾巴那一个；要动头部是以后课里的动作，今天这一对只管队尾。" },
-        { id: "q6", type: "order", score: 15, coversTask: 1, stem: "把「从空盒子攒出一串数，再安全地把它清空」的步骤排成正确顺序。", answer: [0, 1, 2, 3], steps: ["声明一只空盒子，一格都不填", "每来一个数就 push_back 一次", "想删之前先看 size() 是不是大于 0", "连着 pop_back 到 size() 报 0 就停手"], why: "空盒能加不能删；第 3 步那道守卫正是第 4 步能安全收尾的前提。" },
-        { id: "q7", type: "choice", score: 12, stem: "盒子里本来是 {85, 92, 78}，跑完 push_back(60) 再紧接着 pop_back() 之后是什么状态？", options: ["还是 3 格，back() 回到 78", "4 格，back() 是 60", "2 格，back() 是 92", "0 格，成了空盒子"], answer: 0, why: "一加一删互相抵消，而且删掉的正是刚加进去那个 60，前面三格从头到尾没动过。" }
+        { id: "q1", type: "code", score: 15, stem: "把这份程序写成能跑的形：请进 vector 的头文件，再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*vector\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <vector>\n\nint main() {", why: "盒子不住在打印那个头文件里；没有 main 链接器也找不到入口。" },
+        { id: "q2", type: "code", score: 15, coversTask: 1, stem: "声明一只一格都不装的空盒子：尖括号里写 int，名字后面什么都不填。", acceptRegex: ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*;"], acceptOn: "code", sample: "std::vector<int> fav;", why: "空盒子是合法状态，size() 得 0；它能加不能删，正是「来一条加一条」的起手式。" },
+        { id: "q3", type: "code", score: 30, coversTask: 1, stem: "往这只空盒子尾部连排进三个你喜欢的数字：三行 push_back，每行各带一个数。", acceptRegex: ["\\.\\s*push_back\\s*\\(\\s*-?\\d+\\s*\\)\\s*;[\\s\\S]*\\.\\s*push_back\\s*\\(\\s*-?\\d+\\s*\\)\\s*;[\\s\\S]*\\.\\s*push_back\\s*\\(\\s*-?\\d+\\s*\\)\\s*;"], acceptOn: "code", sample: "fav.push_back(7);\nfav.push_back(42);\nfav.push_back(100);", why: "push_back 永远在尾巴加一格，格子数跟着加一；它不接受位置参数，也不动前面那些格，两句话改的都是盒子自己，不用拿变量接结果。" },
+        { id: "q4", type: "code", score: 15, coversTask: 1, stem: "每动一下就重新看一眼：用一条 std::println 把尾上那一格打出来，值的位置给 back()。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\.\\s*back\\s*\\(\\s*\\)"], acceptOn: "code", sample: "std::println(\"最后是 {}\", fav.back());", why: "加完之后 back() 就是刚进来的那个值 —— size() 和 back() 是跟着同步变的。" },
+        { id: "q5", type: "code", score: 25, coversTask: 2, stem: "任务第 2 条：请出去之前先看有没有人 —— 用 if 问 size() 是不是大于 0 才 pop_back，再用 else 打一句不能碰。", acceptRegex: ["if\\s*\\(\\s*[^)]*\\.\\s*size\\s*\\(\\s*\\)[^)]*>\\s*0", "\\.\\s*pop_back\\s*\\(\\s*\\)", "\\belse\\b"], acceptOn: "code", sample: "if (box.size() > 0) {\n    box.pop_back();\n} else {\n    std::println(\"现在 0 格，pop_back 不能碰\");\n}", why: "0 格没有尾巴可请，对空盒子 pop_back 是越界级别的错、标准不作保证；正确做法是先用 size() 守卫，而不是指望它提醒你。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: 0, q3: "1\n42\n7", q4: "size()", q5: [0, 1, 3], q6: [0, 1, 2, 3], q7: 0}],
+          "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> fav;\n\n    fav.push_back(7);\n    fav.push_back(42);\n    fav.push_back(100);\n\n    std::println(\"最后是 {}\", fav.back());\n\n    std::vector<int> box;\n    if (box.size() > 0) {\n        box.pop_back();\n        std::println(\"请出去一个，剩 {} 格\", box.size());\n    } else {\n        std::println(\"现在 0 格，pop_back 不能碰\");\n    }\n\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 3, q2: 1, q3: "0\n42\n7", q4: "back()", q5: [2, 3], q6: [2, 1, 0, 3], q7: 1}],
+          "",
+          "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> fav;\n    fav.push_back(7);\n    fav.push_back(42);\n    std::println(\"最后是 {}\", fav.back());\n    return 0;\n}\n",
+          "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> box;\n    if (box.size() > 0) {\n        box.pop_back();\n    } else {\n        std::println(\"现在 0 格，pop_back 不能碰\");\n    }\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: "0", q3: " 1 \n\n 42 \n 7 ", q4: "size ( )", q5: [1, 0, 3], q6: ["0", "1", "2", "3"], q7: "0"}]
+          "#  include <vector>\nint  main ( )\n{\n  std::vector< int >  my ;\n  my.push_back( 3 ) ;\n  my . push_back ( 9 ) ;\n  my.push_back(11);\n  std::println( \"尾巴 {}\" , my.back ( ) ) ;\n\n  if ( my.size() > 0 ) { my.pop_back ( ) ; }\n  else { std::println(\"空盒别碰\") ; }\n  return 0;\n}\n"]
       }
     },
   ]

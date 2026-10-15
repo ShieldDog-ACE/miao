@@ -1,0 +1,66 @@
+{
+  "cid": "m134",
+  "note": "任务是在 Tracker 里补析构并看清打扫顺序：条件按两扇门加析构加移动那一句摊开，容器里 noexcept 那一段作为不盖任务的观察条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 1 条：给 Tracker 补一行析构，里面用 std::println 把「打扫」和 name_ 一起打出来。",
+      "acceptRegex": ["~\\s*Tracker\\s*\\(\\s*\\)", "std\\s*::\\s*println\\s*\\([^;]*打扫"],
+      "sample": "~Tracker() { std::println(\"  [打扫] 「{}」\", name_); }",
+      "why": "打扫按出生的反序走：先 c、再 b、最后 a；轮到 a 时它手里已经没有内存，名字也就是空的。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写出拷贝构造那扇门：参数是一只只读的 const Tracker 引用。",
+      "acceptRegex": ["Tracker\\s*\\(\\s*const\\s+Tracker\\s*&"],
+      "sample": "Tracker(const Tracker& o) : name_(o.name_ + \"的复印件\") {",
+      "why": "拷贝构造必须有 const：原件要完好，它只负责照着抄一份。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写出移动构造那扇门：参数是 Tracker&& 那种右值引用，后面把 noexcept 写上。",
+      "acceptRegex": ["Tracker\\s*\\(\\s*Tracker\\s*&&\\s*\\w*\\s*\\)\\s*noexcept"],
+      "sample": "Tracker(Tracker&& o) noexcept : name_(std::move(o.name_)) {",
+      "why": "&& 读作右值引用，专接可以搬走的东西；恰恰不能带 const，因为这一行要写原件。noexcept 别省，它管的是容器敢不敢用这扇门。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在 main 里写一句移动交接：新的一格 Tracker，右边对 a 用 std::move。",
+      "acceptRegex": ["\\bTracker\\s+\\w+\\s*=\\s*std\\s*::\\s*move\\s*\\("],
+      "sample": "Tracker c = std::move(a);",
+      "why": "这一句走的是移动构造那扇门，a 被抹成空壳，但析构照样轮到它跑一遍。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把 Tracker 装进容器观察一次：开一个 std::vector<Tracker>，用 push_back 往里放两格。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*Tracker\\s*>", "\\.\\s*push_back\\s*\\("],
+      "sample": "std::vector<Tracker> v;\nv.push_back(Tracker(\"甲\"));\nv.push_back(Tracker(\"乙\"));",
+      "why": "容器换那块更大的内存时才轮得到 noexcept：写上它全是移动，删掉它就退回拷贝，结果仍对只是慢。",
+      "score": 20
+    }
+  ],
+  "notes": [
+    "移动构造的参数恰恰不能有 const：搬走要把原件手里那块内存抹空，带了 const 这一行只能退回拷贝构造。",
+    "类里只写移动构造、不写拷贝构造，一句 Tracker b = a; 会在编译期被拒 —— 几件套要成套写。",
+    "搬空不等于销毁：对象本身还活着，退出作用域时它的析构照跑一遍。",
+    "noexcept 管的是别人敢不敢用这扇门，不管这一行能不能编译；删掉它程序照样算对，只是慢。",
+    "名字上的疤就是路径的证据：容器里出现甲的复印件的复印件，说明那一行走过的是拷贝。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n#include <utility>\n#include <vector>\n\nclass Tracker {\npublic:\n    explicit Tracker(std::string name) : name_(std::move(name)) {}\n    ~Tracker() { std::println(\"  [打扫] 「{}」\", name_); }\n    Tracker(const Tracker& o) : name_(o.name_ + \"的复印件\") {\n        std::println(\"  [拷贝] 抄了一份 {}\", o.name_);\n    }\n    Tracker(Tracker&& o) noexcept : name_(std::move(o.name_)) {\n        std::println(\"  [移动] 整屋搬走 {}\", name_);\n    }\n    const std::string& name() const { return name_; }\nprivate:\n    std::string name_;\n};\n\nint main() {\n    Tracker a(\"A\");\n    Tracker b = a;\n    Tracker c = std::move(a);\n    std::println(\"b = {}, c = {}\", b.name(), c.name());\n    std::vector<Tracker> v;\n    v.push_back(Tracker(\"甲\"));\n    v.push_back(Tracker(\"乙\"));\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n\nclass Tracker {\npublic:\n    explicit Tracker(std::string name) : name_(std::move(name)) {}\n    Tracker(const Tracker& o) : name_(o.name_) { }\n    const std::string& name() const { return name_; }\nprivate:\n    std::string name_;\n};\n\nint main() {\n    Tracker a(\"A\");\n    Tracker b = a;\n    std::println(\"{}\", b.name());\n    return 0;\n}\n",
+      "#include <print>\n#include <string>\n#include <utility>\n\nclass Tracker {\npublic:\n    explicit Tracker(std::string name) : name_(std::move(name)) {}\n    Tracker(const Tracker& o) : name_(o.name_) {}\n    Tracker(Tracker&& o) : name_(std::move(o.name_)) {}\nprivate:\n    std::string name_;\n};\n\nint main() {\n    Tracker a(\"A\");\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\n#  include < utility >\n#  include < vector >\n\nclass Tracker {\n  public:\n  explicit Tracker ( std :: string name ) : name_ ( std :: move ( name ) ) { }\n  Tracker ( const Tracker & o ) : name_ ( o . name_ ) { }\n  ~ Tracker ( ) { std :: println ( \"  [打扫] {}\" , name_ ) ; }\n  Tracker ( Tracker && o ) noexcept : name_ ( std :: move ( o . name_ ) ) { }\n  const std :: string & name ( ) const { return name_ ; }\n  private:\n  std :: string name_ ;\n} ;\n\nint  main ( )\n{\n  Tracker first ( \"A\" ) ;\n  Tracker second = first ;\n  Tracker  taken = std :: move ( first ) ;\n  std :: vector < Tracker > box ;\n  box . push_back ( Tracker ( \"甲\" ) ) ;\n  box . push_back ( Tracker ( \"乙\" ) ) ;\n}\n"
+    ]
+  }
+}

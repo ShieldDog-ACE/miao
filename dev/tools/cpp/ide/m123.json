@@ -1,0 +1,94 @@
+{
+  "cid": "m123",
+  "note": "shared_ptr 共享改单编辑器：源稿真实任务只有 1 条（把 b 再复制给 d，打印 use_count，再让 d 出作用域看变化），coversTask 全部只打 1。拆成「make_shared 造一张 + 连着两条复印 + 第二张关进单独成行的花括号 + use_count 问两次」，计数怎么涨怎么落按规矩五收进 buffer 注释档。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把智能指针工具箱（#include <memory>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": [
+        "#\\s*include\\s*<\\s*memory\\s*>",
+        "\\bint\\s+main\\s*\\("
+      ],
+      "sample": "#include <memory>\n\nint main() {",
+      "why": "make_shared 与 shared_ptr 住在 memory 里；没有 main 就没入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "先有一张共享纸条：用 std::make_shared 造一个对象，交给一个 auto 变量。",
+      "acceptRegex": [
+        "auto\\s+\\w+\\s*=\\s*std\\s*::\\s*make_shared\\s*<"
+      ],
+      "sample": "auto a = std::make_shared<std::string>(\"共享数据\");",
+      "why": "共享纸条从这一刻起计数为 1；被复制的永远是纸条，不是对象。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：连着复印两张 —— 先写一张纸条等于已有纸条，再写一张等于第一张（b 再复制给 d 那一步）。",
+      "acceptRegex": [
+        "auto\\s+\\w+\\s*=\\s*\\w+\\s*;[\\s\\S]{0,200}auto\\s+\\w+\\s*=\\s*\\w+\\s*;"
+      ],
+      "sample": "auto b = a;\nauto d = b;   // 从 b 再抄一张",
+      "why": "共享的那一路允许复印：每加一张纸条，卡片上的计数就加一，对象还是同一个。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：把这两张复印关进一层自己的作用域 —— 另起一行开一对花括号，把抄纸条的语句写在括号里。",
+      "acceptRegex": [
+        "\\n\\s*\\{[\\s\\S]{0,300}?auto\\s+\\w+\\s*=\\s*\\w+\\s*;[\\s\\S]{0,300}?\\n\\s*\\}"
+      ],
+      "sample": "{\n    auto b = a;\n    auto d = b;\n    std::println(\"三张在手，计数 = {}\", d.use_count());\n}",
+      "why": "格子一合上，里面的纸条当场销毁、计数就往下掉 —— 这一步是任务要你亲眼看的变化。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用 use_count 问两次计数，各配一条 println —— 一次在格子合上之前，一次在之后。",
+      "acceptRegex": [
+        "use_count\\s*\\(\\s*\\)[\\s\\S]{0,200}use_count\\s*\\(\\s*\\)",
+        "std\\s*::\\s*println\\s*\\("
+      ],
+      "sample": "std::println(\"三张在手，计数 = {}\", d.use_count());\nstd::println(\"他们走了，计数 = {}\", a.use_count());",
+      "why": "计数写在卡片上，用哪一张纸条去问答案都一样；收尾时机是计数减到 0 的那一刻。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用一行注释写下你看到的计数怎么涨怎么落（至少四个字，正则只验你写了注释）。",
+      "acceptRegex": [
+        "//[^\\n]{4,}"
+      ],
+      "sample": "// 计数从 1 涨到 3，格子合上又落回 1 —— 对象一直是那一个",
+      "why": "注释内容判不了；这一档只确认你把跑出来的变化记下来了。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "shared_ptr 允许复印，代价是计数加一：被复制的是纸条，不是对象；收尾时机是计数减到 0 的那一刻。",
+    "unique_ptr 那张纸条 8 字节，shared_ptr 是 16 字节：一个对象地址加一个计数卡片地址。",
+    "按值传参与 push_back 进容器都会悄悄加一：回来之后计数照旧，因为临时那张也走了。",
+    "必须在堆上、主人只有一个时用 unique_ptr；真的有几个人共同保管、且顺序说不清才换 shared_ptr。",
+    "两个人互相牵着就谁也走不了：两个节点的 peer 各指着对方，计数永远落不到 0，两个拆除都没打印 —— 这就是 shared_ptr 开始漏内存的地方。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <memory>\n#include <string>\n\nint main() {\n    auto a = std::make_shared<std::string>(\"共享数据\");\n    std::println(\"刚创建，计数 = {}\", a.use_count());\n    {\n        auto b = a;\n        auto d = b;\n        std::println(\"三张在手，计数 = {}\", d.use_count());\n    }\n    std::println(\"他们走了，计数 = {}\", a.use_count());\n    std::println(\"数据还在: {}\", *a);\n    return 0;\n}\n// 计数从 1 涨到 3，格子一合上又落回 1：对象始终是同一个\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <memory>\n#include <utility>\n\nint main() {\n    auto a = std::make_unique<int>(7);\n    auto b = std::move(a);\n    std::println(\"{}\", *b);\n    return 0;\n}\n",
+      "#include <print>\n#include <memory>\n\nint main() {\n    auto a = std::make_shared<int>(7);\n    auto b = a;\n    std::println(\"计数 {}\", a.use_count());\n    std::println(\"计数 {}\", b.use_count());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < memory >\n#  include < print >\n\nint  main ( )\n{\n  auto  owner = std :: make_shared < int > ( 9 ) ;\n  std::println(\"起始 {}\", owner.use_count());\n  {\n      auto  second = owner;\n      auto  third = second;\n      std::println(\"三张 {}\", third.use_count());\n  }\n  std::println(\"散了 {}\", owner.use_count());\n  return 0;\n}\n// 计数上去又下来，东西只有一份\n"
+    ]
+  }
+}

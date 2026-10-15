@@ -1,0 +1,82 @@
+{
+  "cid": "c78",
+  "note": "智能指针改单编辑器：任务 1 拆成「#include <memory> 加循环里每圈 make_unique 一只 int」加一条 buffer 确认没漏，任务 2 拆成「make_unique 数组写法 + 下标填 + 累加器求和打印」，任务 3 是思考题只靠注释关键词判形状。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "治掉那个泄漏循环：把智能指针工具箱请进来（#include <memory>），再在循环里每一圈用 make_unique 造一只 int，交给 auto 接住。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*memory\\s*>", "\\bfor\\s*\\(", "auto\\s+\\w+\\s*=\\s*(std::)?make_unique\\s*<\\s*int\\s*>\\s*\\("],
+      "sample": "for (int i = 0; i < 1000000; ++i) {\n    auto one = std::make_unique<int>(i);   // 每圈出大括号就还\n}",
+      "why": "归还被绑在纸条的寿命上：作用域一结束，它的收尾动作自动执行，全段一句 delete 都不用写。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "跑完那一百万圈，用一行注释写下你确认了哪件事（点到没漏、自动归还或不用写 delete 都行）。",
+      "acceptRegex": ["//[^\\n]*(没漏|漏|自动|归还|不用写|delete)"],
+      "sample": "// 这一百万圈跑完，一格都没漏：既无泄漏也无悬垂，全靠作用域",
+      "why": "确认这件事本身得靠跑和读，正则只能验注释里点到了这些词，句子对不对得人来读，这一条判不严格。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "向仓库要一整排：用 make_unique 造一个能装 10 个 int 的数组 —— 尖括号里 int 后面跟一对空方括号，圆括号里给出个数，交给 auto 接住。",
+      "acceptRegex": ["auto\\s+\\w+\\s*=\\s*(std::)?make_unique\\s*<\\s*int\\s*\\[\\s*\\]\\s*>\\s*\\(\\s*\\w+\\s*\\)"],
+      "sample": "auto arr = std::make_unique<int[]>(10);",
+      "why": "数组有专门的类型写法；归还时它自己知道整排怎么还，你不用去记 delete 带不带方括号那件事。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "用下标把这一排格子填上 1 到 10。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*=[^=]"],
+      "sample": "for (int i = 0; i < 10; ++i) arr[i] = i + 1;",
+      "why": "unique_ptr 造出来之后，下标访问照旧跟裸数组一样写。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "求和：声明一只 int 累加器从 0 起，用 += 把每一格加进去，最后用一条 std::println 把和打出来。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*0\\s*;", "\\w+\\s*\\+=\\s*\\w+\\s*\\[", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "int sum = 0;\nfor (int i = 0; i < 10; ++i) sum += arr[i];\nstd::println(\"和 = {}\", sum);",
+      "why": "跟手写 new 那一版算的是同一笔账；两版差的就是要不要自己写归还那一句。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 3 条：用一行注释说清 vector 加智能指针凭什么消灭了 99% 的 new 和 delete（点到谁来管内存）。",
+      "acceptRegex": ["//[^\\n]*(vector|容器|智能指针|自己管|自动)"],
+      "sample": "// 要一串东西就交给 vector，容器一死地就还；单个对象要在堆上、还得活得比花括号久，才轮到智能指针",
+      "why": "这一条为什么这么出：99% 与 1% 的分界是判断，不是写法；正则只验注释点到过那几样东西，判不严格。",
+      "coversTask": 3,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "auto q = std::move(p); 跑完之后 p 是一张空纸条：独占的钥匙只有一把，递出去原主当场空掉；直接复制 unique_ptr 压根编译不过。",
+    "shared_ptr 是合租：赋值给新人计数加一，每位合租人出作用域计数减一，数到零那一刻才真的归还那块地。",
+    "两张 shared_ptr 互相牵着就谁都不肯先松手，计数永不归零，地还不回来 —— 这套机制唯一治不了的漏，没有报错也没有崩溃。",
+    "一串会长的东西交给 vector；只借看不复制交给 const 引用；要原地改外面那只就交引用 —— 这三样都轮不到智能指针。",
+    "在堆上造一个对象、而且它的寿命要跨过大括号活到外面，这一小块才真的该交给智能指针。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <memory>\n#include <print>\n\nint main() {\n    for (int i = 0; i < 1000000; ++i) {\n        auto one = std::make_unique<int>(i);   // 每圈出大括号就还，一句 delete 都不用写\n    }\n    // 这一百万圈跑完，一格都没漏：无泄漏、无悬垂，全靠作用域\n\n    auto arr = std::make_unique<int[]>(10);\n    for (int i = 0; i < 10; ++i) arr[i] = i + 1;\n\n    int sum = 0;\n    for (int i = 0; i < 10; ++i) sum += arr[i];\n    std::println(\"和 = {}\", sum);\n    // 要一串东西就交给 vector 自己管内存，单个对象要活得比花括号久才轮到智能指针，这就是那 99%\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    int* arr = new int[10];\n    for (int i = 0; i < 10; ++i) arr[i] = i + 1;\n    int sum = 0;\n    for (int i = 0; i < 10; ++i) sum += arr[i];\n    std::println(\"和 = {}\", sum);\n    delete[] arr;\n    return 0;\n}\n",
+      "#include <memory>\n#include <print>\n\nint main() {\n    for (int i = 0; i < 1000000; ++i) {\n        auto one = std::make_unique<int>(i);\n    }\n    // 一格都没漏\n    return 0;\n}\n",
+      "#include <memory>\n#include <print>\n#include <string>\n\nint main() {\n    auto s1 = std::make_shared<std::string>(\"共享数据\");\n    auto s2 = s1;\n    std::println(\"几个人在用? {}\", s1.use_count());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <memory>\n# include <print>\nint  main ( )\n{\n    for (int k = 0; k < 50; k++) {\n        auto  single = std::make_unique < int > ( k );\n    }\n    // 跑完这五十圈不用写 delete，出大括号自动归还，一点没漏\n\n    auto  box = std::make_unique< int []>( 10 ) ;\n    for (int k = 0; k < 10; k++)\n        box [ k ] = k + 1 ;\n\n    int  total = 0;\n    for (int k = 0; k < 10; k++)\n        total += box [ k ];\n    std::println( \"总共 {}\", total );\n    // 一串东西交给 vector 自己管内存，单个对象才用智能指针，这就是那 99%\n    return 0;\n}\n"
+    ]
+  }
+}

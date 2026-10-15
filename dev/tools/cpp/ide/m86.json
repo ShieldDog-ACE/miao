@@ -1,0 +1,82 @@
+{
+  "cid": "m86",
+  "note": "素数筛改单编辑器：任务 1 拆成「n 写成 100 + bool 名单开 n+1 格并划掉 0 和 1 + 外层筛到根号 n + 内层从平方起划 + 数出来并打印」，任务 2 拆成「比到 10 就 break 并报出那一个」；第 10 个素数是 29 这个数本身进 notes，机器不代你数。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 1 条：把范围那一只 int 写成 100。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*100\\s*;"],
+      "sample": "int n = 100;",
+      "why": "范围一改，名单就多开几十格；100 以内有多少个素数，跑一遍数得出。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "开一张 bool 名单：std::vector<bool> 装 n + 1 格、初值全给 true，再把第 0 格明确划成 false。",
+      "acceptRegex": ["std::vector\\s*<\\s*bool\\s*>\\s+\\w+\\s*\\(\\s*\\w+\\s*\\+\\s*1\\s*,\\s*true\\s*\\)", "\\w+\\s*\\[\\s*0\\s*\\][^;]*false\\s*;"],
+      "sample": "std::vector<bool> is_prime(n + 1, true);\nis_prime[0] = is_prime[1] = false;",
+      "why": "要装 0 到 n 就得 n + 1 格，差一格是很多翻车现场；0 和 1 不手动划掉会被当成素数报出来。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "外层圈筛到根号 n 就够：for 的中间那截写成 i 乘 i 小于等于 n。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+(\\w+)\\s*=\\s*2\\s*;\\s*\\1\\s*\\*\\s*\\1\\s*<=\\s*\\w+\\s*;"],
+      "sample": "for (int i = 2; i * i <= n; ++i) {",
+      "why": "这是精确边界不是近似：每个合数都有一个不超过根号 n 的质因子，那一轮就会划掉它；写成 i <= n 会白跑很多轮。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "内层从平方开始划：起点的 int 写成 i 乘 i，每圈给游标加上 i，把名单那一格写成 false。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*(\\w+)\\s*\\*\\s*\\1\\s*;", "\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*=\\s*false\\s*;"],
+      "sample": "for (int k = i * i; k <= n; k += i)\n    is_prime[k] = false;",
+      "why": "更小的倍数早被前面的质数划过了，从平方起才是筛法的标准姿势；已被划掉的那些用 if (!is_prime[i]) continue; 跳过。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把名单数出来：声明一只 int 从 0 起，每遇到还活着的那个就给它加一，最后用一条 std::println 把个数打出来。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*0\\s*;", "(\\+\\+\\s*\\w+|\\w+\\s*\\+\\+|\\w+\\s*\\+=\\s*1)", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "int total = 0;\nif (is_prime[i]) { std::print(\"{} \", i); ++total; }\nstd::println(\"\\n共 {} 个\", total);",
+      "why": "活下来的就是素数；先划再数，这两步分开写才看得清筛法在干什么。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：数够 10 个就当场收工 —— 用一条 if 把计数器和 10 比，成立就 break，再打一行报出那一个素数。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*(==|>=)\\s*10\\s*\\)", "break\\s*;", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "if (total == 10) { std::println(\"第 10 个是 {}\", i); break; }",
+      "why": "数够就停是这一问的机关：顺着名单数到 2、3、5、7、11、13、17、19、23 才 9 个，再往前一个就是 29。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "筛法的核心思路是反过来划掉一定不是的数，活下来的就是素数；逐个数字试除、除不动就算素数那套叫试除法，两份账要对得上。",
+    "vector<bool> 是标准库的特殊容器，按位存而不是一份 bool 数组。",
+    "内层划掉的起点是 i 的平方，不是 2 乘 i；外层圈写到 i * i <= n 就够了，合数若有一个大于根号 n 的因子，必配一个更小的先把它划掉。",
+    "100 以内素数的个数是数出来的，跑一遍看打印出来的 total 最靠得住；1 不是素数，2 是唯一的偶数素数。",
+    "第 10 个素数是 29：把 break 挪到打印之前就会少报一个，顺序错了账就不对。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    int n = 100;                                   // 任务 1：把 50 改成 100\n    std::vector<bool> is_prime(n + 1, true);\n    is_prime[0] = is_prime[1] = false;\n    for (int i = 2; i * i <= n; ++i) {\n        if (!is_prime[i]) continue;\n        for (int k = i * i; k <= n; k += i)\n            is_prime[k] = false;\n    }\n\n    int total = 0;\n    for (int i = 2; i <= n; ++i) {\n        if (!is_prime[i]) continue;\n        ++total;\n        if (total == 10) { std::println(\"第 10 个是 {}\", i); break; }\n        std::print(\"{} \", i);\n    }\n    std::println(\"\\n共 {} 个\", total);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nbool trial(int x) {\n    if (x < 2) return false;\n    for (int d = 2; d * d <= x; ++d)\n        if (x % d == 0) return false;\n    return true;\n}\n\nint main() {\n    int n = 100;\n    int total = 0;\n    for (int x = 2; x <= n; ++x) if (trial(x)) ++total;\n    std::println(\"试除法：{} 个\", total);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    int n = 100;\n    std::vector<bool> is_prime(n, true);\n    for (int i = 2; i <= n; ++i) std::print(\"{} \", i);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    int n = 100;\n    std::vector<bool> is_prime(n + 1, true);\n    for (int i = 2; i <= n; ++i) {\n        for (int k = 2 * i; k <= n; k += i)\n            is_prime[k] = false;\n    }\n    int total = 0;\n    for (int i = 2; i <= n; ++i) if (is_prime[i]) ++total;\n    std::println(\"{}\", total);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\n# include < vector >\n\nint  main ( )\n{\n    int  limit = 100;\n    std::vector < bool >  alive ( limit + 1 , true ) ;\n    alive [ 0 ] = false; alive [ 1 ] = false;\n    for (int p = 2; p * p <= limit; ++p) {\n        if (!alive[p]) continue;\n        for (int m = p * p; m <= limit; m += p) alive [ m ] = false;\n    }\n    int  count = 0;\n    for (int q = 2; q <= limit; q++) {\n        if (!alive[q]) continue;\n        count ++;\n        std::print( \"{} \", q );\n        if (count == 10) break;\n    }\n    std::println( \"一共 {}\" , count );\n    return 0;\n}\n"
+    ]
+  }
+}

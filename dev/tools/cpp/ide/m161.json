@@ -1,0 +1,70 @@
+{
+  "cid": "m161",
+  "note": "任务是把两处跳重复注释掉再看重复从哪来：结构与里层各一条压到 35 分，两条注释掉的跳重复与一句说明走 buffer，保证没动过的完整卷判不过线。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "三层结构各就各位：先把这串数排好，再用一层循环固定第一个数（走到 n 减 2 为止），第二只手从 i 加一那格起。",
+      "acceptRegex": ["std\\s*::\\s*sort\\s*\\(\\s*\\w+\\s*\\.\\s*begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\s*\\.\\s*end\\s*\\(\\s*\\)\\s*\\)", "for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*0\\s*;\\s*\\w+\\s*<\\s*\\w+\\s*-\\s*2\\s*;", "int\\s+\\w+\\s*=\\s*\\w+\\s*\\+\\s*1\\s*,"],
+      "sample": "std::sort(v.begin(), v.end());\nint n = static_cast<int>(v.size());\nfor (int i = 0; i < n - 2; ++i) {\n    int lo = i + 1, hi = n - 1;",
+      "why": "排过序才说得出和偏小就左手进；三个自由度当场砍成一个，lo 的起点必须是 i 加一，写成 0 会让 i 自己那一格被用两次。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "里层那双指针：算出三个值的和，和是 0 就把这一组打出来，然后两只手一起往里走一步。",
+      "acceptRegex": ["\\w+\\s*=\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\+\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\+\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]", "std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*\\{\\}\\s*\\+\\s*\\{\\}\\s*\\+\\s*\\{\\}", "\\+\\+\\s*\\w+\\s*;\\s*--\\s*\\w+\\s*;"],
+      "sample": "int s = v[i] + v[lo] + v[hi];\nif (s == 0) {\n    std::println(\"{} + {} + {} = 0\", v[i], v[lo], v[hi]);\n    ++lo; --hi;",
+      "why": "目标不再是 0 而是负的那个数本身；命中后别停在原地，否则同一对下标会被反复判。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务第 1 条：把固定第一个数那处的跳重复写成被注释掉的一行 —— 那行里有 continue，也比的是前一个格子。",
+      "acceptRegex": ["//[^\\n]*continue", "//[^\\n]*\\[\\s*\\w+\\s*-\\s*1\\s*\\]"],
+      "sample": "// if (i > 0 && v[i] == v[i - 1]) continue;   // 这一处注释掉",
+      "why": "实测这一处一注释掉，i 就走到第二个 -1 上：它右边照样有 0 和 1，同一组值被生产了两遍。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "再把命中之后那两句跳重复也注释掉：两行注释里各有 while，一句比的是加一那一格、一句比的是减一那一格。",
+      "acceptRegex": ["//[^\\n]*while[^\\n]*\\+\\s*1", "//[^\\n]*while[^\\n]*-\\s*1"],
+      "sample": "// while (lo < hi && v[lo] == v[lo + 1]) ++lo;\n// while (lo < hi && v[hi] == v[hi - 1]) --hi;",
+      "why": "这两句拦的是命中之后并排的相同值；留着它们时八个数那组打 2 组，注释掉就成 4 组。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "用一行注释写下这些重复答案是从哪儿来的（这一行里要出现「重复」这两个字）。",
+      "acceptRegex": ["//[^\\n]*重复[^\\n]{6,}"],
+      "sample": "// 重复的那一行来自 i=2：排序后两个 -1 并排，第二个 -1 右边也有 0 和 1",
+      "why": "判的是你确实写下一行解释；解释得对不对这块编辑器核对不了 —— 实测三行里第三行来自 i = 2，而去重后的正确答案只有两行。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "本机实测四组同样数字的不同排法：不排序分别只命中 2 组、0 组、0 组、1 组，排好再跑是 3 组 —— 少掉的是答案本身，一行错都不报。",
+    "六个数排好以后，双指针版内层一共只判 7 次，三重循环要判 20 次、命中 3 次，命中的 3 次里含同一组值的两种顺序。",
+    "双指针本身并不自带去重：去重还得靠那三句，一句管第一个数的第二次上岗，两句管命中之后并排的相同值。",
+    "把答案收进容器可以拿两个值捆一起的那种格子记下 lo 与 hi，循环走完再用结构化绑定拆开打印。",
+    "size() 是无符号的，先转成 int 再做减法，否则空容器上 n 减 2 会绕回最远处。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n#include <algorithm>\n\nint main() {\n    std::vector<int> v = {-1, 0, 1, 2, -1, -4};\n    std::sort(v.begin(), v.end());\n    int n = static_cast<int>(v.size());\n    for (int i = 0; i < n - 2; ++i) {\n        // if (i > 0 && v[i] == v[i - 1]) continue;      // 任务：这一处先注释掉\n        int lo = i + 1, hi = n - 1;\n        while (lo < hi) {\n            int s = v[i] + v[lo] + v[hi];\n            if (s == 0) {\n                std::println(\"{} + {} + {} = 0\", v[i], v[lo], v[hi]);\n                // while (lo < hi && v[lo] == v[lo + 1]) ++lo;\n                // while (lo < hi && v[hi] == v[hi - 1]) --hi;\n                ++lo; --hi;\n            } else if (s < 0) ++lo; else --hi;\n        }\n    }\n    return 0;\n}\n// 重复的那一行来自 i=2：排序后两个 -1 并排，第二个 -1 右边也有 0 和 1\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n#include <algorithm>\n\nint main() {\n    std::vector<int> v = {-1, 0, 1, 2, -1, -4};\n    std::sort(v.begin(), v.end());\n    int n = static_cast<int>(v.size());\n    for (int i = 0; i < n - 2; ++i) {\n        if (i > 0 && v[i] == v[i - 1]) continue;\n        int lo = i + 1, hi = n - 1;\n        while (lo < hi) {\n            int s = v[i] + v[lo] + v[hi];\n            if (s == 0) {\n                std::println(\"{} + {} + {} = 0\", v[i], v[lo], v[hi]);\n                while (lo < hi && v[lo] == v[lo + 1]) ++lo;\n                while (lo < hi && v[hi] == v[hi - 1]) --hi;\n                ++lo; --hi;\n            } else if (s < 0) ++lo; else --hi;\n        }\n    }\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {-1, 0, 1, 2, -1, -4};\n    for (int i = 0; i < 6; ++i)\n        for (int j = 0; j < 6; ++j)\n            if (v[i] + v[j] == 0) std::println(\"{} {}\", v[i], v[j]);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\n#  include < algorithm >\nint  main ( )\n{\n  std :: vector < int >  v  =  { - 1 , 0 , 1 , 2 , - 1 , - 4 } ;\n  std :: sort ( v . begin ( ) , v . end ( ) ) ;\n  int  n  =  static_cast < int > ( v . size ( ) ) ;\n  for ( int  i  =  0 ;  i  <  n - 2 ;  ++ i )\n  {\n    //  if ( i > 0 && v [ i ] == v [ i - 1 ] )  continue ;\n    int  lo  =  i + 1 ,  hi  =  n - 1 ;\n    while ( lo < hi )\n    {\n      int  s  =  v [ i ] + v [ lo ] + v [ hi ] ;\n      if ( s == 0 )\n      {\n        std :: println ( \" {} + {} + {} = 0\" , v [ i ] , v [ lo ] , v [ hi ] ) ;\n        //  while ( lo < hi && v [ lo ] == v [ lo + 1 ] )  ++ lo ;\n        //  while ( lo < hi && v [ hi ] == v [ hi - 1 ] )  -- hi ;\n        ++ lo ;  -- hi ;\n      }\n      else if ( s < 0 )  ++ lo ;  else  -- hi ;\n    }\n  }\n}\n// 多出来的重复那一行是第二个 -1 当第一个数时打的\n"
+    ]
+  }
+}

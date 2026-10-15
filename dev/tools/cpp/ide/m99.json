@@ -1,0 +1,82 @@
+{
+  "cid": "m99",
+  "note": "map 词频统计改单编辑器：任务 1 拆成「词表加计数词典 + range-for 里那一行 freq[w]++ + 结构化绑定遍历打印」再加一条 buffer 注释列省掉的几块（省了什么只能点到，判不了账），任务 2 拆成「map 的键换成 char 逐字符加一 + 用方括号查某个字符的次数打出来」。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "备好料：一串词的 std::vector<std::string>，再加一张键是 std::string、值是 int 的计数词典。",
+      "acceptRegex": ["std::map\\s*<\\s*std::string\\s*,\\s*int\\s*>\\s+\\w+", "std::vector\\s*<\\s*std::string\\s*>\\s+\\w+\\s*=\\s*\\{"],
+      "sample": "std::vector<std::string> words = {\"python\", \"java\", \"python\"};\nstd::map<std::string, int> freq;",
+      "why": "键就是词、值就是次数：装哪个词几次的那个 struct 定义这一课压根不写。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "写出核心那一行：range-for 里按 const auto& 取词，对词典里那个键做自增（方括号后面跟两个加号）。",
+      "acceptRegex": ["for\\s*\\(\\s*const\\s+auto\\s*&?\\s*\\w+\\s*:", "\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\+\\+"],
+      "sample": "for (const auto& w : words) freq[w]++;",
+      "why": "方括号保证键存在：没见过就建一条填 0，再加一正好是 1 —— 登记和加一被这一行一起办了。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把词典打印一遍：用 for (const auto& [词, 次数] : 词典) 拆出键和值，再用一条 std::println 把这一组打出来（格式串两个坑）。",
+      "acceptRegex": ["for\\s*\\(\\s*const\\s+auto\\s*&?\\s*\\[\\s*\\w+\\s*,\\s*\\w+\\s*\\]\\s*:\\s*\\w+\\s*\\)", "std::println\\s*\\(\\s*\"[^\"]*\\{[^}\"]*\\}[^\"]*\\{[^}\"]*\\}[^\"]*\""],
+      "sample": "for (const auto& [word, count] : freq)\n    std::println(\"{:<8} {} 次\", word, count);",
+      "why": "最后的遍历打印照旧省不掉，只是遍历的对象从登记表变成了词典；顺序由键说了算。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在文件里留一行注释，写下这一版比 vector 加 struct 那一版少了哪几块代码。",
+      "acceptRegex": ["//[^\\n]*(struct|查找|扫|找|if|分叉|少|省)"],
+      "sample": "// 省掉了：装词和次数的 struct 定义、从头扫到尾的 find_word、没找到就登记一行否则加一笔那段 if 分叉",
+      "why": "这一条为什么这么出：省没省是要对照两份代码读的判断，正则只能验注释里点到了这几样，账对不对得人来读。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务第 2 条：换成数字符 —— 开一张键是 char、值是 int 的词典，用 for (char 变量 : 那句话) 给每个字符来一次自增。",
+      "acceptRegex": ["std::map\\s*<\\s*char\\s*,\\s*int\\s*>\\s+\\w+", "for\\s*\\(\\s*char\\s+\\w+\\s*:", "\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\+\\+"],
+      "sample": "std::map<char, int> chars;\nstd::string s = \"hello world\";\nfor (char c : s) chars[c]++;",
+      "why": "键换成字符照样长树；空格也照样记一笔，它在字节序里排在字母前面。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把某个字符的次数单独打出来：一条 std::println，逗号后面用方括号查那个单引号括起来的字符。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{[^}\"]*\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\[\\s*'[^']'\\s*\\]"],
+      "sample": "std::println(\"l = {}\", chars['l']);",
+      "why": "字符键要写单引号；这一查读的是词典里那一格的计数，hello world 里 l 是 3 次。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "freq[w]++ 一句顶三块：方括号在键不存在时建一条值为 0 的新记录，自增再把那一格加一。",
+    "词表是 python java python c++ python java 时，按字典序打出来是 c++ 1 次、java 2 次、python 3 次：次数最高的反而排在最后，map 不按值排。",
+    "顺手找最热的那个词：遍历词典时一边比 count 一边记下 best 和那个词，比的是值、留的是键。",
+    "查某个人在不在名单里又不想让名单变长，就别拿方括号读：那种场合用 contains 加 at。",
+    "键还可以是词的长度：by_len[w.size()]++ 先按长度归堆，打出来是几个字母的词各有几个。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <map>\n#include <print>\n#include <string>\n#include <vector>\n\nint main() {\n    std::vector<std::string> words = {\"python\", \"java\", \"python\", \"c++\", \"python\", \"java\"};\n    std::map<std::string, int> freq;\n    for (const auto& w : words) freq[w]++;            // 核心就这一行\n    for (const auto& [word, count] : freq)\n        std::println(\"{:<8} {} 次\", word, count);\n    // 比 vector 加 struct 那一版：少了 struct 定义、少了从头扫到尾的 find_word、少了那段 if 分叉，打印照旧\n\n    std::map<char, int> chars;\n    std::string s = \"hello world\";\n    for (char c : s) chars[c]++;                       // 空格也照样记一笔\n    std::println(\"l = {}\", chars['l']);\n    std::println(\"o = {}\", chars['o']);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <map>\n#include <print>\n#include <string>\n#include <vector>\n\nint main() {\n    std::vector<std::string> words = {\"python\", \"java\", \"python\"};\n    std::map<std::string, int> freq;\n    for (const auto& w : words) freq[w]++;\n    for (const auto& [word, count] : freq) std::println(\"{:<8} {} 次\", word, count);\n    return 0;\n}\n",
+      "#include <map>\n#include <print>\n#include <string>\n#include <vector>\n\nint main() {\n    std::vector<std::string> words = {\"python\", \"java\"};\n    std::map<std::string, int> freq;\n    for (const auto& w : words) {\n        if (freq.contains(w)) freq[w] = freq[w] + 1; else freq[w] = 1;\n    }\n    return 0;\n}\n",
+      "#include <map>\n#include <print>\n#include <string>\n\nint main() {\n    std::map<char, int> chars;\n    std::string s = \"hello\";\n    for (char c : s) chars[c]++;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < map >\n# include < print >\n# include < string >\n# include < vector >\n\nint  main ( )\n{\n    std::vector < std::string >  list = { \"a\", \"bb\", \"a\" } ;\n    std::map < std::string , int >  cnt ;\n    for (const auto&  one : list)  cnt [ one ] ++ ;\n    for (const auto& [k, n] : cnt) std::println(\"{:<8} {} 回\", k, n);\n    // 比 vector 加 struct 那一版少了 struct、少了从头扫到尾的查找、少了 if 分叉\n\n    std::map< char , int >  letters ;\n    std::string  text = \"hello world\";\n    for (char  ch :  text)  letters [ ch ] ++ ;\n    std::println( \"次数 {}\" , letters [ 'l' ] ) ;\n    return 0;\n}\n"
+    ]
+  }
+}

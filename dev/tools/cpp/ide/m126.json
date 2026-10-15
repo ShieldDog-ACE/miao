@@ -1,0 +1,97 @@
+{
+  "cid": "m126",
+  "note": "魔法值的问题改单编辑器：源稿真实任务只有 1 条（想一想：编译器为什么不提醒忘了检查 -1），coversTask 全部只打 1。按规矩五配成「真写出 return -1 的暗号函数 + 真把返回值当下标读 + 撞上真数据的 -1 + 换成返回 bool 加引用参数的写法」，想一想本身收进 buffer 注释档。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把数组工具箱（#include <vector>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": [
+        "#\\s*include\\s*<\\s*vector\\s*>",
+        "\\bint\\s+main\\s*\\("
+      ],
+      "sample": "#include <vector>\n\nint main() {",
+      "why": "查找要有名单可查：vector 的 size 与下标这一套都在 vector 里。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条要想的正是这只函数：写一个收 vector 引用加目标值的查找函数，找不到时 return -1; 当暗号。",
+      "acceptRegex": [
+        "\\w+\\s+\\w+\\s*\\([^)]*vector[^)]*\\)\\s*\\{",
+        "return\\s+-1\\s*;"
+      ],
+      "sample": "int find_index(const std::vector<int>& v, int target) {\n    for (std::size_t i = 0; i < v.size(); ++i)\n        if (v[i] == target) return static_cast<int>(i);\n    return -1;\n}",
+      "why": "签名里只有一个 int，没有任何关于「没有」的信息；约定只写在人脑里。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在 main 里真忘检查一次 —— 把返回值接进一个 int，再直接拿它当下标去读那个元素，并用一条 println 打出来。",
+      "acceptRegex": [
+        "=\\s*\\w+\\s*\\(\\s*\\w+\\s*,\\s*\\d+\\s*\\)\\s*;",
+        "\\w+\\s*\\[\\s*\\w+\\s*\\]"
+      ],
+      "sample": "int idx = find_index(scores, 99);\nstd::println(\"拿它当下标读: {}\", scores[idx]);",
+      "why": "没找到时 idx 是 -1，这一读越到了名单外面：编译器一路放行，因为它只看见一个 int。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：让暗号撞上真数据 —— 开一个装 int 的 vector，初值里就有一个 -1。",
+      "acceptRegex": [
+        "vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{[^{}]*-1[^{}]*\\}"
+      ],
+      "sample": "std::vector<int> a = {3, -1, 5};   // 零下 1 度是正经读数",
+      "why": "数据的地盘和「没有」挤在同一个 int 里就会撞车：-1 既是读数又是暗号，谁也分不清。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：换掉暗号那一步 —— 另写一只返回 bool、用 int 引用参数把结果带出来的函数，调用处用 if 挡住再打印。",
+      "acceptRegex": [
+        "bool\\s+\\w+\\s*\\(",
+        "\\w+&\\s*\\w+",
+        "if\\s*\\(\\s*\\w+"
+      ],
+      "sample": "bool find_index(const std::vector<int>& v, int target, int& out) { ... }\nif (find_index(scores, 55, pos)) std::println(\"找到 55，下标 {}\", pos);",
+      "why": "有 还是 没有 变成返回值自带的两种状态：不处理就过不去，编译器这才看得见这条约定。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用一行注释回答编译器为什么不提醒、它知不知道 -1 是暗号（至少四个字，正则只验你写了注释）。",
+      "acceptRegex": [
+        "//[^\\n]{4,}"
+      ],
+      "sample": "// 它只看见一个 int：暗号是人和人约好的，类型里没有这一格，所以提醒不了",
+      "why": "这是一道想清楚的题，判分器只能确认你把结论写下来了，内容对不对要主控读。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "暗号写在人脑里、靠注释靠自觉；写进类型的话编译器看得见，不处理就过不去。",
+    "每个函数各定一套暗号，正常数据还可能正好撞上暗号 —— 零下 1 度是正经读数，跟「没有」撞在一起就分不开了。",
+    "没找到时那个返回值是 -1，拿它当下标读越到了名单外面：这是运行期捅出来的娄子，不是语法错误。",
+    "现有工具里最好的一步是返回 bool 把结果用引用参数带出来，或者让返回值自带「有」与「没有」两格状态。",
+    "把返回值转成下标那一步要写 static_cast<int>(i)，因为 size_t 与 int 是两回事。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint find_index(const std::vector<int>& v, int target) {\n    for (std::size_t i = 0; i < v.size(); ++i)\n        if (v[i] == target) return static_cast<int>(i);\n    return -1;\n}\n\nbool find_index(const std::vector<int>& v, int target, int& out) {\n    for (std::size_t i = 0; i < v.size(); ++i)\n        if (v[i] == target) { out = static_cast<int>(i); return true; }\n    return false;\n}\n\nint main() {\n    std::vector<int> scores = {60, 55};\n    int idx = find_index(scores, 99);\n    std::println(\"idx = {}\", idx);\n    std::println(\"拿它当下标读: {}\", scores[idx]);\n    std::vector<int> a = {3, -1, 5};\n    std::println(\"a 里第一个负数: {}\", a[1]);\n    int pos = 0;\n    if (find_index(scores, 55, pos)) std::println(\"找到 55，下标 {}\", pos);\n    return 0;\n}\n// 编译器不提醒：签名里只有一个 int，暗号是人和人约好的，类型里没有这一格\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint find_index(const std::vector<int>& v, int target) {\n    for (std::size_t i = 0; i < v.size(); ++i) if (v[i] == target) return static_cast<int>(i);\n    return -1;\n}\n\nint main() {\n    std::vector<int> scores = {60, 55};\n    int idx = find_index(scores, 99);\n    if (idx >= 0) std::println(\"{}\", idx);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {60, 55};\n    std::println(\"{}\", scores[0]);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < vector >\n#  include < print >\n\nint  locate ( const std :: vector < int > & v, int want ) {\n    for ( std::size_t i = 0; i < v.size(); ++i )\n        if (v[i] == want) return static_cast<int>(i);\n    return -1;\n}\n\nbool  locate2 ( const std::vector<int>& v, int want, int& where ) {\n    where = 0;\n    return false;\n}\n\nint  main ( )\n{\n  std :: vector < int >  scores = { 60 , 55 } ;\n  int  hole = locate(scores, 99);\n  std::println(\"{}\", scores[hole]);\n  std::vector<int> cold = { 3, -1, 5 };\n  std::println(\"{}\", cold[1]);\n  int  pos = 0;\n  if ( locate2( scores, 55, pos ) ) std::println(\"{}\", pos);\n  return 0;\n}\n// 它只看见 int，暗号是人和人约好的，类型里没有这一格，所以提醒不了\n"
+    ]
+  }
+}

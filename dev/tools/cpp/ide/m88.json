@@ -1,0 +1,82 @@
+{
+  "cid": "m88",
+  "note": "二维 vector 玩矩阵改单编辑器：任务 1 拆成「using 别名 + multiply 收两张表的头 + 先发好结果表的格子 + result[i][j] += a[i][k]*b[k][j]」，任务 2 拆成「下标对调比一格 + 返回 bool 的判断函数找出不等就 return false」；列数取 m[0].size() 这类判断进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "给那张表起个短名字：一行 using，把 vector 套 vector 的 int 起成一个别名。",
+      "acceptRegex": ["\\busing\\s+\\w+\\s*=\\s*std::vector\\s*<\\s*std::vector\\s*<\\s*int\\s*>\\s*>"],
+      "sample": "using Matrix = std::vector<std::vector<int>>;",
+      "why": "三层尖括号不必反复写；外层容器管行、内层管列。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "写出 multiply 的头部：两张表都按引用递给函数，还回来的是这张表那个类型。",
+      "acceptRegex": ["\\w+\\s+multiply\\s*\\(\\s*(const\\s+)?\\w+\\s*&\\s*\\w+\\s*,\\s*(const\\s+)?\\w+\\s*&\\s*\\w+\\s*\\)"],
+      "sample": "Matrix multiply(const Matrix& a, const Matrix& b) {",
+      "why": "按值递整张表就是每圈复印一遍：外层 range-for 都写成 const 引用读行，何况递函数。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "先备好结果表：按第一个数的行数、第二个数的列数发出格子，内层用 std::vector<int>(格数) 默认给 0。",
+      "acceptRegex": ["\\w+\\s+\\w+\\s*\\(\\s*[^,;]+\\s*,\\s*std::vector\\s*<\\s*int\\s*>\\s*\\("],
+      "sample": "Matrix result(a.size(), std::vector<int>(b[0].size()));",
+      "why": "格子还没发出来就写 result[0][0] 是未定义行为；+= 更要那格本来有个 0 在等加。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "三重循环里那一格这么算：result 的第 i 行第 j 格，累加 a[i][k] 乘 b[k][j]。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\[\\s*\\w+\\s*\\]\\s*\\+=\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\[\\s*\\w+\\s*\\]\\s*\\*\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\[\\s*\\w+\\s*\\]"],
+      "sample": "for (size_t k = 0; k < b.size(); ++k)\n    result[i][j] += a[i][k] * b[k][j];",
+      "why": "行乘列：i 走第一个数的行，j 走第二个数的列，k 在中间把这一行与那一列对齐加起来。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：比一比一张表和第 1 题那张转置表 —— 写一句把第 i 行第 j 格和第 j 行第 i 格对调比较的条件。",
+      "acceptRegex": ["(\\w+)\\s*\\[\\s*(\\w+)\\s*\\]\\s*\\[\\s*(\\w+)\\s*\\]\\s*(==|!=)\\s*\\1\\s*\\[\\s*\\3\\s*\\]\\s*\\[\\s*\\2\\s*\\]"],
+      "sample": "if (m[i][j] != m[j][i]) return false;",
+      "why": "对称就是每个位置与自己转置后那一格相等；找出一处不等就不是对称矩阵。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把判断写成一个函数：返回 bool，参数是一张表的引用，里面既有 return false 也有 return true。",
+      "acceptRegex": ["\\bbool\\s+\\w+\\s*\\(\\s*(const\\s+)?\\w+(\\s*<[^>]*>)?\\s*&\\s*\\w+\\s*\\)", "\\breturn\\s+false\\s*;", "\\breturn\\s+true\\s*;"],
+      "sample": "bool symmetric(const Matrix& m) {\n    for (size_t i = 0; i < m.size(); ++i)\n        if (m[i][0] != m[0][i]) return false;\n    return true;\n}",
+      "why": "转置后还等于自己这件事是个判断题，交给一个还回 bool 的函数最顺手；全程不换指向就不用写纸条。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "m[i] 是第 i 行那个 vector，m[i][2] 是第二行的第三格；m.size() 是行数，m[0].size() 是列数。",
+    "方阵时行列数写错看不出来，长方形立刻越界或漏格；每一行的长度可以不同，取不规则的表里 m[0][3] 不报错，只是读到你不想读的地方。",
+    "外层 range-for 写成 const std::vector<int>& row：按引用读行，别每圈复制整行。",
+    "把 m 赋给 b 是整份复制，改副本不动原表：vector 是值类型。",
+    "std::vector<int>(m.size()) 这种写法发出来的格子默认就是 0，正好当累加器的起点；有几列就发几个格子。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nusing Matrix = std::vector<std::vector<int>>;\n\nMatrix multiply(const Matrix& a, const Matrix& b) {\n    Matrix result(a.size(), std::vector<int>(b[0].size()));\n    for (size_t i = 0; i < a.size(); ++i)\n        for (size_t j = 0; j < b[0].size(); ++j)\n            for (size_t k = 0; k < b.size(); ++k)\n                result[i][j] += a[i][k] * b[k][j];\n    return result;\n}\n\nbool symmetric(const Matrix& m) {\n    for (size_t i = 0; i < m.size(); ++i)\n        for (size_t j = 0; j < m[i].size(); ++j)\n            if (m[i][j] != m[j][i]) return false;\n    return true;\n}\n\nint main() {\n    Matrix sq = {{1, 2}, {2, 1}};\n    std::println(\"对称吗 {}\", symmetric(sq));\n    for (const std::vector<int>& row : multiply(sq, sq)) {\n        for (int v : row) std::print(\"{} \", v);\n        std::println(\"\");\n    }\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nstd::vector<std::vector<int>> multiply(std::vector<std::vector<int>> a, std::vector<std::vector<int>> b) {\n    std::vector<std::vector<int>> result;\n    result[0][0] = a[0][0] * b[0][0];\n    return result;\n}\n\nint main() { return 0; }\n",
+      "#include <print>\n#include <vector>\n\nusing Matrix = std::vector<std::vector<int>>;\n\nMatrix multiply(const Matrix& a, const Matrix& b) {\n    Matrix result(a.size(), std::vector<int>(b[0].size()));\n    for (size_t i = 0; i < a.size(); ++i)\n        for (size_t j = 0; j < b[0].size(); ++j)\n            result[i][j] = a[i][j] + b[i][j];\n    return result;\n}\n\nint main() { return 0; }\n",
+      "#include <print>\n#include <vector>\n\nusing Matrix = std::vector<std::vector<int>>;\n\nbool symmetric(const Matrix& m) {\n    for (size_t i = 0; i < m.size(); ++i)\n        for (size_t j = 0; j < m[i].size(); ++j)\n            if (m[i][j] != m[i][j]) return false;\n    return true;\n}\n\nint main() {\n    Matrix m = {{1, 2}, {2, 1}};\n    std::println(\"{}\", symmetric(m));\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < vector >\n# include < print >\n\nusing  Grid = std::vector < std::vector < int > > ;\n\nGrid  multiply ( Grid &  left , Grid &  right )\n{\n    Grid  out ( left.size( ) , std::vector < int > ( right [ 0 ].size( ) ) ) ;\n    for (size_t r = 0; r < left.size(); r++)\n        for (size_t c = 0; c < right [ 0 ].size(); c++)\n            for (size_t t = 0; t < right.size(); t++)\n                out [ r ][ c ] += left [ r ][ t ] * right [ t ][ c ];\n    return out;\n}\n\nbool  same_after_flip ( const  Grid &  g )\n{\n    for (size_t r = 0; r < g.size(); r++)\n        for (size_t c = 0; c < g [ r ].size(); c++)\n            if (g [ r ][ c ] != g [ c ][ r ]) return false;\n    return true;\n}\n\nint  main ( )\n{\n    Grid  sq = { {1, 2}, {2, 1} } ;\n    std::println( \"对称 {}\" , same_after_flip(sq) );\n    for (const std::vector<int>& row : multiply(sq, sq)) {\n        for (int v : row) std::print(\"{} \", v);\n        std::println(\"\");\n    }\n    return 0;\n}\n"
+    ]
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "cid": "m91",
+  "note": "transform 改单编辑器：任务 1 拆成「竖线接加工机 + 机器里真写乘 10 + 看法交给 auto 再走一遍 + 打印原容器两格证明不写回」，任务 2 拆成「vector 装 string 加 return 长度 + 参数按 const 引用收 + 用 auto 遍历那条流」；类型跟着 return 走这类判断进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "给这串数装一台加工机：写一竖线，右边是 std::views::transform 递进去一把 lambda。",
+      "acceptRegex": ["\\w+\\s*\\|\\s*std::views::transform\\s*\\(\\s*\\["],
+      "sample": "nums | std::views::transform([](int x) { return x * x; })",
+      "why": "「有些元素不想要」用 filter，「每个元素都要换成别的东西」用 transform；某些实现里它还会用到 algorithm 那里的东西，只包 <ranges> 会挑灯。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条那一改：加工机里 return 的是这个数乘 10。",
+      "acceptRegex": ["return\\s+\\w+\\s*\\*\\s*10\\s*;"],
+      "sample": "[](int x) { return x * 10; }",
+      "why": "公式只写在这一处；流出去的元素类型就是这条 return 决定的。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把这个看法交给自己一只 auto 变量接住，再用 range-for 走它一遍，每个元素用 std::print 打出来。",
+      "acceptRegex": ["auto\\s+\\w+\\s*=\\s*\\w+\\s*\\|", "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std::print\\s*\\("],
+      "sample": "auto times10 = nums | std::views::transform([](int x) { return x * 10; });\nfor (int v : times10) std::print(\"{} \", v);",
+      "why": "视图记着「怎么加工」，同一个看法能反复走；走一遍就把公式套一遍。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "证明加工不写回原件：用一条 std::println 打原容器的两格，格式串里两个占位坑。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*,\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]"],
+      "sample": "std::println(\"原数组没变: {} {}\", nums[0], nums[4]);",
+      "why": "视图是一层看法，不是新数据，也不动旧数据；要真改原件得自己写赋值圈或收进新容器。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：开一只装 std::string 的 vector 摆几个名字，再用 transform 让加工机 return 那个名字的长度。",
+      "acceptRegex": ["std::vector\\s*<\\s*std::string\\s*>", "return\\s+\\w+\\.size\\s*\\(\\s*\\)\\s*;"],
+      "sample": "std::vector<std::string> names = {\"Anna\", \"Bob\", \"Katherine\", \"Li\"};\nreturn s.size();",
+      "why": "跨类型照样走：写 return s.size() 之后，这条流里流的就是长度而不是名字，类型跟着 return 走。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "那台跨类型的加工机参数按 const 引用收一个 string，然后用一条 for (auto 变量 : 那个看法) 把流打出来。",
+      "acceptRegex": ["\\(\\s*const\\s+std::string\\s*&\\s*\\w+\\s*\\)", "for\\s*\\(\\s*auto\\s+\\w+\\s*:"],
+      "sample": "[](const std::string& s) { return s.size(); }\nfor (auto n : lens) std::print(\"{} \", n);",
+      "why": "按值收一个 string 等于每加工一个都复制一份；流里是长度，类型由加工机定了，就用 auto 接。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "filter 决定谁通过、过去的值不变；transform 决定过去的那个变成什么、一个都不会少 —— 两段管道的职责不能混。",
+    "把平方误写进 filter：那一格要的是真假，一个数被当成真假来看，只有 0 是假，于是 0 被筛掉、其余原样流出去，一个平方都没算。",
+    "接上管道的那一刻一个都没算，遍历时才逐个套公式；同一个视图遍历三遍，公式就被套三遍。",
+    "加工机的返回类型就是流的元素类型：写 return x * x 是 int，写 return s.size() 是无符号长度，写 return 0.5 是 double。",
+    "两条 return 一条回 int 一条回 double 是不合法的，编译器拦得住；transform 从不写回原容器。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <algorithm>\n#include <print>\n#include <ranges>\n#include <string>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5};\n    auto times10 = nums | std::views::transform([](int x) { return x * 10; });\n    for (int v : times10) std::print(\"{} \", v);\n    std::println(\"\");\n    for (int v : times10) std::print(\"{} \", v);\n    std::println(\"\");\n    std::println(\"原数组没变: {} {}\", nums[0], nums[4]);\n\n    std::vector<std::string> names = {\"Anna\", \"Bob\", \"Katherine\", \"Li\"};\n    auto lens = names | std::views::transform(\n                    [](const std::string& s) { return s.size(); });\n    for (auto n : lens) std::print(\"{} \", n);\n    std::println(\"\");\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <algorithm>\n#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5};\n    for (int v : nums | std::views::transform([](int x) { return x * x; })) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5};\n    auto picked = nums | std::views::filter([](int x) { return x * 10; });\n    for (int v : picked) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n#include <string>\n\nint main() {\n    std::vector<std::string> names = {\"Anna\", \"Bob\"};\n    std::vector<int> lens;\n    for (const std::string& s : names) lens.push_back(s.size());\n    for (auto n : lens) std::print(\"{} \", n);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < print >\n# include < ranges >\n# include < vector >\n# include < string >\n# include < algorithm >\n\nint  main ( )\n{\n    std::vector<int> data = {1, 2, 3, 4, 5};\n    auto  ten_times = data | std::views::transform ( []( int  n ) {  return n * 10 ; } ) ;\n    for (int  t : ten_times) std::print( \"{} \", t );\n    for (int  t : ten_times) std::print( \"{} \", t );\n    std::println( \"原件 {} {}\", data[0], data[3] );\n\n    std::vector< std::string >  people = { \"Anna\" , \"Bob\" } ;\n    auto  lengths = people | std::views::transform( []( const std::string &  one ) { return  one.size( ) ; } ) ;\n    for (auto  len : lengths) std::print(\"{} \", len);\n    return 0;\n}\n"
+    ]
+  }
+}

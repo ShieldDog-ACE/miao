@@ -1,0 +1,76 @@
+{
+  "cid": "c61",
+  "note": "const 引用改单编辑器：源稿只有一条任务（在 total 里加一行 v[0] = 0; 编译看报错），coversTask 全写 1；按规矩第五条摊成一对 —— 一条 code 条件要读者真写出那行不许的赋值，一条 buffer 条件要他在旁边记一行报错，剩下的条件收「标准签名 + 只读求和 + 递进去打一枪」，旧六道笔试题的结论进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "请进盒子住的那个头文件：文件顶上写一行 include vector。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*vector\\s*>"],
+      "sample": "#include <vector>",
+      "why": "参数要收 std::vector，就得先请它的头文件；缺这一行报错说的是 std 里没有叫 vector 的名字。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写出「大盒子只读」的标准签名：一个交回 int 的函数，圆括号里收一只 const 打头、后面带 & 的 std::vector<int>。",
+      "acceptRegex": ["int\\s+\\w+\\s*\\(\\s*const\\s+std::vector\\s*<\\s*int\\s*>\\s*&\\s*\\w+\\s*\\)"],
+      "sample": "int total(const std::vector<int>& v) {",
+      "why": "拆开最好记：& 是为了省下整份拷贝，const 是把这只把手上「能写」的权力收走，叠在一起就是又快又安全。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "函数体里只读地把整盒走完：循环外备一本清零的账本，用 for (int x : 盒子) 挨个累加，最后 return 那本账。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*0\\s*;", "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "return\\s+\\w+\\s*;"],
+      "sample": "int sum = 0;\nfor (int x : v) sum += x;\nreturn sum;",
+      "why": "只读的意思是不能写，读法一个都不少：问 size()、取格子、挨个遍历照旧能使，85 加 92 加 78 加 96 得 351。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务那一行：在这个函数体里写一句给盒子第一格赋值的 v[0] = 0; —— 就是要让它编译过不去。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*0\\s*\\]\\s*=\\s*0\\s*;"],
+      "sample": "v[0] = 0;",
+      "why": "想摸原件的那一步被当场拦下：编译不通过，报错停在赋值那一行，说那个位置是只读的 —— 这正是 const 在保护你。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "编译一次，用一行注释记在旁边：报错停在第几行、里面出现哪个词。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 报错停在赋值这一行：读不出来，那个位置是只读的",
+      "why": "这一条只能验你确实记了一行笔记，验不了笔记内容对不对；上一课丢 & 要等跑完才发现，const 这类失败在编译就被拦下，越早暴露的错越便宜。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "在 main 里用花括号造一只装 int 的盒子递进这把工具，再用一条 std::println 把交回来的总分打出来。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{[^}]*\\}", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\(\\s*\\w+\\s*\\)\\s*\\)"],
+      "sample": "std::vector<int> scores = {85, 92, 78, 96};\nstd::println(\"总分 = {}\", total(scores));",
+      "why": "调用处递的是那只盒子本身：不复印、也不许改，函数只是借来看一眼。",
+      "coversTask": 1,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "收一只 vector 有三种签名：传值新建一整个副本，安全但慢；引用不复印、可写原件，权力最大；const 引用不复印、只读，只看不摸。",
+    "读的时候三样都一样能使：v.size() 问几个、v[0] 看第一格、for (int x : v) 挨个走一遍，x 是每轮新建的小盒子。",
+    "本来就不许改的那只盒子（const 那只），只有 const 引用才接得住；函数体里一句赋值给参数的话都没有，就该把 const 写上。",
+    "const 只挡写，不挡越界：空盒子里取 v[0] 照样出事，判空得自己写一句，这件事 const 帮不了你。",
+    "小东西（int、bool）传值就好，用 const 引用只是把签名写啰嗦；真正需要它的是装着几千个元素的盒子。判断顺序两问定形态：改不改、大不大。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint total(const std::vector<int>& v) {\n    int sum = 0;\n    v[0] = 0;                      // 报错停在赋值这一行：那个位置是只读的\n    for (int x : v) sum += x;\n    return sum;\n}\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96};\n    std::println(\"总分 = {}\", total(scores));\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint total(std::vector<int> v) {\n    int sum = 0;\n    for (int x : v) sum += x;\n    return sum;\n}\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96};\n    std::println(\"总分 = {}\", total(scores));\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint total(const std::vector<int>& v) {\n    return 0;\n}\n\nint main() {\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n#  include < vector >\nint  sum_all ( const std::vector< int > & box )\n{\n  int s = 0 ;\n  box[ 0 ] = 0 ;   // 编译器说这一行是只读的\n  for( int one : box ) s += one ;\n  return s ;\n}\nint main ( )\n{\n  std::vector<int>  aa = {1, 2, 3} ;\n  std::println( \"共 {}\" , sum_all ( aa ) ) ;\n  return 0;\n}\n"
+    ]
+  }
+}

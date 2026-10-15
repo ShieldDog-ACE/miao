@@ -1,0 +1,67 @@
+{
+  "cid": "c39",
+  "note": "嵌套循环改单编辑器：任务 1 拆成「外层走 9 步 + 内层上限写死 9 + 一行贴三个占位的算式 + 空串换行写在内层外面」，任务 2 一条包住五行星号那坨嵌套，旧七道笔试题的结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写外层 for：int i 从 1 起，条件走到 9 为止，每轮加一 —— 它管第几行。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+i\\s*=\\s*1\\s*;\\s*i\\s*<=\\s*9\\s*;"],
+      "sample": "for (int i = 1; i <= 9; i++) {",
+      "why": "外层走 9 步就是 9 行；它每挪一格，塞在它循环体里的内层就重新从初值跑一遍。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把内层 for 的上限写死成 9（原来是 j <= i），外层的花括号里再塞这一个完整的 for。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+j\\s*=\\s*1\\s*;\\s*j\\s*<=\\s*9\\s*;"],
+      "sample": "for (int j = 1; j <= 9; j++) {",
+      "why": "内层的上限决定这一行有几个：跟着 i 走是下三角共 45 个，写死 9 就每行都满，成 9 行 9 列的长方形共 81 个。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "内层里用 std::print 往同一行贴一个算式：格式串里留三个占位坑，逗号后面按顺序给 j、i，再给 i 乘 j 的积。",
+      "acceptRegex": ["std::print\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\*\\s*\\w+"],
+      "sample": "std::print(\"{}×{}={}  \", j, i, i * j);",
+      "why": "std::print 不换行，几个算式才贴得成一行；三个坑就三个值，顺序错了乘法表就串位。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "一行打完换行：用 std::println 只给一个空串，位置要在内层花括号的外面、外层花括号的里面。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"\\s*\"\\s*\\)"],
+      "sample": "        std::println(\"\");",
+      "why": "换行那句待在内层之外才一行贴完才另起一行；误写进内层，每个星号各占一行、共 15 行，而且不会有任何报错。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：再写一坨嵌套，外层 i 从 1 走到 5，内层 j 从 1 走到 i，内层里用 std::print 贴一个星号 —— 第 i 行正好 i 个。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+i\\s*=\\s*1\\s*;\\s*i\\s*<=\\s*5\\s*;", "for\\s*\\(\\s*int\\s+j\\s*=\\s*1\\s*;\\s*j\\s*<=\\s*i\\s*;", "std::print\\s*\\(\\s*\"\\s*\\*"],
+      "sample": "for (int i = 1; i <= 5; i++) {\n    for (int j = 1; j <= i; j++) {\n        std::print(\"*\");\n    }\n    std::println(\"\");\n}",
+      "why": "内层上限用外层的计数器 i，星号数就自动等于行号；写成固定数字就不再是三角形。",
+      "coversTask": 2,
+      "score": 25
+    }
+  ],
+  "notes": [
+    "「外层走一步，内层跑满一圈」的准确意思：内层的初始化就写在外层的循环体里，外层每挪一格它都从自己的初值完整跑一遍，所以每一行的内容一模一样。",
+    "总执行次数 = 外层步数 × 每步内层圈数；外层 3 步、内层每步 4 次，内层那一行共执行 12 次。",
+    "j 到 i 时内层总次数是 1+2+……+9 = 45。",
+    "换行那句 std::println 空串应该写在内层的花括号外面，否则每个算式各占一行。",
+    "内外层用同一个变量名会编译报错；内层的计数器每轮都从它的初值重新开始。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    for (int i = 1; i <= 9; i++) {\n        for (int j = 1; j <= 9; j++) {\n            std::print(\"{}×{}={}  \", j, i, i * j);\n        }\n        std::println(\"\");\n    }\n\n    for (int i = 1; i <= 5; i++) {\n        for (int j = 1; j <= i; j++) {\n            std::print(\"*\");\n        }\n        std::println(\"\");\n    }\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    for (int i = 1; i <= 9; i++) {\n        for (int j = 1; j <= i; j++) {\n            std::print(\"{}×{}={}  \", j, i, i * j);\n        }\n        std::println(\"\");\n    }\n\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    for (int i = 1; i <= 5; i++) {\n        for (int j = 1; j <= i; j++) {\n            std::print(\"*\");\n        }\n        std::println(\"\");\n    }\n\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\nint main ( )\n{\n  for(int i=1; i <= 9; i ++)\n  {\n    for(int j=1; j<=9; j++)\n    {\n      std::print( \"{} {}={}  \" , j , i , i*j ) ;\n    }\n    std::println ( \"\" ) ;\n  }\n\n  for ( int i=1; i<=5; i++ )\n  {\n    for ( int j=1; j<=i; j++ ) { std::print (\"*\") ; }\n    std::println(\"\") ;\n  }\n  return 0;\n}\n"
+    ]
+  }
+}

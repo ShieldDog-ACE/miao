@@ -1,0 +1,75 @@
+{
+  "cid": "m156",
+  "note": "任务是 k 取 3 和 8 各跑一遍再手工验证：判定函数、数段数、二分骨架、砍半两句、两个 k、打出 ans 各一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写那个判定函数：bool 打头，最后一句 return 拿剪出来的段数跟目标段数比大小。",
+      "acceptRegex": ["\\bbool\\s+\\w+\\s*\\(", "return\\s+\\w+\\s*>=\\s*\\w+\\s*;"],
+      "sample": "bool ok(const std::vector<int>& rope, int len, int k) {\n    int cnt = 0;\n    for (int r : rope) cnt += r / len;\n    return cnt >= k;\n}",
+      "why": "不直接解方程，只问「这个长度行不行」：这一句把候选切成左边一串真、右边一串假。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "数段数那一圈：用范围 for 走一遍绳子，每根拿长度去除，商累加进一个计数。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "\\w+\\s*\\+=\\s*\\w+\\s*/\\s*\\w+\\s*;"],
+      "sample": "for (int r : rope) cnt += r / len;",
+      "why": "整数除法天然把不够一段的零头扔掉；实测长度从 1 数到 8，段数是 18、8、4、3、2、1、1、1 —— 只可能更少。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "架起二分的骨架：一个 while 判断区间还没见底（小于等于），里头先问出中点 mid。",
+      "acceptRegex": ["while\\s*\\(\\s*\\w+\\s*<=\\s*\\w+\\s*\\)", "\\bint\\s+mid\\s*="],
+      "sample": "int lo = 1, hi = 8;\nwhile (lo <= hi) {\n    int mid = lo + (hi - lo) / 2;",
+      "why": "lo 与 hi 圈住的是候选长度，不是格子下标；机制和上一课一个字没改，只是多带一个 ans 记住最后一次成立的那格。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "两句话把区间砍半：行就把中点记进答案、下界抬到中点之后；不行就把上界压到中点之前。",
+      "acceptRegex": ["\\w+\\s*=\\s*mid\\s*\\+\\s*1\\s*;", "\\w+\\s*=\\s*mid\\s*-\\s*1\\s*;"],
+      "sample": "if (ok(rope, mid, k)) { ans = mid; lo = mid + 1; } else hi = mid - 1;",
+      "why": "行就试试更长，不行就缩短：单调性一断，比如改成恰好 k 段，这套砍半的推理当场失效。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务第 1 条：把 k 先写成 3 跑一遍，再写成 8 跑一遍，两个值都得出现在代码里。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*3\\b", "int\\s+\\w+\\s*=\\s*8\\b"],
+      "sample": "int k = 3, ans = 0;\nint k = 8, ans = 0;",
+      "why": "手工验证：k=3 的真答案是 4 厘米，k=8 是 2 厘米 —— 2 厘米剪出 4+2+1+1=8 段，3 厘米只剩 4 段。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "每跑完一遍用一条 std::println 报答案：那行里要把记住答案的变量打出来。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*\\bans\\b"],
+      "sample": "std::println(\"剪成 {} 段，每段最长 {} 厘米\", k, ans);",
+      "why": "实测 k=19 时三轮全是假，ans 一直停在初值 0，程序照样打印每段最长 0 厘米 —— 那个 0 不是答案，是没人回答。",
+      "coversTask": 1,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "二分买的从来不是快，是单调：绳子越短越容易凑够 k 段，所以真话连着排在左边，问一次 mid 才敢把半边整段扔掉。",
+    "把下界写成 0，实测两根一厘米的绳子第一轮 mid 就是 0，整数除法当场炸：x86 上报浮点异常、退出码 136，不是段错误。",
+    "要么先判长度 1 成不成立，要么让答案的初值取 -1，别让 0 冒充答案。",
+    "把上界从 8 放宽到 100，答案仍是 2 厘米，但判定函数从 3 次涨到 7 次 —— 那正是 log 的代价。",
+    "判定改成恰好 k 段，真话只孤零零落在长度 5 那一格，实测它一本正经地报每段最长 0 厘米；动手前先把段数表打出来。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nbool ok(const std::vector<int>& rope, int len, int k) {\n    int cnt = 0;\n    for (int r : rope) cnt += r / len;\n    return cnt >= k;\n}\n\nint main() {\n    std::vector<int> rope = {8, 5, 3, 2};\n\n    {   // 第一跑：k 取 3\n        int k = 3, ans = 0;\n        int lo = 1, hi = 8;\n        while (lo <= hi) {\n            int mid = lo + (hi - lo) / 2;\n            if (ok(rope, mid, k)) { ans = mid; lo = mid + 1; } else hi = mid - 1;\n        }\n        std::println(\"剪成 {} 段，每段最长 {} 厘米\", k, ans);\n    }\n    {   // 第二跑：k 取 8\n        int k = 8, ans = 0;\n        int lo = 1, hi = 8;\n        while (lo <= hi) {\n            int mid = lo + (hi - lo) / 2;\n            if (ok(rope, mid, k)) { ans = mid; lo = mid + 1; } else hi = mid - 1;\n        }\n        std::println(\"剪成 {} 段，每段最长 {} 厘米\", k, ans);\n    }\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> rope = {8, 5, 3, 2};\n    int k = 3, ans = 0;\n    for (int len = 1; len <= 8; ++len) {\n        int cnt = 0;\n        for (int r : rope) cnt += r / len;\n        if (cnt >= k) ans = len;\n    }\n    std::println(\"每段最长 {} 厘米\", ans);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> rope = {8, 5, 3, 2};\n    int k = 6, ans = 0, lo = 1, hi = 8;\n    while (lo <= hi) {\n        int mid = (lo + hi) / 2;\n        if (mid >= k) hi = mid - 1; else { ans = mid; lo = mid + 1; }\n    }\n    std::println(\"{}\", ans);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\n\nbool  fits ( const std :: vector < int > &  line , int  each , int  want )\n{\n  int  got  =  0 ;\n  for ( int  one : line )  got  +=  one / each ;\n  return  got >= want ;\n}\n\nint  main ( )\n{\n  std :: vector < int >  rope  =  { 8 , 5 , 3 , 2 } ;\n  int  k  =  3 ;\n  int  ans  =  0 ,  lo  =  1 ,  hi  =  8 ;\n  while ( lo <= hi ) {\n    int  mid  =  lo + ( hi - lo ) / 2 ;\n    if ( fits ( rope , mid , k ) ) { ans = mid ; lo = mid + 1 ; }  else  hi = mid - 1 ;\n  }\n  std :: println ( \" 第一段最长 {} 厘米\" , ans ) ;\n  int  want  =  8 ;\n  ans  =  0 ;\n  lo  =  1 ;\n  hi  =  8 ;\n  while ( lo <= hi ) {\n    int  mid  =  lo + ( hi - lo ) / 2 ;\n    if ( fits ( rope , mid , want ) ) { ans = mid ; lo = mid + 1 ; }  else  hi = mid - 1 ;\n  }\n  std :: println ( \" 换成八段就剩 {} 厘米\" , ans ) ;\n}\n"
+    ]
+  }
+}

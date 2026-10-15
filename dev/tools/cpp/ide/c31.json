@@ -1,0 +1,66 @@
+{
+  "cid": "c31",
+  "note": "三目这场的旧题在判「score 改 50 之后 result 装什么、哪个坑取哪头」，编辑器判不了值，就把任务 1 摊成写死 50 加一行三目存进 std::string 再打出来，任务 2 摊成把 (x % 2 == 0) ? even : odd 直接塞进 println；表达式与语句之别、优先级这些只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一只 int 盒子装分数，值就给 50。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*50\\s*;"],
+      "sample": "int score = 50;",
+      "why": "任务 1 就是要把 85 换成 50 再看走哪一头：50 不小于 60，条件为假，于是走冒号那一头。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "一行搞定判定：开一只 std::string 盒子，右边用三目写，条件用括号圈起来，问号后面一个值、冒号后面另一个值。",
+      "acceptRegex": ["std::string\\s+\\w+\\s*=\\s*\\(\\s*\\w+\\s*(>=|<=|>|<|==|!=)\\s*\\d+\\s*\\)\\s*\\?\\s*\"[^\"]*\"\\s*:\\s*\"[^\"]*\""],
+      "sample": "std::string result = (score >= 60) ? \"通过\" : \"未通过\";",
+      "why": "三目永远交出一个值，不存在空的：问号后面是真那头的值，冒号后面是假那头的值，两个都得写；正因为它是个值，才能直接放在等号右边当初始值。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "用一条 std::println 把判定结果打出来：格式串里一个占位坑，逗号后面给那只字符串盒子。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"判定: {}\", result);",
+      "why": "这一行就是拿来对照你预判的结果的：score 是 50 时它打未通过。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：把奇偶判断直接塞进打印：一条 std::println 的坑里放一个三目，条件写某个数 % 2 == 0，两头一边给 even、一边给 odd。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\(\\s*\\w+\\s*%\\s*2\\s*==\\s*0\\s*\\)\\s*\\?", "\"even\"", "\"odd\""],
+      "sample": "std::println(\"{}\", (x % 2 == 0) ? \"even\" : \"odd\");",
+      "why": "三目可以直接当打印坑里的内容，不用先开一只盒子接；条件是 x % 2 == 0，偶数走问号那头，奇数走冒号那头。",
+      "coversTask": 2,
+      "score": 25
+    },
+    {
+      "stem": "再写一行谁大取谁：开一只 int 盒子，右边用三目在两只 int 盒子中间挑一个大的。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*\\(\\s*\\w+\\s*>\\s*\\w+\\s*\\)\\s*\\?\\s*\\w+\\s*:\\s*\\w+\\s*;"],
+      "sample": "int bigger = (a > b) ? a : b;",
+      "why": "它的定位就是二选一再存起来这种小场面；分支里要干的不止取值这一件事，就该回到 if/else 或 switch。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "三目运算符是表达式不是语句：它本身就是一个值，可以当初始值、当参数、当打印坑里的内容；if/else 是语句，自己没有值。",
+    "条件部分建议永远加上一对括号，一眼看出条件到哪里结束，也避开加法这类优先级更高的运算符带来的误会。",
+    "int r = (score >= 60) ? 1 : 0 + 5; 走假分支时 r 是 5，不是 1 或 6：加法的优先级比 ?: 高，0 + 5 先算成 5。",
+    "两个分支一个给数字一个给字符串，编译器会因为定不下类型而报错，两头得是同一种类型。",
+    "从两个候选值里挑一个、逻辑一眼看完时用三目最省；某个分支要连着做三件事，或者分支里要打印两行不同内容，就不该硬塞。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nint main() {\n    int score = 50;\n    std::string result = (score >= 60) ? \"通过\" : \"未通过\";\n    std::println(\"判定: {}\", result);\n\n    int a = 7;\n    int b = 3;\n    int bigger = (a > b) ? a : b;\n    std::println(\"较大值: {}\", bigger);\n\n    int x = 10;\n    std::println(\"{}\", (x % 2 == 0) ? \"even\" : \"odd\");\n    x = 7;\n    std::println(\"{}\", (x % 2 == 0) ? \"even\" : \"odd\");\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int score = 50;\n    if (score >= 60) {\n        std::println(\"通过\");\n    } else {\n        std::println(\"未通过\");\n    }\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int score = 50;\n    std::string result = score >= 60 ? \"通过\" : \"未通过\";\n    std::println(\"{}\", result);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < string >\n#  include <print>\n\nint main ( )\n{\n  int  pts = 50 ;\n  std::string  pan = ( pts >= 60 ) ? \"过\" : \"没过\" ;\n  std::println( \"判定是 {}\", pan );\n  int m = 2, n = 9;\n  int  max2 = ( m > n ) ? m : n ;\n  int k = 8;\n  std::println( \"奇偶 {}\" , ( k % 2 == 0 ) ?  \"even\" : \"odd\" );\n}\n"
+    ]
+  }
+}

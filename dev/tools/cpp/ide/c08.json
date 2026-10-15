@@ -1,0 +1,66 @@
+{
+  "cid": "c08",
+  "note": "整数与四则运算改单编辑器：任务 1 拆成「存两个 int + 打加法表达式 + 打减法表达式」，任务 2 单独一条星号乘 2 再加的打印，心算那半步收进 notes（预测判不了）。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "存两个数：写出至少一行 int 声明，右边的值随你挑（别照抄 10），当场给上。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*\\d+\\s*;"],
+      "sample": "int a = 20;",
+      "why": "表达式每次用到都按盒子当下的值重算：改了初值，等于改了所有用到它的算式。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把两个盒子的和打出来：占位坑里放 a + b 这种加法表达式，别先把结果手算成数字写进去。",
+      "acceptRegex": ["std::println\\s*\\([^)]*\\w+\\s*\\+\\s*\\w+"],
+      "sample": "std::println(\"a + b = {}\", a + b);",
+      "why": "表达式就是一个还没算出来的数，交给打印那一刻才塌成 23。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把两个盒子的差打出来：占位坑里放减法表达式。",
+      "acceptRegex": ["std::println\\s*\\([^)]*\\w+\\s*-\\s*\\w+"],
+      "sample": "std::println(\"应找 {} 元\", paid - total);",
+      "why": "两个 int 相减，结果的类型还是 int：整数运算在整数范围里闭合，不会算出小数。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务 2 那一行：新加一条 std::println，把「某个盒子乘 2 再加另一个盒子」的结果打出来 —— 乘号写星号。",
+      "acceptRegex": ["std::println\\s*\\([^)]*\\w+\\s*\\*\\s*2\\s*\\+\\s*\\w+"],
+      "sample": "std::println(\"{}\", a * 2 + b);",
+      "why": "星号才是乘号，写 × 编译器认不出来；先乘后加，20 加 3 塌成 23。",
+      "coversTask": 2,
+      "score": 30
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "乘号在这里是星号：键盘上没有数学里的 ×，写 × 编译器认不出来。",
+    "表达式是「一个还没算出来的数」：读盒子不改盒子，a + b 不会把 a、b 的值改掉。",
+    "先乘后加：a * 2 + b 先把 a 换成值，算乘法得 20，再加 3 得 23。",
+    "等号是「右算左装」：hp = hp - 30 先把右边算成 70，再装回 hp。",
+    "int triple = 3 * a; 里 triple 拿到的是一个算好的数，不是公式；斜杠除法下一课才讲。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int a = 20;\n    int b = 3;\n\n    std::println(\"a = {}, b = {}\", a, b);\n    std::println(\"a + b = {}\", a + b);\n    std::println(\"a - b = {}\", a - b);\n    std::println(\"a * 2 + b = {}\", a * 2 + b);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int a = 10;\n    std::println(\"{}\", a);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int a = 10;\n    int b = 3;\n    std::println(\"{}\", 13);\n    std::println(\"{}\", a × 2 + b);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include   < print >\nint  main ( )\n{\n  int  first = 9;   int  second = 4;\n  std::println( \"和 {}\", first + second );\n  std::println( \"差 {}\", first-second );\n  std::println( \"{}\" , first  *  2 + second );\n}\n"
+    ]
+  }
+}

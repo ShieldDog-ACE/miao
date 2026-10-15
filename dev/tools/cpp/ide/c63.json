@@ -1,0 +1,76 @@
+{
+  "cid": "c63",
+  "note": "冒泡第 1 步改单编辑器：源稿只有一条任务（换成 3 1 4 2 再跑，在纸上写出每次交换后的样子），coversTask 全写 1；代码条件按正文那套一轮的形制拆成「盒子换成这四个数 + size_t 那格 for + 相邻比大小 + 三只盒子换 + 每步打一行」，纸上那份过程落成一条 buffer 注释，旧六道笔试题的结论进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把盒子里的内容换成任务给的那一串：花括号里按顺序写 3、1、4、2。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{\\s*3\\s*,\\s*1\\s*,\\s*4\\s*,\\s*2\\s*\\}"],
+      "sample": "std::vector<int> v = {3, 1, 4, 2};",
+      "why": "换一串数再跑一轮，正是这一课要你看清「一轮只保证一件事」的那次实验。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写走一轮的那个 for：编号从无符号的 0 起，条件写成右边那格必须存在（j 加 1 还小于 size()）。",
+      "acceptRegex": ["for\\s*\\(\\s*(?:size_t|int)\\s+\\w+\\s*=\\s*0\\s*;[^\\n]*\\+\\s*1\\s*<[^\\n]*\\.\\s*size\\s*\\(\\s*\\)"],
+      "sample": "for (size_t j = 0; j + 1 < v.size(); j++) {",
+      "why": "比的是相邻的空隙而不是格子本身，n 格一轮比 n - 1 次；这个停止条件保证不会去摸盒子外面。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "循环体里问一句：左边那格是不是比右边那格大。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*>\\s*\\w+\\s*\\[\\s*\\w+\\s*\\+\\s*1\\s*\\]"],
+      "sample": "if (v[j] > v[j + 1]) {",
+      "why": "相邻两格比一比，左边比右边大才动手；比完这一对就往后挪一格。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "大就交换，三只盒子按顺序来：先用一只临时 int 接住左边的旧值，再把右格搬进左格，最后把接住的那份放进右格。",
+      "acceptRegex": ["int\\s+(\\w+)\\s*=[^;]*;[\\s\\S]{0,200}?[^;\\n]*=\\s*\\1\\s*;"],
+      "sample": "int t = v[j];\nv[j] = v[j + 1];\nv[j + 1] = t;",
+      "why": "只写两行赋值不行：赋值是覆盖，第一行跑完左格原来的值就不在了，第二行读到的已经是刚搬过来的右值，两格变成同一个数。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把每一步念出来：在 for 的花括号里、if 的外面写一条 std::println，两个占位坑按顺序给当前的 j 和整盒。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"j = {} 之后: {}\", j, v);",
+      "why": "打印写在 if 外面，三次比较各打一行，一共三行；写在 if 里就只看得到换了几次，看不见没换的那一轮。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "纸上那份过程抄进注释：用一行注释写下每次交换后盒子长什么样。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 纸上抄的：1 3 4 2、1 3 4 2、1 3 2 4，一轮后 4 站到最后面",
+      "why": "这一条只能验你确实写了一行记录，验不了纸上那三行推得对不对 —— 那是这块编辑器判不动的部分。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "n 个格子一轮比 n - 1 次，因为比的是相邻的空隙而不是格子本身，最后一格没有右边那个可以跟它比。",
+    "一轮后的保证只有一条：全场最大值被一路顶到队尾。3 1 4 2 走完一轮是 1 3 2 4，4 站到最后面，前面的 1 3 2 仍然是乱的。",
+    "交换两格必须有一只备用盒：先腾出备用盒、右边的搬进左格、备用盒里那个旧左值放进右格，顺序不能换。",
+    "一轮里同一个数可以被连着比较两次：5 换到 1 号格之后马上又跟 8 比了一次，这就是气泡一路往右冒。",
+    "5 2 8 1 走完一轮是 2 5 1 8，8 到位了前面还乱着；一轮下来一次都没换，说明这一串本来就有序 —— 那是下一课那个开关的原理。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {3, 1, 4, 2};\n\n    for (size_t j = 0; j + 1 < v.size(); j++) {\n        if (v[j] > v[j + 1]) {\n            int t = v[j];\n            v[j] = v[j + 1];\n            v[j + 1] = t;\n        }\n        std::println(\"j = {} 之后: {}\", j, v);   // 纸上抄的：1 3 4 2、1 3 4 2、1 3 2 4，一轮后 4 站到最后面\n    }\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {3, 1, 4, 2};\n    for (size_t j = 0; j + 1 < v.size(); j++) {\n        if (v[j] > v[j + 1]) {\n            v[j] = v[j + 1];\n        }\n    }\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {5, 2, 8, 1};\n    for (size_t j = 0; j + 1 < v.size(); j++) {\n        if (v[j] > v[j + 1]) {\n            int t = v[j];\n            v[j] = v[j + 1];\n            v[j + 1] = t;\n        }\n    }\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n#  include <vector>\nint  main ( )\n{\n  std::vector< int > a = { 3 , 1 , 4 , 2 } ;\n  for( int p = 0; p + 1 < a.size ( ) ; p ++ )\n  {\n    if ( a[p] > a [ p + 1 ] )\n    {\n      int tmp = a[p];\n      a[p] = a[p+1];\n      a[p+1] = tmp ;\n    }\n    std::println( \"第 {} 步 {}\" , p , a ) ;   // 纸上：1 3 4 2，1 3 4 2，1 3 2 4\n  }\n  return 0;\n}\n"
+    ]
+  }
+}

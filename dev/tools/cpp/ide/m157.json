@@ -1,0 +1,75 @@
+{
+  "cid": "m157",
+  "note": "任务两半：443 元那张降序表算张数、面额表反过来再跑一遍。除法与取余配成一对，合计那行打印单列一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 1 条前半：把要凑的金额写成 443。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*443\\s*;"],
+      "sample": "int amount = 443;",
+      "why": "源稿算的是 186 元六张；换成 443 元实测是 9 张。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "把面额表按从大到小写出来：一个 int 数组，六个面值，100 打头、1 收尾。",
+      "acceptRegex": ["int\\s+\\w+\\s*\\[\\s*\\]\\s*=\\s*\\{\\s*100\\s*,\\s*50\\s*,\\s*20\\s*,\\s*10\\s*,\\s*5\\s*,\\s*1\\s*\\}"],
+      "sample": "int coins[] = {100, 50, 20, 10, 5, 1};",
+      "why": "面对 100：186 / 100 = 1 张，186 % 100 = 86 —— 表序就是每步的当前最大。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "每一档两步：开一个 int 用除法算出这个面额能拿几张，再用取余把凑走的部分剪掉。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*\\w+\\s*/\\s*\\w+\\s*;", "\\w+\\s*%=\\s*\\w+\\s*;"],
+      "sample": "int n = amount / c;\namount %= c;",
+      "why": "这两个运算符配成一对：除法给出几张，取余给出还剩多少零头。只写除法忘了取余，实测 186 元合计 254 张、余额压根没动。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把每档的张数累加进一个总数，并用一条 std::println 打出合计。",
+      "acceptRegex": ["\\w+\\s*\\+=\\s*\\w+\\s*;", "std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*张[^\"]*\""],
+      "sample": "total += n;\nstd::println(\"合计 {} 张，剩余零头 {}\", total, amount);",
+      "why": "实测 443 元是 9 张：100 四张、20 两张、1 元三张；50、10、5 三档是被那行 if 滤掉的，余额不允许。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条后半：再写一张面额表，把源稿那行反过来，从小到大排。",
+      "acceptRegex": ["int\\s+\\w+\\s*\\[\\s*\\]\\s*=\\s*\\{\\s*1\\s*,\\s*5\\s*,\\s*10\\s*,\\s*20\\s*,\\s*50\\s*,\\s*100\\s*\\}"],
+      "sample": "int small_first[] = {1, 5, 10, 20, 50, 100};",
+      "why": "这一张表就是本课要的那一眼：代码一行都没写错，只是当前被数组顺序定义成了手里第一个碰到的。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "对那张升序表也走一遍：一圈里先用除法把张数累加进去，再用取余把凑走的剪掉。",
+      "acceptRegex": ["\\w+\\s*\\+=\\s*\\w+\\s*/\\s*\\w+\\s*;", "\\w+\\s*%=\\s*\\w+\\s*;"],
+      "sample": "for (int c : small_first) {\n    total += left / c;\n    left %= c;\n}",
+      "why": "实测 186 元这一跑给出 186 张，全是 1 元；443 元那一跑同样离谱 —— 先拿小面额就把每一块钱数一遍。",
+      "coversTask": 1,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "贪心的关键是绝不回头：每步拿当前还能拿的最大面值，拿完就把凑走的部分剪掉，不留候选、不撤销。",
+    "先做取余再除，每一档都算出 0 张，程序一行都不打印；两句的顺序换一下就变成另一回事。",
+    "面额表里混进一个 0，整数除以它不是编译期能抓住的事，实测跑到那一档当场挂掉、核心已转储。",
+    "把 if 大于 0 那行删掉，总张数照旧：那行只是打印的外衣，不是算法。",
+    "贪心给出的张数在本课这套面值上确实最少，但那是面额表给的保证，不是贪心自己的本事；换一张表它当场多花一张。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int coins[] = {100, 50, 20, 10, 5, 1};\n    int small_first[] = {1, 5, 10, 20, 50, 100};\n\n    int amount = 443;\n    int total = 0;\n    for (int c : coins) {\n        int n = amount / c;\n        if (n > 0) std::println(\"{}元 × {}张\", c, n);\n        total += n;\n        amount %= c;\n    }\n    std::println(\"合计 {} 张，剩余零头 {}\", total, amount);\n\n    int left = 443, wrong = 0;\n    for (int c : small_first) {\n        wrong += left / c;\n        left %= c;\n    }\n    std::println(\"从小拿的话给出 {} 张\", wrong);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    int amount = 443;\n    int coins[] = {100, 50, 20, 10, 5, 1};\n    for (int c : coins) std::println(\"{}\", c);\n    std::println(\"合计还没算\");\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int amount = 186;\n    int coins[] = {100, 50, 20, 10, 5, 1};\n    int total = 0;\n    for (int c : coins) {\n        int n = amount / c;\n        total += n;\n        amount %= c;\n    }\n    std::println(\"合计 {} 张\", total);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\nint  main ( )\n{\n  int  big []  =  { 100 , 50 , 20 , 10 , 5 , 1 } ;\n  int  rev []  =  { 1 , 5 , 10 , 20 , 50 , 100 } ;\n  int  rest  =  443 ;\n  int  all  =  0 ;\n  for ( int  d : big )\n  {\n    int  get  =  rest / d ;\n    all  +=  get ;\n    rest  %=  d ;\n  }\n  std :: println ( \" 一共 {} 张\" , all ) ;\n  int  back  =  443 ,  cnt  =  0 ;\n  for ( int  d : rev )\n  {\n    cnt  +=  back / d ;\n    back  %=  d ;\n  }\n  std :: println ( \" 反过来 {} 张\" , cnt ) ;\n}\n"
+    ]
+  }
+}

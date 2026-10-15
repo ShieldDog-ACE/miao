@@ -1,0 +1,81 @@
+{
+  "cid": "c81",
+  "note": "lambda 配 sort 改单编辑器：任务只有一条（把 a > b 改成 a < b），拆成「备好串 + 现场捏一把收两个 int 的裁判 + 连同头尾递进 sort + 裁判身体里现在写的是小于号 + 打出结果 + 三个头文件」；忘改那种只扣这一条的分。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "备好那串数：一只 std::vector<int>，花括号里按源稿给上五个值。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{[^}]+\\}"],
+      "sample": "std::vector<int> nums = {5, 2, 8, 1, 9};",
+      "why": "先有串才有得排：sort 排的就是这一串自己，不用你接返回值。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "现场捏一把裁判：中括号空的，圆括号里收两个 int，身体里 return 一句谁该站前面的比较。",
+      "acceptRegex": ["\\[\\s*\\]\\s*\\(\\s*int\\s+\\w+\\s*,\\s*int\\s+\\w+\\s*\\)", "return\\s+\\w+\\s*[<>]\\s*\\w+\\s*;"],
+      "sample": "[](int a, int b) {\n    return a > b;\n}",
+      "why": "a 和 b 是 sort 每次挑出来递给它的两个元素本身；返回真的意思是 a 该排在 b 前面，不是 a 更大。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把裁判连同头尾两截一起塞进 std::sort 的三个格子：第三个格子就是留给它的。",
+      "acceptRegex": ["std::sort\\s*\\(\\s*\\w+\\.begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.end\\s*\\(\\s*\\)\\s*,\\s*\\["],
+      "sample": "std::sort(nums.begin(), nums.end(), [](int a, int b) { return a < b; });",
+      "why": "sort 管怎么排，你管按什么排；挑哪两位、问多少回都由 sort 决定。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务那一改：裁判身体里现在写的那句是小于号版本（a 比 b 小就让它站前面）。",
+      "acceptRegex": ["return\\s+\\w+\\s*<\\s*\\w+\\s*;"],
+      "sample": "return a < b;",
+      "why": "串于是从前往后长上去；默认规矩本来就是 a < b，这一改等于把默认规则亲手写了一遍。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "用一条 std::println 把排完的那串整个打出来：格式串一个占位坑，逗号后面给那串变量。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"派裁判：{}\", nums);",
+      "why": "vector 能整个递给 {} 这个坑，一行就打完；顺序就是串被原地重排后的新顺序。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：排序工具箱和 vector 头都搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*algorithm\\s*>", "#\\s*include\\s*<\\s*vector\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <algorithm>\n#include <vector>\n\nint main() {",
+      "why": "std::sort 是放在 algorithm 里的函数，不搬进来没人认识它；缺 vector 头就没人认识 std::vector。",
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "std::sort 只给头尾两截时默认也是从小到大；想换规矩就派裁判，第三个格子就是留给它的。",
+    "平手那次必须答假，所以规矩只能用 > 和 <，不能写 >= 或 <=。",
+    "裁判会被喊很多次，不是一场只问一次，所以答案必须自洽：别在身体里改 a 或 b 的值。",
+    "规矩可以有两层：先比长度再比字面，写法是 if (a.size() != b.size()) return a.size() < b.size(); 再接一句 return a < b;。",
+    "按值捕获进来的那份停在定义那一刻的值，后来把原件改了也不算；sort 不靠返回值交货，它改的就是那串本身。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <algorithm>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {5, 2, 8, 1, 9};\n    std::sort(nums.begin(), nums.end(), [](int a, int b) {\n        return a < b;        // 任务：把 > 改成 <，顺序翻过来\n    });\n    std::println(\"派裁判：{}\", nums);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <algorithm>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {5, 2, 8, 1, 9};\n    std::sort(nums.begin(), nums.end());\n    std::println(\"{}\", nums);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    auto judge = [](int a, int b) { return a > b; };\n    std::println(\"{}\", 1);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < vector >\n# include < algorithm >\n# include < print >\n\nint  main ( )\n{\n    std::vector < int >  data = { 5 , 2 , 8 , 1 , 9 } ;\n    std::sort( data.begin( ), data.end( ), [ ] ( int  x , int  y ) {\n        return  x  <  y ;\n    } ) ;\n    std::println( \"改完 {}\" , data ) ;\n    return 0;\n}\n"
+    ]
+  }
+}

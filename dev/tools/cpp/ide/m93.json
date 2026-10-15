@@ -1,0 +1,81 @@
+{
+  "cid": "m93",
+  "note": "常用视图速查改单编辑器：任务 1 拆成「那串数 + take(3) 再接 reverse + 加一行 show + show 那把小工具本体」，任务 2 判「drop(3) 再接 take(3)」这条掐中间段的管道；先 take 还是先 reverse 的语义差别进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 1 条那条窗：先把那串数接 take(3)，再接 reverse，一竖线一竖线写下来。",
+      "acceptRegex": ["\\w+\\s*\\|\\s*std::views::take\\s*\\(\\s*3\\s*\\)\\s*\\|\\s*std::views::reverse"],
+      "sample": "nums | std::views::take(3) | std::views::reverse",
+      "why": "take 问的是此刻流里的头三个，而流已被上一段改过：先截断得 1 2 3，再倒着读就是 3 2 1。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "备好被看的那串数：一只 std::vector<int>，花括号里按顺序给上初值。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{"],
+      "sample": "std::vector<int> nums = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};",
+      "why": "窗框可以搬来搬去，家具一件没动：底下这一份就是全部数据。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务要你加的那一行 show：第一个格子给个名字，第二个格子递上那条带竖线的窗。",
+      "acceptRegex": ["\\bshow\\s*\\(\\s*\"[^\"]*\"\\s*,\\s*\\w+\\s*\\|"],
+      "sample": "show(\"take(3):\", nums | std::views::take(3));",
+      "why": "小工具收的第二个参数是 auto 的窗，窗被问了才给数 —— 一行就把一扇窗打印完。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把 show 这把小工具本体写出来：收一个 std::string 的名字加一个 auto 的窗，体里用 range-for 逐个 std::print。",
+      "acceptRegex": ["\\bvoid\\s+show\\s*\\(\\s*std::string\\s+\\w+\\s*,\\s*auto\\s+\\w+\\s*\\)", "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std::print\\s*\\("],
+      "sample": "void show(std::string label, auto view) {\n    std::print(\"{:<10}\", label);\n    for (int v : view) std::print(\"{} \", v);\n    std::println(\"\");\n}",
+      "why": "冒号后是宽度与对齐：左对齐占 10 格，几行标签才站齐。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：掐出第 4 到第 6 个 —— 先接 drop 扔掉三个，再接 take 只要三个。",
+      "acceptRegex": ["\\|\\s*std::views::drop\\s*\\(\\s*3\\s*\\)\\s*\\|\\s*std::views::take\\s*\\(\\s*3\\s*\\)"],
+      "sample": "nums | std::views::drop(3) | std::views::take(3)",
+      "why": "drop 数的是扔掉几个而不是第几个：写 4 会从第 5 个开始，整个窗口往后挪一格。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：视图那一族的头请进来（#include <ranges>），打印工具箱也请进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*ranges\\s*>", "#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <ranges>\n\nint main() {",
+      "why": "只包 vector 和 print 拿不到 std::views，报错通常长成 std 里没有 views 这个成员。",
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "take、drop、reverse 是窗口：只改从哪看、看几个、朝哪边看，元素本身不动；加工是 filter 与 transform 的职责。",
+    "先 take 再 reverse 得 3 2 1，先 reverse 再 take 得 10 9 8 —— 顺序就是语义，把 lambda 的参数改名才不影响结果。",
+    "视图自己不装数据，它只是架在原数据上的一扇窗：构造一条管道几乎不花钱，同一个视图遍历两遍结果一样，因为它不消耗数据。",
+    "reverse 不会把 vector 里的元素真的倒过来摆；把窗口接在一个临时容器上再留着以后用是最阴的坑，房子没了窗框也就悬空。",
+    "drop(7) 之后看到的第一个元素，是原数据里的第 8 个：想从第几个开始看，参数就写它减一。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <ranges>\n#include <string>\n#include <vector>\n\nvoid show(std::string label, auto view) {\n    std::print(\"{:<10}\", label);\n    for (int v : view) std::print(\"{} \", v);\n    std::println(\"\");\n}\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};\n    show(\"take(3):\", nums | std::views::take(3));\n    show(\"reverse:\", nums | std::views::reverse);\n    show(\"前三再倒过来:\", nums | std::views::take(3) | std::views::reverse);   // 3 2 1\n    show(\"第 4 到 6:\", nums | std::views::drop(3) | std::views::take(3));     // 4 5 6\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};\n    for (int v : nums | std::views::reverse) std::print(\"{} \", v);\n    std::println(\"\");\n    return 0;\n}\n",
+      "#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};\n    for (int v : nums | std::views::reverse | std::views::take(3)) std::print(\"{} \", v);\n    std::println(\"\");\n    return 0;\n}\n",
+      "#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5};\n    std::println(\"{}\", nums[0]);\n    for (int v : nums | std::views::drop(4) | std::views::take(3)) std::print(\"{} \", v);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < vector >\n# include < ranges >\n# include < print >\n# include < string >\n\nvoid  show ( std::string  name , auto  win )\n{\n    std::print( \"{:<10}\", name );\n    for (int  one : win) std::print( \"{} \", one );\n    std::println(\"\");\n}\n\nint  main ( )\n{\n    std::vector< int >  data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};\n    show( \"前三再倒过来:\", data | std::views::take ( 3 ) | std::views::reverse ) ;\n    show( \"中间一段:\", data | std::views::drop( 3 ) | std::views::take( 3 ) );\n    return 0;\n}\n"
+    ]
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "cid": "m94",
+  "note": "iota 与惰性改单编辑器：任务 1 拆成「只给一个起点的 iota 加 ranges 头 + 立方加工机 + take(5) 刹车 + 遍历打印」，任务 2 拆成「加工机里先打标记再 return」加一行注释写不惰性会怎样；半开口径与刹车不是剪刀那些判断进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "凭空起一条没有终点的流：只给一个起点的 std::views::iota，并把视图那一族的头请进来（#include <ranges>）。",
+      "acceptRegex": ["std::views::iota\\s*\\(\\s*1\\s*\\)", "#\\s*include\\s*<\\s*ranges\\s*>"],
+      "sample": "std::views::iota(1)                       // 无限流 1 2 3 …",
+      "why": "只给一个参数的 iota 表示没有终点：它保证能被一位一位要下去，但不保证有长度可问，也不保证能下标随机取。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条那一改：加工机把这个数连乘自己两次，return 它的立方。",
+      "acceptRegex": ["return\\s+(\\w+)\\s*\\*\\s*\\1\\s*\\*\\s*\\1\\s*;"],
+      "sample": "[](int n) { return n * n * n; }",
+      "why": "同一个名字连写三次才是立方；写 n * n 是平方，头五个会变成 1 4 9 16 25。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "给无限流踩一脚刹车：管道末尾再续一段 std::views::take，只要前 5 个。",
+      "acceptRegex": ["\\|\\s*std::views::take\\s*\\(\\s*5\\s*\\)"],
+      "sample": "| std::views::take(5);",
+      "why": "take 决定上游最多被要五次，第六个数从未被造出来 —— 惰性才让它成为刹车而不是剪刀。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把整条流交给一只 auto 变量，再用 range-for 走它，每个数用 std::print 打出来。",
+      "acceptRegex": ["auto\\s+\\w+\\s*=", "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std::print\\s*\\("],
+      "sample": "auto cube = std::views::iota(1) | std::views::transform([](int n) { return n * n * n; }) | std::views::take(5);\nfor (int v : cube) std::print(\"{} \", v);",
+      "why": "整条管道写好的那一刻一个字都没打印、一个数都没造，只登记下做法；for 来要的那一刻才现算。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条那双眼睛：在加工机的花括号里，return 之前先 std::print 一句标记，看清这个数是被谁要出来的。",
+      "acceptRegex": ["std::views::transform\\s*\\(\\s*\\[[^\\]]*\\]\\s*\\([^)]*\\)\\s*\\{\\s*std::print"],
+      "sample": "std::views::transform([](int n) { std::print(\"[造 {}]\", n); return n * n; })",
+      "why": "标记只在 for 圈真来要的时候才打印：造几个打几个，take 说要四个就只打四行标记。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "用一行注释回答任务第 2 条：要是视图不惰性，接上管道就立刻把全部结果算好存起来，那段无限流会怎样。",
+      "acceptRegex": ["//[^\\n]*(惰性|走不完|造完|算完|终点|刹车|剪刀)"],
+      "sample": "// 不惰性就根本走不完：建立视图那一刻得数完一个没有终点的序列，take 退化成先造完再剪短",
+      "why": "这一条为什么这么出：正则只能验注释里点到了这些说法，推得对不对得人来读，判不严格。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "std::views::iota(1, 6) 是半开口径：右端写的是数到哪儿停，6 取不到，打出来是 1 2 3 4 5；想含 6 就写 iota(1, 7)。",
+    "建立视图只是登记做法：写下 iota 接 transform 接 take 的那一刻什么都没造，只记下怎么给下一个、怎么换算、要几个。",
+    "提示句先出来，证明建视图时一个都没造；四个标记和四个平方交替出现，而且刚好四个。",
+    "同一个 iota 视图遍历两遍，数数机会从头再数两遍；它不消耗数据，也不留下一份结果。",
+    "右端的 take(5) 不是把已经造好的结果裁短：造多少由被要多少次决定，没被要的那部分压根没存在过。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <ranges>\n\nint main() {\n    auto cube = std::views::iota(1)\n              | std::views::transform([](int n) { std::print(\"[造 {}]\", n); return n * n * n; })\n              | std::views::take(5);\n    std::println(\"视图建好了，上面一个字都没打印\");\n    for (int v : cube) std::print(\"{} \", v);\n    std::println(\"\");\n    // 不惰性就根本走不完：建立视图那一刻得数完一个没有终点的序列，take 退化成先造完再剪短\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <ranges>\n\nint main() {\n    auto sq = std::views::iota(1, 6)\n            | std::views::transform([](int n) { return n * n; })\n            | std::views::take(5);\n    for (int v : sq) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <print>\n#include <ranges>\n\nint main() {\n    for (int v : std::views::iota(1) | std::views::transform([](int n) { return n * n * n; })) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <print>\n#include <ranges>\n\nint main() {\n    auto noisy = std::views::iota(1) | std::views::transform([](int n) { std::print(\"[造 {}]\", n); return n + n; });\n    std::println(\"建好了\");\n    for (int v : noisy) std::print(\"{} \", v);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <ranges>\n# include < print >\n\nint  main ( )\n{\n    auto  third = std::views::iota ( 1 )\n        | std::views::transform ( []( int  k ) { std::print( \"造 {}\", k ); return  k * k * k ; } )\n        | std::views::take ( 5 ) ;\n    std::println( \"视图建好，上面还没打印任何东西\" );\n    for (int  one : third) std::print(\"{} \", one);\n    // 不惰性的话这一段根本走不完：上游是一条没有终点的流，take 就成了剪刀而不是刹车\n    return 0;\n}\n"
+    ]
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "cid": "m191",
+  "title": "第 191 课考试 · 两个栈倒出一个队列",
+  "task": "任务题目：用两个栈拼出一个队列 —— 先把 1、2、3 依次放进入口那头的栈，再倒到出口那头的栈取人；取到一半往入口补一个 4，看看名单怎么变；最后反过来玩一遍，用两条队列拼出一个栈。",
+  "hint": "卡住了先回看本课「原理讲解」那一节和课末【任务】那两条 —— 这一课的演示代码还没落稿（正文里那三段还是占位），家什暂时只在源稿的任务里。",
+  "note": "这一课从来没排过考，正文的三段演示还是占位（只有标题和目标那句是真话），题面、条件、notes 全按源稿两条任务和栈队列那两课教过的写法搭；任务 1 拆成倒水 + 取人 + 补 4 三条，任务 2 拆成两条队列挪人一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写两行：开出两个装 int 的栈，一个当入口那头的 in，一个当出口这头的 out。",
+      "acceptRegex": [
+        "std\\s*::\\s*stack\\s*<\\s*int\\s*>\\s+in\\s*;",
+        "std\\s*::\\s*stack\\s*<\\s*int\\s*>\\s+out\\s*;"
+      ],
+      "sample": "std::stack<int> in;\nstd::stack<int> out;",
+      "why": "两个栈各管一扇门：in 只管收人，out 只管放人，先进先出就是从这一倒一拿拼出来的。",
+      "score": 15
+    },
+    {
+      "stem": "把 1、2、3 三个人依次请进 in 这一头：三次 push，一个接一个。",
+      "acceptRegex": [
+        "in\\s*\\.\\s*push\\s*\\(\\s*1\\s*\\)",
+        "in\\s*\\.\\s*push\\s*\\(\\s*2\\s*\\)",
+        "in\\s*\\.\\s*push\\s*\\(\\s*3\\s*\\)"
+      ],
+      "sample": "in.push(1);\nin.push(2);\nin.push(3);",
+      "why": "在栈这头人是倒着摞的：最后放的 3 压在最上面，所以必须靠倒水把它翻回 1、2、3。",
+      "score": 15
+    },
+    {
+      "stem": "倒水：先看 out 空不空，只有它空着才动手；趁 in 还没空，把 in 顶上那个接过来压进 out，再把 in 的顶上拿走。",
+      "acceptRegex": [
+        "out\\s*\\.\\s*empty\\s*\\(",
+        "in\\s*\\.\\s*empty\\s*\\(",
+        "out\\s*\\.\\s*push\\s*\\(\\s*in\\s*\\.\\s*top\\s*\\(\\s*\\)\\s*\\)",
+        "in\\s*\\.\\s*pop\\s*\\("
+      ],
+      "sample": "if (out.empty()) {\n    while (!in.empty()) {\n        out.push(in.top());\n        in.pop();\n    }\n}",
+      "why": "out 里还压着人就去动 in，倒进来的新人会插到还没放出去的人前面 —— 这就是必须等 out 空了才倒的道理。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "取人：从 out 这一头顶上把那个人报出来，再把他送走（top 和 pop 都得用上）。",
+      "acceptRegex": [
+        "out\\s*\\.\\s*top\\s*\\(",
+        "out\\s*\\.\\s*pop\\s*\\("
+      ],
+      "sample": "std::println(\"出队 {}\", out.top());\nout.pop();",
+      "why": "倒过一次水之后 out 的顶上正是最早进来的那个，从这头拿人就是队首出队。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：出到一半再来新人 —— 往 in 里 push 一个 4，然后再打一行看看 out 这头顶上是谁。",
+      "acceptRegex": [
+        "in\\s*\\.\\s*push\\s*\\(\\s*4\\s*\\)",
+        "std\\s*::\\s*println\\s*\\("
+      ],
+      "sample": "in.push(4);\nstd::println(\"补进 4 之后，out 顶上还是 {}\", out.top());",
+      "why": "4 落在 in 那一头排到最后，out 里还没放出去的人照旧先走；顺序没乱，就是这一条要你亲眼看到的。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：反过来玩 —— 开两条队列，把第一条里除了最后一个人以外的都挪到第二条，露在队首的那个就是栈顶，报出来再送走。",
+      "acceptRegex": [
+        "std\\s*::\\s*queue\\s*<\\s*int\\s*>\\s+\\w+\\s*;[\\s\\S]{0,80}?std\\s*::\\s*queue\\s*<\\s*int\\s*>",
+        "\\bwhile\\s*\\(",
+        "\\.\\s*front\\s*\\(\\s*\\)",
+        "\\.\\s*pop\\s*\\("
+      ],
+      "sample": "while (a.size() > 1) {\n    b.push(a.front());\n    a.pop();\n}\nstd::println(\"栈顶是 {}\", a.front());\na.pop();",
+      "why": "队列只会从队首放人，栈顶却是最后进来的那个，所以只能把前面的人都腾到另一条队列里，才露得出栈顶那一个。",
+      "coversTask": 2,
+      "score": 20
+    }
+  ],
+  "notes": [
+    "两个栈拼队列：in 只管收人，out 只管放人，倒一次水顺序就正好翻回来，先进先出是这么拼出来的。",
+    "必须等 out 空了才倒：out 里还压着人就去动 in，倒进来的新人会插到还没放出去的人前面，队伍顺序就乱了。",
+    "出到一半再入队 4，4 排在最后 —— 前面没放出去的人照样先走，这一步就是要你亲手验一遍。",
+    "用两条队列拼栈：栈顶是最后进来的那个，队列只会从队首拿人，得把除了最后一个以外的人先挪到另一条队列。",
+    "报完栈顶还得把那批人挪回原来那条队列，它才接着当栈用。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <stack>\n#include <queue>\n\nint main() {\n    std::stack<int> in;\n    std::stack<int> out;\n    in.push(1);\n    in.push(2);\n    in.push(3);\n\n    if (out.empty()) {\n        while (!in.empty()) {\n            out.push(in.top());\n            in.pop();\n        }\n    }\n    std::println(\"出队 {}\", out.top());\n    out.pop();\n\n    in.push(4);\n    std::println(\"补进 4 之后，out 顶上还是 {}\", out.top());\n\n    std::queue<int> a;\n    std::queue<int> b;\n    a.push(1);\n    a.push(2);\n    a.push(3);\n    while (a.size() > 1) {\n        b.push(a.front());\n        a.pop();\n    }\n    std::println(\"栈顶是 {}\", a.front());\n    a.pop();\n    while (!b.empty()) {\n        a.push(b.front());\n        b.pop();\n    }\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <stack>\nint main() {\n    std::stack<int> in;\n    std::stack<int> out;\n    in.push(1);\n    return 0;\n}\n",
+      "#include <print>\n#include <stack>\n\nint main() {\n    std::stack<int> in;\n    std::stack<int> out;\n    in.push(1);\n    in.push(2);\n    in.push(3);\n    std::println(\"出队 {}\", out.top());\n    out.pop();\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\n# include <stack>\n# include <queue>\n\nint main ( )\n{\n  std::stack<int> in;\n  std::stack<int> out;\n  in . push ( 1 );\n  in.push(2);\n  in.push(3);\n  if ( ! out.empty ( ) )\n  {\n    while ( in.empty() == false )\n    {\n      out.push( in.top() );\n      in.pop();\n    }\n  }\n  std::println( \"拿走 {}\", out.top() );\n  out.pop ( ) ;\n  in.push ( 4 );\n  std::println(\"看看顶上：{}\", out.top());\n  std::queue<int> q1;\n  std::queue<int> q2;\n  q1.push(1); q1.push(2); q1.push(3);\n  while ( q1.size() > 1 ) { q2.push(q1.front()); q1.pop(); }\n  std::println(\"栈顶 {}\", q1.front());\n  q1.pop();\n  while (!q2.empty()) { q1.push(q2.front()); q2.pop(); }\n  return 0;\n}\n"
+    ]
+  }
+}

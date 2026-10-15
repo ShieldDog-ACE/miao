@@ -1,0 +1,80 @@
+{
+  "cid": "m112",
+  "note": "类的骨架改单编辑器：源稿真实任务只有 1 条（旧卷那些 2、3、4 号是虚号，不跟），coversTask 全部只打 1。拆成「class + public 段 + private 段 + 收尾分号」「两个按钮的形状」「带下划线的私有数据给默认值」，再按规矩五配一条伸手进箱子的坏代码加一条 buffer 注释档。const 承诺、图纸与机器进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱（#include <print>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "类定义要放在 main 外面；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：开一个类 —— class 起头，public 段和 private 段都要有，右花括号后面补上那个不是装饰的分号。",
+      "acceptRegex": ["class\\s+\\w+", "public\\s*:", "private\\s*:", "\\}\\s*;"],
+      "sample": "class Score {\npublic:\nprivate:\n    int done_ = 0;\n};",
+      "why": "类定义本身是一条语句，漏了分号会报 expected ';' after class definition 这一类话；函数定义不要分号，这两件事正好相反。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在 public 段里开出两个按钮 —— 一个收 int 的 void 函数负责改值，一个名字后面带 const 的 int 函数只让看。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*int\\s+\\w+\\s*\\)", "int\\s+\\w+\\s*\\(\\s*\\)\\s*const"],
+      "sample": "void add(int n) { done_ += n; }\nint done() const { return done_; }",
+      "why": "const 承诺这个按钮只让看、不让改；改值只有那一个入口，规矩才只用写在一处。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在 private 段里锁住数据 —— 至少一个 int 成员在声明处直接给默认值，名字按正文那样以下划线结尾。",
+      "acceptRegex": ["int\\s+\\w+_\\s*=\\s*\\d+\\s*;"],
+      "sample": "private:\n    int total_ = 100;\n    int done_ = 0;",
+      "why": "对象一出生就带着这些值，不用另写构造的活；零件藏在 private 里，外面只能通过按钮碰。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：造一个这个类的对象，先按一次按钮，再绕过按钮直接把那个带下划线的私有成员写成 9999 —— 这一行就是要编译不过。",
+      "acceptRegex": ["\\w+\\s+\\w+\\s*;", "\\.\\w+_\\s*=\\s*9999\\s*;"],
+      "sample": "Score s;\ns.add(30);\ns.done_ = 9999;",
+      "why": "把 private 改成 public 这一行就过了，但满分才 100 的机器从此每个数字都不再可信 —— 编译器拦下它，正是锁起来要买的东西。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在那一行旁边用注释回答哪种更安全、为什么（至少四个字，正则只验你写了注释，验不了内容）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 编译不过：绕过按钮之后，这台机器之后给出的每个数字都不再可信，锁起来更安全",
+      "why": "这一档判不了内容，只能确认你把结论写下来；结论本身要靠你跑那两步试出来。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "类定义本身是一条语句：右花括号后面必须跟一个分号；函数定义不要分号、类定义要分号，这两件事正好相反。",
+    "按钮是唯一的改值入口，规矩只要写在一处就永远成立；一旦绕过按钮，这台机器之后给出的每个数字都不再可信。",
+    "private 不是防坏人，是防自己：它把不许这样写进编译期，而不是写在注释里求人别碰。",
+    "int done() const 名字后面那个 const 承诺这个按钮只让看、不让改。",
+    "类是图纸，对象是照图纸造出来的机器：两台机器各有一套 done_ 和 total_，互不干扰。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nclass Score {\npublic:\n    void add(int n) {\n        if (n < 0) return;\n        done_ += n;\n        if (done_ > total_) done_ = total_;\n    }\n    int done() const { return done_; }\n    int left() const { return total_ - done_; }\nprivate:\n    std::string subject_ = \"未命名\";\n    int total_ = 100;\n    int done_ = 0;\n};\n\nint main() {\n    Score s;\n    s.add(30);\n    std::println(\"进度 = {}\", s.done());\n    s.done_ = 9999;   // 编译不过：绕过按钮之后每个数字都不再可信，锁起来更安全\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint total = 100;\nint done = 0;\n\nint main() {\n    done = 9999;\n    std::println(\"{}\", done);\n    return 0;\n}\n",
+      "#include <print>\n\nclass Score {\npublic:\n    int total = 100;\n    int done = 0;\n    void add(int n) { done += n; }\n};\n\nint main() {\n    Score s;\n    s.add(30);\n    std::println(\"{}\", s.done);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\n\nclass  Score\n{\n  public :\n      void  bump ( int n ) { done_ += n; }\n      int  read ( )  const { return done_; }\n  private :\n      int cap_ = 100;\n      int done_ = 0;\n};\n\nint  main ( )\n{\n  Score  one ;\n  one.bump(20);\n  std::println(\"进度 {}\", one.read());\n  one.cap_ = 9999;   // 这一步被编译器拦下：锁起来更安全，按钮才是唯一入口\n  return 0;\n}\n"
+    ]
+  }
+}

@@ -918,7 +918,10 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 .crumb-btn.on { color: var(--accent); border-color: var(--accent); }
 
 /* ---- 编辑器：题面那几行 # 注释就在 textarea 里（exam-ui.js 锁区），下面只有行号列 + 叠层 ---- */
-.ide-editor { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; background: var(--ide-bg); }
+/* 编辑器宿主：overflow 必须 clip 在自己这一格里。
+   上一版没框住：.ed 的高度由行号列（gutter）的内容撑出来，题面一长（c06 十五行 + 字号 19）
+   就顶穿宿主，绝对定位的 textarea 与它的横向滚动条画到下面那条页签栏上 —— 他说的「横杠优先级高、会穿模」。 */
+.ide-editor { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; overflow: hidden; background: var(--ide-bg); }
 
 /* 代码区：行号列 + 相对定位的叠层（当前行 → 着色层 → 透明 textarea） */
 .ide-code-row { flex: 1 1 auto; display: flex; min-height: 0; }
@@ -978,7 +981,9 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 /* ---- 共用代码编辑器控件（code-editor.js）：IDE 与笔试代码题同一套四层 ----
    四层（行号 / 当前行 / 着色 / textarea）复用上面 .gt-code / .ide-cur / .ide-hl / .ide-ta，
    这里只补控件自己的外壳与补全弹框。卡片里那枚要自带边框，IDE 里外层已经框好了。 */
-.ed { display: flex; flex-direction: column; min-height: 0; background: var(--ide-bg); }
+.ed { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; background: var(--ide-bg); }
+/* 卡片里那枚（.ed-box）由 JS 给死高度，不跟着宿主长 */
+.ed-box { flex: 0 0 auto; }
 .ed-box { border: 1px solid var(--border); border-radius: 9px; }
 .ed-box:focus-within { border-color: var(--accent); }
 /* 补全弹框贴在光标那一格下面，坐标由 JS 量（字体回落时按格宽乘会偏半个字） */
@@ -995,12 +1000,15 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 .ide-panel {
   flex: 0 0 232px; display: flex; flex-direction: column; min-height: 0;
   border-top: 1px solid var(--ide-line); background: var(--ide-term-bg);
+  /* 压在编辑区之上：编辑器那四层是绝对定位的，静态的栏会被它盖住（就是那条穿模） */
+  position: relative; z-index: 3;
 }
 .ide-panel.hidden-panel { flex: 0 0 auto; }
 .ide-panel.hidden-panel .panel-body { display: none; }
 .panel-split { flex: 0 0 4px; cursor: row-resize; background: transparent; }
 .panel-split:hover, .panel-split.on { background: var(--accent); }
 .panel-tabs {
+  position: relative; z-index: 1;
   flex: 0 0 32px; display: flex; align-items: center; gap: 18px; padding: 0 14px;
   font-size: .7rem; letter-spacing: .6px; color: var(--text-3);
   background: var(--ide-chrome); border-bottom: 1px solid var(--ide-line); user-select: none;

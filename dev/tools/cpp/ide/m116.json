@@ -1,0 +1,71 @@
+{
+  "cid": "m116",
+  "note": "继承与 override 改单编辑器：源稿真实任务只有 1 条（对比有无 override 时编译器的反应），coversTask 全部只打 1。拆成「基类 virtual 的 area + 孩子 public 继承并挂 override + 故意拼成 aer 且照样挂 override」，两种反应按规矩五收进一条 buffer 注释档；开口子与验收、签名三项、基类析构进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱（#include <print>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "两个类写在 main 外面；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：先立父亲 —— 写一个类，里面有一个参数表后面挂着 virtual 的 double area() const，函数体 return 一个 0.0。",
+      "acceptRegex": ["virtual\\s+double\\s+\\w+\\s*\\(\\s*\\)\\s*const", "return\\s+0\\.0\\s*;"],
+      "sample": "class Shape {\npublic:\n    virtual double area() const { return 0.0; }\n};",
+      "why": "virtual 说的是这个方法欢迎孩子改写；基类的 area 留着兜底，没人改写时就走它。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：再立孩子 —— 用 class 名字后面接冒号 public 基类那种写法继承过去，并在孩子里把 area 改写一遍，参数表后面挂上 override。",
+      "acceptRegex": ["class\\s+\\w+\\s*:\\s*public\\s+\\w+", "area\\s*\\(\\s*\\)\\s*const\\s+override"],
+      "sample": "class Circle : public Shape {\npublic:\n    double area() const override { return 3.14159265 * r_ * r_; }\n};",
+      "why": "class Circle : public Shape 读作 Circle 对外就是一个 Shape；override 是请编译器替你确认这一行真的改到了父亲的方法。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：把 area 故意拼成 aer，那一行照样挂着 override 别删 —— 就是要编译器替你查这笔账。",
+      "acceptRegex": ["aer\\s*\\(\\s*\\)\\s*const\\s+override"],
+      "sample": "double aer() const override { return 3.14159265 * r_ * r_; }",
+      "why": "挂着 override 时这一行被当场拦下；同一个报错也出现在参数多写一个、或者孩子自己漏了 const 的情况。",
+      "coversTask": 1,
+      "score": 30,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：再把那一行的 override 删掉跑一次，然后用一行注释写下两种写法各是什么反应（至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 挂着 override 报 marked override but does not override；删掉 override 一路通过，面积打成 0.00",
+      "why": "注释内容判不了，只能验你确实记录了对比；那两样反应要你自己跑两遍看。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "virtual 说这个方法欢迎孩子改写，override 说我这一行就是在改写、请编译器检查：一个开口子，一个验收。",
+    "把 override 删掉又把名字拼错时，编译一路通过，s->area() 走的还是基类那句 return 0.0，屏幕上就是 0.00。",
+    "挂着 override 拼错名字时报 marked 'override', but does not override：它盯的是签名三项对不对得上。",
+    "打算被继承的类，析构要写 virtual，否则孩子那一份不跑；再加一个新图形类型，遍历那一段代码一个字都不用改。",
+    "基类摆在 private 下的数据成员，孩子在类里直接写是报错的，要走父亲留下的公开方法。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nclass Shape {\npublic:\n    virtual ~Shape() = default;\n    virtual double area() const { return 0.0; }\n};\n\nclass Circle : public Shape {\npublic:\n    Circle(double r) : r_(r) {}\n    double area() const override { return 3.14159265 * r_ * r_; }\n    double aer() const override { return 3.14159265 * r_ * r_; }\nprivate:\n    double r_;\n};\n\nint main() {\n    Circle c(2.0);\n    std::println(\"圆的面积 = {:.2f}\", c.area());\n    return 0;\n}\n// 挂着 override 时报 marked 'override' but does not override；把 override 删掉就一路通过，面积还是 0.00\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nclass Shape {\npublic:\n    double area() const { return 0.0; }\n};\n\nclass Circle : public Shape {\npublic:\n    double aer() const { return 3.0 * 3.0; }\n};\n\nint main() {\n    Circle c;\n    std::println(\"{}\", c.aer());\n    return 0;\n}\n",
+      "#include <print>\n\nclass Shape {\npublic:\n    virtual double area() const { return 0.0; }\n};\n\nclass Circle : public Shape {\npublic:\n    double area() const override { return 3.0 * 3.0; }\n};\n\nint main() {\n    Circle c;\n    std::println(\"{}\", c.area());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n\nclass  Shape\n{\n  public :\n      virtual  double  area ( )  const { return 0.0; }\n};\n\nclass  Ring :  public  Shape\n{\n  public :\n      double  area ( )  const  override { return 2.0 * 2.0; }\n      double  aer ( )  const  override { return 2.0; }\n};\n\nint  main ( )\n{\n  Ring  r ;\n  std::println(\"{}\", r.area());\n  return 0;\n}\n// 挂 override 时编译器说 does not override，删掉 override 一声不响，面积还是零\n"
+    ]
+  }
+}

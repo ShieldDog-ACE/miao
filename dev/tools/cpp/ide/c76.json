@@ -1,0 +1,82 @@
+{
+  "cid": "c76",
+  "note": "栈与堆改单编辑器：任务 1 拆成「new 一排格子 + 下标填 + 累加器求和并打印 + 归还撕条」，任务 2 用一条 buffer 要求把注释掉的 delete[] 那行真留在文件里，任务 3 是思考题只能靠注释关键词判形状。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "向仓库申请一整排格子：用 new 要 10 个 int，把还回来的地址交给一张 int* 纸条。",
+      "acceptRegex": ["\\bint\\s*\\*\\s*\\w+\\s*=\\s*new\\s+int\\s*\\[\\s*\\w+\\s*\\]"],
+      "sample": "int* arr = new int[10];",
+      "why": "new 还回来的是地址，所以堆和指针总是一起讲；长度写在这儿，编译期不知道也行。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "用下标把格子里填上数：一行写 arr[i] 等于什么，把 1 到 10 铺进去。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*=[^=]"],
+      "sample": "arr[i] = i + 1;",
+      "why": "堆上的数组照样用下标访问，第 i 格写谁就是写谁。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "算总和：先声明一只 int 累加器从 0 起，用 += 把每一格加进去，最后用一条 std::println 把和打出来。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*0\\s*;", "\\w+\\s*\\+=\\s*\\w+\\s*\\[", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "int sum = 0;\nfor (int i = 0; i < 10; ++i) sum += arr[i];\nstd::println(\"和 = {}\", sum);",
+      "why": "先算完再归还：算的这一步读的就是那块地里的内容。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "还地并撕纸条：用 delete[] 把整排地归还，紧跟一句把那张纸条写成 nullptr。",
+      "acceptRegex": ["delete\\s*\\[\\s*\\]\\s*\\w+\\s*;", "\\w+\\s*=\\s*nullptr\\s*;"],
+      "sample": "delete[] arr;\narr = nullptr;",
+      "why": "数组用 delete[]，单个对象用 delete；归还的是那块地，纸条上那串号照旧写着，所以撕纸条得人自己写。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：把归还那行注释掉再跑一次，让那行以注释的形式留在文件里（// delete[] 纸条名），看清屏幕上一行都不缺。",
+      "acceptRegex": ["//[^\\n]*delete\\s*\\["],
+      "sample": "// delete[] arr;   跑一遍：结果照样对，漏的是那块地",
+      "why": "这种看不到的错误编译器不拦、运行不崩，长期跑的服务会被一点点拖垮。正则只能验那行真被注释掉了，你观察到什么得靠注释本身，判不严格。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务第 3 条：用注释写清楚大数组为什么要放堆上：点到栈和堆各自的容量，或者装不下的后果。",
+      "acceptRegex": ["//[^\\n]*(栈|堆)", "//[^\\n]*(MB|溢出|装不下|几兆|仓库)"],
+      "sample": "// 栈只有几 MB，一百万个 int 是 4 MB 左右，硬放会堆栈溢出当场崩；堆是仓库，自己 new 自己 delete",
+      "why": "栈跟着函数一起消失、快到几乎不要钱，但只有几 MB；堆的大小运行时才定也行。正则只验点到关键词，道理对不对得人来读。",
+      "coversTask": 3,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "函数一进来就摆盒子、一返回就整层自动收走的那块地叫栈：后摆的先收，全靠机器移动一根指针。",
+    "栈上数组的长度必须是编译期就能定下来的数；想让一个东西在函数结束之后还活着，就得让它住堆上。",
+    "delete[] 之后纸条上的地址不会自动变成 nullptr，误用就成了悬垂 —— 赋 nullptr 那是人写的，不是机器做的。",
+    "堆上的数组读起来并不比栈上快，栈更省更快；小数组放栈上照样合法。",
+    "大小运行时才知道的数组只能问堆要：先 std::cin 读进一个 n，再 new int[n]，栈给不出。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int* arr = new int[10];\n    for (int i = 0; i < 10; ++i)\n        arr[i] = i + 1;\n\n    int sum = 0;\n    for (int i = 0; i < 10; ++i)\n        sum += arr[i];\n    std::println(\"和 = {}\", sum);\n\n    delete[] arr;\n    arr = nullptr;\n    // delete[] arr;        刚才把这行注释掉跑了一遍：屏幕上一行不缺，那块地却没还\n    // 栈只有几 MB，一百万个 int 是 4 MB 左右，硬放会堆栈溢出当场崩；堆是仓库，大小运行时才定也行\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    int arr[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};\n    int sum = 0;\n    for (int i = 0; i < 10; ++i) sum += arr[i];\n    std::println(\"和 = {}\", sum);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int* arr = new int[10];\n    for (int i = 0; i < 10; ++i) arr[i] = i + 1;\n    int sum = 0;\n    for (int i = 0; i < 10; ++i) sum += arr[i];\n    std::println(\"{}\", sum);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int* arr = new int[10];\n    delete[] arr;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\nint  main ( )\n{\n    int *  cells = new int [ 10 ] ;\n    for (int k = 0; k < 10; k++)\n        cells [k] = k + 1;\n\n    int  total = 0;\n    for (int k = 0; k < 10; k++)\n        total += cells [k];\n    std::println( \"总共 {}\" , total );\n\n    delete []  cells ;\n    cells = nullptr;\n    // delete[] cells;   任务 2 那一行，跑完再还回来\n    // 表面上一切正常，其实那块地一直没还\n    // 栈只有几 MB，堆是仓库；一百万个 int 大约 4 MB，放栈上当场溢出\n    return 0;\n}\n"
+    ]
+  }
+}

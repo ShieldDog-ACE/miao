@@ -1,0 +1,82 @@
+{
+  "cid": "c73",
+  "note": "内存与地址改单编辑器：任务 1、3 是跑两次对比和想 0x，按 code + buffer 一对办（注释只验形状与关键词，内容判不严格）；任务 2 全在代码里（复制一只、问号、比号、改值再打）。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "用一条 std::println 问出 age 的门牌号：格式串里用 {:p} 这个坑，逗号后面写 & 再加变量名。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{:p\\}[^\"]*\"\\s*,\\s*&\\s*\\w+"],
+      "sample": "std::println(\"age   的地址: {:p}\", &age);",
+      "why": "& 读作取地址，写在变量前面就问这个变量住在几号柜；打地址要用 {:p} 这个坑，普通 {} 打不出规整的号。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把这份程序编译运行两次，在那行打印旁边留一行注释，写下你看到的两个号是相同还是不同。",
+      "acceptRegex": ["//[^\\n]*(不同|一样|相同|变)"],
+      "sample": "// 跑两次这里的号不一样，程序每次被放到哪儿是系统临场定的",
+      "why": "号不同是正常的，不是 bug；正则只能验你确实写了这么一行注释，写的内容对不对得人来读，这一条判不严格。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "复制一份：再声明一只 int，初值不给数字，直接把第一只变量的值抄过来。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*[A-Za-z_]\\w*\\s*;"],
+      "sample": "int age2 = age;",
+      "why": "复制过去的是柜子里摊着的那个值，不是柜子本身；起编号得重新腾一组才有。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "验证各住各家：用一条 std::println 把「两只的地址是不是同一个」打出来，逗号后面写 & 一只 == & 另一只。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*&\\s*\\w+\\s*==\\s*&\\s*\\w+"],
+      "sample": "std::println(\"同一个柜子吗？{}\", &age == &age2);",
+      "why": "比较号用 & 取地址再 ==，打出来是 bool；两个名字同号说明压根是同一组柜子，那就是起外号。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把 age2 改成一个新值，再用一条 std::println 把两只的值一起打出来：格式串里两个占位坑。",
+      "acceptRegex": ["\\w+\\s*=\\s*\\d+\\s*;", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+"],
+      "sample": "age2 = 16;\nstd::println(\"age = {}, age2 = {}\", age, age2);",
+      "why": "各改各的：改副本不碰原件，这也是传值那种「改了白改」的底子。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 3 条：在文件里另起一行注释，写下地址为什么用 0x 开头（要点到它是几进制）。",
+      "acceptRegex": ["//[^\\n]*(16|十六)"],
+      "sample": "// 0x 是十六进制的前缀，每一位正好顶 4 个二进制位，几十亿格的编号这样写短一半",
+      "why": "这一条为什么这么出：思考题在这块编辑器里只能验「你写了注释、而且点到进制」，句子本身对不对要靠人读。",
+      "coversTask": 3,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "程序每次被放到内存的哪个位置是系统临场定的，所以两趟运行之间号不同；同一趟里问同一个变量，号才是稳的，任何逻辑都不该写死某个具体地址。",
+    "& 站在变量前面是取地址，站在类型后面是起外号 —— 同一个符号两份工。",
+    "占几格由类型定：int 通常占 4 格，跟装的是 15 还是一百万无关；sizeof 就是问这个的，写 sizeof c 这种形式。",
+    "两个变量的地址相同，说明它们是同一组柜子的两个名字，不是互不相干的两个盒子。",
+    "机器执行 int age = 15; 是先把地址和名字对上，再按 int 腾 4 个连续的柜子、把 15 摊进去；编号是腾出来那一刻就定好的。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int age = 15;\n    double score = 92.5;\n\n    std::println(\"age   的值  : {}\", age);\n    std::println(\"age   的地址: {:p}\", &age);      // 跑两次这里的号不一样，程序被放到哪儿是系统临场定的\n    std::println(\"score 的地址: {:p}\", &score);    // 0x 打头是 16 进制，编号这样写短一半\n\n    int age2 = age;\n    std::println(\"age2 的地址: {:p}\", &age2);\n    std::println(\"同一个柜子吗？{}\", &age == &age2);\n\n    age2 = 16;\n    std::println(\"age = {}, age2 = {}\", age, age2);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    int age = 15;\n    std::println(\"age = {}\", age);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int age = 15;\n    int age2 = age;\n    std::println(\"age2 = {}\", age2);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int age = 15;\n    std::println(\"{:p}\", &age);   // 两次的号不同\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\nint  main ( )\n{\n    int  n1 = 15;\n    std::println( \"n1 的值 {}\" , n1 );\n    std::println( \"n1 门牌 {:p}\" , & n1 );      // 再跑一次门牌变了，两趟之间不同是正常\n    int  n2 = n1 ;\n    std::println( \"n2 门牌 {:p}\" , &n2 );       // 0x 打头是十六进制，长编号写起来短\n    std::println( \"同一个家吗 {}\" , &n1 == &n2 );\n    n2 = 20;\n    std::println(\"n1 {} n2 {}\", n1, n2);\n    return 0;\n}\n"
+    ]
+  }
+}

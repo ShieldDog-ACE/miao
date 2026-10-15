@@ -45,6 +45,12 @@ echo
 echo "===== 代码编辑器控件自测（两把尺无损 / 四层对齐 / 成对闭合 / 缩进 / 补全） ====="
 node "$HERE/editor-test.js" || EC=1
 echo
+echo "===== 模拟编译自测（该报的必须报、不许误报的一条都不报） ====="
+node "$HERE/cpp-compile-test.js" || EC=1
+echo
+echo "===== C++ 子集模拟器对拍（27 例 vs 本机 g++ 的 stdout） ====="
+node "$HERE/cpp-sim-test.js" || EC=1
+echo
 echo "===== 正文三条闸（梗 / 交叉引用 / 构造首现，只查已重做的新稿） ====="
 node "$HERE/../tools/lesson-audit.cjs" || EC=1
 echo

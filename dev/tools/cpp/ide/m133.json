@@ -1,0 +1,74 @@
+{
+  "cid": "m133",
+  "note": "任务就是用 std::string 重做复制/移动实验并打印原件，条件按演示 2 那五行摊开，旧题的概念点全进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把字符串盒子和交接工具箱都搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*string\\s*>", "#\\s*include\\s*<\\s*utility\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <string>\n#include <utility>\n\nint main() {",
+      "why": "std::move 住在 utility 里，std::string 住在 string 里，缺哪个都没人认。",
+      "score": 15
+    },
+    {
+      "stem": "开一格 std::string 装一大串同样的字符（个数要给得多一点，才看得出搬的是内存不是内容）。",
+      "acceptRegex": ["\\bstd\\s*::\\s*string\\s+[A-Za-z_]\\w*\\s*\\(\\s*\\d{3,}\\s*,"],
+      "sample": "std::string a(5000, 'x');",
+      "why": "个数给到几千，字符串自己管着一大块内存，这一课的比较才有意义。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写一次复制：再开一格 std::string，直接拿原件赋值给它。",
+      "acceptRegex": ["\\bstd\\s*::\\s*string\\s+[A-Za-z_]\\w*\\s*=\\s*[A-Za-z_]\\w*\\s*;"],
+      "sample": "std::string b = a;",
+      "why": "等号右边光是一个名字，走的是复制：另买一块内存逐个抄，原件照旧用。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写一次移动：再开一格 std::string，赋值时对原件用 std::move。",
+      "acceptRegex": ["\\bstd\\s*::\\s*string\\s+[A-Za-z_]\\w*\\s*=\\s*std\\s*::\\s*move\\s*\\("],
+      "sample": "std::string c = std::move(a);",
+      "why": "那一块内存换个主人，一格字符都没动；被搬空的原件是合法的空串，不是垃圾值。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "用一条 std::println 打复制件：占位坑里既给它的个数（size），也给它前几个字符（substr）。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*\\.\\s*size\\s*\\(", "std\\s*::\\s*println\\s*\\([^;]*\\.\\s*substr\\s*\\("],
+      "sample": "std::println(\"b 有 {} 个，前三个是「{}」\", b.size(), b.substr(0, 3));",
+      "why": "复制件该有五千个字符、开头也是那串 x —— 它跟原件一样新。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一条 std::println 打被搬空的原件：两个占位坑按顺序给它的个数和它本身。",
+      "acceptRegex": ["\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*([A-Za-z_]\\w*)\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*,\\s*\\1\\s*\\)"],
+      "sample": "std::println(\"a 剩 {} 个，内容是「{}」\", a.size(), a);",
+      "why": "这一条正是任务要你亲眼确认的：搬完之后原件是 0 个、内容是空，它仍然能安全打印。",
+      "coversTask": 1,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "std::move 一个字节都不搬，它只是把对象标成「我可以不要了」，真动手的是接收那一头。",
+    "被搬空的原件标准只承诺有效但未指定：能安全析构、能重新装，里面是什么不能当回事。",
+    "对 const 对象写 std::move，实测还是会走复制，原件一个字节都没搬走。",
+    "移动划算的前提是对象自己管着一大块内存、而且原件确实不再用；搬 int 这种小东西通常并不比复制省。",
+    "空壳不是报废：搬空之后再往里装，照样能重新用起来。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n#include <utility>\n\nint main() {\n    std::string a(5000, 'x');\n    std::string b = a;\n    std::string c = std::move(a);\n    std::println(\"b 有 {} 个，前三个是「{}」\", b.size(), b.substr(0, 3));\n    std::println(\"c 有 {} 个，前三个是「{}」\", c.size(), c.substr(0, 3));\n    std::println(\"a 剩 {} 个，内容是「{}」\", a.size(), a);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n\nint main() {\n    std::string a(5, 'x');\n    std::string b = a;\n    std::println(\"{}\", b);\n    return 0;\n}\n",
+      "#include <print>\n#include <string>\n#include <utility>\n\nint main() {\n    std::string a(5000, 'x');\n    std::string b = a;\n    std::string c = a;\n    std::println(\"b {}\", b.size());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\n#  include < utility >\nint  main ( )\n{\n  std :: string big ( 8000 , 'z' ) ;\n  std :: string copy1 = big ;\n  std :: string taken = std :: move ( big ) ;\n  std :: println ( \"复制 {} 个 {}\" , copy1 . size ( ) , copy1 . substr ( 0 , 2 ) ) ;\n  std :: println ( \"原件剩 {} 个 {}\" , big . size ( ) , big ) ;\n}\n"
+    ]
+  }
+}

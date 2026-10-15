@@ -1,0 +1,67 @@
+{
+  "cid": "m143",
+  "note": "任务是改名看值落 999：两条岔路各判一段，打印与改名后的观察各一条，观察那条走 buffer；三件套上锁再单列一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写出第一条岔路：用 #ifdef 问一个标记在不在，中间用一个带数值的 #define 把值写成 1，最后 #endif 关门。",
+      "acceptRegex": ["#\\s*ifdef\\s+\\w+[\\s\\S]{0,160}?#\\s*define\\s+\\w+\\s+1[\\s\\S]{0,160}?#\\s*endif"],
+      "sample": "#ifdef COMMON_H_OPENED\n#define LOCKED_VERSION 1\n#endif",
+      "why": "标记在，这段就放行；锁的第二遍正是靠这一问把整段剪掉。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务第 1 条：写出相反的那条岔路 —— #ifndef 开头，中间把同一个名字的值写成 999，#endif 收尾。要让这一条放行，开头那行标记的定义得换成别的名字。",
+      "acceptRegex": ["#\\s*ifndef\\s+\\w+[\\s\\S]{0,160}?#\\s*define\\s+\\w+\\s+999[\\s\\S]{0,160}?#\\s*endif"],
+      "sample": "#ifndef COMMON_H_OPENED\n#define LOCKED_VERSION 999\n#endif",
+      "why": "标记不在了，两条岔路就换了一条：#ifdef 那段不成立，#ifndef 那段放行，写进去的是 999 —— 这是锁只放行第一遍的反面演示。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把那个值打出来：格式串里一个占位坑，参数给那个名字。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"内容只被定义了一次，值 = {}\", LOCKED_VERSION);",
+      "why": "两段只有一段干活：这句打出来的就是最终那个值，改名的效果全在这一行上。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "把改名以后你看到的值记在一行注释里（要写出 999 那个数）。",
+      "acceptRegex": ["//[^\\n]{4,}", "//[^\\n]*999"],
+      "sample": "// 把标记改名成 MY_MARK 以后，跑出来值 = 999",
+      "why": "判的是你确实记下了一次观察；注释里那句对不对这块编辑器判不动，得自己跑一遍核对。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "给一份头文件上锁：#ifndef 一个锁名、紧跟着把同一个名字写上、中间放 struct Point 那一行，最后 #endif 收尾。",
+      "acceptRegex": ["#\\s*ifndef\\s+\\w+[\\s\\S]{0,120}?#\\s*define\\s+\\w+[\\s\\S]{0,160}?struct\\s+Point[\\s\\S]{0,160}?#\\s*endif"],
+      "sample": "#ifndef POINT_H\n#define POINT_H\nstruct Point { int x; int y; };\n#endif",
+      "why": "问、写标记、放内容、关门，四步按这个顺序；锁名必须全局唯一，两份头文件撞同一个名字时后一份整段被跳过。",
+      "score": 25
+    }
+  ],
+  "notes": [
+    "抄写员不认识刚才抄过了：两条路各抄一次就是两份，两份定义撞在一起报的是 redefinition of struct Point。",
+    "error 说这里第二次定义，note 说第一次就在刚才那行 —— 成对出现就该想到锁；重复包含是编译期的事，一句都到不了链接站。",
+    "第二遍进来时第一问就有答案，从 #ifndef 到 #endif 整段被剪掉，这个文件在那一遍等于空文件。",
+    "两个不同的 .cpp 各抄一遍同一份头文件是设计内的正常事，这把锁只管同一个编译单元里抄两遍。",
+    "三件套忘写收尾那句，实测报的是 unterminated #ifndef，指着文件第一行；#pragma once 与三件套同时挂在本机一句警告都不给。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\n#define MY_MARK                    // 把源稿那个标记改了名\n\n#ifdef COMMON_H_OPENED\n#define LOCKED_VERSION 1\n#endif\n\n#ifndef COMMON_H_OPENED\n#define LOCKED_VERSION 999\n#endif\n\n#ifndef POINT_H\n#define POINT_H\nstruct Point { int x; int y; };\n#endif\n\nint main() {\n    std::println(\"内容只被定义了一次，值 = {}\", LOCKED_VERSION);\n    Point p{3, 4};\n    std::println(\"点 {} {}\", p.x, p.y);\n    return 0;\n}\n// 把标记改名成 MY_MARK 以后，跑出来值 = 999\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\n#ifndef HAVE_MARK\n#define VERSION 999\n#endif\n\nint main() {\n    std::println(\"值 = {}\", VERSION);\n    return 0;\n}\n",
+      "#include <print>\n\n#define COMMON_H_OPENED\n\n#ifdef COMMON_H_OPENED\n#define LOCKED_VERSION 1\n#endif\n\n#ifndef COMMON_H_OPENED\n#define LOCKED_VERSION 999\n#endif\n\nint main() {\n    std::println(\"内容只被定义了一次，值 = {}\", LOCKED_VERSION);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  define  MY_OWN_MARK\n\n# ifdef  OLD_MARK\n#  define   GATE  1\n# endif\n\n# ifndef OLD_MARK\n#  define  GATE  999\n# endif\n\n# ifndef  POINT_LOCK\n#  define  POINT_LOCK\nstruct  Point  {  int  x ;  int  y ; } ;\n# endif\n\nint  main ( )\n{\n  std :: println ( \" 这一次的值 {}\" , GATE ) ;\n  Point  q { 1 , 2 } ;\n  std :: println ( \"{} {}\" , q . x , q . y ) ;\n}\n// 改名以后跑起来是 999，说明第二条岔路放行了\n"
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "cid": "c24",
+  "note": "让变量自己变这场的旧题在判「四行跑完最后一行是多少」，编辑器判不了数值结果，就把任务 1 摊成 *= 那一行真写出来加一句打印、任务 2 摊成啰嗦版 score = score + 1 与简写版 score++ 各一行；前后置之别与不可靠写法只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一只 int 盒子装分数，右边给一个整数初值。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*\\d+\\s*;"],
+      "sample": "int score = 100;",
+      "why": "后面每一行都是在这只盒子身上改，所以先要有它，并且要给一个说得清的初值才好对照你猜的结果。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "加一行 *= 2：让这只盒子在自己身上翻倍（左边就是那只盒子的名字）。",
+      "acceptRegex": ["\\w+\\s*\\*=\\s*2\\s*;"],
+      "sample": "score *= 2;",
+      "why": "* 是乘法那一层的缩写版：*= 就是自己乘上右边那个数再装回自己，100 变 200。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把变完之后的分数打出来：格式串里一个占位坑，逗号后面给那只盒子。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"score = {}\", score);",
+      "why": "这一行就是拿来对照你心算的结果的；运算符两边算完会塌成一个值，直接进占位坑。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写出 score++ 的啰嗦版：一行的左边是那只盒子，右边是它自己加上 1。",
+      "acceptRegex": ["(\\w+)\\s*=\\s*\\1\\s*\\+\\s*1\\s*;"],
+      "sample": "score = score + 1;",
+      "why": "复合赋值只是「左边的盒子参与运算再装回左边」的缩写，这两行语义完全等价，前者只是少打一遍变量名。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "再写它的简写版：对同一只盒子用一对加号，单独占一行。",
+      "acceptRegex": ["\\w+\\s*\\+\\+\\s*;"],
+      "sample": "score++;",
+      "why": "单独占一行时 score++ 和 ++score 没有区别，都是把盒子加 1；差别要塞进更大的表达式里才露脸。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include <print> 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "+= 真正的主场是累计盒：先写 int total = 0; 清零，每拿到一个新分数走一行 total += 那个分数;，全部加完再打印。",
+    "total -= 5; 是在自己身上减，和 += 是同一套缩写。",
+    "后置的 score++ 先交出旧值再自己加 1：score 是 10 时打印交出 10，下一行读到的才是 11；前置 ++score 交出加完的新值。",
+    "score++ 2 这种写法不存在：++ 只加 1，多出来那个数编译器不认识，会报 expected ';' 之类；想一次加 2 就写 score += 2;。",
+    "在同一行里既用 score 的旧值又改 score 是不可靠的写法，别这么写。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int score = 100;\n    int total = 0;\n\n    total += score;\n    score *= 2;\n    score = score + 1;\n    score++;\n\n    std::println(\"score = {}\", score);\n    std::println(\"total = {}\", total);\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int score = 90;\n    score = score * 2;\n    std::println(\"{}\", score);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int score;\n    score = score + 2;\n    std::println(\"{}\", score++ 2);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  int  points = 7;\n  int  sum = 0;\n  sum += points;\n  sum  -=  1;\n  points  *=  2 ;\n  points = points + 1 ;\n  points++;\n  std::println( \"最后 {}\", points );\n}\n"
+    ]
+  }
+}

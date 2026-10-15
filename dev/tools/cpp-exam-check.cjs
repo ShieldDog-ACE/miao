@@ -74,16 +74,21 @@ const TEACH_FOR_STEM = [
   ["cout 旧流", /std::cout/, 999]
 ];
 
-/* 读者能看见的字段：受闸；selftest 只喂判分器，不受闸 */
+/* 读者能看见的字段：受闸；selftest 只喂判分器，不受闸。
+   单编辑器卷（mode:"ide"）多出两块读者可见文本 —— notes（旧题的知识点原话就躺在题面注释里）
+   与 starter（编辑器预置的那副骨架），还有判错时复盘里给读者看的 sample：一样要过这四条。 */
 function visibleTexts(paper) {
   const out = [];
   out.push(["task", String(paper.task || "")]);
   out.push(["hint", String(paper.hint || "")]);
   out.push(["title", String(paper.title || "")]);
+  if (paper.starter !== undefined) out.push(["starter", String(paper.starter || "")]);
+  (paper.notes || []).forEach((n, i) => out.push(["note" + i, String(n)]));
   (paper.questions || []).forEach(q => {
     out.push(["stem:" + q.id, String(q.stem || "")]);
     out.push(["why:" + q.id, String(q.why || "")]);
     out.push(["code:" + q.id, String(q.code || "")]);
+    if (q.sample !== undefined) out.push(["sample:" + q.id, String(q.sample || "")]);
     (q.options || []).forEach((o, i) => out.push(["opt:" + q.id + i, String(o)]));
     (q.steps || []).forEach((s, i) => out.push(["step:" + q.id + i, String(s)]));
     (q.acceptLines || []).forEach((s, i) => out.push(["line:" + q.id + i, String(s)]));
@@ -118,7 +123,7 @@ loaded.forEach(item => {
   const where = courseOf(cid) + " 第 " + no + " 课卷";
 
   /* 1. 契约 */
-  const contract = PAPER.validatePaper(paper);
+  const contract = paper.mode === "ide" ? PAPER.validateIde(paper) : PAPER.validatePaper(paper);
   contract.forEach(e => errors.push("〔" + cid + "〕契约：" + e));
   if (paper.kind !== "paper") errors.push("〔" + cid + "〕kind 必须是 \"paper\"，现在是 " + JSON.stringify(paper.kind));
   if (!FIXTURE && String(cid).slice(0, 1) !== (no <= 81 ? "c" : "m")) errors.push("〔" + cid + "〕cid 前缀与课号归属不符");
@@ -145,17 +150,34 @@ loaded.forEach(item => {
     if (!covered.has(i + 1)) errors.push("〔" + cid + "〕任务对账：源稿第 " + (i + 1) + " 条任务「" + t.slice(0, 28) + "…」没有任何题的 coversTask 对着它（D-57）");
   });
 
-  /* 3. 单轨结构（D-62）：一场卷只许一种形状，形状由 exam-mode.json 逐课分配 */
+  /* 3. 形状（D-88：2026-10-15 起一屏到底 —— 每一场都是「一块编辑器 + 逐条判定」）
+        迁移途中两种形状并存：还没换掉的笔试卷沿用上一版 D-78 的分配表与旧红线；
+        换好的单编辑器卷走下面这一套。全部换完就把分配表与笔试那套一起删掉。 */
   const want = MODE_TABLE[cid];
-  if (!want) errors.push("〔" + cid + "〕单轨：分配表里没有这一课（跑 node dev/tools/cpp-exam-mode.cjs 重算表）");
-  if (paper.mode !== want) errors.push("〔" + cid + "〕单轨：卷里写的 mode 是 " + JSON.stringify(paper.mode) +
+  const isIde = paper.mode === "ide";
+  if (!want && !isIde) errors.push("〔" + cid + "〕单轨：分配表里没有这一课（跑 node dev/tools/cpp-exam-mode.cjs 重算表）");
+  if (!isIde && want && paper.mode !== want) errors.push("〔" + cid + "〕单轨：卷里写的 mode 是 " + JSON.stringify(paper.mode) +
     "，分配表判的是 " + JSON.stringify(want) + "（改卷还是改表？改表要写清为什么）");
 
   const nCode = qs.filter(q => q.type === "code").length;
   const nChoice = qs.filter(q => q.type === "choice").length;
   const nOutput = qs.filter(q => q.type === "output").length;
   const nFill = qs.filter(q => q.type === "blank" || q.type === "match").length;
-  if (want === "code") {
+  if (isIde) {
+    /* 单编辑器卷：条件数 3–6、条条是 code、条条给 acceptRegex 与 sample、starter 不许替读者做完 */
+    if (nCode !== qs.length) errors.push("〔" + cid + "〕单编辑器：混进 " + (qs.length - nCode) +
+      " 条不是 code 的条件（" + [...new Set(qs.filter(q => q.type !== "code").map(q => q.type))].join("/") + "）—— 一块编辑器判不了选择型题");
+    if (qs.length < 3 || qs.length > 6) errors.push("〔" + cid + "〕单编辑器：" + qs.length + " 条条件，要求 3–6 条");
+    qs.forEach(q => {
+      if (![].concat(q.acceptRegex || []).length) errors.push("〔" + cid + "〕单编辑器：条件 " + q.id + " 没给 acceptRegex —— 这块编辑器只有「找关键写法」一条判分路");
+      if (!q.sample) errors.push("〔" + cid + "〕单编辑器：条件 " + q.id + " 没给 sample —— 判错了复盘要给读者看参考写法，不许甩裸正则");
+    });
+    if (paper.file && !/\.(cpp|cc|h)$/.test(String(paper.file))) errors.push("〔" + cid + "〕单编辑器：file 是 " + paper.file + "，C++ 的源文件名得分");
+    const sf = PAPER.ideStarterFails(paper);
+    if (!sf.failed) errors.push("〔" + cid + "〕单编辑器：预置骨架 starter 单独交卷判 " + sf.score + " 分 —— 骨架不许替读者做完任何一条条件");
+    const badAcceptOn = qs.filter(q => q.acceptOn != null && q.acceptOn !== "code" && q.acceptOn !== "buffer");
+    if (badAcceptOn.length) errors.push("〔" + cid + "〕单编辑器：" + badAcceptOn.map(q => q.id).join("、") + " 的 acceptOn 只认 code / buffer");
+  } else if (want === "code") {
     if (qs.length - nCode > 0) errors.push("〔" + cid + "〕单轨：这一课是代码卷，却混进 " + (qs.length - nCode) +
       " 道非代码题（" + [...new Set(qs.filter(q => q.type !== "code").map(q => q.type))].join("/") + "）—— 代码卷就只留编辑器");
     if (qs.length < 3 || qs.length > 6) errors.push("〔" + cid + "〕单轨：代码卷 " + qs.length + " 道题，要求 3–6 道（D-62）");
@@ -186,10 +208,11 @@ loaded.forEach(item => {
   const st = paper.selftest || {};
   const passLine = paper.pass == null ? 60 : paper.pass;
   const run = (ans, label) => {
-    try { return PAPER.gradePaper(paper, ans); }
+    try { return isIde ? PAPER.gradeIde(paper, String(ans == null ? "" : ans)) : PAPER.gradePaper(paper, ans); }
     catch (e) { errors.push("〔" + cid + "〕自测 " + label + "：判分器报错 " + e.message); return null; }
   };
   if (!st.refs || !st.refs.length) errors.push("〔" + cid + "〕自测：没有 refs（参考解），这道卷没自测过");
+  if (isIde && st.refs.some(s => typeof s !== "string")) errors.push("〔" + cid + "〕自测：单编辑器卷的三档必须是「整份代码」的字符串，不是按题号给的答案表");
   (st.refs || []).forEach((a, i) => {
     const r = run(a, "refs" + i);
     if (!r) return;
@@ -222,7 +245,7 @@ loaded.forEach(item => {
     });
   });
 
-  rows.push({ cid, no, mode: want, track: paper.mode === want ? "ok" : "bad", qs: qs.length, taskQScore,
+  rows.push({ cid, no, mode: isIde ? "ide" : want, track: isIde ? "ok" : (paper.mode === want ? "ok" : "bad"), qs: qs.length, taskQScore,
     covered: covered.size, of: lesson.tasks.length, passLine });
 });
 
@@ -240,8 +263,13 @@ function bodyCids() {
         vm.runInContext(fs.readFileSync(path.join(dir, f), "utf8"), ctx, { filename: f, timeout: 20000 });
         Object.keys(ctx.window).filter(k => /^MIAO_CPP(M)?_P\d+$/.test(k)).forEach(k => {
           ((ctx.window[k] || {}).chapters || []).forEach(c => {
-            /* 占位章不算「写了」：装配层的占位块里有那句「正文还在写」 */
-            const isPlaceholder = (c.blocks || []).some(b => b && /正文还在写/.test(String(b.text || "")));
+            /* 占位章不算「写了」。上一版只认「正文还在写」那一句，结果 m172/m191/m195 三种占位
+               （本课目标写「占位」、块里是 TODO-PRIN / TODO-CODE1 / PH4、整节只有小标题）全被当成写完了，
+               闸反过来逼考卷去考一篇没有内容的正文 —— 现在四种形状一起认，另外加一条兜底：
+               一章连一段代码演示都没有，就不算写完。 */
+            const texts = (c.blocks || []).map(b => String((b && (b.text || b.code || b.html)) || ""));
+            const isPlaceholder = texts.some(t => /正文还在写|占位|TODO-[A-Z]|PH\d+/.test(t)) ||
+              !(c.blocks || []).some(b => b && b.t === "code");
             /* 第 0 课三节准备课（s01–s03）按口径不排考试，沿用 python 那门课 D-9 的处理 */
             if (!isPlaceholder && !/^s\d/.test(String(c.id || ""))) set.add(c.id);
           });
@@ -268,6 +296,7 @@ errors.slice(0, errCap).forEach(e => console.log("  ✘ " + e));
 if (errors.length > errCap) console.log("  …还有 " + (errors.length - errCap) + " 条（加 --all 全打）");
 const done = rows.filter(r => r.track === "ok");
 console.log("[cpp-exam-check] 进度：入门 " + gotCpp + "/81 场 · 掌握 " + gotCppm + "/132 场 · 已写正文 " + bodies.size + " 章");
-console.log("[cpp-exam-check] 单轨改造：已就 " + done.length + " 场（代码卷 " + done.filter(r => r.mode === "code").length +
-  " · 笔试卷 " + done.filter(r => r.mode === "quiz").length + "）· 还差 " + (rows.length - done.length) + " 场");
+console.log("[cpp-exam-check] 形状：单编辑器 " + done.filter(r => r.mode === "ide").length +
+  " 场 · 还在旧轨 " + done.filter(r => r.mode !== "ide").length + " 场（代码卷 " + done.filter(r => r.mode === "code").length +
+  " · 笔试卷 " + done.filter(r => r.mode === "quiz").length + "）· 形状不对 " + (rows.length - done.length) + " 场");
 process.exit(errors.length ? 1 : 0);

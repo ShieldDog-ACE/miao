@@ -1,0 +1,73 @@
+{
+  "cid": "m199",
+  "note": "图与邻接表这课：建表、双向记边、任务要求的 2-3 那对、外层加内层范围 for 念名单、空名单换行，名单怎么变收进 buffer 注释；旧七题知识点压成 5 条 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一行：用一个装 vector 的 vector 建出邻接表，开 4 个点，每个点先挂一张空名单。",
+      "acceptRegex": ["std::vector\\s*<\\s*std::vector\\s*<\\s*int\\s*>\\s*>\\s+\\w+\\s*\\(\\s*4\\s*\\)"],
+      "sample": "std::vector<std::vector<int>> adj(4);",
+      "why": "外层开 4 个格子就是 4 个点，每格自带一张空名单；它不会自动填任何编号，谁连着谁要靠你亲手记。",
+      "score": 15
+    },
+    {
+      "stem": "把 0 和 1 记成好友：两头的名单各写一行 push_back，一行都不许省。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*0\\s*\\]\\.push_back\\s*\\(\\s*1\\s*\\)", "\\w+\\s*\\[\\s*1\\s*\\]\\.push_back\\s*\\(\\s*0\\s*\\)"],
+      "sample": "adj[0].push_back(1);\nadj[1].push_back(0);",
+      "why": "无向边双向通行：0 的名单里有 1，1 的名单里也要有 0，漏一笔这条路就少一半。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：再加一对好友 2 和 3，同样两头各记一笔。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*2\\s*\\]\\.push_back\\s*\\(\\s*3\\s*\\)", "\\w+\\s*\\[\\s*3\\s*\\]\\.push_back\\s*\\(\\s*2\\s*\\)"],
+      "sample": "adj[2].push_back(3);\nadj[3].push_back(2);",
+      "why": "2 这头记一笔、3 这头也记一笔，这对边才算闭上；push_back 把新编号排到名单末尾。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "念名单：外面一个数着 0 到 3 的循环，里面用范围 for 走这个点的名单，先把每个人自己的编号打出来再挨个打朋友。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*0", "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\[", "std::print\\s*\\("],
+      "sample": "for (int i = 0; i < 4; ++i) {\n    std::print(\"{} 的好友:\", i);\n    for (int f : adj[i]) std::print(\" {}\", f);\n}",
+      "why": "名单的长度就是这个点的朋友个数，范围 for 直接走 adj[i] 就念得完。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "每念完一个人的名单就换一行：用一条不带内容的 std::println 收尾，让一个朋友都没有的那个点也占一行。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"\"\\s*\\)"],
+      "sample": "std::println(\"\");",
+      "why": "一笔都没记的那个点照样打出来 —— 空名单也是名单，不换行四个人的名单就会挤成一行。",
+      "score": 15
+    },
+    {
+      "stem": "跑完之后用一行注释写下加上这对好友之后，哪两行名单变了（至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 2 的名单变成 1 3，3 从空名单变成只有 2",
+      "why": "这一步只判你确实留了一行注释，注释内容这块编辑器判不了；本机实测就是这两行在动。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "邻接表的形象说法是给每个点挂一张好友名单，名单里装的是朋友的编号；只记个数就丢掉了连着谁这个关键信息。",
+    "无向边要记两笔，两头的名单各记一次，漏一笔这条路就少一半。",
+    "push_back 永远把新编号排到队尾，所以加上 2-3 之后 2 的名单是在原有的 1 后面追加 3。",
+    "外层开 4 个格子建出来的是 4 张空名单，编号要靠 push_back 亲手记进去；名单的长度等于这个点的朋友个数。",
+    "一个朋友都没记的那个点，那一行照样打出来 —— 空名单也是名单。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<std::vector<int>> adj(4);\n    adj[0].push_back(1);\n    adj[1].push_back(0);\n    adj[1].push_back(2);\n    adj[2].push_back(1);\n    adj[2].push_back(3);\n    adj[3].push_back(2);\n    for (int i = 0; i < 4; ++i) {\n        std::print(\"{} 的好友:\", i);\n        for (int f : adj[i]) std::print(\" {}\", f);\n        std::println(\"\");\n    }\n    // 2 的名单变成 1 3，3 从空名单变成只有 2\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "std::vector<std::vector<int>> adj(4);\nadj[0].push_back(1);\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<std::vector<int>> adj(4);\n    adj[0].push_back(1);\n    adj[1].push_back(0);\n    adj[2].push_back(3);\n    adj[3].push_back(2);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\n# include <vector>\n\nint main ()\n{\n  std::vector<std::vector<int>> g(4);\n  g[0].push_back(1); g[1].push_back(0);\n  g[1].push_back(2); g[2].push_back(1);\n  g[2].push_back(3);\n  g[3].push_back(2);\n  for (int i = 0; i < 4; i ++) {\n    std::print(\"{} 的好友:\", i);\n    for (int f : g[i]) std::print(\" {}\", f);\n    std::println ( \"\" );\n  }\n  // 变的是 2 和 3 那两行名单\n  return 0;\n}\n"
+    ]
+  }
+}

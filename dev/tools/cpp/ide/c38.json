@@ -1,0 +1,67 @@
+{
+  "cid": "c38",
+  "note": "break 与 continue 改单编辑器：任务 1 拆成「三格 for + if i 等于 3 就 break + 打印每轮」，任务 2 拆成「1 到 20 的三格 for + 用 % 3 配 continue」，旧七道笔试题的结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一个三格 for：第一格让 i 从 1 起，第二格数到 10 为止，第三格每轮加一。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*1\\s*;[^\\n]*<=\\s*10\\s*;[^\\n]*\\+\\+"],
+      "sample": "for (int i = 1; i <= 10; i++) {",
+      "why": "三格 for 是自己数、自己取下标：初值、条件、步进三格都在括号里，用分号隔开。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在循环体里加一句：i 等于 3 就踩 break，让整场循环当场结束。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*==\\s*3\\s*\\)", "\\bbreak\\s*;"],
+      "sample": "if (i == 3) {\n    break;\n}",
+      "why": "break 是「整场结束」，跳到循环下面那一行；i 为 3 这一轮还没走到后面的打印语句就跳出去了。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把每一轮的 i 打出来，让屏幕上几个数一目了然。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"{}\", i);",
+      "why": "打印写在 break 那一句后面，撞进 if 的那一轮就轮不到它 —— 这正是 break 之后本轮剩下的语句不再执行。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "再写一个三格 for：i 从 1 数到 20。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*1\\s*;[^\\n]*<=\\s*20\\s*;[^\\n]*\\+\\+"],
+      "sample": "for (int i = 1; i <= 20; i++) {",
+      "why": "任务 2 要 1 到 20 全过一遍，还是自己数数，用三格 for。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "在这个循环体开头用一句 if 配 continue：用取余判断能不能被 3 整除，不能整除的那一轮直接作废、进下一轮，把 3 的倍数留给后面的打印。",
+      "acceptRegex": ["%\\s*3", "continue\\s*;"],
+      "sample": "if (i % 3 != 0) continue;",
+      "why": "continue 只是本轮作废：它跳的是循环体里剩下的语句，跳不到 for 的第三格，步进格照常执行，所以循环不会卡住。",
+      "coversTask": 2,
+      "score": 25
+    }
+  ],
+  "notes": [
+    "break 结束整个循环、跳到循环下面那一行；continue 只结束这一轮、直接进下一轮 —— 程序在 break 之后照常往下走。",
+    "break 之后本轮剩下的循环体语句不做了；continue 之后本轮剩下的语句同样不做了。",
+    "while 里放 continue 容易因为步进那一格被跳掉而变成死循环，for 里用就没这个坑。",
+    "break 只离开紧挨着它的那一个循环，不会把整个程序停掉。",
+    "在一串东西里找第一个目标、找到就不必再往下看，是 break 的场合；continue 只能跳过这一轮，后面的元素照样被逐个看完。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    for (int i = 1; i <= 10; i++) {\n        if (i == 3) {\n            break;\n        }\n        std::println(\"{}\", i);\n    }\n\n    for (int i = 1; i <= 20; i++) {\n        if (i % 3 != 0) continue;\n        std::println(\"3 的倍数: {}\", i);\n    }\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    for (int i = 1; i <= 10; i++) {\n        if (i == 3) {\n            break;\n        }\n        std::println(\"{}\", i);\n    }\n\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    for (int i = 1; i <= 20; i++) {\n        if (i % 3 == 0) {\n            std::println(\"3 的倍数: {}\", i);\n        }\n    }\n\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\nint main ( )\n{\n  for( int k = 1; k<=10; k++ )\n  {\n    if (k==3) break ;\n    std::println( \"i = {}\" , k ) ;\n  }\n  for ( int k = 1 ; k <= 20 ; k ++ )\n  {\n    if ( k % 3 != 0 ) continue ;\n    std::println( \"{}\" , k ) ;\n  }\n}\n"
+    ]
+  }
+}

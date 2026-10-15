@@ -1,0 +1,82 @@
+{
+  "cid": "c72",
+  "note": "先声明后定义改单编辑器：任务 1 是「删掉声明看报错」，按规矩配成 code + buffer 一对（报错注释只能验形状验不了内容），另配声明形状、调用、身体在 main 之后、打印、能跑的形。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "在文件开头给 is_prime 写一行预告片：只有形状、以分号结尾，没有花括号。",
+      "acceptRegex": ["\\bbool\\s+\\w+\\s*\\(\\s*(int\\s*\\w*)?\\s*\\)\\s*;"],
+      "sample": "bool is_prime(int n);",
+      "why": "声明只讲形状、以分号结尾，编译器先在本子上记下这个名字；定义才带花括号身体。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "在 main 里调用一次 is_prime，把一只 int 变量或一个数递给它。",
+      "acceptRegex": ["is_prime\\s*\\(\\s*(?!int\\b)(\\w+|\\d+)\\s*\\)"],
+      "sample": "is_prime(n)",
+      "why": "调用之前必须先见到那个函数的名字 —— 要么定义写在上面，要么先来一行声明，编译器是一遍扫到底的。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把 is_prime 的身体写成真正的定义放在 main 后面：签名收一个 int、带花括号，里面 return true 和 return false 都得有。",
+      "acceptRegex": ["\\bbool\\s+\\w+\\s*\\(\\s*int\\s+\\w+\\s*\\)\\s*\\{", "\\breturn\\s+false\\s*;", "\\breturn\\s+true\\s*;", "\\bint\\s+main[\\s\\S]*\\bbool\\s+\\w+\\s*\\("],
+      "sample": "bool is_prime(int n) {\n    if (n < 2) return false;\n    return true;\n}",
+      "why": "定义只能有一份；把它写在 main 后面正是这一行预告片换来的自由。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "用一条 std::println 在那个循环里把数和判断结果一起打出来：格式串里两个占位坑，逗号后面按顺序给值。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,"],
+      "sample": "std::println(\"{} {}\", n, is_prime(n) ? \"是素数\" : \"不是\");",
+      "why": "几个坑就给几个值；三目那一句把 bool 换成两段文字，打出来比 true false 好看。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：搬进打印工具箱（#include <print>），开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务那一删：把声明那行删掉再编译一次，在原处留一行注释写下报错里你认出的那个词（四个字以上），然后把声明加回来交卷。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 报错说 use of undeclared identifier is_prime，红线画在调用那一行",
+      "why": "本子上没登记过这个名字，扫到调用那行当场拦下；正则只能验你确实写了注释，写的内容对不对得人来读，这一条判不严格。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "声明只讲形状、以分号结尾；定义带花括号身体，同一个函数的定义只能有一份。",
+    "同一个函数的声明可以出现好几次，只要形状一样；声明末尾的分号不能少，少了编译器会把下一行的开头当成续写。",
+    "声明里参数的类型必须和定义一字不差，参数名可以各写各的，圆括号里也可以只写类型不写名字。",
+    "没写声明是 use of undeclared identifier，红线画在调用那一行；没写定义卡在链接那一步报 undefined reference，两个长相不同。",
+    "even 和 odd 互相喊就靠开头两行预告片：我喊你、你喊我，光排顺序排不出来。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nbool is_prime(int n);                  // 声明：预告片，注意分号\n\nint main() {\n    for (int n : {2, 9, 17, 21}) {\n        std::println(\"{} {}\", n, is_prime(n) ? \"是素数\" : \"不是\");\n    }\n    return 0;\n}\n\nbool is_prime(int n) {                 // 定义：正片放在 main 后面\n    if (n < 2) return false;\n    for (int i = 2; i * i <= n; ++i)\n        if (n % i == 0) return false;\n    return true;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nbool is_prime(int n) {\n    if (n < 2) return false;\n    return true;\n}\n\nint main() {\n    int n = 17;\n    if (is_prime(n)) {\n        n = 1;\n    }\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    std::println(\"{}\", 7);\n    return 0;\n}\n",
+      "#include <print>\nbool is_prime(int n) { return n > 1; }\nint main() {\n    std::println(\"{}\", is_prime(7));\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include  <print>\nbool  is_prime ( int ) ;        // 预告片可以只写类型\n\nint  main ( )\n{\n    int  n = 17;\n    bool  ok = is_prime ( n );\n    std::println( \"数 {} 是素数吗 {}\" , n , ok );   // 删掉上面那行时编译器说认不出 is_prime\n    return 0;\n}\n\nbool is_prime(int k)\n{\n    if (k < 2) return false;\n    for (int i = 2; i * i <= k; ++i)\n        if (k % i == 0) return false;\n    return true;\n}\n"
+    ]
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "cid": "c75",
+  "note": "指针 vs 引用改单编辑器：任务 1 拆成「返回引用的签名加 return 本人 + 调用处直接赋值」，任务 2 拆成「vector 的外号签名 + 两头备用盒换位置」，任务 3 是思考题，配成纸条换指向的 code 加一条 buffer 注释。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写 int& max_of(int& x, int& y) 这一类函数：返回类型带 &，两个参数也各带一个 &，体里用 return 把其中一个人还出去。",
+      "acceptRegex": ["\\bint\\s*&\\s*\\w+\\s*\\(\\s*int\\s*&\\s*\\w+\\s*,\\s*int\\s*&\\s*\\w+\\s*\\)", "\\breturn\\s+\\w+\\s*;"],
+      "sample": "int& max_of(int& x, int& y) {\n    if (x > y) return x;\n    return y;\n}",
+      "why": "还回来的不是值而是本人的外号，所以调用方拿到的是那只盒子本身，而不是复印件。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "在外面一句直接把较大者清零：给 max_of(a, b) 这个调用结果赋值 0。",
+      "acceptRegex": ["\\w+\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)\\s*=\\s*\\d+\\s*;"],
+      "sample": "max_of(a, b) = 0;",
+      "why": "调用结果是个引用，等号右边写的就是本人那格的新值 —— 这就是外号的威力。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "写 void reverse(std::vector<int>& v) 这一类的头部：参数是 vector 的外号，带上 &，函数不返回新容器。",
+      "acceptRegex": ["\\bvoid\\s+\\w+\\s*\\(\\s*std::vector\\s*<\\s*int\\s*>\\s*&\\s*\\w+\\s*\\)"],
+      "sample": "void reverse(std::vector<int>& v) {",
+      "why": "带上 & 才是外号，能原地改；漏掉 & 就把整串复印一份进去折腾，外面一点感觉没有。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "在 reverse 的体里把两头配成对换过来：先 int 一只备用盒抄下某一头，再两格互写，最后把备用盒那份填回去。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*\\w+\\s*\\[[^\\]]+\\]\\s*;\\s*\\w+\\s*\\[[^\\]]+\\]\\s*=\\s*\\w+\\s*\\[[^\\]]+\\]\\s*;\\s*\\w+\\s*\\[[^\\]]+\\]\\s*=\\s*\\w+\\s*;"],
+      "sample": "int t = v[0];\nv[0] = v[3];\nv[3] = t;",
+      "why": "两个格子换东西照样要第三个帮忙；写 v[位置] 就是直接改外面那串里的第几格。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "换指向的实验：写一句把纸条涂掉重填另一个变量的号（左边不带 *），再写一句 * 纸条名 = 一个数，改现在指着的本人。",
+      "acceptRegex": ["[;}][ \\t\\r\\n]*\\w+\\s*=\\s*&\\s*\\w+\\s*;", "\\*\\s*\\w+\\s*=\\s*\\d+\\s*;"],
+      "sample": "p = &d;\n*p = 44;",
+      "why": "纸条上记的是号，涂掉重填就行，原来的盒子毫发无损；左边带 * 才写进别人那格。",
+      "coversTask": 3,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 3 条：用一行注释写清楚，为什么引用想改绑办不到而纸条做得到（点到号和盒子谁拴着谁）。",
+      "acceptRegex": ["//[^\\n]*(号|拴|绑|指|地址)"],
+      "sample": "// 引用是本人的外号，出生那一行就绑死，赋值只是给本人换内容；纸条上写的是号，换个号填上就行",
+      "why": "这一条为什么这么出：正则只能验注释里点到了这些词，说理对不对得人来读，这块编辑器判不严格。",
+      "coversTask": 3,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "int& ref = a; 之后写 ref = b; 不是改绑到 b，是把 b 的值抄进 a，跑完 a 和 b 都是 20 —— 改绑这个动作对引用压根不存在，加星号也救不了。",
+    "三大区别：引用出生那一行就必须指认本人，指针可以先声明后指认；指针能换指向且不牵连原盒子，引用不能；用起来的长相也不同。",
+    "纸条可以空着：int* p = nullptr; 合法，用之前先跟 nullptr 比一次；硬去解引用一张没抄号的纸条，编译放行，跑起来当场段错误。",
+    "引用不能空着：int& bad_ref; 解开注释就报错，外号不能悬空挂在没人身上。",
+    "必然有个东西、也不许换的场景就交给引用；只有「可空」这一件事引用办不到，才轮到纸条上场。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint& max_of(int& x, int& y) {\n    if (x > y) return x;\n    return y;\n}\n\nvoid reverse(std::vector<int>& v) {\n    int t = v[0];\n    v[0] = v[3];\n    v[3] = t;\n    int u = v[1];\n    v[1] = v[2];\n    v[2] = u;\n}\n\nint main() {\n    int a = 30, b = 70;\n    max_of(a, b) = 0;\n    std::println(\"a={}, b={}\", a, b);\n\n    std::vector<int> v = {1, 2, 3, 4};\n    reverse(v);\n    std::println(\"{}\", v);\n\n    int c = 30, d = 40;\n    int* p = &c;\n    p = &d;\n    *p = 44;\n    std::println(\"c={}, d={}\", c, d);\n    // 引用是本人的外号，出生那一行就绑死；纸条上记的是号，涂掉重填就行，c 毫发无损\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint max_of(int x, int y) {\n    if (x > y) return x;\n    return y;\n}\n\nint main() {\n    int a = 30, b = 70;\n    std::println(\"{}\", max_of(a, b));\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nvoid reverse(std::vector<int> v) {\n    int t = v[0];\n    v[0] = v[3];\n    v[3] = t;\n}\n\nint main() {\n    std::vector<int> v = {1, 2, 3, 4};\n    reverse(v);\n    std::println(\"{}\", v);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int c = 30, d = 40;\n    int* p = &c;\n    *p = 44;\n    std::println(\"c={}, d={}\", c, d);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\n# include <vector>\n\nint & bigger ( int &  m , int &  n )\n{\n    if (m > n)\n        return m;\n    return n;\n}\n\nvoid  flip ( std::vector <int> &  box )\n{\n    int  hold = box [ 0 ] ;\n    box [ 0 ] = box [ 3 ] ;\n    box [ 3 ] = hold ;\n}\n\nint  main ( )\n{\n    int  p1 = 30 ,  p2 = 70;\n    bigger ( p1 , p2 ) = 0;\n    std::println( \"p1 {} p2 {}\" , p1 , p2 );\n    std::vector<int> nums = {1, 2, 3, 4};\n    flip(nums);\n    std::println(\"{}\", nums);\n    int  c = 30 , d = 40;\n    int*  q = &c;\n    q = &d;\n    * q = 44;\n    // 纸条记的是号，换个号填上就行；外号出生就拴死，赋值只换本人兜里的东西\n    return 0;\n}\n"
+    ]
+  }
+}

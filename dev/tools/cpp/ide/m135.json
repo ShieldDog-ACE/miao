@@ -1,0 +1,67 @@
+{
+  "cid": "m135",
+  "note": "任务两半正好一合法一报错：传值那半用 code 条件判，只读那半按规矩做成不合法写法加一条 buffer 注释，调用档另开一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一个传值的函数：括号里的参数就写成 std::string 加一个名字，不带 & 也不带 const。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*std\\s*::\\s*string\\s+\\w+\\s*\\)"],
+      "sample": "void by_value(std::string s) {",
+      "why": "参数不带 & 就是一个新对象：每调一次抄一份，返回时再把它打扫掉。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "再写一个只读的函数：参数写成 const std::string& 加一个名字。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*const\\s+std\\s*::\\s*string\\s*&"],
+      "sample": "void by_const_ref(const std::string& s) {",
+      "why": "const 引用是只读的手：零抄写，只看不改，这个承诺由编译器在编译期验收。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条前半：在传值那个函数的身体里，对参数用 += 接上一段文字。这一版要能编译过。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*std\\s*::\\s*string\\s+\\w+\\s*\\)\\s*\\{[^}]*\\+="],
+      "sample": "void by_value(std::string s) {\n    s += \"再加一句\";\n}",
+      "why": "改的是这份副本，原件照旧，所以合法 —— 代价是那一遍抄写。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务第 1 条后半：在只读那个函数的身体里把同一句 += 也写出来（它编译不过，就是要你亲眼见），再在旁边跟一行注释，写下报错里出现的那个词。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*const\\s+std\\s*::\\s*string\\s*&\\s*\\w+\\s*\\)\\s*\\{[^}]*\\+=", "//[^\\n]{4,}"],
+      "sample": "void by_const_ref(const std::string& s) {\n    s += \"再加一句\";   // 报错第一行说 no match for operator+=\n}",
+      "why": "拦的是写这个动作：const 引用不许 +=，但读它的个数、拿去比较都合法。这一条只能判到「报错那行注释写了」，注释内容对不对判不了。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "在 main 里调用传值那个函数一次，调用处对原件配一个 std::move：这一档连抄写都省了，原件当场空掉。",
+      "acceptRegex": ["\\w+\\s*\\(\\s*std\\s*::\\s*move\\s*\\(\\s*\\w+\\s*\\)\\s*\\)\\s*;"],
+      "sample": "by_value(std::move(long_text));",
+      "why": "明确不要原件了，就传值配 std::move：整屋搬走，调用者之后不该再拿原件干活。",
+      "score": 25
+    }
+  ],
+  "notes": [
+    "传值那个参数是一个新对象：每调一次申请一块内存把整串抄进去，返回时打扫掉，调一万次就抄一万次。",
+    "从输出上根本看不出传值多抄了一份，这正是本课要治的病；类里那一嗓子没响，才是零抄写的证据。",
+    "只读原件就写 const 引用，要改原件就写非 const 引用，明确不要原件了就写值并在调用处配 std::move。",
+    "八个字节的小东西传值更快，一律写 const 引用反而多一道间接；那条口诀管的是自己管内存的大对象。",
+    "编译器不拦昂贵的写法，是因为传值在语言里完全合法：它只拦越界和写只读这类违背承诺的动作。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nvoid by_value(std::string s) {\n    s += \"再加一句\";\n    std::println(\"  传值改完: {}\", s);\n}\n\nvoid by_const_ref(const std::string& s) {\n    s += \"再加一句\";   // 报错第一行说 no match for operator+=\n    std::println(\"  传引用改完: {}\", s);\n}\n\nint main() {\n    std::string long_text = \"这是一条很长的弹幕……\";\n    by_value(long_text);\n    by_const_ref(long_text);\n    by_value(std::move(long_text));\n    std::println(\"原件还在: {}\", long_text);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n\nvoid show(std::string s) {\n    std::println(\"{}\", s);\n}\n\nint main() {\n    std::string text = \"弹幕\";\n    show(text);\n    return 0;\n}\n",
+      "#include <print>\n#include <string>\n\nvoid by_value(std::string s) {\n    std::println(\"{}\", s);\n}\nvoid by_const_ref(const std::string& s) {\n    std::println(\"{}\", s.size());\n}\n\nint main() {\n    std::string t = \"a\";\n    by_value(t);\n    by_const_ref(t);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\nvoid  take_by_copy ( std :: string  buf )\n{\n  buf  +=  \"追加一点东西\" ;\n  std :: println ( \"  {}\" , buf ) ;\n}\nvoid  look_only ( const std :: string &  buf )\n{\n  buf  +=  \"追加一点东西\" ;  // 编译器说不许写只读的东西\n  std :: println ( \"  {}\" , buf ) ;\n}\nint  main ( )\n{\n  std :: string  line  =  \"很长的一段字\" ;\n  take_by_copy ( line ) ;\n  look_only ( line ) ;\n  take_by_copy ( std :: move ( line ) ) ;\n}\n"
+    ]
+  }
+}

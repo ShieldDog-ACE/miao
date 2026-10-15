@@ -1,0 +1,75 @@
+{
+  "cid": "c20",
+  "note": "从键盘读数这场的旧题在判「敲 7 空格 8 之后 a、b 里是什么」，编辑器里判不了运行结果，就摊成四只看得见的手：连读两个数的 >>、和的打印、带初值的两只盒子、把 a 和 b 一起打出来；任务 2 那句「记住这现象」只能收进注释一条 buffer。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "先声明两只 int 盒子并给上初值 0，再用一条 std::cin 连着读进两个数（一行写完，两个 >>）。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*0\\s*;[\\s\\S]*int\\s+\\w+\\s*=\\s*0\\s*;", "std::cin\\s*>>\\s*\\w+\\s*>>\\s*\\w+"],
+      "sample": "int a = 0;\nint b = 0;\nstd::cin >> a >> b;",
+      "why": ">> 可以连着写，程序按个数收：两个数用空格或回车分开都行，各灌进一只盒子；箭头指向谁，谁就被灌满。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把这两个数的和打出来（格式串里一个占位坑，逗号后面给那次加法）。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\+\\s*\\w+"],
+      "sample": "std::println(\"它们的和是 {}\", a + b);",
+      "why": "输入 7 和 8 时这一行打出 15；把和直接写在打印的参数里，就不用再多开一只盒子装结果。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "问用户要输入的那句提示，用不带换行的 std::print 写一行。",
+      "acceptRegex": ["std::print\\s*\\(\\s*\""],
+      "sample": "std::print(\"请输入两个整数（空格隔开）: \");",
+      "why": "提示不换行，光标停在冒号后面，用户就在同一行敲数；换成 std::println 就成提示孤零零一行加一个空行，看着像程序卡住了。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "读完把两只盒子里的东西一起打出来看看：一条 std::println，格式串里两个占位坑，逗号后面按顺序给那两个变量。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+"],
+      "sample": "std::println(\"a = {}, b = {}\", a, b);",
+      "why": "这一行就是那台照妖镜：故意敲 hello 时它打出 a = 0, b = 0，读没读进去一眼就看出来。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "在这一行旁边写一行注释，记下你敲 hello 之后看到的两个数（至少写四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "std::println(\"a = {}, b = {}\", a, b);   // 敲 hello 之后两个都还是 0",
+      "why": "这一条只能判「你写了一行像样的注释」，写没写对现象这块编辑器判不了 —— 这是它判不动的部分。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把键盘和打印两个工具箱都搬进来（两行 #include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*iostream\\s*>", "#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <iostream>\n#include <print>\n\nint main() {",
+      "why": "std::cin 和 std::print 住在 iostream 里，std::println 住在 print 里，缺一个就没人认识它们；没有 main，链接器找不到入口。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    ">> 右边必须是已经声明好的变量：cin 只往现成的盒子里灌，它不负责造盒子。",
+    "分隔符空格和回车都算，程序按个数收不按行数收：一次敲 7 空格 8 和分两行敲，效果一样。",
+    "你敲的内容要按下回车才整行交给程序，在那之前程序就在等。",
+    "读失败是安静的：不崩溃、不报错、也不重问一遍，盒子保持原来的值，后面的代码继续执行。",
+    "声明时就写 int a = 0; 是有意的：有初值才认得出读失败长什么样，否则盒子里是内存留下的垃圾。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <iostream>\n#include <print>\n\nint main() {\n    int a = 0;\n    int b = 0;\n\n    std::print(\"请输入两个整数（空格隔开）: \");\n    std::cin >> a >> b;\n\n    std::println(\"a = {}, b = {}\", a, b);   // 敲 hello 之后两个都还是 0\n    std::println(\"它们的和是 {}\", a + b);\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <iostream>\n#include <print>\nint main() {\n    int a;\n    std::println(\"{}\", a);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int a = 0;\n    int b = 0;\n    std::println(\"请输入两个整数: \");\n    std::cin >> a;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < iostream >\n#  include <print>\n\nint main ( )\n{\n  int  first = 0;\n  int second = 0;\n  std::print ( \"给两个数 : \" );\n  std::cin >> first >> second ;\n  std::println( \"读回来 {} 和 {}\", first , second );\n  std::println( \"合计 {}\", first + second );\n  // 输入 hello 时两个都是 0\n}\n"
+    ]
+  }
+}

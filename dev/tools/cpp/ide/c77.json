@@ -1,0 +1,75 @@
+{
+  "cid": "c77",
+  "note": "源稿任务 2 要 try-catch，但本课正文没教（构造首现闸认第 176 课）。这一版把任务落成「用 at 而不是 [] 去取那个越界的位置，并注释写下程序会怎么停下来」—— 考的是坑本身，不提前用没教的构造。主控定的口径，写进任务书 §20.3。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一份能跑的形：把打印工具箱搬进来，开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*(print|iostream|vector)\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <vector>\n\nint main() {",
+      "why": "这一课开始碰容器和指针，先把入口和要用的东西摆齐。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：造一个只有三个数的名单，再对那个空指针（或者还没指向任何东西的指针）动手 —— 写出你会踩坑的那一行。",
+      "acceptRegex": ["std::vector<\\s*\\w+\\s*>\\s*\\w+\\s*[({=]", "\\b\\w+\\s*(->|\\*)\\s*\\w+|\\*\\s*(\\w+)\\s*="],
+      "sample": "std::vector<int> v = {1, 2, 3};\n    int* p = nullptr;\n    *p = 7;",
+      "why": "空指针不知道自己指向哪儿，一解引用就是段错误（segfault）—— 这一课要你亲眼见一次。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务第 2 条：去拿名单里第 10 个位置 —— 用 at 写，别用方括号，这样程序会在越界那一刻当场停下来说话。",
+      "acceptRegex": ["\\.\\s*at\\s*\\(\\s*10\\s*\\)"],
+      "sample": "v.at(10);",
+      "why": "方括号 [] 不查边界，越界了也照读，看到的是垃圾；at() 会当场报位置不对。本课要记的就是这两种取法的差别。",
+      "coversTask": 2,
+      "score": 25
+    },
+    {
+      "stem": "在那一行旁边用注释写下：这一越界是按方括号那种取法会看到什么、按 at 这种取法会看到什么。",
+      "acceptRegex": ["\\/\\/[^\\n]{6,}"],
+      "sample": "// [] 会读出垃圾值，at(10) 会当场报 out of range 停下",
+      "why": "正则只能验你写了这行注释，验不了里面的话对不对 —— 这一条的实质要回看【常见坑】那一段自己核对。",
+      "coversTask": 2,
+      "score": 10,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务第 3 条：坑③④那种「编译器只查语法、不管运行时边界」的写法，写一条能编过但结果不对的：把一个下标给到名单末尾之外。",
+      "acceptRegex": ["\\[\\s*\\w+\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*\\]|\\[\\s*3\\s*\\]"],
+      "sample": "std::println(\"{}\", v[3]);",
+      "why": "编译器只看语法对不对：v[3] 形状合法，越界不越界它不管 —— 这就是本课说的「运行时边界没人查」。",
+      "coversTask": 3,
+      "score": 15
+    },
+    {
+      "stem": "收尾：把这条程序允许编过的部分打印出来（拿那个合法的第一个数），再 return 0。",
+      "acceptRegex": ["std::(println|print)\\s*\\(", "return\\s+0\\s*;"],
+      "sample": "std::println(\"first = {}\", v[0]);\n    return 0;",
+      "why": "先让合法的那部分跑通，才看得清是哪一行把程序带崩的。",
+      "score": 10
+    }
+  ],
+  "notes": [
+    "解引用一个没指向任何东西的指针是未定义行为，最常见的下场是段错误（segfault）—— 见一次就记住了。",
+    "方括号 [] 不查边界，at() 查：越界时 at() 当场报错停下，[] 继续把那块内存里的垃圾读给你看。",
+    "编译器只查语法，运行时边界它不管：这就是「能编过」和「结果对」是两件事。",
+    "坑③④（拿过期的指针、给错了类型）为什么编译器不提醒？因为它只看这一句写得合不合语法。",
+    "先猜结果，再把合法那部分单独跑一遍对：这一课的四条坑都是这么抓出来的。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {1, 2, 3};\n    int* p = nullptr;\n    *p = 7;   // 空指针一解引用就段错误\n    v.at(10);  // [] 会读出垃圾值，at(10) 会当场报 out of range 停下\n    std::println(\"{}\", v[3]);\n    std::println(\"first = {}\", v[0]);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "int main() { return 0; }\n",
+      "std::vector<int> v = {1, 2, 3};\nstd::println(\"{}\", v[1]);\n"
+    ],
+    "loose": [
+      "#  include < vector >\n#include <print>\nint  main ( ) {\n  std::vector<int>  v {1,2,3};\n  int * p = nullptr;\n  * p = 7;  // 空指针\n  v . at ( 10 );   // 这一行会当场停下\n  std::println(\"{}\", v [ 3 ] );\n  std::println( \"first = {}\" , v[0] );\n  return 0;\n}\n"
+    ]
+  }
+}

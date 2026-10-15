@@ -88,6 +88,10 @@
   }
 
   function render(app, tid, cid, exam, my) {
+    /* 单编辑器卷（mode:"ide"）不在这里画卡片 —— 那是 Python 考场那一屏，外壳只有一份，
+       住在 exam-ui.js 的 ide() 里：C++ 只往里填注释符、语言尺、题面与判分函数。
+       2026-10-15 他下令「C++ 的进入考试全都改成 python 教程的代码编辑器模式」，走的就是这条路。 */
+    if (exam && exam.mode === "ide") { renderIdePaper(app, tid, cid, exam, my); return; }
     if (!PAPER) {
       app.innerHTML = '<div class="ide"><div class="ide-loading"><h2>笔试引擎没加载上</h2>' +
         '<p>site.js 的 engines.paper 里必须先有 exam-paper.js，再有本文件。</p>' +
@@ -95,7 +99,7 @@
       return;
     }
     var qs = [].concat(exam.questions || []);
-    /* 这套界面今天只服务 C++ 两门（py 在浏览器里跑得动，走的是考场编辑器）；
+    /* 这套界面今天只服务还在用卡片卷的课（py 在浏览器里跑得动，走的是考场编辑器）；
        万一以后别课也用笔试卷，lang 认不出就退 text，顶多不上色 */
     var HL_LANG = /^cpp/.test(tid) ? "cpp" : "text";
     var draft = loadDraft(tid, cid);
@@ -140,6 +144,74 @@
 
     $("#ppExit", app).onclick = function () { saveDraft(tid, cid, answers); location.hash = "#/read/" + tid + "/" + cid; };
     $("#ppSubmit", app).onclick = function () { doSubmit(app, tid, cid, qs, answers, exam, my); };
+  }
+
+  /* ---------------- 单编辑器卷：一块编辑器 + 逐条判定（C++ 两门课的全部 187 场） ----------------
+   * 题面 = 标题 / 任务 / 每条条件 / 知识点 / 提示，全部写成 // 注释行，最后一条独行的 // 是分界；
+   * 判分 = MIAO_PAPER.gradeIde 在整份 buffer 上逐条找关键写法（剥注释，抄题面进注释不算过）。
+   * 旧卡片卷的作答草稿（miao_paprdraft_*）在这里已经没有任何形状能接住它，进门就清掉，
+   * 别在本机里留一堆没人读的键。 */
+  function renderIdePaper(app, tid, cid, exam, my) {
+    var UI = root.MIAO_EXAM_UI;
+    if (!UI || !UI.ide || !PAPER || !PAPER.gradeIde) {
+      app.innerHTML = '<div class="ide"><div class="ide-loading"><h2>考场外壳没加载上</h2>' +
+        '<p>site.js 的 engines.paper 里 code-editor.js 与 exam-ui.js 必须排在 exam-paper.js 之前。</p>' +
+        '<a class="btn btn-primary" href="#/read/' + esc(tid) + "/" + esc(cid) + '">回到课文</a></div></div>';
+      return;
+    }
+    try { localStorage.removeItem("miao_paprdraft_" + tid + "_" + cid); } catch (e) { }
+    var qs = [].concat(exam.questions || []);
+    var task = ["// " + (exam.title || ""), "// 任务题目：" + (exam.task || "")];
+    qs.forEach(function (q, i) { task.push("// 条件" + (i + 1) + "：" + (q.stem || "") + "（" + (q.score || 0) + " 分）"); });
+    (exam.notes || []).forEach(function (n) { task.push("// 知识点：" + n); });
+    if (exam.hint) task.push("// 提示：" + exam.hint);
+    task.push("//");
+    var usesStdin = /std::cin/.test(String(exam.starter || "") + JSON.stringify(exam.questions || []));
+    UI.ide(app, tid, cid, exam, my, {
+      lang: "cpp", comment: "//", statusLang: "C++", tabUnits: 4,
+      fileName: exam.file || "main.cpp",
+      taskLines: task, starter: exam.starter || "",
+      checkList: qs.map(function (q) { return { label: q.stem, weight: q.score }; }),
+      needStdin: usesStdin, stdinLines: (exam.stdin || []).join("\n"),
+      termNote: "站内模拟：编译查形状（括号、分号、入口、有没有搬头文件），运行走自研的 C++ 子集机器 —— 27 例与本机 g++ 的输出逐字对过。真类型检查、真链接站内不做。",
+      intro: [
+        { text: "// 题面就在文件最上面那几行 // 注释里。Ctrl+B 编译，Ctrl+Enter 运行，写完点右上「交卷」逐条判定。", cls: "term-dim" },
+        { text: "  Ctrl+滚轮（或 Ctrl +/−）调字号，Ctrl+0 回到 15。", cls: "term-dim" }
+      ],
+      compileTitle: "模拟编译这份代码（Ctrl+B）：查括号闭合、少分号、没有 main、用了没搬进来的名字",
+      compile: function (src, ctx) {
+        var CC = root.MIAO_CPP_COMPILE;
+        if (!CC) return { problems: 0, echo: [], lines: [{ cls: "term-err tb-final", html: "编译检查器没加载上：site.js 的 engines.paper 里 cpp-compile.js 要在最前面。" }], meta: "[编译检查器缺失]" };
+        return CC.check(src, { jumpHtml: function (n) { return ctx.jumpHtml(ctx.screenLine(n)); } });
+      },
+      run: function (src, stdin, ctx) {
+        var CS = root.MIAO_CPP_SIM;
+        if (!CS) return { out: "", err: "站内 C++ 模拟器没加载上（cpp-sim.js）。", exitCode: 1, error: null };
+        var r = CS.run(src, { stdin: stdin || [] });
+        return r;
+      },
+      runEcho: function () { return "$ ./main"; },
+      errLines: cppErrLines,
+      grade: function (src, stdin, ctx) { return PAPER.gradeIde(exam, ctx.buffer); }
+    });
+  }
+
+  /* 模拟器与编译器的报错行：格式就一种「第 N 行：…」，把它染成红字并挂上能点的行号。
+     与 Python 那条 traceback 解析同一出口形状（[{cls, html}]），终端和「问题」页签共用。 */
+  function cppErrLines(text, extraLine, api) {
+    var lines = String(text || "").split("\n");
+    if (lines.length && lines[lines.length - 1] === "") lines.pop();
+    return lines.map(function (l) {
+      var m = /(main\.cpp:)?(\d+): error: (.*)/.exec(l) || /第 (\d+) 行：(.*)/.exec(l);
+      if (!m) return { cls: l.trim() ? "term-err tb-final" : "term-dim", html: esc(l) };
+      var ln = Number(m[2]);
+      var msg = m[3] !== undefined ? m[3] : m[2];
+      var codeLine = m[3] === undefined ? Number(m[1]) : ln;
+      return {
+        cls: "term-err tb-final",
+        html: esc(l.replace(/第 \d+ 行：|(\d+): error: /, "")) + " " + api.jumpBtn(api.screenLine(codeLine))
+      };
+    });
   }
 
   function cardHtml(q, i, lang) {

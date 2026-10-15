@@ -1,0 +1,76 @@
+{
+  "cid": "c28",
+  "note": "else if 这场的旧题在判「95 / 60 / 59 / 3 各打哪一档」，编辑器判不了命中哪一段，就把任务 1 摊成真写出一条四档链（最严的 >=90 开头、else if 接住及格档、else 兜底打不及格），任务 2 摊成再把 >=60 挪到最上面那条链的前头加一条 buffer 注释记下 85 被打成什么；死代码与顺序省条件只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一只 int 盒子装分数，右边给一个整数初值。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*\\d+\\s*;"],
+      "sample": "int score = 85;",
+      "why": "分档靠这一只盒子被依次改成 95、60、59、3 来试；先有盒子才谈得上往里面装分数。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写最严的那一档：if 的括号里判它大于等于 90，花括号里用一条 std::println 打出优秀两个字。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*>=\\s*90\\s*\\)\\s*\\{", "std::println\\s*\\(\\s*\"[^\"]*优秀"],
+      "sample": "if (score >= 90) {\n    std::println(\"{} 分：优秀\", score);",
+      "why": "写完一条链要从上往下问一遍：这一档成立的范围会不会把下面某一档整个罩住 —— 所以最严的排最上面。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "往下接档：写一条 else if，判这只盒子大于等于 60，后面跟上花括号。",
+      "acceptRegex": ["else\\s+if\\s*\\(\\s*\\w+\\s*>=\\s*(60|80)\\s*\\)\\s*\\{"],
+      "sample": "} else if (score >= 60) {",
+      "why": "能走到这一条就说明前面那档都不成立，小于 90 这件事已经被顺序替你写好了，不用再补一遍。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "最后补一个不带条件的 else 兜底，花括号里用一条 std::println 打出不及格。",
+      "acceptRegex": ["\\}\\s*else\\s*\\{", "std::println\\s*\\(\\s*\"[^\"]*不及格"],
+      "sample": "} else {\n    std::println(\"{} 分：不及格\", score);",
+      "why": "else 天生不带条件，想带条件就得写 else if；这一道门接住前面全不成立的输入，比如 59 和 3。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：再写一条顺序挪位子的链，把判大于等于 60 那一条整个放到最上面，>= 90 那一档跟在它后面当 else if。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*>=\\s*60\\s*\\)\\s*\\{[\\s\\S]*?else\\s+if\\s*\\(\\s*\\w+\\s*>=\\s*90"],
+      "sample": "if (score >= 60) {\n    std::println(\"{} 分：及格\", score);\n} else if (score >= 90) {",
+      "why": "85 一进第一道就命中并终止，>= 90 被前面的宽条件整个罩住，成了永远执行不到的死代码；编译器不报错，因为语法完全正确。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "拿 85 跑一遍这条挪了顺序的链，用一行注释写下它被打成了哪一档、为什么（至少写四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 85 被打成及格，>=90 那一档再也走不到",
+      "why": "这一条只能判「你写了一行像样的注释」，写没写对原因这块编辑器判不了 —— 这是它判不动的部分。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "链的语义是排他：第一个成立的进门，后面的看都不看，链里最多执行一段，一段都不执行也有可能。",
+    "score 是 95 时只打一行优秀，后面两条 else if 连条件都不计算。",
+    "边界就看那一个等号：60 满足大于等于，落在及格这一档；59 才掉进 else。",
+    "几条规则可以同时成立时该用一串独立 if 而不是链，否则后一件事会被前一件事吞掉，一张卷被贴两个档。",
+    "写分档链的合理顺序：列出各档范围确认互斥，最严的写最上面，补一个 else 接住没人要的输入，再用边界值逐个试跑。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int score = 95;\n\n    if (score >= 90) {\n        std::println(\"{} 分：优秀\", score);\n    } else if (score >= 80) {\n        std::println(\"{} 分：良好\", score);\n    } else if (score >= 60) {\n        std::println(\"{} 分：及格\", score);\n    } else {\n        std::println(\"{} 分：不及格\", score);\n    }\n\n    int trial = 85;\n    if (trial >= 60) {\n        std::println(\"{} 分：及格\", trial);\n    } else if (trial >= 90) {\n        std::println(\"{} 分：优秀\", trial);\n    }\n    // 85 被打成及格，>=90 那一档再也走不到\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int score = 95;\n    if (score >= 90) {\n        std::println(\"优秀\");\n    }\n    return 0;\n}\n",
+      "int score = 50;\nif (score >= 60) {\n    std::println(\"及格\");\n} else {\n    std::println(\"不及格\");\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  int  points = 60;\n  if ( points >= 90 ) { std::println( \"优秀\" ); }\n  else if ( points >= 60 ) { std::println( \"及格\" ); }\n  else { std::println( \"不及格\" ); }\n\n  int x = 85;\n  if (x >= 60) { std::println(\"{} 档\", x); }\n  else if (x >= 90) { std::println(\"高的那档\"); }\n  // 顺序错了，宽的挡在前面\n}\n"
+    ]
+  }
+}

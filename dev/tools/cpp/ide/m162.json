@@ -1,0 +1,78 @@
+{
+  "cid": "m162",
+  "note": "两条任务：换两组串再跑、把 right/left/best 打成一张表。核心三条给任务一，打表那条与纸上走表那条例给任务二；表怎么走的记录走 buffer。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "立起计数容器：一个 map 装每个字符现在窗内有几个，右端每轮把一个字符吃进去。",
+      "acceptRegex": ["std\\s*::\\s*map\\s*<\\s*char\\s*,\\s*int\\s*>", "\\+\\+\\s*\\w+\\s*\\[\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\]"],
+      "sample": "std::map<char, int> cnt;\n++cnt[s[right]];",
+      "why": "窗内有没有重复靠这个容器数：吃进来就是一格，吐出去就减一格。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "撞了就从左端吐：一个 while 问窗内那个字符还大于 1 吗，体里把最左边那个减一、再把左端往右挪一格。",
+      "acceptRegex": ["while\\s*\\(\\s*[^()]{1,60}>\\s*1\\s*\\)", "--\\s*\\w+\\s*\\[\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\]", "\\+\\+\\s*\\w+\\s*;"],
+      "sample": "while (cnt[s[right]] > 1) { --cnt[s[left]]; ++left; }",
+      "why": "左端只往右走、从不退回来：这是整趟不超过 2n 步的代价押在那条不变式上。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "只在合规之后量宽度：算出 right 减 left 加 1，再拿它跟 best 比、把大的那个留下。",
+      "acceptRegex": ["\\w+\\s*=\\s*\\w+\\s*-\\s*\\w+\\s*\\+\\s*1\\s*;[\\s\\S]{0,80}?if\\s*\\(\\s*\\w+\\s*>\\s*\\w+\\s*\\)\\s*\\w+\\s*=\\s*\\w+\\s*;", "\\w+\\s*-\\s*\\w+\\s*\\+\\s*1\\s*>\\s*\\w+"],
+      "matchAny": true,
+      "sample": "int w = right - left + 1;\nif (w > best) best = w;",
+      "why": "带重复的宽度不算数：实测把量宽度挪到 while 之前，bbbbb 报 2、abcabcbb 报 4，两个数都比正确值虚高。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务第 1 条：把这两组串都跑一遍 —— 一串写 bbbbb，一串写 pwwkew。",
+      "acceptRegex": ["\"bbbbb\"", "\"pwwkew\""],
+      "sample": "for (std::string s : {std::string(\"bbbbb\"), std::string(\"pwwkew\")}) {",
+      "why": "实测答案是 1 和 3，跟源稿给的对上；bbbbb 上左端走了 4 步、pwwkew 上走了 3 步，都不超过串长。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：每轮打一行表，把这一轮的 right、left、best 和当前窗口一起打出来 —— 窗口内容拿 substr 从 left 截 w 个。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*\\.\\s*substr\\s*\\("],
+      "sample": "std::println(\"  {}     {}     {}     {}     {}\", right, s[right], left, best, s.substr(left, w));",
+      "why": "这张表就是本课的望远镜：八行里第 6 轮 left 从 3 直接跳到 5 —— 那轮 b 撞了，窗里既有的 b 与前面的 c 都得吐掉。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "纸上跟完一遍以后，在注释里记下 left 那一列怎么走的（把看到的几个数写出来）。",
+      "acceptRegex": ["//[^\\n]*[0-9][^\\n]*[0-9]", "//[^\\n]{6,}"],
+      "sample": "// 跟一遍 abcabcbb：left 那一列是 0 0 0 1 2 3 5 7，一路往上没有一次往回",
+      "why": "判的是你确实把走法记下来了；记的对不对这块编辑器核对不了 —— 实测 right 那一列就是 0 到 7 每轮加一，八加七一共 15 步，而老实枚举每一段要试 36 段。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "右扩到违规、左缩到合规，两只手各自最多走 n 步，整趟不超过 2n —— 这种复杂度叫线性时间。",
+    "窗口宽度是 right 减 left 加 1；best 从第 2 格起就定在 3，之后再没变过。",
+    "实测 abcabcbb 的答案是 3：换 bbbbb 与 pwwkew 之后是 1 和 3。",
+    "换成 128 张格子表可以让左端一步跳过去，但那句守卫不能省：去掉后 abba 报 3、pwwkew 报 5，另外两串照样报对，测试跑不干净就会蒙混。",
+    "格子表的下标必须非负：char 可能是带符号的，先转成无符号的 char 再当索引。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n#include <map>\n\nint main() {\n    for (std::string s : {std::string(\"bbbbb\"), std::string(\"pwwkew\"), std::string(\"abcabcbb\")}) {\n        std::map<char, int> cnt;\n        int left = 0, best = 0;\n        for (int right = 0; right < static_cast<int>(s.size()); ++right) {\n            ++cnt[s[right]];                         // 右端吃进一个字符\n            while (cnt[s[right]] > 1) { --cnt[s[left]]; ++left; }   // 撞了就从左端吐\n            int w = right - left + 1;\n            if (w > best) best = w;                  // 合规了才量宽度\n            std::println(\"  {}     {}     {}     {}     {}\", right, s[right], left, best, s.substr(left, w));\n        }\n        std::println(\"{} 最长不重复段 = {}\", s, best);\n    }\n    return 0;\n}\n// 跟一遍 abcabcbb：left 那一列是 0 0 0 1 2 3 5 7，一路往上走\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n#include <map>\n\nint main() {\n    std::string s = \"abcabcbb\";\n    std::map<char, int> cnt;\n    int left = 0, best = 0;\n    for (int right = 0; right < static_cast<int>(s.size()); ++right) {\n        ++cnt[s[right]];\n        while (cnt[s[right]] > 1) { --cnt[s[left]]; ++left; }\n        if (right - left + 1 > best) best = right - left + 1;\n    }\n    std::println(\"最长不重复段 = {}\", best);\n    return 0;\n}\n",
+      "#include <print>\n#include <string>\n\nint main() {\n    std::string s = \"bbbbb\";\n    std::println(\"{}\", static_cast<int>(s.size()));\n    return 0;\n}\n",
+      "#include <print>\n#include <string>\n#include <map>\n\nint main() {\n    std::string s = \"pwwkew\";\n    std::map<char, int> cnt;\n    for (char c : s) ++cnt[c];\n    std::println(\"{}\", cnt['w']);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\n#  include < map >\nint  main ( )\n{\n  for ( std :: string  t  :  { std :: string ( \"bbbbb\" ) , std :: string ( \"pwwkew\" ) } )\n  {\n    std :: map < char , int >  have ;\n    int  left  =  0 ,  best  =  0 ;\n    for ( int  right  =  0 ;  right  <  static_cast < int > ( t . size ( ) ) ;  ++ right )\n    {\n      ++ have [ t [ right ] ] ;\n      while ( have [ t [ right ] ] > 1 ) { -- have [ t [ left ] ] ;  ++ left ; }\n      int  w  =  right - left + 1 ;\n      if ( w > best )  best = w ;\n      std :: println ( \" {} {} {} {}\" , right , left , best , t . substr ( left , w ) ) ;\n    }\n    std :: println ( \" {} 的最长段 {}\" , t , best ) ;\n  }\n  // 表里左手走的是 0 0 0 1 2 3 5 7 这一列\n}\n"
+    ]
+  }
+}

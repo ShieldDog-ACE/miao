@@ -1,0 +1,75 @@
+{
+  "cid": "m150",
+  "note": "任务两处：装上那三个数、把 long long 那一档换成 int 再看数字。条件按容器初值、起点、循环上界、两格累乘、两档打印摊开。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 1 条前半：给那一格 vector<int> 装上三个数，初值写成 3、9、4。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{\\s*3\\s*,\\s*9\\s*,\\s*4\\s*\\}"],
+      "sample": "std::vector<int> v = {3, 9, 4};",
+      "why": "上一段这里是空的，这一跑要它有元素；三个元素的最大值是 9。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "取第一个元素当起点：开一个 int，值写成方括号里下标 0 那一格。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*\\w+\\s*\\[\\s*0\\s*\\]\\s*;"],
+      "sample": "int best = v[0];",
+      "why": "取元素之前先问容器是不是空的；空容器上这一句没有元素可给。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "开扫描循环：从下标 1 起，上界是元素个数，条件用小于号、不多写那个等号。",
+      "acceptRegex": ["for\\s*\\(\\s*size_t\\s+\\w+\\s*=\\s*1\\s*;\\s*\\w+\\s*<\\s*\\w+\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*;"],
+      "sample": "for (size_t i = 1; i < v.size(); ++i)\n    if (v[i] > best) best = v[i];",
+      "why": "size 是个数，最后一个元素住在个数减 1；多写一个等号就走整圈到墙外那一格。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "开一格 long long 起累乘：初值 1，循环里用乘等于同一个数。",
+      "acceptRegex": ["long\\s+long\\s+\\w+\\s*=\\s*1\\s*;", "\\w+\\s*\\*=\\s*\\w+\\s*;"],
+      "sample": "long long big = 1;\nfor (int i = 0; i < 13; ++i) big *= 10;",
+      "why": "10 的 13 次方是十万亿量级，早在 21 亿之上，long long 才装得住。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务第 1 条后半：同一个累乘再开一格 int 的算一遍（初值也是 1，乘同一个数）。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*1\\s*;", "\\w+\\s*\\*=\\s*\\w+\\s*;"],
+      "sample": "int small = 1;\nfor (int i = 0; i < 13; ++i) small *= 10;",
+      "why": "这就是那一步换盒子实验：累乘过程本身在 int 里翻，最后再宽的容器也救不回来。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用两条 std::println 把这两档各打一行：一行带上 long long 字样，一行带上 int 字样。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*long\\s+long", "std\\s*::\\s*println\\s*\\([^;]*\\bint\\b"],
+      "sample": "std::println(\"long long = {}\", big);\nstd::println(\"int 换上去 = {}\", small);",
+      "why": "本机实测两行是 10000000000000 和 1316134912：后者是个看着挺合理的正数，溢出既不报警也不报错。",
+      "coversTask": 1,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "一问格数：i 小于 size 走 size 圈，i 小于等于 size 多走一整圈，下标越界。",
+    "二问空：容器可能是 0 个吗？是的话取 v[0] 之前先问一句 empty。",
+    "空容器上 size 减 1 不等于 -1：无符号数减过头绕到最远处，本机打的是 18446744073709551615，循环上界当场没了。",
+    "溢出给你的是一个像样的错数，比当场崩掉难查得多：估到会超就从第一个变量起一路用 long long。",
+    "本机那句断言中止是编译配置给的额外保护，不是语言保证；自查的口径要按没人替我拦来定。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {3, 9, 4};\n    int best = v[0];\n    for (size_t i = 1; i < v.size(); ++i)\n        if (v[i] > best) best = v[i];\n    std::println(\"最大值是 {}\", best);\n    long long big = 1;\n    int small = 1;\n    for (int i = 0; i < 13; ++i) { big *= 10; small *= 10; }\n    std::println(\"long long = {}\", big);\n    std::println(\"int 换上去 = {}\", small);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v;\n    if (!v.empty()) {\n        int best = v[0];\n        for (size_t i = 1; i < v.size(); ++i)\n            if (v[i] > best) best = v[i];\n    }\n    long long big = 1;\n    for (int i = 0; i < 13; ++i) big *= 10;\n    std::println(\"{}\", big);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {3, 9, 4};\n    int best = v[0];\n    for (size_t i = 1; i < v.size(); ++i)\n        if (v[i] > best) best = v[i];\n    std::println(\"最大值是 {}\", best);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\nint  main ( )\n{\n  std :: vector < int >  nums  =  { 3 , 9 , 4 } ;\n  int  top  =  nums [ 0 ] ;\n  for ( size_t  k  =  1 ;  k  <  nums . size ( ) ;  ++ k )\n      if ( nums [ k ]  >  top )  top  =  nums [ k ] ;\n  long  long  wide  =  1 ;\n  int  narrow  =  1 ;\n  for ( int  j  =  0 ;  j  <  13 ;  ++ j )\n  {  wide  *=  10 ;  narrow  *=  10 ;  }\n  std :: println ( \" long long 那一档 {}\" , wide ) ;\n  std :: println ( \" int 换上去 {}\" , narrow ) ;\n}\n"
+    ]
+  }
+}

@@ -6,76 +6,90 @@
 window.MIAO_CPPM_EXAM_P10 = {
   papers: [
     {
-      cid: "m113", kind: "paper", mode: "code", authored: "c31922bc", pass: 60, task: "任务题目：给 Score 加第三个成员 int done_ = 0;，构造函数不管它，然后打印出来确认对象一出生它就是 0；再回答它凭什么没被初始化列表也带着值出生", hint: "想不起来就回看本课【演示 3 · 声明处给默认值，构造函数可以不管它】与【原理讲解】里那条装载顺序。",
+      cid: "m113", kind: "paper", mode: "ide", authored: "c31922bc", file: "main.cpp", pass: 60, task: "任务题目：给 Score 加第三个成员 int done_ = 0;，构造函数不管它，然后打印出来确认对象一出生它就是 0；再回答它凭什么没被初始化列表也带着值出生", hint: "想不起来就回看本课【演示 3 · 声明处给默认值，构造函数可以不管它】与【原理讲解】里那条装载顺序。",
+      notes: [],
       questions: [
-        { id: "q1", type: "code", score: 26, coversTask: 1, stem: "（任务题）按本课任务给这个类补上第三个成员：一个 int done_，对象一出生它就是 0，构造函数的参数表和冒号后面都不必写它。写出那一行声明。", acceptRegex: ["int\\s+done_\\s*=\\s*0"], sample: "int done_ = 0;", why: "声明处那个 = 0 本身就是一份初始化，由所有构造函数共享。放在 private 区里，写不写注释都不算这题的点，那行 = 0 才是。" },
-        { id: "q2", type: "code", score: 22, stem: "把演示 1 那个带冒号的构造函数改成不写冒号、在函数体里把两个成员一一赋值。写出函数体里那两句赋值。", acceptRegex: ["subject_\\s*=", "total_\\s*=\\s*total"], sample: "subject_ = std::move(subject);\n        total_ = total;", why: "结果是同样的，代价不同：string 成员多付一次造壳与扔壳。这题只认你有没有把值写进带下划线的成员。" },
-        { id: "q3", type: "code", score: 30, coversTask: 1, stem: "（任务题）写出这个构造函数：参数表收 std::string 和 int 各一个，紧跟冒号，后面只安排 subject_ 与 total_ 两栏，函数体空着。", acceptRegex: ["Score\\s*\\(\\s*(const\\s+)?std\\s*::\\s*string\\s+\\w+\\s*,\\s*int\\s+\\w+\\s*\\)\\s*:", "subject_\\s*\\(\\s*\\w+", "total_\\s*\\(\\s*\\w+\\s*\\)"], sample: "Score(std::string subject, int total) : subject_(std::move(subject)), total_(total) {}", why: "同名、不写返回类型，紧跟冒号那一段就是初始化列表 —— 成员出生时就带着值，没有「先成空壳再被赋值」那一步；done_ 不在列表里也不在参数里，它靠声明处的 = 0 自己出生。" },
-        { id: "q4", type: "code", score: 22, coversTask: 1, stem: "（任务题）写一行：造一个 Score 对象，只递科目名和总数两个参数，第三个成员 done_ 不用你管。", acceptRegex: ["Score\\s+\\w+\\s*\\(\\s*\"[^\"]*\"\\s*,\\s*\\d+\\s*\\)"], sample: "Score s(\"英语词汇\", 5500);", why: "声明处给了 = 0，所有构造函数共享这份初始化，调用处自然一个参数都不用多加 —— 对象一出生 done_ 就是 0。" }
+        { id: "q1", type: "code", score: 26, coversTask: 1, stem: "（任务题）按本课任务给这个类补上第三个成员：一个 int done_，对象一出生它就是 0，构造函数的参数表和冒号后面都不必写它。写出那一行声明。", acceptRegex: ["int\\s+done_\\s*=\\s*0"], acceptOn: "code", sample: "int done_ = 0;", why: "声明处那个 = 0 本身就是一份初始化，由所有构造函数共享。放在 private 区里，写不写注释都不算这题的点，那行 = 0 才是。" },
+        { id: "q2", type: "code", score: 22, stem: "把演示 1 那个带冒号的构造函数改成不写冒号、在函数体里把两个成员一一赋值。写出函数体里那两句赋值。", acceptRegex: ["subject_\\s*=", "total_\\s*=\\s*total"], acceptOn: "code", sample: "subject_ = std::move(subject);\n        total_ = total;", why: "结果是同样的，代价不同：string 成员多付一次造壳与扔壳。这题只认你有没有把值写进带下划线的成员。" },
+        { id: "q3", type: "code", score: 30, coversTask: 1, stem: "（任务题）写出这个构造函数：参数表收 std::string 和 int 各一个，紧跟冒号，后面只安排 subject_ 与 total_ 两栏，函数体空着。", acceptRegex: ["Score\\s*\\(\\s*(const\\s+)?std\\s*::\\s*string\\s+\\w+\\s*,\\s*int\\s+\\w+\\s*\\)\\s*:", "subject_\\s*\\(\\s*\\w+", "total_\\s*\\(\\s*\\w+\\s*\\)"], acceptOn: "code", sample: "Score(std::string subject, int total) : subject_(std::move(subject)), total_(total) {}", why: "同名、不写返回类型，紧跟冒号那一段就是初始化列表 —— 成员出生时就带着值，没有「先成空壳再被赋值」那一步；done_ 不在列表里也不在参数里，它靠声明处的 = 0 自己出生。" },
+        { id: "q4", type: "code", score: 22, coversTask: 1, stem: "（任务题）写一行：造一个 Score 对象，只递科目名和总数两个参数，第三个成员 done_ 不用你管。", acceptRegex: ["Score\\s+\\w+\\s*\\(\\s*\"[^\"]*\"\\s*,\\s*\\d+\\s*\\)"], acceptOn: "code", sample: "Score s(\"英语词汇\", 5500);", why: "声明处给了 = 0，所有构造函数共享这份初始化，调用处自然一个参数都不用多加 —— 对象一出生 done_ 就是 0。" }
       ],
       selftest: {
         refs: [
-          {q1: "int done_ = 0;", q2: "subject_ = std::move(subject);\n        total_ = total;", q3: "Score(std::string subject, int total) : subject_(std::move(subject)), total_(total) {}", q4: "Score s(\"英语词汇\", 5500);"}],
+          "#include <string>\nint main() {\n    int done_ = 0;\n    subject_ = std::move(subject);\n    total_ = total;\n    Score(std::string subject, int total) : subject_(std::move(subject)), total_(total) {}\n    Score s(\"英语词汇\", 5500);\n    return 0;\n}\n"],
         wrongs: [
-          {q1: "int done_;", q2: "subject(subject_); total(total_);", q3: "Score(std::string subject, int total) { subject_ = std::move(subject); total_ = total; }", q4: "Score s(5500, \"英语词汇\");"}],
+          "",
+          "int done_;",
+          "subject(subject_); total(total_);",
+          "Score(std::string subject, int total) { subject_ = std::move(subject); total_ = total; }",
+          "Score s(5500, \"英语词汇\");"],
         loose: [
-          {q1: "int   done_=0 ;", q2: "subject_=std::move( subject ) ;\ntotal_=total ;", q3: "Score ( std :: string  s , int  n )  :   total_ ( n ) ,  subject_ ( std :: move ( s ) ) { }", q4: "Score   p  (  \"数学\"  ,  30  ) ;"}]
+          "int main() {\n    int   done_=0 ;\n    subject_=std::move( subject ) ;\n    total_=total ;\n    Score ( std :: string  s , int  n )  :   total_ ( n ) ,  subject_ ( std :: move ( s ) ) { }\n    Score   p  (  \"数学\"  ,  30  ) ;\n    return 0;\n}\n"]
       }
     },
     {
-      cid: "m114", kind: "paper", mode: "quiz", authored: "20154591", pass: 60, task: "任务题目：往只读的 remaining 里塞一行 done_ = 0;，看清编译器怎么把你拦下来，然后把那行删掉；再说清这条拦阻到底在保护谁", hint: "想不起来就回看本课【演示 2 · 本课任务：在 remaining 里手滑一行】与【演示 3 · const 引用只能敲带 const 的门】。",
+      cid: "m114", kind: "paper", mode: "ide", authored: "20154591", file: "main.cpp", pass: 60, task: "任务题目：往只读的 remaining 里塞一行 done_ = 0;，看清编译器怎么把你拦下来，然后把那行删掉；再说清这条拦阻到底在保护谁", hint: "想不起来就回看本课【演示 2 · 本课任务：在 remaining 里手滑一行】与【演示 3 · const 引用只能敲带 const 的门】。",
+      notes: ["const 写在参数表后面才算本课的 const 成员函数；只写在返回值前面一样合法，但方法内部照样能写成员。", "那行赋值被拦下时报的是 assignment of member in read-only object：方法把自己签成了只读，一写成员就撞编译器。", "标了 const，收 const 引用的函数才调得动这个方法；在带 const 的方法里调同类另一个不带 const 的方法，同样被拦。", "一个方法挂了 const，并不保证这个对象在整个程序期间不变 —— const 管的是这个方法动不动成员，管不住别的方法什么时候改对象。", "该不该挂 const 的口径只看函数体里既没写成员、也没调不带 const 的方法，跟名字、可见性、有没有返回值都无关。"],
       questions: [
-        { id: "q1", type: "choice", score: 11, stem: "const 写在哪个位置，才算本课说的 const 成员函数？", options: ["写在返回值前面，比如 const int remaining()", "写在参数表后面，比如 int remaining() const", "写在类名后面", "写在成员变量的声明后面"], answer: 1, why: "位置不同管的东西不同。只写返回值前面那个 const 一样合法，但方法内部照样能写成员 —— 等于什么都没承诺。" },
-        { id: "q2", type: "output", score: 13, stem: "演示 1 那段跑完打印什么？（一行）", acceptLines: ["进度 40%，还剩 6 个"], why: "s 总共 10 个、add(4) 之后做了 4 个：progress 是 0.4 乘 100 得 40，remaining 是 10 减 4 得 6。" },
-        { id: "q3", type: "choice", score: 14, coversTask: 1, stem: "那行赋值被拦下时，编译器报的是 assignment of member 'Score::done_' in read-only object。根因是什么？", options: ["done_ 是 private，remaining 在类里看不见它", "这个方法把「自己」签成了只读，只读的方法里不能写成员", "remaining 有返回值，所以不许再有副作用", "带 const 的方法只能有一句 return"], answer: 1, why: "在类里 private 成员当然可见。拦你的是后面那个 const；同样的赋值挪进不带 const 的 add 里立刻合法。" },
-        { id: "q4", type: "multi", score: 15, coversTask: 1, stem: "关于 const 成员函数，说法对的是？（多选，错勾任何一项整题 0 分）", options: ["标了 const，收 const Score& 的函数才调得动这个方法", "只把 const 写在返回值前面，方法里仍然可以写成员", "一个方法挂了 const，就保证这个对象在整个程序期间不会变", "在 const 方法里调同类另一个不带 const 的方法，同样被拦"], answers: [0, 1, 3], why: "const 管的是「这个方法动不动成员」和「只读对象上能调什么」，它管不住别的方法什么时候改对象。" },
-        { id: "q5", type: "output", score: 14, coversTask: 1, stem: "演示 3 里把 s.add(1) 那一行删掉之后，这段跑完打印什么？（一行）\nScore s(10); s.add(4); report(s);", acceptLines: ["还剩 6 个"], why: "留着一行 add 就先被编译拦下；删掉之后 report 只读，10 减 4 得 6。这也说明只读函数干不了改数据的活。" },
-        { id: "q6", type: "choice", score: 12, stem: "一个方法该不该挂 const，本课给的判断口径是？", options: ["看它有没有返回值", "函数体里既没写成员、也没调不带 const 的方法，就该挂", "看它写在 public 还是 private 下面", "名字里带 get、print 的一律挂上"], answer: 1, why: "口径只看它动不动状态，跟名字、可见性、有没有返回值都无关。靠名字猜是最容易漏标的那条路。" },
-        { id: "q7", type: "match", score: 21, coversTask: 1, stem: "把左边关于 const 的四种写法，和它真正管到的事连起来（右边顺序是打乱的）。", answer: {"把 const 写在参数表后面，像 int remaining() const": "编译器替这份承诺盯着：一写成员就报只读对象，删掉那行才过得去", "把 const 只写在返回值前面": "它管不到这个方法动不动成员，光写在这儿什么也没承诺", "在带 const 的方法里写一行 done_ = 0": "这就是本课任务里那一行手滑的下场", "函数参数写成 const Score& s": "交出去的是只读对象，不带 const 的方法一个也敲不开"}, left: ["把 const 写在参数表后面，像 int remaining() const", "把 const 只写在返回值前面", "在带 const 的方法里写一行 done_ = 0", "函数参数写成 const Score& s"], right: ["它管不到这个方法动不动成员，光写在这儿什么也没承诺", "编译器替这份承诺盯着：一写成员就报只读对象，删掉那行才过得去", "交出去的是只读对象，不带 const 的方法一个也敲不开", "这就是本课任务里那一行手滑的下场"], why: "const 写在参数表后面才修饰这个方法：它承诺不动成员，这份承诺由编译器在编译期兑现，写一下就拦住，删掉才过。返回值前面那个 const 管的是别的事。参数写成只读引用时，交出去的是只读对象，只有带 const 的方法敲得开。" }
+        { id: "q1", type: "code", score: 15, stem: "把这份程序写成能跑的形：把打印工具箱（#include <print>）搬进来，再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <print>\n\nint main() {", why: "类定义写在 main 外面；没有 main，链接器找不到入口。" },
+        { id: "q2", type: "code", score: 15, coversTask: 1, stem: "写一个类，里面有一个只读的 int 方法：const 挂在参数表后面，像 int remaining() const。", acceptRegex: ["class\\s+\\w+", "int\\s+\\w+\\s*\\(\\s*\\)\\s*const"], acceptOn: "code", sample: "class Score {\npublic:\n    int remaining() const { return total_ - done_; }", why: "位置不同管的东西不同：const 只有挂在参数表后面才修饰这个方法；写在返回值前面一样合法，却什么也没承诺。" },
+        { id: "q3", type: "code", score: 15, coversTask: 1, stem: "再开一个不带 const 的方法：收一个 int 的 void 函数，函数体里用 += 改那个成员。", acceptRegex: ["void\\s+\\w+\\s*\\(\\s*int\\s+\\w+\\s*\\)\\s*\\{", "\\w+_\\s*\\+="], acceptOn: "code", sample: "void add(int n) { done_ += n; }", why: "它要写 done_，挂了 const 反而编译不过；要不要挂只看这个函数动不动成员。" },
+        { id: "q4", type: "code", score: 25, coversTask: 1, stem: "任务第 1 条：在那个带 const 的方法里手滑一行 —— 直接给成员赋值 0（done_ = 0; 这样一句），就是要编译器当场拦你。", acceptRegex: ["[\\n;]\\s*\\w+_\\s*=\\s*0\\s*;"], acceptOn: "code", sample: "int remaining() const {\n    done_ = 0;\n    return total_ - done_;\n}", why: "这个方法把自己签成了只读，只读的方法里不能写成员；同样的赋值挪进不带 const 的 add 里立刻合法。" },
+        { id: "q5", type: "code", score: 15, coversTask: 1, stem: "任务第 1 条：在旁边用一行注释抄下报错里那个词（read-only object，至少四个字），确认之后把那行删掉再说。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 报错说 assignment of member in read-only object：拦你的是参数表后面那个 const", why: "正则只能验你写了注释，抄得对不对判不了 —— 这一处是这块编辑器判不动的部分。" },
+        { id: "q6", type: "code", score: 15, coversTask: 1, stem: "把只读这件事再做一层：写一个函数，参数是那个类的 const 引用，里面只用带 const 的方法。", acceptRegex: ["void\\s+\\w+\\s*\\(\\s*const\\s+\\w+\\s*&\\s*\\w+\\s*\\)"], acceptOn: "code", sample: "void report(const Score& s) {\n    std::println(\"还剩 {} 个\", s.remaining());\n}", why: "交出去的是只读对象，不带 const 的方法一个也敲不开；所以 s.add(1) 那一行要先删掉才过得去。" }
       ],
       selftest: {
         refs: [
-          {q1: 1, q2: "进度 40%，还剩 6 个", q3: 1, q4: [0, 1, 3], q5: "还剩 6 个", q6: 1, q7: {"把 const 写在参数表后面，像 int remaining() const": "编译器替这份承诺盯着：一写成员就报只读对象，删掉那行才过得去", "把 const 只写在返回值前面": "它管不到这个方法动不动成员，光写在这儿什么也没承诺", "在带 const 的方法里写一行 done_ = 0": "这就是本课任务里那一行手滑的下场", "函数参数写成 const Score& s": "交出去的是只读对象，不带 const 的方法一个也敲不开"}}],
+          "#include <print>\n\nclass Score {\npublic:\n    Score(int total) : total_(total), done_(0) {}\n    int remaining() const {\n        done_ = 0;\n        return total_ - done_;\n    }\n    double progress() const { return static_cast<double>(done_) / total_; }\n    void add(int n) { done_ += n; }\nprivate:\n    int total_, done_;\n};\n\nvoid report(const Score& s) {\n    std::println(\"还剩 {} 个\", s.remaining());\n}\n\nint main() {\n    Score s(10);\n    s.add(4);\n    report(s);\n    return 0;\n}\n// 报错原话：assignment of member Score::done_ in read-only object，删掉那一行才过\n"],
         wrongs: [
-          {q1: 0, q2: "进度 4%，还剩 6 个", q3: 0, q4: [2], q5: "还剩 5 个", q6: 3, q7: {"把 const 写在参数表后面，像 int remaining() const": "它管不到这个方法动不动成员，光写在这儿什么也没承诺", "把 const 只写在返回值前面": "交出去的是只读对象，不带 const 的方法一个也敲不开", "在带 const 的方法里写一行 done_ = 0": "编译器替这份承诺盯着：一写成员就报只读对象，删掉那行才过得去", "函数参数写成 const Score& s": "这就是本课任务里那一行手滑的下场"}}],
+          "",
+          "#include <print>\n\nclass Score {\npublic:\n    int remaining() { return total_ - done_; }\n    void add(int n) { done_ += n; }\nprivate:\n    int total_ = 10;\n    int done_ = 0;\n};\n\nint main() {\n    Score s;\n    s.add(4);\n    std::println(\"{}\", s.remaining());\n    return 0;\n}\n",
+          "#include <print>\n\nclass Score {\npublic:\n    const int remaining() const { return total_; }\n    void add(int n) { done_ = n; }\nprivate:\n    int total_ = 10;\n    int done_ = 0;\n};\n\nint main() {\n    Score s;\n    std::println(\"{}\", s.remaining());\n    return 0;\n}\n"],
         loose: [
-          {q1: "1", q2: " 进度 40%，还剩 6 个 ", q3: "1", q4: [3, 1, 0], q5: "还剩 6 个 ", q6: "1", q7: {"0": 1, "1": 0, "2": 3, "3": 2}}]
+          "#  include < print >\n\nclass  Score\n{\n  public :\n      int  left ( )  const {\n          done_ = 0;\n          return total_ - done_;\n      }\n      void  add ( int n ) { done_ += n; }\n  private :\n      int total_ = 10;\n      int done_ = 0;\n};\n\nvoid  tell ( const  Score & obj ) { std::println(\"{}\", obj.left()); }\n\nint  main ( )\n{\n  Score s;\n  s.add(3);\n  tell(s);\n  return 0;\n}\n// 报错里有 read-only object 这个词，那一行删掉就编译过了\n"]
       }
     },
     {
-      cid: "m115", kind: "paper", mode: "code", authored: "3c7515e1", pass: 60, task: "任务题目：给 Score 再写一个 operator==，科目名相同就算相等，然后打印 v[0] == v[1]；先想清楚排完序之后 v[0] 和 v[1] 各是谁再跑", hint: "想不起来就回看本课【演示 3 · 本课任务：再写一个 operator==】与【常见坑】里那条「写成一个让 a 不小于 a 成立的样式」。",
+      cid: "m115", kind: "paper", mode: "ide", authored: "3c7515e1", file: "main.cpp", pass: 60, task: "任务题目：给 Score 再写一个 operator==，科目名相同就算相等，然后打印 v[0] == v[1]；先想清楚排完序之后 v[0] 和 v[1] 各是谁再跑", hint: "想不起来就回看本课【演示 3 · 本课任务：再写一个 operator==】与【常见坑】里那条「写成一个让 a 不小于 a 成立的样式」。",
+      notes: [],
       questions: [
-        { id: "q1", type: "code", score: 27, coversTask: 1, stem: "（任务题）写一个 operator==：两个 Score 的科目名相同就算相等。参数是右边那个对象，方法本身不改任何东西。", acceptRegex: ["operator\\s*=", "name_\\s*=="], sample: "bool operator==(const Score& o) const { return name_ == o.name_; }", why: "名字固定是 operator 跟一个符号；比较只看名字是否相同，就用 name_ 跟 o 的 name_ 比。后面那个 const 是上一课的规矩。" },
-        { id: "q2", type: "code", score: 17, coversTask: 1, stem: "写出 Score 的 operator<：按完成率决定谁排前面，参数接右边那个对象，方法不改对象。", acceptRegex: ["operator\\s*<", "rate\\s*\\("], sample: "bool operator<(const Score& o) const { return rate() < o.rate(); }", why: "这一句是整节课的轴：算法问的那句话由它回答，比较的口径直接用已经写好的只读方法 rate。" },
-        { id: "q3", type: "code", score: 28, coversTask: 1, stem: "写一行打印：这个排完序的 vector 里，下标 0 和下标 1 那两个对象相等吗？直接用 == 比较它们，把结果塞进 {} 里打出来。", acceptRegex: ["std\\s*::\\s*println\\s*\\(", "\\{\\s*\\}", "\\[\\s*0\\s*\\]\\s*==\\s*\\w+\\s*\\[\\s*1\\s*\\]"], sample: "std::println(\"排完 v0 == v1 是 {}\", v[0] == v[1]);", why: "operator== 写完之后，v[0] == v[1] 这一句就是在调用它；打印出来是 true 还是 false，看的是你定的那条相等规则。" },
-        { id: "q4", type: "code", score: 28, coversTask: 1, stem: "写一行：把整批 Score 对象排一次序，排序用的就是类里那个 operator<，一个额外参数都不必给。", acceptRegex: ["std\\s*::\\s*sort\\s*\\(", "\\.\\s*begin\\s*\\(\\s*\\)", "\\.\\s*end\\s*\\(\\s*\\)"], sample: "std::sort(v.begin(), v.end());", why: "std::sort 只要两个迭代器；它自己会去问 a < b，于是你在类里写下的 operator< 就是它用的那把尺子。" }
+        { id: "q1", type: "code", score: 27, coversTask: 1, stem: "（任务题）写一个 operator==：两个 Score 的科目名相同就算相等。参数是右边那个对象，方法本身不改任何东西。", acceptRegex: ["operator\\s*=", "name_\\s*=="], acceptOn: "code", sample: "bool operator==(const Score& o) const { return name_ == o.name_; }", why: "名字固定是 operator 跟一个符号；比较只看名字是否相同，就用 name_ 跟 o 的 name_ 比。后面那个 const 是上一课的规矩。" },
+        { id: "q2", type: "code", score: 17, coversTask: 1, stem: "写出 Score 的 operator<：按完成率决定谁排前面，参数接右边那个对象，方法不改对象。", acceptRegex: ["operator\\s*<", "rate\\s*\\("], acceptOn: "code", sample: "bool operator<(const Score& o) const { return rate() < o.rate(); }", why: "这一句是整节课的轴：算法问的那句话由它回答，比较的口径直接用已经写好的只读方法 rate。" },
+        { id: "q3", type: "code", score: 28, coversTask: 1, stem: "写一行打印：这个排完序的 vector 里，下标 0 和下标 1 那两个对象相等吗？直接用 == 比较它们，把结果塞进 {} 里打出来。", acceptRegex: ["std\\s*::\\s*println\\s*\\(", "\\{\\s*\\}", "\\[\\s*0\\s*\\]\\s*==\\s*\\w+\\s*\\[\\s*1\\s*\\]"], acceptOn: "code", sample: "std::println(\"排完 v0 == v1 是 {}\", v[0] == v[1]);", why: "operator== 写完之后，v[0] == v[1] 这一句就是在调用它；打印出来是 true 还是 false，看的是你定的那条相等规则。" },
+        { id: "q4", type: "code", score: 28, coversTask: 1, stem: "写一行：把整批 Score 对象排一次序，排序用的就是类里那个 operator<，一个额外参数都不必给。", acceptRegex: ["std\\s*::\\s*sort\\s*\\(", "\\.\\s*begin\\s*\\(\\s*\\)", "\\.\\s*end\\s*\\(\\s*\\)"], acceptOn: "code", sample: "std::sort(v.begin(), v.end());", why: "std::sort 只要两个迭代器；它自己会去问 a < b，于是你在类里写下的 operator< 就是它用的那把尺子。" }
       ],
       selftest: {
         refs: [
-          {q1: "bool operator==(const Score& o) const { return name_ == o.name_; }", q2: "bool operator<(const Score& o) const { return rate() < o.rate(); }", q3: "std::println(\"排完 v0 == v1 是 {}\", v[0] == v[1]);", q4: "std::sort(v.begin(), v.end());"}],
+          "#include <print>\n#include <algorithm>\nint main() {\n    bool operator==(const Score& o) const { return name_ == o.name_; }\n    bool operator<(const Score& o) const { return rate() < o.rate(); }\n    std::println(\"排完 v0 == v1 是 {}\", v[0] == v[1]);\n    std::sort(v.begin(), v.end());\n    return 0;\n}\n"],
         wrongs: [
-          {q1: "bool operator==(const Score& o) { return rate() == o.rate(); }", q2: "int compare(Score o) { return 0; }", q3: "std::println(\"{}\", v[0] < v[1]);", q4: "std::max(v.begin(), v.end());"}],
+          "",
+          "bool operator==(const Score& o) { return rate() == o.rate(); }",
+          "int compare(Score o) { return 0; }",
+          "std::println(\"{}\", v[0] < v[1]);",
+          "std::max(v.begin(), v.end());"],
         loose: [
-          {q1: "bool operator == ( const Score& other ) const {\n  return  name_  ==  other.name_ ;\n}", q2: "bool  operator <(const Score& other) const{ return other.rate() > rate(); }", q3: "std :: println ( \"看： {}\" , v [ 0 ] == v [ 1 ] ) ;", q4: "std :: sort ( v . begin ( ) , v . end ( ) ) ;"}]
+          "int main() {\n    bool operator == ( const Score& other ) const {\n    return  name_  ==  other.name_ ;\n    }\n    bool  operator <(const Score& other) const{ return other.rate() > rate(); }\n    std :: println ( \"看： {}\" , v [ 0 ] == v [ 1 ] ) ;\n    std :: sort ( v . begin ( ) , v . end ( ) ) ;\n    return 0;\n}\n"]
       }
     },
     {
-      cid: "m116", kind: "paper", mode: "quiz", pass: 60, task: "任务题目：把 override 删掉再故意把 area 拼成 aer，对比有无 override 时编译器的反应，并说清那两行 0.00 是从哪一句来的", hint: "想不起来就回看本课【演示 2 · 本课任务：把 override 删掉，再故意拼错名字】与【常见坑】里那条析构。",
+      cid: "m116", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, task: "任务题目：把 override 删掉再故意把 area 拼成 aer，对比有无 override 时编译器的反应，并说清那两行 0.00 是从哪一句来的", hint: "想不起来就回看本课【演示 2 · 本课任务：把 override 删掉，再故意拼错名字】与【常见坑】里那条析构。",
+      notes: ["virtual 说这个方法欢迎孩子改写，override 说我这一行就是在改写、请编译器检查：一个开口子，一个验收。", "把 override 删掉又把名字拼错时，编译一路通过，s->area() 走的还是基类那句 return 0.0，屏幕上就是 0.00。", "挂着 override 拼错名字时报 marked 'override', but does not override：它盯的是签名三项对不对得上。", "打算被继承的类，析构要写 virtual，否则孩子那一份不跑；再加一个新图形类型，遍历那一段代码一个字都不用改。", "基类摆在 private 下的数据成员，孩子在类里直接写是报错的，要走父亲留下的公开方法。"],
       questions: [
-        { id: "q1", type: "choice", score: 10, stem: "virtual 和 override 分别在哪一头说话？", options: ["virtual 说这个方法欢迎孩子改写；override 说我这一行就是在改写，请编译器检查", "virtual 说这个类不许被继承；override 说要重写两遍", "两个是一个意思，写哪个都行", "virtual 只给析构用，override 只给方法用"], answer: 0, why: "一个开口子、一个验收。源稿那两行注释正好对上：基类 virtual ~Shape 与 virtual double area，孩子 area 后面写 override。" },
-        { id: "q2", type: "output", score: 13, stem: "把 override 删掉、又把 area 拼成 aer，其余照演示 1，两个半径 2.0 和 1.0 的圆跑出来打印什么？（两行）", acceptLines: ["圆的面积 = 0.00", "圆的面积 = 0.00"], why: "拼错的那个 aer 没人调用，s->area() 走的还是基类那句 return 0.0 —— 编译一路通过，这正是没写 override 的下场。" },
-        { id: "q3", type: "choice", score: 28, coversTask: 1, stem: "保留 override、把 area 拼成 aer，编译器报 'double Circle::aer() const' marked 'override', but does not override。这句在说什么？", options: ["你写的这个函数没匹配上任何允许改写的方法，改写根本没发生", "Circle 不能继承 Shape", "area 的返回值类型必须是 int", "基类的析构函数漏了 virtual"], answer: 0, why: "同一个报错也出现在参数多写一个、或者孩子自己漏了 const 的情况 —— 它盯的就是签名三项对不对得上。" },
-        { id: "q4", type: "multi", score: 15, stem: "关于继承，说法对的是？（多选，错勾任何一项整题 0 分）", options: ["class Circle : public Shape 读作 Circle 对外就是一个 Shape", "打算被继承的类，析构要写 virtual，否则孩子那一份不跑", "基类摆在 private 下的数据成员，孩子在 Circle 的类里可以直接写", "再加一个新图形类型，遍历那一段代码一个字都不用改"], answers: [0, 1, 3], why: "基类的 private 孩子在类里直接写是报错的，要走父亲留下的公开方法；其余三条都是本课正文实测过或明确讲过的形状。" },
-        { id: "q5", type: "blank", score: 22, coversTask: 1, stem: "孩子那一行想在编译期确认自己真的改到了父亲的方法，就在参数表后面写上关键词____。", accept: ["override", "写 override"], why: "老写法没这层保险：拼错名字、参数不同、少个 const，全都静悄悄合法，程序照跑，只是走的是基类那份。" },
-        { id: "q6", type: "choice", score: 12, stem: "实测把基类析构的 virtual 去掉，父子两个析构各打印一句话，程序打出来的是？", options: ["先 清理 Circle 再 清理 Shape", "只打印 清理 Shape —— 孩子那句根本没跑", "-Wall 会先警告一句，然后照常清理两个", "编译不过，逼你加回来"], answer: 1, why: "通过父亲的手收孩子时，析构不带 virtual 就只跑父亲那一份，而且实测连 -Wall 都没提示。规矩：打算被继承的类，析构写 virtual。" }
+        { id: "q1", type: "code", score: 15, stem: "把这份程序写成能跑的形：把打印工具箱（#include <print>）搬进来，再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <print>\n\nint main() {", why: "两个类写在 main 外面；没有 main，链接器找不到入口。" },
+        { id: "q2", type: "code", score: 20, coversTask: 1, stem: "任务第 1 条：先立父亲 —— 写一个类，里面有一个参数表后面挂着 virtual 的 double area() const，函数体 return 一个 0.0。", acceptRegex: ["virtual\\s+double\\s+\\w+\\s*\\(\\s*\\)\\s*const", "return\\s+0\\.0\\s*;"], acceptOn: "code", sample: "class Shape {\npublic:\n    virtual double area() const { return 0.0; }\n};", why: "virtual 说的是这个方法欢迎孩子改写；基类的 area 留着兜底，没人改写时就走它。" },
+        { id: "q3", type: "code", score: 20, coversTask: 1, stem: "任务第 1 条：再立孩子 —— 用 class 名字后面接冒号 public 基类那种写法继承过去，并在孩子里把 area 改写一遍，参数表后面挂上 override。", acceptRegex: ["class\\s+\\w+\\s*:\\s*public\\s+\\w+", "area\\s*\\(\\s*\\)\\s*const\\s+override"], acceptOn: "code", sample: "class Circle : public Shape {\npublic:\n    double area() const override { return 3.14159265 * r_ * r_; }\n};", why: "class Circle : public Shape 读作 Circle 对外就是一个 Shape；override 是请编译器替你确认这一行真的改到了父亲的方法。" },
+        { id: "q4", type: "code", score: 30, coversTask: 1, stem: "任务第 1 条：把 area 故意拼成 aer，那一行照样挂着 override 别删 —— 就是要编译器替你查这笔账。", acceptRegex: ["aer\\s*\\(\\s*\\)\\s*const\\s+override"], acceptOn: "code", sample: "double aer() const override { return 3.14159265 * r_ * r_; }", why: "挂着 override 时这一行被当场拦下；同一个报错也出现在参数多写一个、或者孩子自己漏了 const 的情况。" },
+        { id: "q5", type: "code", score: 15, coversTask: 1, stem: "任务第 1 条：再把那一行的 override 删掉跑一次，然后用一行注释写下两种写法各是什么反应（至少四个字）。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 挂着 override 报 marked override but does not override；删掉 override 一路通过，面积打成 0.00", why: "注释内容判不了，只能验你确实记录了对比；那两样反应要你自己跑两遍看。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: "圆的面积 = 0.00\n圆的面积 = 0.00", q3: 0, q4: [0, 1, 3], q5: "override", q6: 1}],
+          "#include <print>\n\nclass Shape {\npublic:\n    virtual ~Shape() = default;\n    virtual double area() const { return 0.0; }\n};\n\nclass Circle : public Shape {\npublic:\n    Circle(double r) : r_(r) {}\n    double area() const override { return 3.14159265 * r_ * r_; }\n    double aer() const override { return 3.14159265 * r_ * r_; }\nprivate:\n    double r_;\n};\n\nint main() {\n    Circle c(2.0);\n    std::println(\"圆的面积 = {:.2f}\", c.area());\n    return 0;\n}\n// 挂着 override 时报 marked 'override' but does not override；把 override 删掉就一路通过，面积还是 0.00\n"],
         wrongs: [
-          {q1: 1, q2: "圆的面积 = 12.57\n圆的面积 = 3.14", q3: 3, q4: [2], q5: "virtual", q6: 0}],
+          "",
+          "#include <print>\n\nclass Shape {\npublic:\n    double area() const { return 0.0; }\n};\n\nclass Circle : public Shape {\npublic:\n    double aer() const { return 3.0 * 3.0; }\n};\n\nint main() {\n    Circle c;\n    std::println(\"{}\", c.aer());\n    return 0;\n}\n",
+          "#include <print>\n\nclass Shape {\npublic:\n    virtual double area() const { return 0.0; }\n};\n\nclass Circle : public Shape {\npublic:\n    double area() const override { return 3.0 * 3.0; }\n};\n\nint main() {\n    Circle c;\n    std::println(\"{}\", c.area());\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: " 圆的面积 = 0.00 \n圆的面积 = 0.00 ", q3: "0", q4: [3, 1, 0], q5: "OVERRIDE", q6: "1"}]
+          "#  include < print >\n\nclass  Shape\n{\n  public :\n      virtual  double  area ( )  const { return 0.0; }\n};\n\nclass  Ring :  public  Shape\n{\n  public :\n      double  area ( )  const  override { return 2.0 * 2.0; }\n      double  aer ( )  const  override { return 2.0; }\n};\n\nint  main ( )\n{\n  Ring  r ;\n  std::println(\"{}\", r.area());\n  return 0;\n}\n// 挂 override 时编译器说 does not override，删掉 override 一声不响，面积还是零\n"]
       }
     },
   ]

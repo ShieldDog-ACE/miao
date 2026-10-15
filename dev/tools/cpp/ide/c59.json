@@ -1,0 +1,68 @@
+{
+  "cid": "c59",
+  "note": "传值改单编辑器：这一场源稿只有一条任务（先猜输出再运行），coversTask 全部写 1，绝不虚号第 2 条；按规矩第五条把任务摊成「真写得出一手复印件被改、原件照打」四条 code + 一条记录「为什么」的 buffer 注释，先猜这件事本身进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一把只收一份复印件的工具：void 开头，圆括号里收一个 int，身体第一件事就是给那个参数赋成 999。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*int\\s+(\\w+)\\s*\\)\\s*\\{\\s*\\1\\s*=\\s*999\\s*;"],
+      "sample": "void try_change(int x) {\n    x = 999;",
+      "why": "参数 x 是函数自己新建的一只独立盒子，出生时值和 a 相同，此后各走各路；写 x 就是写副本，写不到 a。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在工具的身体里用一条 std::println 把那个参数此刻的值打出来：格式串一个占位坑。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*int\\s+\\w+\\s*\\)\\s*\\{[^}]*std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\""],
+      "sample": "    std::println(\"函数里 x = {}\", x);",
+      "why": "副本被改成 999 并当场打印出来，这是两行输出里第一行的来历。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在 main 里让一只 int 出生就是 10，然后调用那把工具、把它递进去。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*10\\s*;", "\\w+\\s*\\(\\s*\\w+\\s*\\)\\s*;"],
+      "sample": "int a = 10;\ntry_change(a);",
+      "why": "调用发生的一瞬间把 a 的当前值复印一份装进参数盒 —— 递进去的不是那个变量，而是它那一刻的值。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "调用一结束就在 main 里打一条 std::println，逗号后面还是那个被递出去的变量 —— 这两行数字不一样，就是传值的全部证据。",
+      "acceptRegex": ["\\w+\\s*\\(\\s*(\\w+)\\s*\\)\\s*;[\\s\\S]{0,200}?std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\1\\s*\\)"],
+      "sample": "try_change(a);\nstd::println(\"调用后 a = {}\", a);",
+      "why": "原件 a 一个字节都没被碰过，所以这一行还是 10；函数里对参数的修改随函数结束一起消失，外面完全看不见它存在过。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "先猜再跑：猜完之后，用一行注释写出 a 为什么没变。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 函数拿到的是那一刻值的复印件，写在副本上，原稿不动",
+      "why": "这一条只能验你确实写了一行解释，验不了写得对不对 —— 「先猜」这件事本身是这块编辑器判不动的部分。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "传值等于复印：参数盒是函数自己新建的独立盒子，出生时值和外面那只相同，此后各走各路；「写 x 就是写 a」是带 & 的那种写法，本课还没学。",
+    "函数里对参数的修改随函数结束一起消失，副本被扔掉、外面看不见它存在过；这种隔离是好脾气 —— 调完函数不用担心自己的数据被偷偷改掉。",
+    "每次调用都重新复印一次当前值：a = 10 时看到 10，main 里改成 a = 42 再调一次才看到 42，那份旧复印件早随上一轮调用作废，不会跟着刷新。",
+    "传值的英文是 pass by value，名字里的 value 就是全部重点：递进去的是值的一份副本，不是变量本身，也不是变量的地址。",
+    "想改到原件有两条路：用 return 把值带出来（干净，但一只手只能拎一个值），或者给参数加个 & 拿到原稿本身（下一课讲）；这条任务的重点在「先猜」两个字，没猜在前，跑完就只是看了一遍现成的结果。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nvoid try_change(int x) {\n    x = 999;\n    std::println(\"函数里 x = {}\", x);\n}\n\nint main() {\n    int a = 10;\n\n    try_change(a);\n    std::println(\"调用后 a = {}   ← 原稿没变\", a);\n\n    a = 42;\n    try_change(a);\n    std::println(\"再喊一次，a = {}\", a);\n\n    // 函数拿到的是那一刻值的复印件，写在副本上，原稿不动\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nvoid try_change(int x) {\n    x = 999;\n    std::println(\"函数里 x = {}\", x);\n}\n",
+      "#include <print>\n\nint try_change(int x) {\n    return x;\n}\n\nint main() {\n    int a = 10;\n    std::println(\"a = {}\", a);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\nvoid  change ( int v )\n{\n  v = 999 ;\n  std::println( \"函数里 {}\" , v ) ;\n}\nint main ( )\n{\n  int n = 10 ;\n  change ( n ) ;\n  std::println( \"外面 {}\" , n ) ;\n  // 复印件被改，原件一动不动\n  return 0;\n}\n"
+    ]
+  }
+}

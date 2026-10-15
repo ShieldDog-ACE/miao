@@ -1,0 +1,75 @@
+{
+  "cid": "c03",
+  "note": "强类型改单编辑器：任务 1 拆成「非法那行真写出来 + 旁边一行注释」，任务 2 拆成 3.2/3.9 砍尾巴与 -2.9 向零，任务 3 用 3.7 打印演示「不报错」，旧七题知识点压进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开出任务 1 那一行：先准备一个 int 盒子，再把一整段字符串（双引号包住）直接塞给它 —— 这行编译不过，就是要你亲手写出来。",
+      "acceptRegex": ["\\bint\\s+\\w+\\b", "\\w+\\s*=\\s*\"[^\"]+\"\\s*;"],
+      "sample": "int age = 15;\n    age = \"十五\";",
+      "why": "int 盒拒绝装字符串，这类错在编译阶段就被拦下 —— 这正是强类型的保护。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在这一行旁边留一行注释，把报错第一行里那个核心词抄下来（至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 报错说 cannot convert",
+      "why": "报错第一行通常在讲「类型对不上 / cannot convert」；正则只能验你写了注释，抄得对不对要你复盘时核对。",
+      "coversTask": 1,
+      "score": 10,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "写两行：把 3.2 和 3.9 先后装进同一个 int 盒。",
+      "acceptRegex": ["=\\s*3\\.2\\s*;", "=\\s*3\\.9\\s*;"],
+      "sample": "age = 3.2;\n    age = 3.9;",
+      "why": "小数装进 int 盒是砍尾巴：3.2 变 3、3.9 也变 3，不是四舍五入进位。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把负数这一眼打出来：先把 -2.9 装进 int 盒，再打印那个盒子。",
+      "acceptRegex": ["=\\s*-2\\.9\\s*;", "std::println\\s*\\("],
+      "sample": "n = -2.9; std::println(\"{}\", n);",
+      "why": "-2.9 砍成 -2，是朝 0 那一侧砍（向零截断），不是往小砍成 -3。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "任务 3 的现场：把 3.7 装进 int 盒并打印它，亲眼看到这一行编译器根本不拦。",
+      "acceptRegex": ["=\\s*3\\.7\\s*;", "std::println\\s*\\("],
+      "sample": "age = 3.7; std::println(\"age = {}\", age);",
+      "why": "类型勉强对得上（小数能勉强变整数）它就不拦，改用悄悄截断 —— 有时你就是故意只要整数部分。",
+      "coversTask": 3,
+      "score": 15
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "score": 20
+    }
+  ],
+  "notes": [
+    "小数装进 int 盒是砍尾巴：3.7 变 3，不是四舍五入。",
+    "-2.9 装进 int 得到 -2：截断是往零的方向砍，不是向小。",
+    "int 盒拒绝装字符串，这类错在编译阶段就被拦下 —— 这正是强类型的保护。",
+    "同一句话换 double 盒：92.5 原样收下，double 盒装整数会变成 7.0。",
+    "编译器的警告说的往往就是这种悄悄丢数据的转换，别当成耳旁风。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int age = 15;\n    age = \"十五\";   // 报错说 cannot convert from const char* to int\n    age = 3.2;\n    age = 3.9;\n    std::println(\"{}\", age);\n    int n = 0;\n    n = -2.9;\n    std::println(\"{}\", n);\n    age = 3.7;\n    std::println(\"age = {}\", age);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int age = 15;\n    age = 3.7;\n    std::println(\"age = {}\", age);\n    return 0;\n}\n",
+      "int age = 15;\nage = 3.2;\n"
+    ],
+    "loose": [
+      "#  include < print >\nint  main ( )\n{\n  int num = 15;\n  num = \"abc\";  // 编译器提示 cannot convert\n  num = 3.2;\n  num = 3.9;   std::println( \"{}\" , num );\n  int k = 0;\n  k = -2.9;    std::println( \"{}\", k );\n  num = 3.7;   std::println( \"{}\" , num );\n}\n"
+    ]
+  }
+}

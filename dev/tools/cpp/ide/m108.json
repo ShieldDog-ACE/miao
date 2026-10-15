@@ -1,0 +1,80 @@
+{
+  "cid": "m108",
+  "note": "unique 两步走改单编辑器：两条任务都是观察题，按规矩五各配一条 code（真把 sort+unique 写出来、真把不排序那次 unique 写出来）加一条 buffer 注释档；unique 只搬不删、只认邻居这些概念题进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把去重工具箱（#include <algorithm>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*algorithm\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <algorithm>\n\nint main() {",
+      "why": "sort 与 unique 都住在 algorithm 里；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：给一列有重复的数先 std::sort，再 std::unique —— 并把 unique 给的边界用一个 auto 接住。",
+      "acceptRegex": ["std\\s*::\\s*sort\\s*\\([^;]{0,40}begin\\s*\\(\\s*\\)", "auto\\s+\\w+\\s*=\\s*std\\s*::\\s*unique\\s*\\("],
+      "sample": "std::sort(a.begin(), a.end());\nauto last = std::unique(a.begin(), a.end());",
+      "why": "sort 让相同的挨在一起，unique 才看得见它们；它把重复的往后搬，返回不重复那一段到哪儿结束。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：这一步先不要 erase —— 用一条 for 把所有元素（含尾巴）全打出来，再用一条 println 把 size 和边界到 begin 的距离打出来。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std\\s*::\\s*print", "\\.size\\s*\\(\\s*\\)"],
+      "sample": "for (int v : a) std::print(\"{} \", v);\nstd::println(\"边界下标 {}，size {}\", last - a.begin(), a.size());",
+      "why": "前四格是去重结果，尾巴上的旧值还在；size 一格没少，这就是没真删的现场。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：另开一列没排序的数，跳过 sort 直接对它调 std::unique，再用一条 println 打出它现在的 size。",
+      "acceptRegex": ["vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{[^{}]*\\}", "std\\s*::\\s*unique\\s*\\(\\s*\\w+\\.begin\\s*\\(\\s*\\)", "\\.size\\s*\\(\\s*\\)"],
+      "sample": "std::vector<int> b = {3, 1, 3, 2, 1, 5, 2};\nauto last2 = std::unique(b.begin(), b.end());\nstd::println(\"没排序 size {}\", b.size());",
+      "why": "没有报错也没有警告：它只跟相邻的上一格比，一对都不挨着时就什么也没发现，安静地返回 end。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在旁边用一行注释写下你看到尾巴里藏着什么（至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 尾巴里的 3 3 5 是被搬走的旧值，容器一格没少",
+      "why": "这一句只能验你确实写了观察，内容判不了 —— 结论要靠你自己跑出来对照。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务第 2 条：再在第二次尝试旁边用一行注释解释为什么一格都没搬动（至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// unique 只认相邻的重复，不排序时一对都不挨着，去重等于没发生",
+      "why": "同样是判不了内容的观察档；它盯的是你有没有把第二次尝试的结论记下来。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "std::unique 只搬不删：它手里只有两个迭代器，改容器大小是容器自己的活，所以下一步要 erase。",
+    "第一步要 sort，因为 unique 只跟相邻的上一格比：相同的必须先成为邻居，中间隔了一个别的数它就看不见。",
+    "unique 改的是容器里的内容，erase 改的是容器的长度；判断有没有真删，就看它有没有变小。",
+    "想要去重又保留第一次出现的先后，得走另一条登记表的路子，不是 sort 加 unique。",
+    "第三个参数可以自定义什么算重复，比如 [](int a, int b) { return a / 10 == b / 10; } 就把十位数相同的当作一家。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <algorithm>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {3, 1, 3, 2, 1, 5, 2};\n    std::sort(a.begin(), a.end());\n    auto last = std::unique(a.begin(), a.end());\n    for (int v : a) std::print(\"{} \", v);\n    std::println(\"边界下标 {}，size {}\", last - a.begin(), a.size());\n    // 尾巴里的 3 3 5 是被搬走的旧值，size 一格没少\n    std::vector<int> b = {3, 1, 3, 2, 1, 5, 2};\n    auto last2 = std::unique(b.begin(), b.end());\n    for (int v : b) std::print(\"{} \", v);\n    std::println(\"没排序 size {}\", b.size());\n    // 没有一对相同的挨着，一格都没搬动，边界就落在 end\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <algorithm>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {3, 1, 3, 2, 1, 5};\n    std::sort(a.begin(), a.end());\n    a.erase(std::unique(a.begin(), a.end()), a.end());\n    for (int v : a) std::print(\"{} \", v);\n    std::println(\"{}\", a.size());\n    return 0;\n}\n",
+      "#include <algorithm>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {1, 1, 2, 2, 3};\n    auto last = std::unique(v.begin(), v.end());\n    v.erase(last, v.end());\n    std::println(\"{}\", v.size());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < algorithm >\n#  include < print >\n#  include < vector >\n\nint  main ( )\n{\n  std :: vector < int >  names = { 4 , 2 , 4 , 1 , 2 } ;\n  std :: sort ( names.begin ( ) , names.end ( ) ) ;\n  auto  edge = std :: unique ( names.begin ( ) , names.end ( ) ) ;\n  for ( int x : names ) std::print(\"{} \", x);\n  std::println(\"边界 {} size {}\", edge - names.begin(), names.size());\n  // 后头那几格还是被搬走的旧值，长度一点没少\n  std::vector<int> raw = {4, 2, 4, 1, 2};\n  auto edge2 = std::unique(raw.begin(), raw.end());\n  std::println(\"没排序 size {}\", raw.size());\n  // 不排序时它一对都没看见，去重等于没发生\n  return 0;\n}\n"
+    ]
+  }
+}

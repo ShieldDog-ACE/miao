@@ -1,0 +1,75 @@
+{
+  "cid": "m141",
+  "note": "任务整条是 shell 活：命令与观察落在 buffer 注释，代码侧按演示 3 那份 main.cpp 摊成能跑的形、一格字符串、只声明不实现、一条打印。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 1 条：在注释里写下那条只让抄写员干完活、再看尾巴那几行的命令（g++ 带上 -E，后面跟 tail）。",
+      "acceptRegex": ["g\\s*\\+\\s*\\+[^\\n]*-E[^\\n]*\\.cpp", "tail"],
+      "sample": "// g++ -std=c++23 -E main.cpp | tail -n 12",
+      "why": "-E 只干活到抄完为止，把展开结果打到屏幕上；tail 取尾巴，你写的那几行就在那里。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "这份 .cpp 就是喂给预处理的那份文件：#include 会被整份抄进来。",
+      "score": 15
+    },
+    {
+      "stem": "开一格 std::string，装一段文字。",
+      "acceptRegex": ["std\\s*::\\s*string\\s+\\w+\\s*=\\s*\"[^\"]*\"\\s*;"],
+      "sample": "std::string s = \"hello\";",
+      "why": "这一行会原样出现在展开结果的尾巴上，是本课观察的对象之一。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写一行只有声明、没有实现的函数：返回 int，括号里两个 int 参数，行尾直接是分号。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*\\(\\s*int\\s+\\w+\\s*,\\s*int\\s+\\w+\\s*\\)\\s*;"],
+      "sample": "int add(int a, int b);",
+      "why": "声明本身合法：编译器照单翻译，把 add 留成一个待填的空格，要到链接那站才找人。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一条 std::println 把那格字符串和那次函数调用一起打出来：格式串里两个占位坑，参数按顺序给。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\("],
+      "sample": "std::println(\"{} {}\", s, add(1, 2));",
+      "why": "这一句在展开成品里还是你那一句的样子 —— 预处理只换宏、抄头文件，不动你的语句。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在注释里把后两站的命令各写一行：一行用 -c 出一份 .o，一行把 .o 拼成可执行文件。",
+      "acceptRegex": ["g\\s*\\+\\s*\\+[^\\n]*-c[^\\n]*\\.cpp", "g\\s*\\+\\s*\\+[^\\n]*\\.o[^\\n]*-o\\s*\\w+"],
+      "sample": "// g++ -std=c++23 -c main.cpp -o main.o\n// g++ -std=c++23 main.o add.o -o app",
+      "why": "每个 .cpp 各自走完前三站，最后一站才把所有 .o 凑齐；命令里只列 .cpp，头文件没有 .o。",
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "四站的顺序是预处理、编译、汇编、链接，对应开关是 -E、-S、-c，最后一站这三个都不带。",
+    "只写声明不写实现，前三站一路绿灯，缺块要到链接那站才报 undefined reference —— 看到报错行首是 ld 就数命令里有几份 .cpp。",
+    "预处理是按顺序抄写：#include 在前、你的代码在后，所以你的代码永远在展开结果的尾巴上。",
+    "展开出来的行数不等于你文件的行数：实测只有七行的 main.cpp 展开成六万多行。",
+    "用 nm 看 .o 的符号表能看到一行 U add：那个 U 是说这个符号还欠着，等第四站来补。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nint add(int a, int b);          // 只有声明：实现住在 add.cpp\n\nint main() {\n    std::string s = \"hello\";\n    std::println(\"{} {}\", s, add(1, 2));\n    return 0;\n}\n// g++ -std=c++23 -E main.cpp | tail -n 12   我的那几行在展开结果的尾巴上\n// g++ -std=c++23 -c main.cpp -o main.o\n// g++ -std=c++23 main.o add.o -o app && ./app\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    std::println(\"{}\", \"hi\");\n    return 0;\n}\n",
+      "#include <print>\n#include <string>\n\nint main() {\n    std::string s = \"hello\";\n    std::println(\"{}\", s);\n    return 0;\n}\n// 抄写员干完活以后我的代码在哪儿\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\n\nint  calc ( int  p , int  q ) ;\n\nint  main ( )\n{\n  std :: string  word  =  \"hi\" ;\n  std :: println ( \" 打 {} 和 {}\" , word , calc ( 1 , 2 ) ) ;\n}\n// 跑 g++ -std=c++23 -E build.cpp | tail -n 12 看到自己的代码在末尾\n// g++ -std=c++23 -c build.cpp -o build.o\n// g++ -std=c++23 build.o calc.o -o app\n"
+    ]
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "cid": "m120",
+  "note": "手写 RAII 类改单编辑器：源稿真实任务只有 1 条（f.write 之后加 return 0，文件还会被关吗），coversTask 全部只打 1。拆成「类 + 构造里 fopen + 藏的 FILE* 成员 nullptr」「write 方法用 fputs」「析构里 fclose」「内层大括号里 write 之后紧跟 return 0」，答案本身按规矩五收进 buffer 注释档。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把文件工具箱（#include <cstdio>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*cstdio\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <cstdio>\n\nint main() {",
+      "why": "fopen、fclose、fputs 都带 std:: 前缀住在 cstdio 里；没有 main 就没入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条要用的那个类：写一个 class，构造里用 std::fopen 把文件借进来，并把裸指针放在成员位置、声明处直接给 nullptr。",
+      "acceptRegex": ["class\\s+\\w+", "fopen\\s*\\(", "FILE\\s*\\*\\s*\\w+\\s*=\\s*nullptr\\s*;"],
+      "sample": "class FileGuard {\npublic:\n    explicit FileGuard(const char* path) : f_(std::fopen(path, \"w\")) {}\nprivate:\n    std::FILE* f_ = nullptr;",
+      "why": "裸指针藏进类里，外人碰不到它，就不会有人半路去 fclose 或者把它改成空。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "给这个类开一个 void 的 write 方法，参数是一个 const char 指针，里面用 std::fputs 把内容落地。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*const\\s+char\\s*\\*\\s*\\w+\\s*\\)", "fputs\\s*\\("],
+      "sample": "void write(const char* s) { if (f_) std::fputs(s, f_); }",
+      "why": "构造允许借不到：f_ 可能就是空指针，所以每个用它的地方先判一下再动手。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把还写进析构：写一个 ~ 开头、不带参数的析构函数，函数体里调 std::fclose 关掉那个句柄。",
+      "acceptRegex": ["~\\w+\\s*\\(\\s*\\)", "fclose\\s*\\("],
+      "sample": "~FileGuard() {\n    if (f_) std::fclose(f_);\n    std::println(\"自动关闭\");\n}",
+      "why": "析构由编译器担保一定执行 —— 缝上这两下，文件的寿命就等于对象的寿命。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在 main 里另起一行开一层大括号，在里面造一个这个类的对象、调它的 write，紧跟一句 return 0; 从 main 跳出去。",
+      "acceptRegex": ["\\n\\s*\\{[^{}]{0,300}write\\s*\\([^)]*\\)\\s*;[^{}]{0,200}return\\s+0\\s*;", "\\w+\\s+\\w+\\s*\\(\\s*\""],
+      "sample": "{\n    FileGuard f(\"/tmp/raii_demo.txt\");\n    f.write(\"hello raii\\n\");\n    return 0;\n}",
+      "why": "这一条要的是提前溜走那条出口：重新编译跑一遍，看自动关闭那句还在不在屏幕上。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用一行注释回答文件还会被关吗，以及写在括号外面的那一行打印还轮不轮得到（至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 照样关：return 0 也是出作用域，析构那句 fclose 跑了，格子外面那行打印轮不到",
+      "why": "注释内容判不了；这一档只确认你把跑出来的结论写下来了。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "老的写法靠人记：出事就 return，忘关没人知道；缝成对象之后，无论从哪条出口离开，析构那一句必被执行。",
+    "构造允许借不到：f_ 就是个空指针，每个用到它的地方先判一下，比当场翻脸更好教。",
+    "抄一份就是两个主人守一个句柄：拷贝构造与拷贝赋值都要写成 = delete 才把这条路封死。",
+    "先造的晚析构：两个守卫在同一格子里时，后创建的那个先打扫。",
+    "写在格子外面的那行打印再也轮不到 —— 提前 return 跳出的是整个 main，不是那一层括号。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <cstdio>\n\nclass FileGuard {\npublic:\n    explicit FileGuard(const char* path) : f_(std::fopen(path, \"w\")) {\n        std::println(\"打开 {}\", path);\n    }\n    ~FileGuard() {\n        if (f_) std::fclose(f_);\n        std::println(\"自动关闭\");\n    }\n    void write(const char* s) { if (f_) std::fputs(s, f_); }\nprivate:\n    std::FILE* f_ = nullptr;\n};\n\nint main() {\n    {\n        FileGuard f(\"/tmp/raii_demo.txt\");\n        f.write(\"hello raii\\n\");\n        std::println(\"提前走人的那条出口\");\n        return 0;\n    }\n    std::println(\"已离开作用域\");\n    return 0;\n}\n// 照样关：return 0 也是出作用域，析构里那句 fclose 跑了，格子外面那行轮不到\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <cstdio>\n\nint main() {\n    std::FILE* f = std::fopen(\"/tmp/x.txt\", \"w\");\n    std::fputs(\"hi\", f);\n    return 0;\n}\n",
+      "#include <print>\n#include <cstdio>\n\nclass FileGuard {\npublic:\n    std::FILE* f;\n    FileGuard(const char* path) { f = std::fopen(path, \"w\"); }\n    void write(const char* s) { std::fputs(s, f); }\n};\n\nint main() {\n    FileGuard g(\"/tmp/x.txt\");\n    g.write(\"hi\\n\");\n    std::println(\"没有析构，句柄就这么丢了\");\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < cstdio >\n#  include < print >\n\nclass  Holder\n{\n  public :\n      Holder ( const char * path ) { handle = std::fopen(path, \"w\"); }\n      ~ Holder ( ) { if ( handle ) std::fclose( handle ); std::println(\"关了\"); }\n      void  write ( const char * s ) { if (handle) std::fputs(s, handle); }\n  private :\n      std :: FILE *  handle = nullptr;\n};\n\nint  main ( )\n{\n  {\n      Holder  g(\"/tmp/demo.txt\");\n      g.write(\"hi\\n\");\n      return 0;\n  }\n  std::println(\"轮不到这行\");\n}\n// 文件还是关了，因为 return 也要出作用域，格子外那行没打出来\n"
+    ]
+  }
+}

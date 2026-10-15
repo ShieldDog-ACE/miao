@@ -1,0 +1,68 @@
+{
+  "cid": "c49",
+  "note": "constexpr 改单编辑器：任务 1 拆成「两个 constexpr 数字 + 一行编译期乘法 + 打印得数」，任务 2「都能过，琢磨区别」摊成一对（真写一行 const 版乘法的 code 条件 + 一条记录琢磨结果的 buffer 注释），旧六道笔试题的结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "用 constexpr 把「每天跑 2 圈」和「一共 20 周」这两件事各定成一个编译期就钉死的 int。",
+      "acceptRegex": ["constexpr\\s+int\\s+\\w+\\s*=\\s*2\\s*;", "constexpr\\s+int\\s+\\w+\\s*=\\s*20\\s*;"],
+      "sample": "constexpr int LAPS_PER_DAY = 2;\nconstexpr int WEEKS = 20;",
+      "why": "constexpr 必须声明当场就能算出值，先声明再给它赋值的路子不通；名字全大写加下划线是让人一眼看出别去动它。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再开一个 constexpr：等号右边用乘号把前面那两个名字乘起来，编译期把总圈数算完。",
+      "acceptRegex": ["constexpr\\s+int\\s+\\w+\\s*=\\s*\\w+\\s*\\*\\s*\\w+"],
+      "sample": "constexpr int TOTAL_LAPS = LAPS_PER_DAY * 7 * WEEKS;",
+      "why": "右边只要全是编译期已知的东西就可以做运算，不必写成字面量；这一次乘法在编译期就做完了，运行时拿到的已经是成品数。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "用一条 std::println 把总圈数打出来：格式串里一个占位坑，逗号后面给那个编译期算好的名字。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"一共跑 {} 圈\", TOTAL_LAPS);",
+      "why": "2 乘 7 乘 20 是 280；编译期算完就烧进程序里，运行时只是拿来用，这正是零成本的来历。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：把同样一行乘法的 constexpr 换成 const 再写一遍，让它和上面那行摆在一起编译。",
+      "acceptRegex": ["\\bconst\\s+int\\s+\\w+\\s*=\\s*\\w+\\s*\\*\\s*\\w+"],
+      "sample": "const int TOTAL_LAPS_2 = LAPS_PER_DAY * 7 * WEEKS;",
+      "why": "15 乘 365 什么时候算都算得出来，所以两种写法都能编译 —— 差别在承诺的方向：constexpr 是给编译器派活儿，const 只是不让你改。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "在那一行旁边用一行注释写下你琢磨到的区别：谁当场交货，谁只管不许改。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 都过：constexpr 要求编译期就算出来，const 只保证之后不许改",
+      "why": "这一条只能验你确实记了一行笔记，验不了笔记内容对不对 —— 「琢磨区别」这件事本身是这块编辑器判不动的部分。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "constexpr 是给编译器派活儿（当场交货），const 只是不让你改：值可以晚一点才知道，也能交给 const。",
+    "写 constexpr int n;（只声明先不给值）会被编译器当场拒绝；constexpr 必须声明当场就算得出值。",
+    "把键盘读来的数交给 constexpr，编译器会说「初始化表达式不是常量表达式」；同一个数交给 const 完全合法。",
+    "编译期算完就烧进程序里，运行时不必再算一遍，这是零成本的来历；右边只要全是编译期已知的东西就可以做运算，不必写成字面量。",
+    "constexpr 是 constant expression 的缩写，重点是「现在就算得出来」而不是「不能改」；const 管改不改（人的规矩），constexpr 管什么时候定（编译器的活儿）。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    constexpr int LAPS_PER_DAY = 2;\n    constexpr int WEEKS = 20;\n    constexpr int TOTAL_LAPS = LAPS_PER_DAY * 7 * WEEKS;\n\n    std::println(\"一共跑 {} 圈\", TOTAL_LAPS);\n\n    const int TOTAL_LAPS_2 = LAPS_PER_DAY * 7 * WEEKS;   // 都过：constexpr 要求编译期就算出来，const 只保证之后不许改\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    constexpr int LAPS_PER_DAY = 2;\n    constexpr int WEEKS = 20;\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int laps_per_day = 2;\n    int weeks = 20;\n    const int total = laps_per_day * 7 * weeks;\n    std::println(\"一共跑 {} 圈\", total);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\nint main ( )\n{\n  constexpr int per_day =2;\n  constexpr int  n_weeks  = 20 ;\n  constexpr int all = per_day * 7 * n_weeks ;\n  std::println( \"共 {} 圈\" , all ) ;\n  const int also_ok = per_day * n_weeks ;  // constexpr 是编译期算好，const 只是不许改\n  return 0;\n}\n"
+    ]
+  }
+}

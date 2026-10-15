@@ -1,0 +1,82 @@
+{
+  "cid": "m92",
+  "note": "管道组合改单编辑器：任务 1 拆成「iota 含 1 不含 101 + filter 模 3 + transform 平方 + take 5 + 遍历打印」五段，任务 2 判「真另接一条 transform 在 filter 之前的管道」加一行写结果的注释；为什么可以换顺序这类说理进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "连容器都不用造：用 std::views::iota 生成 1 到 100 这一百个数（下界含、上界不含）。",
+      "acceptRegex": ["std::views::iota\\s*\\(\\s*1\\s*,\\s*101\\s*\\)"],
+      "sample": "std::views::iota(1, 101)",
+      "why": "上界是「一到就停」的位置，上界减下界才等于个数：101 减 1 等于 100。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "接上第一段筛子：一竖线后面 std::views::filter 递一把 lambda，放行的是能被 3 整除的数。",
+      "acceptRegex": ["\\|\\s*std::views::filter\\s*\\(\\s*\\[", "return\\s+\\w+\\s*%\\s*3\\s*==\\s*0\\s*;"],
+      "sample": "| std::views::filter([](int x) { return x % 3 == 0; })",
+      "why": "谁过去由这一段说了算；一行读作「然后只放能被 3 整除的过去」。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "接上第二段加工机：一竖线后面 std::views::transform，return 这个数自己的平方（自己乘自己）。",
+      "acceptRegex": ["\\|\\s*std::views::transform\\s*\\(\\s*\\[", "return\\s+(\\w+)\\s*\\*\\s+\\1\\s*;"],
+      "sample": "| std::views::transform([](int x) { return x * x; })",
+      "why": "过去的那个变成什么由这一段说了算，一个都不会少。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "接上第三段：一竖线后面 std::views::take，只要前 5 个。",
+      "acceptRegex": ["\\|\\s*std::views::take\\s*\\(\\s*5\\s*\\)"],
+      "sample": "| std::views::take(5);",
+      "why": "数够了整条链当场停手，后面的数连问都没问过。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把整条链交给一只 auto 变量接住，再用 range-for 走它，每个元素用 std::print 打出来。",
+      "acceptRegex": ["auto\\s+\\w+\\s*=", "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std::print\\s*\\("],
+      "sample": "auto out = std::views::iota(1, 101) | std::views::filter([](int x) { return x % 3 == 0; });\nfor (int v : out) std::print(\"{} \", v);",
+      "why": "三段接好之后什么都没算，管道是声明；for 圈真去读的那一刻才逐段执行。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：另接一条把 transform 写在 filter 前面的管道，再跑一遍，用一行注释写下结果一样还是不一样。",
+      "acceptRegex": ["\\|\\s*std::views::transform[\\s\\S]{0,300}\\|\\s*std::views::filter", "//[^\\n]*(一样|不一样|顺序|结果)"],
+      "sample": "auto swapped = std::views::iota(1, 101) | std::views::transform([](int x) { return x * x; })\n             | std::views::filter([](int x) { return x % 3 == 0; }) | std::views::take(5);\n// 这一对恰好一样：平方不改变能被 3 整除的性质；换成加 1 就筛出另一批",
+      "why": "filter 的条件只看元素自身、transform 一对一保序，所以这一组谁在前都一样 —— 是恰好巧上，不是规矩。正则只能验你写了那一条反序管道和一行结论，道理对不对得人来读。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "三段接好、for 圈还没去读的时候，程序什么都没算，只造出一个记着怎么遍历的视图对象：先声明要什么，执行在遍历那一刻。",
+    "真正发生的事是逐元素推过整条链：取下一个、问谓词、假就丢掉、真就交给公式、take 数够了当场停手 —— 这就是谓词只被问了几次的原因。",
+    "先取三个再筛，问的是头三个里合格的有几个；先筛再取三个，问的是合格的头三个：take 挪位置一定改变结果。",
+    "把 lambda 的参数改名、把整条管道存进一个 auto 变量都不改变结果；加工机换成加 1，偶数全变奇数，筛出来的立刻是另一批。",
+    "够五个就停：9 36 81 144 225 就是 3、6、9、12、15 的平方，后面的数连问都没问过。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <algorithm>\n#include <print>\n#include <ranges>\n\nint main() {\n    auto out = std::views::iota(1, 101)\n             | std::views::filter([](int x) { return x % 3 == 0; })\n             | std::views::transform([](int x) { return x * x; })\n             | std::views::take(5);\n    for (int v : out) std::print(\"{} \", v);\n    std::println(\"\");\n\n    auto swapped = std::views::iota(1, 101)\n                 | std::views::transform([](int x) { return x * x; })\n                 | std::views::filter([](int x) { return x % 3 == 0; })\n                 | std::views::take(5);\n    for (int v : swapped) std::print(\"{} \", v);\n    std::println(\"\");\n    // 这一对换顺序结果一样：平方不改变能不能被 3 整除，两段都一对一保序；take 挪到前面就不一样了\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <algorithm>\n#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {1, 2, 3, 4, 5};\n    auto out = nums | std::views::filter([](int x) { return x % 3 == 0; })\n                    | std::views::transform([](int x) { return x * x; });\n    for (int v : out) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <algorithm>\n#include <print>\n#include <ranges>\n\nint main() {\n    auto out = std::views::iota(1, 100)\n             | std::views::filter([](int x) { return x % 3 == 0; })\n             | std::views::transform([](int x) { return x * x; });\n    std::println(\"{}\", 1);\n    return 0;\n}\n",
+      "#include <algorithm>\n#include <print>\n#include <ranges>\n\nint main() {\n    auto out = std::views::iota(1, 101) | std::views::take(5);\n    for (int v : out) std::print(\"{} \", v);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < ranges >\n# include < print >\n# include < algorithm >\n\nint  main ( )\n{\n    auto  first = std::views::iota ( 1 , 101 )\n        | std::views::filter ( []( int  n ) { return  n % 3 == 0 ; } )\n        | std::views::transform ( []( int  n ) { return  n * n ; } )\n        | std::views::take ( 5 ) ;\n    for (int  x : first) std::print( \"{} \", x );\n    std::println(\"\");\n\n    auto  second = std::views::iota(1, 101) | std::views::transform([](int n) { return n * n; })\n                 | std::views::filter([](int n) { return n % 3 == 0; }) | std::views::take(5);\n    for (int x : second) std::print(\"{} \", x);\n    // 这两条结果一样：平方不改变能不能被 3 整除，顺序在这里不换结果；take 换了就不同\n    return 0;\n}\n"
+    ]
+  }
+}

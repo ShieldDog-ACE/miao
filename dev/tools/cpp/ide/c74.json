@@ -1,0 +1,82 @@
+{
+  "cid": "c74",
+  "note": "指针基础改单编辑器：任务 1 拆成「double 盒 + double* 纸条 + 顺着写回去 + 顺着读出来」，任务 2 拆成「两个 int* 参数 + 三步换值」，任务 3 是思考题只能配一条 buffer 注释（关键词判到，句子对不对判不了）。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "声明一只 double 把 1.5 装进去，再写一张 double* 的纸条记住它的地址。",
+      "acceptRegex": ["\\bdouble\\s+\\w+\\s*=\\s*\\d*\\.\\d+\\s*;", "\\bdouble\\s*\\*\\s*\\w+\\s*=\\s*&\\s*\\w+\\s*;"],
+      "sample": "double d = 1.5;\ndouble* p = &d;",
+      "why": "星号挨着类型写，是这张纸条的户口：它记的是 double 的门牌；右边用 & 问到号再抄进去。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "别写 d 的名字，顺着纸条把那格改成 9.9。",
+      "acceptRegex": ["\\*\\s*\\w+\\s*=\\s*\\d+\\.\\d+\\s*;"],
+      "sample": "*p = 9.9;",
+      "why": "表达式里挨着变量写的那个 * 是动作，叫解引用：顺着号找上门直接写，等价于 d = 9.9。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "再打一条 std::println，把顺着纸条摸出来的内容打出来：逗号后面写 * 加纸条名。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\*\\s*\\w+"],
+      "sample": "std::println(\"*p 顺藤摸瓜 : {}\", *p);",
+      "why": "& 从东西拿到号，* 从号拿到内容：打 *p 就是打 d 那一格里摊着的值。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "写 swap_ptr 那一类的函数头部：两个参数都得是记 int 门牌的纸条，各带一个 *。",
+      "acceptRegex": ["\\bvoid\\s+\\w+\\s*\\(\\s*int\\s*\\*\\s*\\w+\\s*,\\s*int\\s*\\*\\s*\\w+\\s*\\)"],
+      "sample": "void swap_ptr(int* a, int* b) {",
+      "why": "递进去的是门牌号不是值，函数里才碰得到原件 —— 这是复印件那套碰不到的天花板。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "在这个函数体里用三句话换掉两格的内容：先把 *a 的内容抄进一只 int 备用盒，再把 *b 写进 *a，最后把备用盒那份写回 *b。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*\\*\\s*\\w+\\s*;", "\\*\\s*\\w+\\s*=\\s*\\*\\s*\\w+\\s*;", "\\*\\s*\\w+\\s*=\\s*\\w+\\s*;"],
+      "sample": "int tmp = *a;\n*a = *b;\n*b = tmp;",
+      "why": "左边带 * 才写进别人的柜子；抄下来那一份是不带 * 的普通 int。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 3 条：在文件里用一行注释写清楚，int* p 里的 * 和 *p = 100 里的 * 各自是什么。",
+      "acceptRegex": ["//[^\\n]*(类型|户口|动作|解引用|内容|地址)"],
+      "sample": "// 挨着类型写的 * 是户口，说这张纸条记的是 int 的门牌；写在表达式里的 * 是动作，顺着号取内容",
+      "why": "判据永远是看它站在哪儿。正则只能验注释里点到了这些词，句子对不对得人来读，这一条判不严格。",
+      "coversTask": 3,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "挨着类型写的 * 是户口，说明纸条记的是哪种门牌；挨着变量写在表达式里的 * 是动作，叫解引用。",
+    "int* p = &age; 之后写 *p = 100，等价于 age = 100；想让纸条换个指向就写 p = &other;，左边不带星号。",
+    "纸条上还没抄号就顺着 *p 去写，编译一路放行，跑起来直接 Segmentation fault：p 里是那一格留下的旧数字。",
+    "一行写 int* a, b; 只有 a 是指针，b 是普通的 int；规矩是一条：一行只声明一个指针，或者老老实实写成 int *a, *b;。",
+    "p == &age 打出来是 true：纸条记的号就是 &age 问出来的那个号。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nvoid swap_ptr(int* a, int* b) {\n    int tmp = *a;\n    *a = *b;\n    *b = tmp;\n}\n\nint main() {\n    double d = 1.5;\n    double* p = &d;\n    *p = 9.9;\n    std::println(\"d = {}\", d);\n    std::println(\"*p 顺藤摸瓜 : {}\", *p);\n\n    int x = 1, y = 9;\n    swap_ptr(&x, &y);\n    std::println(\"换完：x = {}, y = {}\", x, y);\n    // 挨着类型写的 * 是户口，说 p 记的是 double 的门牌；表达式里的 * 是顺着地址取内容\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nvoid swap_ptr(int a, int b) {\n    int tmp = a;\n    a = b;\n    b = tmp;\n}\n\nint main() {\n    int x = 1, y = 9;\n    swap_ptr(x, y);\n    std::println(\"x = {}, y = {}\", x, y);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    double d = 1.5;\n    double* p = &d;\n    std::println(\"{:p}\", p);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    double d = 1.5;\n    double* p = &d;\n    *p = 9.9;\n    std::println(\"{}\", *p);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\nvoid  trade ( int *  left , int *  right )\n{\n    int  hold = * left ;\n    * left  = * right ;\n    * right  = hold ;\n}\n\nint  main ( )\n{\n    double  price = 1.5 ;\n    double *  tag = & price ;\n    * tag = 9.9 ;\n    std::println(\"price {}\", price);\n    std::println( \"摸出来 {}\" , * tag ) ;\n    int  a = 1 ,  b = 9;\n    trade( &a , &b );\n    std::println(\"a {} b {}\", a, b);\n    // 类型旁边的星号是户口，表达式里的星号才是顺着门牌取内容\n    return 0;\n}\n"
+    ]
+  }
+}

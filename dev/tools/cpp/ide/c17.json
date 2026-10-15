@@ -1,0 +1,80 @@
+{
+  "cid": "c17",
+  "note": "查找 find 这场的旧题全是「数门牌 / 认 npos」的概念题，摊成代码条件就三条路：把两次 find 真打出来、把跟 npos 的比写出来、把找到与没找到两条打印写出来；判断本身要等 if 那一课，比 npos 这一步能判。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一个 std::string 装 I love C++，再用一条 std::println 把 find 找 love 的返回值打出来。",
+      "acceptRegex": [
+        "std::string\\s+\\w+\\s*=\\s*\"[^\"]*love[^\"]*\"",
+        "\\.find\\s*\\(\\s*\"love\"\\s*\\)"
+      ],
+      "sample": "std::string text = \"I love C++\";\nstd::println(\"love 的起点 {}\", text.find(\"love\"));",
+      "why": "find 报回来的是匹配段的起点门牌，门牌从 0 数：I 占 0 号格、空格占 1 号格，love 的 l 在 2 号格。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再问一次：用 find 找 C++，把它的起点门牌也打出来。",
+      "acceptRegex": [
+        "std::println\\s*\\([^;]*\\.find\\s*\\(\\s*\"C\\+\\+\"\\s*\\)"
+      ],
+      "sample": "std::println(\"C++ 的起点 {}\", text.find(\"C++\"));",
+      "why": "数完前面的 I、空格、love、空格就是 7；要找的东西写成双引号是一段文字，单引号是一个字符。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把「到底找到没有」写成一次比较：拿 find 的返回值和 std::string::npos 比一比（不是跟 0 比，也不是跟 -1 比）。",
+      "acceptRegex": [
+        "\\.find\\s*\\([^)]*\\)\\s*[!=]=\\s*(std::)?string::npos"
+      ],
+      "sample": "text.find(\"java\") == std::string::npos",
+      "why": "找不到不报错也不返回 -1：回来的是 std::string::npos，一串极大的数字，它是那个编号类型里的最大值。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "按那条比较的结果分两头打：一条 std::println 里写找到了，另一条里写没找到。",
+      "acceptRegex": [
+        "std::println\\s*\\([^)]*找到了",
+        "std::println\\s*\\([^)]*没找到"
+      ],
+      "sample": "if (text.find(\"java\") == std::string::npos) { std::println(\"没找到\"); } else { std::println(\"找到了\"); }",
+      "why": "这一条要的是「找到 / 没找到」两头各有一行打印；把它接成真的分支要等判断那一课，这里判不出你比完有没有分岔，只能看两条打印在不在。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印和字符串两个工具箱都搬进来（两行 #include），再开出 main 这个入口。",
+      "acceptRegex": [
+        "#\\s*include\\s*<\\s*print\\s*>",
+        "#\\s*include\\s*<\\s*string\\s*>",
+        "\\bint\\s+main\\s*\\("
+      ],
+      "sample": "#include <print>\n#include <string>\n\nint main() {",
+      "why": "缺 #include <print> 就没人认识 std::println，缺 #include <string> 就没人认识 std::string；没有 main，链接器找不到入口。",
+      "score": 20
+    }
+  ],
+  "notes": [
+    "find 报回来的是起点门牌号，不是内容也不是真假；门牌从 0 开始数。",
+    "找不到时返回 std::string::npos，打印出来是一串几十位的数字，认长相比背定义靠谱。",
+    "想把找到和没找到分开处理，就把 find 的返回值跟 npos 比，不跟 0 比、也不跟 -1 比。",
+    "find 只报最靠前那一处：banana 里的 na 在 2 号格和 4 号格都出现过，find 返回 2；想要 4 得写 word.find(\"na\", 3)，从 3 号格往后才找。",
+    "把返回值交给 substr 剪出后面一段是最常见的用法；但 npos 一旦当起点喂给 substr，程序当场终止，报错还指着 substr 说话。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nint main() {\n    std::string text = \"I love C++\";\n\n    std::println(\"love 的起点 {}\", text.find(\"love\"));\n    std::println(\"C++ 的起点 {}\", text.find(\"C++\"));\n\n    if (text.find(\"java\") == std::string::npos) {\n        std::println(\"没找到\");\n    } else {\n        std::println(\"找到了\");\n    }\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\nint main() {\n    std::string text = \"I love C++\";\n    std::println(\"{}\", text.find(\"love\"));\n    std::println(\"{}\", text.find(\"java\"));\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    std::string s = \"I love C++\";\n    std::println(\"{}\", s.find(\"java\"));\n    if (s.find(\"java\") == -1) { std::println(\"not found\"); }\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include  < string >\n#  include <print>\n\nint main ( )\n{\n  std::string  sentence = \"I love C++ today\";\n  auto a = sentence.find( \"love\" );\n  std::println( \"起点 {}\", a );\n  auto b = sentence.find( \"C++\" );\n  std::println( \"第二个起点 {}\", b );\n  bool missing = sentence.find( \"java\" ) != std::string::npos;\n  if ( missing ) { std::println( \"这里是没找到\" ); }\n  else { std::println( \"这里找到了\" ); }\n}\n"
+    ]
+  }
+}

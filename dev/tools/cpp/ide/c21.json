@@ -1,0 +1,77 @@
+{
+  "cid": "c21",
+  "note": "算术运算符这场的旧题在判「四行打印各是什么数」，编辑器判不了运行结果，就把任务 1 摊成写死单价数量、算总价、打总价三句；任务 2 那句「换成 10.5 编译看报错」照规矩摊成一对：code 条件要那两行真写出来（不许留成注释），buffer 条件只判他记了一行注释。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开两只 int 盒子：一只装单价 8，一只装数量 3。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*8\\s*;", "int\\s+\\w+\\s*=\\s*3\\s*;"],
+      "sample": "int price = 8;\nint count = 3;",
+      "why": "先把两个数各归一只盒子，后面四次问法都从这两只盒子取；写死数字是为了每次编译都对得上心算的结果。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再开一只 int 盒子装总价，右边就写这两只盒子相乘。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*\\w+\\s*\\*\\s*\\w+\\s*;"],
+      "sample": "int total = price * count;",
+      "why": "运算符两边算完会塌成一个值再装进左边的盒子，所以 8 乘 3 得 24 落进 total。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一条 std::println 把总价打出来：格式串里带上总价两个字，再加一个占位坑。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*总价[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+"],
+      "sample": "std::println(\"总价 = {}\", total);",
+      "why": "这一行就是拿来跟你心算的 24 对照的；一个坑给一个值，坑和值按逗号顺序对。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一条 std::println 问「零头」：把总价对 10 取余的结果打出来，格式串里带上零头两个字。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*零头[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*%\\s*10"],
+      "sample": "std::println(\"不满 10 的零头 = {}\", total % 10);",
+      "why": "同一只盒子四种问法：乘、减、整除问装得下几个 10，取余问不够一个 10 的剩多少；24 对 10 取余是 4。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：开一只 double 盒子装 10.5，再拿它去对一个整数取余（这两行要真写进代码里，编译不过才看得见报错）。",
+      "acceptRegex": ["double\\s+(\\w+)\\s*=\\s*10\\.5\\s*;[\\s\\S]*\\1\\s*%", "%\\s*[\\w]+[\\s\\S]*double\\s+\\w+\\s*=\\s*10\\.5"],
+      "matchAny": true,
+      "sample": "double money = 10.5;\nstd::println(\"{}\", money % 4);",
+      "why": "余数的定义依赖整除，% 只在整数之间成立；类型对不上，编译器在编译阶段就把这一行拦下。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "在它旁边用一行注释写下报错里那个词（至少写四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "double money = 10.5;\nstd::println(\"{}\", money % 4);   // 报错里说 invalid operands",
+      "why": "这一条只能判「你写了一行像样的注释」，抄的报错对不对这块编辑器判不了 —— 这是它判不动的部分。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "整数除法砍尾巴不四舍五入：25 / 2 打 12，不是 12.5；想按小数除，至少有一边得是小数。",
+    "+ - * / 都能收小数，唯独 % 只收整数，这是本课唯一的硬性类型限制。",
+    "对 10 取余拿到个位数字，整除 10 砍掉个位；对 2 取余是 0 就是偶数，是 1 就是奇数。",
+    "205 秒是几分几秒，靠一对搭档符号各问一半：205 / 60 得分钟，205 % 60 得零头秒数。",
+    "除数是 0 不会得到无穷大，那是未定义行为，程序常常直接异常终止。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int price = 8;\n    int count = 3;\n\n    int total = price * count;\n    std::println(\"总价 = {}\", total);\n    std::println(\"付 100 找零 = {}\", 100 - total);\n    std::println(\"总价里有几个 10 = {}\", total / 10);\n    std::println(\"不满 10 的零头 = {}\", total % 10);\n\n    double money = 10.5;\n    std::println(\"小数取余 = {}\", money % 4);   // 报错里说 invalid operands\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int price = 8;\n    int count = 3;\n    int total = price * count;\n    std::println(\"总价 = {}\", total);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int a = 8;\n    int b = 3;\n    int c = a + b;\n    std::println(\"{}\", c / 10);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  int  unit_price = 8;\n  int qty = 3 ;\n  auto  all = unit_price * qty;\n  int all2 = 0;\n  all2 = unit_price * qty;\n  std::println( \"总价一共 {}\", all );\n  std::println( \"零头还剩 {}\", all % 10 );\n  double cash = 10.5;\n  std::println( \"{}\", cash % 4 );\n  // 编译不过，说运算数类型不对\n}\n"
+    ]
+  }
+}

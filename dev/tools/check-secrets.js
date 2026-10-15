@@ -23,6 +23,7 @@ const EXAMPLE_OK = /\.example[.]|^\.env\.example/;   // 模板里的占位值不
 /* 教程正文与题库：里面的 password="..."、邮箱、路径都是课上示例，不是配置。
  * 2026-10-06 去后端后，正文从 backend/seed-data.js 搬到了 frontend/assets/data/。 */
 const CONTENT_FILE = /(^|\/)assets\/data\/[\w./-]*\.js$|(^|\/)assets\/js\/data\.js$/;
+const NUMERIC_PASS = /^\s*["']?pass["']?\s*[:=]\s*[\w.]*\.pass\s*==\s*null\s*\?\s*\d+\s*:\s*[\w.]*\.pass\b|^\s*["']?pass["']?\s*[:=]\s*\d+\s*[,;]?\s*$/;
 const PLACEHOLDER = /test|example|wrong|demo|changeme|placeholder|你的|请改|占位|\bxxx+\b|\$\{/i;  // 明显是假值
 const RULES = [
   ["HIGH", /miao-admin-2026/, "残留的后台默认口令"],
@@ -61,6 +62,11 @@ function walk(dir) {
         if (isExample && (level === "MED" || why === "残留的后台默认口令")) continue;
         if (isContent && why !== "残留的后台默认口令") continue;   // 教程正文里的 password= 只是示例
         if (/口令|密钥|授权码/.test(why) && PLACEHOLDER.test(line)) continue;   // 测试/模板里的假值
+        /* 考卷的「通过线」字段也叫 pass，值是数字或「数字三元式」（`pass: p.pass == null ? 60 : p.pass`），
+           那是 60 分及格线不是口令。A/B 实测：把值换成一个带引号的真口令形状仍然报高危
+           （样本落在临时文件里验过，不在本文件里写死——不然这条注释自己就被这把尺逮住）。
+           所以这条豁免只吃「值是纯数字，或只是引用另一个 .pass 字段加数字」的形状。 */
+        if (why === "明文密钥字段" && NUMERIC_PASS.test(line)) continue;
         hits.push({ level, file: display(abs), line: i + 1, why, text: line.trim().slice(0, 90) });
       }
     });

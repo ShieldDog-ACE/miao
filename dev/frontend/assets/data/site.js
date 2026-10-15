@@ -96,13 +96,15 @@ window.MIAO_SITE = {
   /* 考场界面脚本：按 engine 分四套，进考场才拉。
      顺序有讲究 —— exam-grade.js / exam-ui.js 在浏览器里直接用沙箱挂在 window 上的全局名，
      所以沙箱四份必须排在它们前面（写反了会当场 ReferenceError: require is not defined）。
-     paper = 笔试（C++ 这类浏览器跑不了的），判分在 exam-paper.js，界面在 exam-paper-ui.js。 */
+     paper = 笔试与单编辑器那一屏：判分本体在 exam-paper.js，卡片界面在 exam-paper-ui.js，
+     cpp-compile.js 与 cpp-sim.js 是 C++ 考场那两颗按钮（编译＝形状检查，运行＝站内子集机器）。 */
   engines: {
     code: ["assets/js/py-engine.js", "assets/js/py-runtime.js", "assets/js/py-builtin.js",
       "assets/js/py-stdlib.js", "assets/js/exam-grade.js", "assets/js/code-editor.js", "assets/js/exam-ui.js"],
     en: ["assets/js/exam-ui.js", "assets/js/exam-en.js"],
     enword: ["assets/js/exam-ui.js", "assets/js/exam-en.js"],
-    paper: ["assets/js/code-editor.js", "assets/js/exam-ui.js", "assets/js/exam-paper.js", "assets/js/exam-paper-ui.js"]
+    paper: ["assets/js/code-editor.js", "assets/js/exam-ui.js", "assets/js/exam-paper.js",
+      "assets/js/cpp-compile.js", "assets/js/cpp-sim.js", "assets/js/exam-paper-ui.js"]
   },
 
   announcements: [

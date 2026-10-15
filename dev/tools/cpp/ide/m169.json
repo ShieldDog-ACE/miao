@@ -1,0 +1,74 @@
+{
+  "cid": "m169",
+  "note": "DFS 组合改单编辑器：任务 1 拆成「出口 == 3 + 上限 5 + 三个占位坑的打印」，任务 2 那半是撤门槛（正文里紧跟 push_back 那一行）配一条 buffer 注释记下为什么冒出重复；start 起步的 for 与压弹成对各占一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写出那个递归函数：函数名带一个整数参数，函数体里的 for 循环从这个参数起步（不是从 1 起步）。",
+      "acceptRegex": ["void\\s+\\w*dfs\\w*\\s*\\(\\s*int\\s+\\w+\\s*\\)", "for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*[a-zA-Z_]\\w*\\s*;"],
+      "sample": "void dfs(int start) {\n    for (int i = start; i <= 5; ++i) {",
+      "why": "start 就是这一层的门槛：只许从它往后挑，1 2 与 2 1 才只剩一种写法；门槛跟着递归往下传，每深一层抬高一次。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把出口改成选够 3 个 —— 那一行的判断写成大小等于 3。",
+      "acceptRegex": ["\\w+\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*==\\s*3"],
+      "sample": "if (cur.size() == 3) {",
+      "why": "选够 k 个就输出、就 return，这是组合的唯一出口；n 与 k 是这个模板仅有的两个旋钮，出口管的是选几个。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把 for 的上限改成 5 —— 一共 5 个数可挑。",
+      "acceptRegex": ["for\\s*\\([^)]*<=\\s*5"],
+      "sample": "for (int i = start; i <= 5; ++i) {",
+      "why": "上限管的是共几个数；只改出口不改上限，5 号永远进不了组合，带 5 的那些组会整个漏掉。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：用一条 std::println 把选中的三个数打在同一行 —— 格式串里三个占位坑，逗号后面按顺序给那三格。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(\\s*\"[^\\\"]*\\{\\}[^\\\"]*\\{\\}[^\\\"]*\\{\\}[^\\\"]*\"\\s*,\\s*\\w+\\s*\\[\\s*0\\s*\\]\\s*,\\s*\\w+\\s*\\[\\s*1\\s*\\]\\s*,\\s*\\w+\\s*\\[\\s*2\\s*\\]"],
+      "sample": "std::println(\"{} {} {}\", cur[0], cur[1], cur[2]);",
+      "why": "几个坑就给几个值；改完这两处加这一行，实测输出 10 组，从 1 2 3 到 3 4 5。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写两行：挑中一个数就把它压进当前组合，递归回来之后把它弹出去。",
+      "acceptRegex": ["\\w+\\s*\\.\\s*push_back\\s*\\(", "\\w+\\s*\\.\\s*pop_back\\s*\\("],
+      "sample": "cur.push_back(i);\ndfs(i + 1);\ncur.pop_back();",
+      "why": "挑、记、递、撤 —— 撤销永远在递归回来之后；忘了弹不会崩，当前组合只进不出，出口只满足一次，实测只打出一行就正常退出。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：把门槛撤掉 —— 压进去那一行后面的递归调用改成从 1 重新挑，再在它旁边留一行注释写下重复是怎么冒出来的。",
+      "acceptRegex": ["\\w+\\s*\\.\\s*push_back\\s*\\([^)]*\\)\\s*;[\\s\\S]{0,40}?\\w*dfs\\w*\\s*\\(\\s*1\\s*\\)", "//[^\\n]{4,}"],
+      "sample": "dfs(1);   // 门槛退回 1，同一层又能挑刚挑过的数，先冒出 1 1",
+      "why": "不重是规矩消灭的，不是去重消灭的：门槛一撤，每层都能再挑上一层刚挑过的数，像 1 1 这种自己配自己的先冒出来，1 2 与 2 1 那种倒序也全回来了。注释写得对不对得人来读。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "n 与 k 是这个模板仅有的两个旋钮：出口管选几个、上限管共几个，门槛的机制一行都不用动。",
+    "组合不看顺序，1 2 和 2 1 算同一种；门槛抬到刚挑的数之上，每个组合就只剩一条严格递增的路。",
+    "5 选 3 改完这两处，实测输出 10 组：每层从编号小的试起，第一组是 1 2 3，最后一组是 3 4 5。",
+    "忘了撤销选择不会崩溃，只会安静地少输出 —— 当前组合只进不出，出口只满足一次；「没输出」不算错误，最容易被放过。",
+    "撤销就是把「试这条路」留下的痕迹擦干净，不擦的话这层循环的下一个人根本无路可走。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nstd::vector<int> cur;\nvoid dfs(int start) {\n    if (cur.size() == 3) {\n        std::println(\"{} {} {}\", cur[0], cur[1], cur[2]);\n        return;\n    }\n    for (int i = start; i <= 5; ++i) {\n        cur.push_back(i);\n        dfs(1);   // 门槛退回 1，同一层又能挑刚挑过的数，先冒出 1 1\n        cur.pop_back();\n    }\n}\nint main() { dfs(1); }\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nstd::vector<int> cur;\nvoid dfs(int start) {\n    if (cur.size() == 2) {\n        std::println(\"{} {}\", cur[0], cur[1]);\n        return;\n    }\n    for (int i = start; i <= 4; ++i) {\n        cur.push_back(i);\n        dfs(i + 1);\n        cur.pop_back();\n    }\n}\nint main() { dfs(1); }\n",
+      "#include <print>\nint main() {\n    std::println(\"{}\", 10);\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\nstd :: vector < int >  picked ;\nvoid  dfs ( int  from )\n{\n  if ( picked . size ( )  ==  3 )  {\n    std :: println ( \"{}  {}  {}\" ,  picked [ 0 ] ,  picked [ 1 ] ,  picked [ 2 ] ) ;\n    return ;\n  }\n  for ( int  x = from ; x <= 5 ;  ++ x )  {\n    picked . push_back ( x ) ;\n    dfs ( 1 ) ;  // 从 1 重新挑，同一个人能被挑两回\n    picked . pop_back ( ) ;\n  }\n}\nint  main ( )  {  dfs ( 1 ) ;  }\n"
+    ]
+  }
+}

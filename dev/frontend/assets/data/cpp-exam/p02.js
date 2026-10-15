@@ -12,104 +12,111 @@
 window.MIAO_CPP_EXAM_P02 = {
   papers: [
     {
-      cid: "c06", kind: "paper", mode: "quiz", pass: 60, title: "第 6 课考试 · const 常量", task: "任务题目：亲眼看到改 const 常量会被编译器拦下；声明 const 常量 DAILY_WORDS = 15 并算出一年背多少单词", hint: "想不起来就回看本课【演示 2】的两条注释和【演示 3】的具名常量。",
+      cid: "c06", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 6 课考试 · const 常量", task: "任务题目：亲眼看到改 const 常量会被编译器拦下；声明 const 常量 DAILY_WORDS = 15 并算出一年背多少单词", hint: "想不起来就回看本课【演示 2】的两条注释和【演示 3】的具名常量。",
+      notes: ["const 的含义就是这只盒子上生只准赋值一次；往只读的盒子里写，错误在编译期就判定，不会等到运行。", "const 变量声明时必须初始化：没有初值的锁盒子，C++ 不允许存在。", "常量名按习惯全大写加下划线，比如 DAILY_WORDS、MAX_SCORE；编译器不强制，但那是给人看的信号。", "「魔法数字」是直接写在代码里、没人知道含义的数字；提成具名常量后，满分变了只需要改一处。", "const 不会让盒子占的字节数变少；该不该锁，看的是这个值在整个程序里会不会变。"],
       questions: [
-        { id: "q1", type: "choice", score: 15, coversTask: 1, stem: "已经写了 const int MAX_SCORE = 750;，再来一行 MAX_SCORE = 800;，会怎样？", options: ["编译报错：往只读的盒子里写，编译器拦下", "悄悄改成 800，程序照跑", "编译能过，运行时才崩溃", "合法，但打印出来还是 750"], answer: 0, why: "const 的含义就是这只盒子上生只准赋值一次；写它是编译期就判定的错误，不会等到运行。" },
-        { id: "q2", type: "choice", score: 13, coversTask: 1, stem: "把 const int DAYS; 单独一行写进程序（不给初值），编译器的意思是？", options: ["警告一下就好，DAYS 当成 0", "报错：const 变量声明时必须初始化", "合法，用的时候再补值", "自动当成 365"], answer: 1, why: "锁上的盒子必须当场交货：以后再也写不进去，现在又不给值，这种盒子 C++ 不允许存在。" },
-        { id: "q3", type: "output", score: 18, coversTask: 2, stem: "这段代码打印什么？（一行一条）\nconst int DAILY_WORDS = 15;\nstd::println(\"一年 {}\", 365 * DAILY_WORDS);", acceptLines: ["一年 5475"], why: "365 乘 15 等于 5475；常量只是个名字，读的时候跟直接写数字一样参与运算。" },
-        { id: "q4", type: "blank", score: 12, coversTask: 2, stem: "本项目的习惯：常量名用____加下划线写，比如 DAILY_WORDS、MAX_SCORE。（填一种大小写写法）", accept: ["全大写", "全部大写", "大写", "全是大写"], why: "全大写是给读代码的人看的信号：一眼知道这个值锁着、别碰。编译器不强制，但约定要守。" },
-        { id: "q5", type: "choice", score: 12, stem: "「魔法数字」指的是什么？", options: ["直接写在代码里、没人知道含义的数字", "超出 int 上限的大数", "带小数的数字", "用 const 声明的常量"], answer: 0, why: "750、0.03 这种光秃秃写在代码里的数，过两天没人知道它是什么意思 —— 本课的对策是提成具名常量。" },
-        { id: "q6", type: "multi", score: 18, stem: "下面哪些说法是对的？（多选，错勾任何一项整题 0 分）", options: ["满分变了，用具名常量只需要改一处", "const 会让盒子占的字节数变少", "判断该不该锁，看的是这个值在程序里会不会变", "常量用小写 max_score 命名，编译器会报错"], answers: [0, 2], why: "const 不改变大小（字节数照旧）；命名习惯没有强制力，小写也能编译，只是丢掉了给人看的信号。" },
-        { id: "q7", type: "choice", score: 12, stem: "下面哪一处**最该**用 const？", options: ["游戏中当前的血量", "一周有 7 天这个事实", "用户从键盘输入的年龄", "循环里正在变化的计数"], answer: 1, why: "一周 7 天在整个程序里都不该变；血量、输入值、循环计数都天生要变，锁上就等于自缚。" }
+        { id: "q1", type: "code", score: 15, coversTask: 1, stem: "先锁上一只盒子：写一行 const 的 int 常量，名字全大写，值当场给出来。", acceptRegex: ["const\\s+int\\s+[A-Z][A-Z0-9_]*\\s*=\\s*\\d+\\s*;"], acceptOn: "code", sample: "const int MAX_SCORE = 750;", why: "锁上的盒子必须当场交货：const 没有初值编译器不放行；名字全大写是本项目给读代码的人的信号。" },
+        { id: "q2", type: "code", score: 20, coversTask: 1, stem: "任务 1 那一行：把「往锁上的盒子再写一次」那个赋值写出来（值给 800），并在它旁边留一行至少四个字的注释记下报错里的说法。", acceptRegex: ["[A-Z][A-Z0-9_]{2,}\\s*=\\s*800\\s*;", "//[^\\n]{4,}"], acceptOn: "buffer", sample: "// MAX_SCORE = 800;   // 报错说 expression must be a modifiable lvalue", why: "往只读的盒子里写，编译期就被拦下；任务要求看完报错再注释回去，所以这一行落在注释里也算 —— 正则只能验你写了注释，抄得对不对要复盘核对。" },
+        { id: "q3", type: "code", score: 20, coversTask: 2, stem: "任务 2：声明你选的常量「每天背单词数」，const 的 int，值给 15，名字全大写。", acceptRegex: ["const\\s+int\\s+[A-Z][A-Z0-9_]*\\s*=\\s*15\\s*;"], acceptOn: "code", sample: "const int DAILY_WORDS = 15;", why: "一个值整个程序都不该变，就锁起来给它起名字；以后要改每天 20 个，只改这一处。" },
+        { id: "q4", type: "code", score: 25, coversTask: 2, stem: "用一条 std::println 打出一年背多少个：让 365 乘上你那个常量，别把 15 又光秃秃写一遍。", acceptRegex: ["365\\s*\\*|\\*\\s*365", "std::println\\s*\\("], acceptOn: "code", sample: "std::println(\"一年能背 {} 个单词\", 365 * DAILY_WORDS);", why: "常量只是个名字，读的时候跟直接写数字一样参与运算：365 乘 15 等于 5475。" },
+        { id: "q5", type: "code", score: 20, stem: "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <print>\n\nint main() {", why: "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: 1, q3: "一年 5475", q4: "全大写", q5: 0, q6: [0, 2], q7: 1}],
+          "#include <print>\n\nint main() {\n    const int MAX_SCORE = 750;\n    // MAX_SCORE = 800;   // 报错说 expression must be a modifiable lvalue\n    // const int DAYS;    // 也报错：const 没有初值\n\n    const int DAILY_WORDS = 15;\n    std::println(\"一年能背 {} 个单词\", 365 * DAILY_WORDS);\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 1, q2: 0, q3: "一年 5475.0", q4: "小写", q5: 3, q6: [1, 3], q7: 0}],
+          "",
+          "#include <print>\nint main() {\n    int daily_words = 15;\n    std::println(\"{}\", daily_words);\n    return 0;\n}\n",
+          "#include <print>\nint main() {\n    const int MAX_SCORE = 750;\n    MAX_SCORE = 800;\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: "1", q3: "一年  5475", q4: "全部大写", q5: "0", q6: [0, 2], q7: "1"}]
+          "#  include   < print >\nint  main ( )\n{\n  const  int   LIMIT = 750;\n  LIMIT = 800;      // 编译器说不让往只读盒子里写\n  const int WORDS_PER_DAY = 15;\n  std::println( \"{}\", WORDS_PER_DAY * 365 );\n}\n"]
       }
     },
     {
-      cid: "c07", kind: "paper", mode: "quiz", pass: 60, title: "第 7 课考试 · 命名规范", task: "任务题目：判出 int A、int x1、int price_r_m_b 三个名字的毛病并改成规范的；用你选的一种风格声明「班级人数」「上学方式」并打印", hint: "想不起来就回看本课【演示 3】的改名对照和「它被设计成什么样」那三问。",
+      cid: "c07", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 7 课考试 · 命名规范", task: "任务题目：判出 int A、int x1、int price_r_m_b 三个名字的毛病并改成规范的；用你选的一种风格声明「班级人数」「上学方式」并打印", hint: "想不起来就回看本课【演示 3】的改名对照和「它被设计成什么样」那三问。",
+      notes: ["编译器不在乎名字的含义：只要符合标识符规则（字母数字下划线、不能数字开头、不占关键字）就照样编译。", "见名知意是命名的唯一硬标准，风格、大小写都是为它服务的。", "snake_case 是全小写加下划线；camelCase 是第一个词全小写、后面每个词首字母大写，写成 myAge 而不是 MyAge。", "同一个项目里两种风格别混着用：混用会逼读代码的人反复判断这两个名字是不是同一个变量。", "坏名字阴在程序照样编译、结果也正确，看不见的成本落在以后每次读这段代码的人身上。"],
       questions: [
-        { id: "q1", type: "choice", score: 17, coversTask: 1, stem: "下面四个名字，哪个最符合本课的规范？", options: ["A", "x1", "class_count", "price_r_m_b"], answer: 2, why: "class_count 念出来就知道是班级数量，还守了小写加下划线；另外三个要么单字母、要么带数字尾巴、要么缩写叠三层。" },
-        { id: "q2", type: "choice", score: 12, stem: "关于变量名，编译器的态度是什么？", options: ["不在乎名字的含义，只要符合标识符规则就照样编译", "会拒绝 a 这种单字母名字", "要求所有名字都用小写", "要求名字里带上单位"], answer: 0, why: "名字是给人看的：编译器只查底线（字母数字下划线、不能数字开头、不占关键字），含义对不对它管不了。" },
-        { id: "q3", type: "output", score: 19, coversTask: 2, stem: "这段代码打印什么？（一行一条）\nint class_count = 42;\nstd::string school_way = \"bus\";\nstd::println(\"{} 人，坐 {}\", class_count, school_way);", acceptLines: ["42 人，坐 bus"], why: "两个占位坑按顺序填：先 class_count 的 42，再 school_way 里的 bus。名字好，读代码就不用猜。" },
-        { id: "q4", type: "blank", score: 14, coversTask: 1, stem: "int A、int x1、int price_r_m_b 三个名字不合格的根子是同一个：都做不到见名知____。（填一个字）", accept: ["意"], why: "看见名字就知道它装的是什么，这是命名的唯一硬标准；风格、大小写都是为它服务的。" },
-        { id: "q5", type: "multi", score: 16, stem: "下面关于命名风格的说法，哪些是对的？（多选，错勾任何一项整题 0 分）", options: ["snake_case 是全小写加下划线", "camelCase 要求第一个词的首字母也大写成 MyAge", "同一个项目里两种风格可以随便混着用", "常量按习惯写成全大写加下划线，比如 MAX_SCORE"], answers: [0, 3], why: "小驼峰是第一个词全小写（myAge）；混用风格会逼读代码的人反复判断「这两个是不是同一个变量」。" },
-        { id: "q6", type: "choice", score: 11, stem: "「坏名字」的危害为什么容易被忽视？", options: ["因为程序照样编译通过、结果也正确，看不见的成本落在读的人身上", "因为编译器只在调试模式下检查", "因为坏名字会被自动重命名", "因为它一定会导致运行时崩溃"], answer: 0, why: "这正是它阴的地方：不出错，只是以后每次读这段代码的人都得多花三十秒猜。" },
-        { id: "q7", type: "order", score: 11, stem: "把「给一个变量改名」的合理步骤排成正确顺序。", answer: [0, 1, 2, 3], steps: ["想清楚这个值到底是什么、干什么用", "问自己它带不带单位、会不会变", "按项目统一的那一种风格把名字写出来", "如果它不会变，升级成 const 常量并写成全大写"], why: "先弄清含义再命名，顺序反了就只是在换字母；最后一步接的是上一课的 const。" }
+        { id: "q1", type: "code", score: 15, coversTask: 1, stem: "任务 1：把那几个不合格的名字改成规范的写出来 —— 一个 int 变量，名字由两个词组成（小写加下划线，或者小驼峰），值当场给。", acceptRegex: ["\\bint\\s+(?:[a-z]{2,}(?:_[a-z]{2,})+|[a-z]{2,}(?:[A-Z][a-z]+)+)\\s*=\\s*\\d+\\s*;"], acceptOn: "code", sample: "int magazine_price = 45;", why: "单字母、字母加数字尾巴、缩写叠三层都做不到见名知意；名字由两个词组成，念出来就知道它装的是什么。" },
+        { id: "q2", type: "code", score: 15, coversTask: 1, stem: "在改好的那一行旁边留一行注释（至少四个字），记下它原来那个不合格的名字长什么样。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 原来写的是 int price_r_m_b; 三个缩写叠一起没人能还原", why: "演示 3 就是把反面教材注释掉留着对照；正则只能验你写了注释，写得对不对要复盘核对。" },
+        { id: "q3", type: "code", score: 15, coversTask: 2, stem: "任务 2：声明「班级人数」这个变量 —— 一个 int，名字照样由两个词组成，值给一个人数。", acceptRegex: ["\\bint\\s+(?:[a-z]{2,}(?:_[a-z]{2,})+|[a-z]{2,}(?:[A-Z][a-z]+)+)\\s*=\\s*\\d+\\s*;"], acceptOn: "code", sample: "int class_count = 42;", why: "班级人数会变小但一眼知道是什么：见名知意比风格统一更要紧，风格是为它服务的。" },
+        { id: "q4", type: "code", score: 20, coversTask: 2, stem: "声明「上学方式」这个变量：用 std::string 装一段双引号里的文字，名字也由两个词组成。", acceptRegex: ["\\bstd::string\\s+(?:[a-z]{2,}(?:_[a-z]{2,})+|[a-z]{2,}(?:[A-Z][a-z]+)+)\\s*=\\s*\"[^\"]*\"\\s*;"], acceptOn: "code", sample: "std::string school_way = \"bus\";", why: "方式是一段文字，就得用字符串盒子；名字照样要念得出含义。" },
+        { id: "q5", type: "code", score: 20, coversTask: 2, stem: "用一条 std::println 把这两个一起打出来：格式串里两个占位坑，逗号后面按顺序给这两个变量。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+"], acceptOn: "code", sample: "std::println(\"{} 人，坐 {}\", class_count, school_way);", why: "两个坑就给两个值，顺序对上；名字起得好，读代码的人不用回头数。" },
+        { id: "q6", type: "code", score: 15, stem: "把这份程序写成能跑的形：打印和字符串两个工具箱都搬进来，再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*string\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <print>\n#include <string>\n\nint main() {", why: "缺 #include <print> 就没人认识 std::println；std::string 这个工具来自 #include <string>。" }
       ],
       selftest: {
         refs: [
-          {q1: 2, q2: 0, q3: "42 人，坐 bus", q4: "意", q5: [0, 3], q6: 0, q7: [0, 1, 2, 3]}],
+          "#include <print>\n#include <string>\n\nint main() {\n    int magazine_price = 45;   // 原来写的是 int price_r_m_b; 三个缩写叠一起\n    int days_per_week = 7;       // 原来那个 x1 装的如果是 7，它就是「一周几天」\n    int class_count = 42;\n    std::string school_way = \"bus\";\n\n    std::println(\"{} 人，坐 {}\", class_count, school_way);\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 0, q2: 1, q3: "42", q4: "形", q5: [1, 2], q6: 3, q7: [3, 2, 1, 0]}],
+          "",
+          "#include <print>\nint main() {\n    int a = 15;\n    int x1 = 700;\n    std::println(\"{}\", a);\n    return 0;\n}\n",
+          "#include <print>\nint main() {\n    int price_r_m_b = 45;\n    return 0;\n}\n"],
         loose: [
-          {q1: "2", q2: "0", q3: "42 人，坐  bus", q4: "意", q5: [0, 3], q6: "0", q7: ["0", "1", "2", "3"]}]
+          "#  include   < print >\n# include < string >\nint  main ( )\n{\n  int daysPerWeek = 7;   // 原名 x1 等于没起名字\n  int  goSchoolWayCount = 3;\n  std::string  wayToSchool = \"bus\";\n  std::println( \"{} {}\" ,  goSchoolWayCount , wayToSchool );\n}\n"]
       }
     },
     {
-      cid: "c08", kind: "paper", mode: "quiz", pass: 60, title: "第 8 课考试 · 整数与四则运算", task: "任务题目：改掉初值先心算再验证；新加一行打印 a * 2 + b 的结果", hint: "回看本课【演示 1】的三行运算和「它被设计成什么样」里表达式一步步塌成数的过程。",
+      cid: "c08", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 8 课考试 · 整数与四则运算", task: "任务题目：改掉初值先心算再验证；新加一行打印 a * 2 + b 的结果", hint: "回看本课【演示 1】的三行运算和「它被设计成什么样」里表达式一步步塌成数的过程。",
+      notes: ["乘号在这里是星号：键盘上没有数学里的 ×，写 × 编译器认不出来。", "表达式是「一个还没算出来的数」：读盒子不改盒子，a + b 不会把 a、b 的值改掉。", "先乘后加：a * 2 + b 先把 a 换成值，算乘法得 20，再加 3 得 23。", "等号是「右算左装」：hp = hp - 30 先把右边算成 70，再装回 hp。", "int triple = 3 * a; 里 triple 拿到的是一个算好的数，不是公式；斜杠除法下一课才讲。"],
       questions: [
-        { id: "q1", type: "choice", score: 12, coversTask: 1, stem: "int a = 10; 改成 int a = 20; 之后，原本打印 a + b（b 仍是 3）的那一行会打出什么？", options: ["13", "20", "23", "还是 10"], answer: 2, why: "表达式每次用到都按盒子当下的值重算：20 加 3 得 23，改初值等于改了所有用到它的算式。" },
-        { id: "q2", type: "choice", score: 10, stem: "C++ 里表示乘法用的是哪个符号？", options: ["×", "*", "x", "^"], answer: 1, why: "键盘上没有数学里的乘号，早期只能拿星号替；写 × 编译器认不出来，报错看着像文件坏了。" },
-        { id: "q3", type: "blank", score: 24, coversTask: 2, stem: "（任务题）已有 int a = 10; 和 int b = 3;。写一行 std::println，把 a 乘 2 再加 b 的结果打出来（占位坑里放表达式）。", acceptRegex: ["println\\s*\\([^)]*a\\s*\\*\\s*2\\s*\\+\\s*b"], sample: "std::println(\"{}\", a * 2 + b);", why: "写法就是把算式直接放进占位坑：std::println(\"{}\", a * 2 + b); —— 先乘后加，塌成 23。" },
-        { id: "q4", type: "output", score: 16, coversTask: 1, stem: "这段代码两行分别打印什么？（一行一条）\nint price = 7;\nint total = 6 * price;\nint paid = 50;\nstd::println(\"总价 {} 元\", total);\nstd::println(\"找回 {} 元\", paid - total);", acceptLines: ["总价 42 元", "找回 8 元"], why: "6 乘 7 得 42 存进 total；找回的钱是 50 减 42。第二行也是个表达式，用到时才算。" },
-        { id: "q5", type: "blank", score: 10, stem: "两个 int 相减，结果的类型还是____。（填类型名）", accept: ["int", "整数", "int 类型"], why: "类型在声明那一刻定死（第 3 课），整数运算在整数范围里闭合，不会算出小数。" },
-        { id: "q6", type: "multi", score: 14, stem: "下面哪些说法是对的？（多选，错勾任何一项整题 0 分）", options: ["星号 * 是乘号，数学里的 × 编译器不认", "写成 a + b 之后，a 和 b 盒子里的值会被改掉", "int triple = 3 * a; 里 triple 拿到的是一个算好的数，不是公式", "斜杠 / 本课还没正式讲"], answers: [0, 2, 3], why: "表达式只是「一个还没算出来的数」，读盒子不改盒子；除法下一课专讲，它比减法更会坑人。" },
-        { id: "q7", type: "choice", score: 8, stem: "hp = hp - 30; 这一行发生了什么？", options: ["先算右边，再把结果装回 hp", "把 hp 删了重建", "hp 变成 30", "编译报错：等号两边都有 hp"], answer: 0, why: "等号是「把右边的值装进左边的盒子」，先右后左；数学里的相等在这里不成立。" },
-        { id: "q8", type: "order", score: 6, stem: "把「a * 2 + b」算成结果的过程排成正确顺序。", answer: [0, 1, 2, 3], steps: ["把 a 换成它现在的值 10", "把 b 换成它现在的值 3", "先算乘法得 20", "再算加法得 23"], why: "先取盒子的值，再按先乘后加的规矩化简，最后塌成一个数交给 println。" }
+        { id: "q1", type: "code", score: 20, coversTask: 1, stem: "存两个数：写出至少一行 int 声明，右边的值随你挑（别照抄 10），当场给上。", acceptRegex: ["\\bint\\s+\\w+\\s*=\\s*\\d+\\s*;"], acceptOn: "code", sample: "int a = 20;", why: "表达式每次用到都按盒子当下的值重算：改了初值，等于改了所有用到它的算式。" },
+        { id: "q2", type: "code", score: 20, coversTask: 1, stem: "用一条 std::println 把两个盒子的和打出来：占位坑里放 a + b 这种加法表达式，别先把结果手算成数字写进去。", acceptRegex: ["std::println\\s*\\([^)]*\\w+\\s*\\+\\s*\\w+"], acceptOn: "code", sample: "std::println(\"a + b = {}\", a + b);", why: "表达式就是一个还没算出来的数，交给打印那一刻才塌成 23。" },
+        { id: "q3", type: "code", score: 15, coversTask: 1, stem: "用一条 std::println 把两个盒子的差打出来：占位坑里放减法表达式。", acceptRegex: ["std::println\\s*\\([^)]*\\w+\\s*-\\s*\\w+"], acceptOn: "code", sample: "std::println(\"应找 {} 元\", paid - total);", why: "两个 int 相减，结果的类型还是 int：整数运算在整数范围里闭合，不会算出小数。" },
+        { id: "q4", type: "code", score: 30, coversTask: 2, stem: "任务 2 那一行：新加一条 std::println，把「某个盒子乘 2 再加另一个盒子」的结果打出来 —— 乘号写星号。", acceptRegex: ["std::println\\s*\\([^)]*\\w+\\s*\\*\\s*2\\s*\\+\\s*\\w+"], acceptOn: "code", sample: "std::println(\"{}\", a * 2 + b);", why: "星号才是乘号，写 × 编译器认不出来；先乘后加，20 加 3 塌成 23。" },
+        { id: "q5", type: "code", score: 15, stem: "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <print>\n\nint main() {", why: "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。" }
       ],
       selftest: {
         refs: [
-          {q1: 2, q2: 1, q3: "std::println(\"{}\", a * 2 + b);", q4: "总价 42 元\n找回 8 元", q5: "int", q6: [0, 2, 3], q7: 0, q8: [0, 1, 2, 3]}],
+          "#include <print>\n\nint main() {\n    int a = 20;\n    int b = 3;\n\n    std::println(\"a = {}, b = {}\", a, b);\n    std::println(\"a + b = {}\", a + b);\n    std::println(\"a - b = {}\", a - b);\n    std::println(\"a * 2 + b = {}\", a * 2 + b);\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 0, q2: 0, q3: "std::println(\"{}\", a);", q4: "总价 42 元", q5: "double", q6: [1], q7: 1, q8: [3, 2, 1, 0]}],
+          "",
+          "#include <print>\nint main() {\n    int a = 10;\n    std::println(\"{}\", a);\n    return 0;\n}\n",
+          "#include <print>\nint main() {\n    int a = 10;\n    int b = 3;\n    std::println(\"{}\", 13);\n    std::println(\"{}\", a × 2 + b);\n    return 0;\n}\n"],
         loose: [
-          {q1: "2", q2: "1", q3: "println ( \"{}\" ,  a*2+b ) ;", q4: "总价  42 元\n找回  8 元", q5: "整数", q6: [0, 2, 3], q7: "0", q8: ["0", "1", "2", "3"]}]
+          "#  include   < print >\nint  main ( )\n{\n  int  first = 9;   int  second = 4;\n  std::println( \"和 {}\", first + second );\n  std::println( \"差 {}\", first-second );\n  std::println( \"{}\" , first  *  2 + second );\n}\n"]
       }
     },
     {
-      cid: "c09", kind: "paper", mode: "quiz", pass: 60, title: "第 9 课考试 · 整数除法与取余", task: "任务题目：用 / 和 % 各一次把 100 分钟换成一小时四十分钟；把 10.0 改成 10，说清输出为什么变了", hint: "回看本课【演示 2】的单位换算和【演示 3】里 10 / b 与 10.0 / b 的对照。",
+      cid: "c09", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 9 课考试 · 整数除法与取余", task: "任务题目：用 / 和 % 各一次把 100 分钟换成一小时四十分钟；把 10.0 改成 10，说清输出为什么变了", hint: "回看本课【演示 2】的单位换算和【演示 3】里 10 / b 与 10.0 / b 的对照。",
+      notes: ["10 / 3 得 3：两边都是 int 就按整数除，小数部分在除的那一刻被砍掉，事后补 .0 补不回来。", "% 管没分掉的零头：10 % 3 得 1；验算规矩是 商 * 除数 + 余数 == 被除数。", "截断是向零不是向小：-7 / 2 得 -3，跟着 -7 % 2 得 -1，余数的符号跟着被除数。", "想要小数结果就主动给一个 double：10.0 / 3 才是 3.3333。", "% 只服务整数，10.5 % 3 编译就报错；除数是 0 编译器不拦，那是运行时才炸的严重错误。"],
       questions: [
-        { id: "q1", type: "output", score: 26, coversTask: 1, stem: "这段代码打印什么？（一行一条）\nint minutes = 100;\nstd::println(\"{} 分钟 = {} 小时 {} 分\", minutes, minutes / 60, minutes % 60);", acceptLines: ["100 分钟 = 1 小时 40 分"], why: "100 除以 60 的整数部分是 1（凑出一个整小时），100 对 60 取余得 40（剩下的零头）—— 两个运算各司一半。" },
-        { id: "q2", type: "choice", score: 24, coversTask: 2, stem: "原来写 std::println(\"{:.4f}\", 10.0 / b);（b 是 3）打出 3.3333。把 10.0 改成 10 之后会怎样？", options: ["还是 3.3333", "打出 3 这样的整数结果", "编译报错", "打出 4"], answer: 1, why: "两边都成了 int，就按整数除法算，小数部分当场被砍掉；编译器一声不响，这是最容易被忽略的改法。" },
-        { id: "q3", type: "choice", score: 10, stem: "-7 / 2 的结果是多少？", options: ["-4", "-3.5", "-3", "运行才崩"], answer: 2, why: "截断是「向零」，不是「向小」：-3.5 砍成 -3；跟着 -7 % 2 会是 -1，余数符号跟被除数。" },
-        { id: "q4", type: "blank", score: 8, stem: "10 块钱分给 3 个人，每人 3 块；想知道手里还剩几块，用____运算。（填一个运算符或它的名字）", accept: ["%", "取余", "求余", "mod", "余数"], why: "/ 管「分出去多少」，% 管「没分掉的零头」，两个合起来才是一次完整的分配。" },
-        { id: "q5", type: "output", score: 9, stem: "这两行分别打印什么？（一行一条，按顺序写）\nstd::println(\"{}\", 17 / 5);\nstd::println(\"{}\", 17 % 5);", acceptLines: ["3", "2"], why: "17 块 5 个人：每人 3 块，剩 2 块。验算 3 * 5 + 2 == 17。" },
-        { id: "q6", type: "multi", score: 16, stem: "下面哪些说法是对的？（多选，错勾任何一项整题 0 分）", options: ["两个 int 相除，结果还是 int", "(a / b) * b + a % b 的结果等于 a", "10.5 % 3 能正常编译运行", "除数是 0 时编译器会拦住你"], answers: [0, 1], why: "% 只服务整数，浮点会报错；除数为 0 是运行时才炸的严重错误，编译器不拦 —— 所以别写出来。" },
-        { id: "q7", type: "choice", score: 7, stem: "算平均分（总分和人数都是 int）想保留小数，正确的做法是？", options: ["让参与除法的其中一边先变成带小数点的数", "在结果后面补 .0", "改用 % 来求", "整数除法没救，只能放弃小数"], answer: 0, why: "损失发生在除的那一刻，事后补不回来；只要有一边是 double，整个除法就按小数做。" }
+        { id: "q1", type: "code", score: 20, coversTask: 1, stem: "任务 1 的第一半：写一行赋值，用一个盒子（或直接一个数）除以 60，算出能凑出几个整小时。", acceptRegex: ["=\\s*\\w+\\s*/\\s*60\\s*;"], acceptOn: "code", sample: "int hours = minutes / 60;", why: "两个 int 相除结果还是 int：100 / 60 得 1，小数尾巴当场被砍掉。" },
+        { id: "q2", type: "code", score: 20, coversTask: 1, stem: "任务 1 的第二半：再写一行赋值，对 60 取余，把凑不满一小时的零头取出来。", acceptRegex: ["=\\s*\\w+\\s*%\\s*60\\s*;"], acceptOn: "code", sample: "int rest = minutes % 60;", why: "/ 管分出去多少，% 管没分掉的零头：100 % 60 得 40，两个合起来才是一次完整的换算。" },
+        { id: "q3", type: "code", score: 15, coversTask: 1, stem: "用一条 std::println 把换算结果打出来：格式串里至少两个占位坑，逗号后面按顺序给小时和余数。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\""], acceptOn: "code", sample: "std::println(\"{} 分钟 = {} 小时 {} 分\", minutes, hours, rest);", why: "验算一下就知道两个各司一半：商乘 60 加余数正好回到 100。" },
+        { id: "q4", type: "code", score: 20, coversTask: 2, stem: "任务 2 那一改：写一条 std::println，占位坑里放「10 除以一个 int 盒子」—— 两边都是整数的那种写法。", acceptRegex: ["std::println\\s*\\([^)]*\\b10\\s*/\\s*\\w+"], acceptOn: "code", sample: "std::println(\"{}\", 10 / b);", why: "把 10.0 改成 10，两边都成了 int，就按整数除法算，打出 3 这样的整数结果 —— 编译器一声不响。" },
+        { id: "q5", type: "code", score: 15, coversTask: 2, stem: "留一行对照：再写一条 std::println，把上面那个除法用 10.0 写一遍，看到它按小数除。", acceptRegex: ["std::println\\s*\\([^)]*10\\.0\\s*/\\s*\\w+"], acceptOn: "code", sample: "std::println(\"{:.4f}\", 10.0 / b);", why: "只要有一边是 double，整个除法就按小数做；:.4f 是只保留 4 位小数。" },
+        { id: "q6", type: "code", score: 10, coversTask: 2, stem: "在这两行旁边留一行注释（至少四个字），写下你看到的输出变化。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 10.0 改成 10 之后从 3.3333 变成 3", why: "正则只能验你写了注释，写得对不对要复盘核对 —— 「观察输出」这一步这块编辑器判不动。" }
       ],
       selftest: {
         refs: [
-          {q1: "100 分钟 = 1 小时 40 分", q2: 1, q3: 2, q4: "%", q5: "3\n2", q6: [0, 1], q7: 0}],
+          "#include <print>\n\nint main() {\n    int minutes = 100;\n    int hours = minutes / 60;\n    int rest = minutes % 60;\n    std::println(\"{} 分钟 = {} 小时 {} 分\", minutes, hours, rest);\n\n    int b = 3;\n    // 10.0 改成 10 之后输出从 3.3333 变成 3\n    std::println(\"{}\", 10 / b);\n    std::println(\"{:.4f}\", 10.0 / b);\n    return 0;\n}\n"],
         wrongs: [
-          {q1: "100 分钟 = 1 小时 4 分", q2: 0, q3: 0, q4: "/", q5: "3.4", q6: [2, 3], q7: 1}],
+          "",
+          "#include <print>\nint main() {\n    int a = 100;\n    std::println(\"{}\", a / 60);\n    return 0;\n}\n",
+          "#include <print>\nint main() {\n    int b = 3;\n    std::println(\"{}\", 10.0 / b);\n    return 0;\n}\n"],
         loose: [
-          {q1: "100  分钟 = 1  小时 40 分", q2: "1", q3: "2", q4: "取余", q5: " 3 \n 2 ", q6: [0, 1], q7: "0"}]
+          "#  include   < print >\nint  main ( )\n{\n  int  total_min = 100;\n  int  h = total_min/60;\n  int  r = total_min%60;\n  std::println( \"小时 {} 分 {}\", h, r );\n  int n = 3;\n  // 换成整数除法以后从 3.3333 掉到 3\n  std::println(\"{}\",  10 /n );\n  std::println( \"{}\", 10.0 / n );\n}\n"]
       }
     },
     {
-      cid: "c10", kind: "paper", mode: "quiz", pass: 60, title: "第 10 课考试 · 装不下的大数", task: "任务题目：把 400000000000LL 换成 int 看打出的鬼数字；再用 int 装 90 亿、换 long long 对比两行输出", hint: "回看本课【演示 2】的鬼数字、【演示 3】的两行对照，以及里程表那个类比。",
+      cid: "c10", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 10 课考试 · 装不下的大数", task: "任务题目：把 400000000000LL 换成 int 看打出的鬼数字；再用 int 装 90 亿、换 long long 对比两行输出", hint: "回看本课【演示 2】的鬼数字、【演示 3】的两行对照，以及里程表那个类比。",
+      notes: ["装爆之后程序不报错：类型匹配、只是值超范围，编译器一般只给警告，盒子多大它替你决定不了。", "第 3 课那条「类型对不上就拦下」管的是类型，本课是数值超出，两道关卡不是一回事。", "int 的正数上限大约在 21 亿；从 1970 年元旦算起的秒级时间戳早已超过它，那种量就该用 long long。", "long long 也会溢出：阶乘、指数增长照样爆，「想装多大就多大」是错觉。", "两个 int 相乘先按 int 算，乘积超出照样绕回来；把一边写成 100000LL，才按 long long 算。"],
       questions: [
-        { id: "q1", type: "choice", score: 17, coversTask: 1, stem: "把 long long big = 400000000000LL; 的类型改成 int（其余不动），编译运行会怎样？", options: ["编译直接报错，程序编不出来", "程序照样跑，打出一个绕回来的怪数（常见机器上是 568041472）", "值不变，还是 400000000000", "屏幕上打印 0"], answer: 1, why: "类型没错、只是数值超出格子数量，编译器通常只给警告；数从天花板绕回地面，照跑照错。" },
-        { id: "q2", type: "output", score: 21, coversTask: 2, stem: "这段代码打印什么？（一行一条）\nlong long big = 9000000000LL;\nstd::println(\"{}\", big);", acceptLines: ["9000000000"], why: "90 亿超出 int 约 21 亿的上限，但 long long 装得下，尾巴的 LL 让它一开始就住对盒子。" },
-        { id: "q3", type: "choice", score: 15, coversTask: 1, stem: "为什么这种「装不下」编译器一般只警告而不报错？", options: ["类型是对的，超出的是数值；盒子多大、你想要多大的数，编译器替你决定不了", "因为 g++ 检查不出来", "因为 int 其实装得下 4000 亿", "因为溢出在 C++ 里是合法的语法"], answer: 0, why: "第 3 课那条「类型对不上就拦下」管的是类型；本课类型匹配、只是值超范围，编译器只能提醒你不能替你拿主意。" },
-        { id: "q4", type: "blank", score: 13, stem: "写很大的整数字面量时，尾巴上要加上____，明确告诉编译器按 long long 存。（填后缀）", accept: ["LL", "ll", "LL 后缀", "两个 L"], why: "不写后缀时类型由编译器先猜；写了 LL，这个数从一开始就住在大盒子里。" },
-        { id: "q5", type: "multi", score: 17, stem: "下面哪些说法是对的？（多选，错勾任何一项整题 0 分）", options: ["int 的正数上限大约在 21 亿", "long long 至少 8 字节，正数能到约 9.2 乘以 10 的 18 次方", "两个 int 各自都不大，但乘积超出时结果照样会绕回来", "long long 想装多大就多大"], answers: [0, 1, 2], why: "long long 也会溢出（阶乘、指数增长一样爆）；乘法按操作数的类型算，两边都是 int 就先用 int 算。" },
-        { id: "q6", type: "output", score: 9, stem: "这行打印什么？\nstd::println(\"{}\", sizeof(long long));", acceptLines: ["8"], why: "第 4 课那根探针：int 是 4 字节，long long 是 8 字节 —— 差距就是「21 亿」和「92 亿亿」。" },
-        { id: "q7", type: "choice", score: 8, stem: "下面哪个量最该用 long long 而不是 int？", options: ["一个班的人数", "从 1970 年元旦算起的秒数", "一周有几天", "一次考试的分数"], answer: 1, why: "秒级时间戳的量级早已远超 21 亿；其余三个都远小于 int 的上限，用 int 足够。" }
+        { id: "q1", type: "code", score: 20, coversTask: 1, stem: "任务 1 那一改：把一个 int 盒子的初值直接写成 400000000000（别加 LL），硬塞给它。", acceptRegex: ["\\bint\\s+\\w+\\s*=\\s*400000000000\\s*;"], acceptOn: "code", sample: "int broken = 400000000000;", why: "类型对得上（都是整数），超出的只是数值：编译器通常只警告不拦，数从天花板绕回地面。" },
+        { id: "q2", type: "code", score: 15, coversTask: 1, stem: "用一条 std::println 把这只装爆的盒子原样打出来，看看打出什么鬼数字。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"], acceptOn: "code", sample: "std::println(\"本应 400000000000，实际打出: {}\", broken);", why: "程序照跑照错，常见机器上打出 568041472 —— 这就是「不报错的错误」最阴的地方。" },
+        { id: "q3", type: "code", score: 10, coversTask: 1, stem: "在这一行旁边留一行注释（至少四个字），记下屏幕上那个实际打出来的数。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 打出来是 568041472，不是 400000000000", why: "正则只能验你写了注释，抄下来的数对不对要复盘核对 —— 看输出这一步这块编辑器判不动。" },
+        { id: "q4", type: "code", score: 20, coversTask: 2, stem: "任务 2 的第一半：用 int 装 90 亿 —— 写一行 int 声明，右边是 9000000000，不带后缀。", acceptRegex: ["\\bint\\s+\\w+\\s*=\\s*9000000000\\s*;"], acceptOn: "code", sample: "int bad = 9000000000;", why: "int 的正数上限大约在 21 亿（2147483647）：90 亿早就翻过天花板，绕回来的数很多机器上是 410065408。" },
+        { id: "q5", type: "code", score: 25, coversTask: 2, stem: "任务 2 的第二半：同一个数给 long long 作对照 —— 写一行 long long 声明，数字尾巴上带上 LL。", acceptRegex: ["long\\s+long\\s+\\w+\\s*=\\s*9000000000\\s*LL\\s*;"], acceptOn: "code", sample: "long long big = 9000000000LL;", why: "不写后缀时类型由编译器先猜；写了 LL，这个数从一开始就住在大盒子里，90 亿轻松装下。" },
+        { id: "q6", type: "code", score: 10, stem: "用一条 std::println 把 sizeof 打出来，看清两只盒子的字节数差距。", acceptRegex: ["std::println\\s*\\([^)]*sizeof\\s*\\("], acceptOn: "code", sample: "std::println(\"long long 占 {} 字节\", sizeof(long long));", why: "int 是 4 字节、long long 是 8 字节 —— 差距就是「21 亿」和「92 亿亿」的区别。" }
       ],
       selftest: {
         refs: [
-          {q1: 1, q2: "9000000000", q3: 0, q4: "LL", q5: [0, 1, 2], q6: "8", q7: 1}],
+          "#include <print>\n\nint main() {\n    int broken = 400000000000;   // 打出来是 568041472，不是 400000000000\n    std::println(\"本应 400000000000，实际打出: {}\", broken);\n\n    int bad = 9000000000;\n    long long big = 9000000000LL;\n    std::println(\"int      : {}\", bad);\n    std::println(\"long long: {}\", big);\n\n    std::println(\"int 占 {} 字节\", sizeof(int));\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 0, q2: "410065408", q3: 2, q4: "4", q5: [3], q6: "4", q7: 0}],
+          "",
+          "#include <print>\nint main() {\n    long long big = 400000000000LL;\n    std::println(\"{}\", big);\n    return 0;\n}\n",
+          "int x = 100;\nstd::println(\"{}\", x);\n"],
         loose: [
-          {q1: "1", q2: " 9000000000 ", q3: "0", q4: "ll", q5: [0, 1, 2], q6: " 8 ", q7: "1"}]
+          "#  include   < print >\nint  main ( )\n{\n  int  x = 400000000000;   // 屏幕上是个 568041472 这样的怪数\n  std::println( \"{}\", x );\n  int  y = 9000000000;\n  long  long   z = 9000000000 LL;\n  std::println( \"{}\",  y );\n  std::println( \"{}\", sizeof( int ) );\n}\n"]
       }
     },
   ]

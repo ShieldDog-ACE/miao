@@ -1,0 +1,71 @@
+{
+  "cid": "m119",
+  "note": "RAII 改单编辑器：源稿真实任务只有 1 条（在 main 里加一层大括号再创建一个 Locker，观察还的顺序），coversTask 全部只打 1。拆成「Locker 的形状：收 string 的构造 + 析构 + 两处 println」「内层作用域里再创建一个」「拷贝 = delete」，观察结论按规矩五收进一条 buffer 注释档。析构时刻、中途 return 不漏这些进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱（#include <print>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "守卫对象的寿命写在源码的那对大括号里，析构调用就被插在格子合上的位置。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "写一个当柜子的类：class 起头，一个收 std::string 参数的构造（借）、一个 ~ 开头的析构（还），两处各用一条 println 报自己的名。",
+      "acceptRegex": ["class\\s+\\w+", "\\w+\\s*\\(\\s*(?:std\\s*::\\s*)?string\\s+\\w+\\s*\\)", "~\\w+\\s*\\(\\s*\\)", "std\\s*::\\s*println\\s*\\("],
+      "sample": "class Locker {\npublic:\n    explicit Locker(std::string who) : who_(std::move(who)) {\n        std::println(\"{}：投币（构造=借资源）\", who_);\n    }\n    ~Locker() {\n        std::println(\"{}：拔钥匙（析构=还资源）\", who_);\n    }",
+      "why": "借写进构造、还写进析构，而析构由编译器担保一定执行 —— 靠对象而不是靠记性。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在 main 里先造一个守卫，再另起一行加一层大括号，在这个更小的作用域里再创建一个守卫对象（名字随你）。",
+      "acceptRegex": ["\\n\\s*\\{[^{}]{0,200}\\w+\\s+\\w+\\s*\\(\\s*\"", "\\w+\\s+\\w+\\s*\\(\\s*\""],
+      "sample": "Locker x(\"外层\");\n{\n    Locker y(\"内层\");\n    Locker z(\"内层二号\");\n}",
+      "why": "多一层大括号就多一个主人：格子合上时里面那几个先还，外层的最后才走 —— 后借的先还。",
+      "coversTask": 1,
+      "score": 30,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "柜主只有一个，不许抄：把拷贝构造写成 = default 的反面 —— 收 const 引用、后面接 = delete; 的那一句声明。",
+      "acceptRegex": ["=\\s*delete\\s*;"],
+      "sample": "Locker(const Locker&) = delete;",
+      "why": "抄了就会两个人守同一块资源，还的时候还两遍；不许抄才是柜子的脾气。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用一行注释写下你看到的还的顺序：内层那几个和外层那个谁先谁后（至少四个字，正则只验你写了注释）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 格子合上时内层二号先还、内层后还，外层的 x 等 main 结束才走",
+      "why": "顺序要靠跑一遍看屏幕；注释内容判不了，这一档只确认你把观察记下来了。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "RAII 的核心：把借写进构造函数、还把写进析构函数，而析构由编译器担保一定执行；智能指针就是这个做法写成库的版本。",
+    "析构在它所在的那对大括号合上的那一刻当场执行；做成全局或静态对象，才会一路拖到 main 之后。",
+    "靠记性的写法里，那条 if 就 return 的出口会漏还；靠对象的写法两条出口都从同一个作用域末端出去，析构守在那儿。",
+    "本机实测的八行是：三声投币连着来，两声拔钥匙在格子合上时倒着走，最后才是外层的拔钥匙。",
+    "名字只是给日志看的，它自己会打扫；真正不许抄的是那块借来的资源，所以拷贝构造要写 = delete。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n#include <utility>\n\nclass Locker {\npublic:\n    explicit Locker(std::string who) : who_(std::move(who)) {\n        std::println(\"{}：投币，柜门开了（构造=借资源）\", who_);\n    }\n    ~Locker() {\n        std::println(\"{}：拔钥匙，柜门锁了（析构=还资源）\", who_);\n    }\n    Locker(const Locker&) = delete;\nprivate:\n    std::string who_;\n};\n\nint main() {\n    Locker x(\"外层\");\n    {\n        Locker y(\"内层\");\n        Locker z(\"内层二号\");\n        std::println(\"  ……内层干活……\");\n    }\n    std::println(\"  ……外层还在……\");\n    return 0;\n}\n// 格子合上时 z 先还、y 后还，外层的 x 等 main 结束才走：后借的先还\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n\nvoid borrow(const std::string& who) { std::println(\"{} 借\", who); }\nvoid give_back(const std::string& who) { std::println(\"{} 还\", who); }\n\nint main() {\n    borrow(\"小明\");\n    give_back(\"小明\");\n    return 0;\n}\n",
+      "#include <print>\n#include <string>\n\nclass Locker {\npublic:\n    Locker(std::string who) { std::println(\"{} 借\", who); }\n    ~Locker() { std::println(\"拔钥匙\"); }\n};\n\nint main() {\n    Locker x(\"小明\");\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\n\nclass  Guard\n{\n  public :\n      Guard ( string  tag ) { std::println(\"借 {}\", tag); }\n      ~ Guard ( ) { std::println(\"还\"); }\n      Guard ( const Guard & ) =  delete ;\n  private :\n      std :: string  tag_;\n};\n\nint  main ( )\n{\n  Guard  out(\"外\");\n  {\n      Guard  in(\"内\");\n      std::println(\"干活\");\n  }\n  return 0;\n}\n// 里层那个先说还，外层的排在后面\n"
+    ]
+  }
+}

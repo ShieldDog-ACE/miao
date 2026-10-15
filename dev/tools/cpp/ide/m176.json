@@ -1,0 +1,74 @@
+{
+  "cid": "m176",
+  "note": "两条任务各拆两条：任务二走容量改 7、开表、打印答案，任务一走倒着走与正着走两条 for 并存加观察记录（buffer）；转移式单独一条扣任务二。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 2 条：把容量改成 7，再按容量开出一张 dp 表，初值全写 0。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*7\\s*;", "std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s*\\w+\\s*\\(\\s*(\\w+\\s*\\+\\s*1|8)\\s*,\\s*0\\s*\\)"],
+      "sample": "int W = 7;\nstd::vector<int> dp(W + 1, 0);",
+      "why": "容量在循环外那一格：改成 7 之后内层自然只走到第 7 格，表要多开一格才装得下下标 7。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "把正解那圈内层写成从大容量往小走：走到这一件物品的重量就停。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*[^;\\n]*;\\s*\\w+\\s*>=\\s*[^;\\n]*;\\s*[^;\\n]*--"],
+      "sample": "for (int j = W; j >= w[i]; --j)",
+      "why": "倒着走时右边的 dp[j - w[i]] 还是上一件物品留下的旧账，这一件至多被装一次 —— 这是 0-1 背包唯一的方向要求。",
+      "score": 15
+    },
+    {
+      "stem": "写出转移那一行：不装留着的旧答案，与腾出这件物品的地方把它装上的新答案，两者取大的；把比大小的工具箱也搬进来。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*algorithm\\s*>", "std\\s*::\\s*max\\s*\\(\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*,\\s*\\w+\\s*\\[\\s*\\w+\\s*-\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\]\\s*\\+"],
+      "sample": "dp[j] = std::max(dp[j], dp[j - w[i]] + v[i]);",
+      "why": "式子左边那格是不装，右边那项是装：dp[j - w[i]] 是留出 w[i] 之后剩下的容量能给的价值，再加这一件自己的价值；少了 include，编译器不认 std::max。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "任务第 1 条：在同一个程序里再写一版内层从小往大走的错版，那一圈 for 从这件物品的重量起、走到容量为止。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*\\w+\\s*\\[[^\\]\\n]*\\]\\s*;\\s*\\w+\\s*<=\\s*[^;\\n]*;\\s*[^;\\n]*\\+\\+"],
+      "sample": "for (int j = w[i]; j <= 8; ++j)  // 正着走：错版",
+      "why": "正着走时 dp[j - w[i]] 可能本轮刚被更新过，等于同一件物品又被装了一次；换一张表来跑它，才能和倒着走的那版对照。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 报出答案：格式串里两个占位坑，逗号后面按顺序给容量和最后一格。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(\\s*\"[^\"\\n]*\\{\\}[^\"\\n]*\\{\\}[^\"\\n]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]"],
+      "sample": "std::println(\"容量 {} 的背包最多装出价值 {}\", W, dp[W]);",
+      "why": "dp 表只有右下角那格才是答案；容量 7 时打出来是 11，正是物品 1 加物品 4。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "两版都跑一遍，用一行注释记下你看到的：正着走那一版最后那格是多少、跟倒着走的差没差。",
+      "acceptRegex": ["//[^\\n]*[0-9][^\\n]*[0-9]", "//[^\\n]{8,}"],
+      "sample": "// 本课这组数据：正着走容量 8 仍是 12，重 3 值 5 容量 6 那组才错成 10",
+      "why": "判的是你真的跑了两版并记下来：记的数对不对这块编辑器核对不了 —— 实测本课这组数据容量 8 和 7 都没变，换个数据就露馅。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "正着走更新 dp[j] 时用的 dp[j - w[i]] 可能已经是本轮装过这件的新值，同一件被偷偷装第二次；倒着走才保证每件至多一次。",
+    "极小反例最能说明机制：一件物品重 3 值 5、容量 6，倒着走答案是 5，改成正着走当场错成 10。",
+    "本课这组数据把内层改成正着走，容量 8 与 7 的答案都没变 —— 判断对错看机制，不能只看一组数据碰巧对。",
+    "dp 初值全 0 表示什么都不装价值 0；填成 -1 反而会沿着转移一路算出负数。",
+    "验证容量 7 是 11 的路数：先把循环外那一个数改掉 → 心算最优组合（物品 2 加物品 4 重 8 装不下，换物品 1 重 2 值 3 加物品 4 重 5 值 8 正好重 7）→ 跑程序核对 dp[7]。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n#include <algorithm>\n\nint main() {\n    std::vector<int> w = {2, 3, 4, 5}, v = {3, 4, 5, 8};\n    int W = 7;\n    std::vector<int> dp(W + 1, 0);\n    for (int i = 0; i < 4; ++i)\n        for (int j = W; j >= w[i]; --j)\n            dp[j] = std::max(dp[j], dp[j - w[i]] + v[i]);\n    std::println(\"容量 {} 的背包最多装出价值 {}\", W, dp[W]);\n    std::vector<int> bad(8, 0);\n    for (int i = 0; i < 4; ++i)\n        for (int j = w[i]; j <= 7; ++j)\n            bad[j] = std::max(bad[j], bad[j - w[i]] + v[i]);\n    std::println(\"正着走那一版最后一格 = {}\", bad[7]);\n    return 0;\n}\n// 容量 7 正解 11，正着走那版也是 11：这组数据骗不出错，重 3 值 5 容量 6 才错成 10\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> w = {2, 3, 4, 5}, v = {3, 4, 5, 8};\n    int W = 8;\n    std::vector<int> dp(W + 1, 0);\n    for (int i = 0; i < 4; ++i)\n        for (int j = w[i]; j <= W; ++j)\n            dp[j] = dp[j] + dp[j - w[i]];\n    std::println(\"{}\", dp[W]);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\n#  include < algorithm >\nint  main ( )\n{\n  std :: vector < int >  wt = { 2 , 3 , 4 , 5 } ,  val = { 3 , 4 , 5 , 8 } ;\n  int  cap = 7 ;\n  std :: vector < int >  best ( cap + 1 , 0 ) ;\n  for ( int  i  =  0 ;  i  <  4 ;  ++ i )\n      for ( int  j  =  cap ;  j  >=  wt [ i ] ;  -- j )\n          best [ j ] = std :: max ( best [ j ] , best [ j - wt [ i ] ] + val [ i ] ) ;\n  std :: println ( \" 容量 {} 最多装 {} \", cap , best [ cap ] ) ;\n  std :: vector < int >  wrong ( 8 , 0 ) ;\n  for ( int  i  =  0 ;  i  <  4 ;  ++ i )\n      for ( int  j  =  wt [ i ] ;  j  <=  7 ;  ++ j )\n          wrong [ j ] = std :: max ( wrong [ j ] , wrong [ j - wt [ i ] ] + val [ i ] ) ;\n  std :: println ( \" 正着走那版 = {} \" , wrong [ 7 ] ) ;\n  // 两版都是 11 ， 这组数据看不出差别\n  return 0 ;\n}\n"
+    ]
+  }
+}

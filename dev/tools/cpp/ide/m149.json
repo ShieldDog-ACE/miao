@@ -1,0 +1,75 @@
+{
+  "cid": "m149",
+  "note": "任务是把两个 12 月 31 日各算一次看差在哪：查表、闰年判据、走到上个月、起步与累加、二月补一天、两次打印各一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把十二个月的天数抄成一张表：一个 int 数组，初值十二个数，二月那一格写 28。",
+      "acceptRegex": ["int\\s+\\w+\\s*\\[\\s*\\]\\s*=\\s*\\{\\s*31\\s*,\\s*28\\s*,"],
+      "sample": "int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};",
+      "why": "十二个数摆到明处就能被肉眼数一遍：抄完加总是 365，出错当场能验；会变的全在表里，逻辑只剩累加。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "把闰年那句判据写成三段的 bool：能被 4 整除、不被 100 整除、还能被 400 整除。",
+      "acceptRegex": ["%\\s*4\\s*==\\s*0", "%\\s*100\\s*!=\\s*0", "%\\s*400\\s*==\\s*0"],
+      "sample": "bool leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;",
+      "why": "口诀三句一句不能少：四年一闰，百年不闰，四百年再闰；只写第一段，实测 1900-3-1 会算成 61 天。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "开一个从下标 0 起、只走到上个月的循环：条件里要带那个减 1。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*0\\s*;\\s*\\w+\\s*<\\s*\\w+\\s*-\\s*1"],
+      "sample": "for (int m = 0; m < month - 1; ++m) {",
+      "why": "本月没过完，所以不加本月；下标从 0 起而口头月份从 1 起，两套编号差 1。少写这个减 1，实测三月 1 日从 61 天变成 92 天。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "总数从当天起步，循环里把表上那一格加进来：一句从某个变量取初值的 int，一句对方括号里那一格的累加。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*\\w+\\s*;", "\\w+\\s*\\+=\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]"],
+      "sample": "int total = day;\ntotal += days[m];",
+      "why": "起点写成 0 而不是当天，实测三月 1 日少算整整一天；问 1 月 5 日时循环一圈都不转，total 就是 5。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "二月逢闰年补一天：那句 if 比的那一格是 1，条件里带上闰年那个 bool，体里给总数加 1。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*==\\s*1\\s*&&\\s*\\w+\\s*\\)\\s*\\w+\\s*\\+=\\s*1\\s*;"],
+      "sample": "if (m == 1 && leap) total += 1;",
+      "why": "闰日只在二月那一格补：问十二月时循环必然经过 m == 1，所以 2028 年比 2026 年多出这 1 天。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：用 std::println 把 2026 年 12 月 31 日和 2028 年 12 月 31 日各算一次打出来，两个数并排看得见。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*\\(\\s*2026\\s*,\\s*12\\s*,\\s*31\\s*\\)", "std\\s*::\\s*println\\s*\\([^;]*\\(\\s*2028\\s*,\\s*12\\s*,\\s*31\\s*\\)"],
+      "sample": "std::println(\"2026-12-31 = {}，2028-12-31 = {}\", dayOfYear(2026, 12, 31), dayOfYear(2028, 12, 31));",
+      "why": "本机实测是 365 和 366：前十一月那张表加总 334，平年 334 加 31，闰年多补那 1 天成 335 加 31。",
+      "coversTask": 1,
+      "score": 20
+    }
+  ],
+  "notes": [
+    "查表的价值在分工：会变的全在表里，逻辑只剩累加，排查面被压成数表和特判两处。",
+    "十二个数抄完就加一遍是当场验收：平年应为 365，不等就知道表抄错了。",
+    "days 的下标从 0 起，一月住在 days[0]，而口头说的月份从 1 起，两套编号差 1。",
+    "把闰日特判挪到循环外写成 if (leap && month > 2) total += 1;，实跑每个日期都一致，但月份比较得你自己写对，别一处一半。",
+    "边界的错不一定只差一格：多算整个三月差的是 31 而不是 1。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint dayOfYear(int year, int month, int day) {\n    int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};\n    bool leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;\n    int total = day;\n    for (int m = 0; m < month - 1; ++m) {\n        total += days[m];\n        if (m == 1 && leap) total += 1;\n    }\n    return total;\n}\n\nint main() {\n    std::println(\"2026-12-31 = {}，2028-12-31 = {}\", dayOfYear(2026, 12, 31), dayOfYear(2028, 12, 31));\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};\nint main() {\n    bool leap = (2028 % 4 == 0 && 2028 % 100 != 0) || 2028 % 400 == 0;\n    std::println(\"{} {}\", leap, days[1]);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};\n    int month = 12, day = 31;\n    int total = day;\n    for (int m = 0; m < month; ++m) total += days[m];\n    std::println(\"{}\", total);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\nint  ordinal ( int  y , int  mo , int  dd )\n{\n  int  md [ ]  =  { 31 , 28 , 31 , 30 , 31 , 30 , 31 , 31 , 30 , 31 , 30 , 31 } ;\n  bool  run  =  ( y % 4 == 0 && y % 100 != 0 ) || y % 400 == 0 ;\n  int  sum  =  dd ;\n  for ( int  k  =  0 ;  k  <  mo - 1 ;  ++ k )\n  {\n    sum  +=  md [ k ] ;\n    if ( k == 1 && run )  sum  +=  1 ;\n  }\n  return  sum ;\n}\nint  main ( )\n{\n  std :: println ( \" 先看 2026 年 {}\" , ordinal ( 2026 , 12 , 31 ) ) ;\n  std :: println ( \" 再看 2028 年 {}\" , ordinal ( 2028 , 12 , 31 ) ) ;\n}\n"
+    ]
+  }
+}

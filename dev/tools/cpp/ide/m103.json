@@ -1,0 +1,80 @@
+{
+  "cid": "m103",
+  "note": "优先队列改单编辑器：任务 1（合并石子）拆成「三参数小顶堆 + while size>1 取两次 top + 代价累加并 push 回去」，任务 2（实时前三名）拆成「push 后 size>3 就 pop」和「一路弹到空」。默认大顶堆、第 k 小只弹 k-1 次这些概念题进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把队列工具箱（#include <queue>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*queue\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <queue>\n\nint main() {",
+      "why": "缺 #include <queue> 就没人认识 std::priority_queue；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：开一只小顶堆 —— 三个尖括号参数一个都不省（元素类型、底层容器 vector、比较规则 greater），并把装 greater 的 #include <functional> 也搬进来。",
+      "acceptRegex": ["priority_queue\\s*<\\s*int\\s*,\\s*(std::)?vector\\s*<\\s*int\\s*>\\s*,\\s*(std::)?greater\\s*<\\s*int\\s*>\\s*>", "#\\s*include\\s*<\\s*functional\\s*>"],
+      "sample": "#include <functional>\nstd::priority_queue<int, std::vector<int>, std::greater<int>> need;",
+      "why": "不写规则默认是 less（大的先走）；换成 greater 才是小的先出来，而 greater 住在 functional 里，第二个参数不能空着不填。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：写一句 while，条件是堆里还剩两个以上（size 大于 1），圈里连取两次 top、各 pop 一次，把当前最轻的两堆拿出来。",
+      "acceptRegex": ["while\\s*\\(\\s*\\w+\\.size\\s*\\(\\s*\\)\\s*>\\s*1\\s*\\)", "\\w+\\.top\\s*\\(\\s*\\)", "\\w+\\.pop\\s*\\(\\s*\\)"],
+      "sample": "while (need.size() > 1) {\n    int a = need.top(); need.pop();\n    int b = need.top(); need.pop();",
+      "why": "每次都要当前最轻的两堆，这正是小顶堆的活；pop 返回 void，想拿值得先 top。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：把这两堆之和累加进一个总数变量，再把合成后的那一堆 push 回堆里接着比。",
+      "acceptRegex": ["\\w+\\s*\\+=\\s*\\w+\\s*\\+\\s*\\w+\\s*;", "\\w+\\.push\\s*\\(\\s*\\w+\\s*\\+\\s*\\w+\\s*\\)"],
+      "sample": "total += a + b;\nneed.push(a + b);",
+      "why": "合完的这一堆可能还是最轻的，得放回堆里；代价是每次两数之和，一路加到只剩一堆为止。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：维护实时前三名 —— 用一条 for 让每个分数先 push 占位，再用一句 if 判「size 大于 3」就 pop，挤掉这仨里垫底的那个。",
+      "acceptRegex": ["\\w+\\.push\\s*\\(\\s*\\w+\\s*\\)", "if\\s*\\(\\s*\\w+\\.size\\s*\\(\\s*\\)\\s*>\\s*3\\s*\\)", "\\w+\\.pop\\s*\\(\\s*\\)"],
+      "sample": "for (int score : {88, 95, 72, 91, 60, 83}) {\n    top3.push(score);\n    if (top3.size() > 3) top3.pop();\n}",
+      "why": "只养三个格子的小顶堆：堆顶永远是这仨里最小的，一超员就先把它请出去，全程不用排全表。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：写一句 while（条件是堆不空），把留下的那几个分数按 top 的顺序一个个打出来。",
+      "acceptRegex": ["while\\s*\\(\\s*!\\s*\\w+\\.empty\\s*\\(\\s*\\)\\s*\\)", "\\w+\\.top\\s*\\(\\s*\\)"],
+      "sample": "while (!top3.empty()) { std::print(\"{} \", top3.top()); top3.pop(); }",
+      "why": "小顶堆弹出是从小到大的：前三名打出来就是 88 91 95；堆只保证父亲不小于孩子，整体并没排好序。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "只写 std::priority_queue<int> 不填后两个参数就是大顶堆，top 给出这批数里最大的那一个。",
+    "要最小的先出来，就把规则写成 greater：三个模板参数按位置一个都不能空，还得补上 functional 头文件。",
+    "堆里只有父亲不小于孩子这一条规矩，整体并不是排好序的，也不能按下标读。",
+    "pop 返回 void，想拿值要先 top；空堆上 top 或 pop 同样是未定义行为。",
+    "想知道第 k 小，在小顶堆里弹 k 减 1 次再看一次 top 就够，剩下的元素根本没被排过。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <queue>\n#include <vector>\n#include <functional>\n\nint merge_cost() {\n    std::priority_queue<int, std::vector<int>, std::greater<int>> need;\n    for (int v : {1, 2, 3, 4}) need.push(v);\n    int total = 0;\n    while (need.size() > 1) {\n        int a = need.top(); need.pop();\n        int b = need.top(); need.pop();\n        total += a + b;\n        std::println(\"本次代价 {}\", a + b);\n        need.push(a + b);\n    }\n    return total;\n}\n\nint main() {\n    std::println(\"总代价 {}\", merge_cost());\n    std::priority_queue<int, std::vector<int>, std::greater<int>> top3;\n    for (int score : {88, 95, 72, 91, 60, 83}) {\n        top3.push(score);\n        if (top3.size() > 3) top3.pop();\n    }\n    std::print(\"前三名从小到大弹出: \");\n    while (!top3.empty()) { std::print(\"{} \", top3.top()); top3.pop(); }\n    std::println(\"\");\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <queue>\n\nint main() {\n    std::priority_queue<int> big;\n    big.push(5);\n    std::println(\"{}\", big.top());\n    return 0;\n}\n",
+      "#include <print>\n#include <queue>\n#include <vector>\n\nint main() {\n    std::priority_queue<int> need;\n    for (int v : {1, 2, 3, 4}) need.push(v);\n    while (!need.empty()) { std::print(\"{} \", need.top()); need.pop(); }\n    std::println(\"\");\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < queue >\n#  include < print >\n#  include < vector >\n#  include < functional >\n\nint  main ( )\n{\n  std :: priority_queue < int , vector < int > , greater < int > >  heap ;\n  for (int v : {1, 2, 3, 4}) heap.push(v);\n  int sum = 0;\n  while ( heap.size ( ) > 1 ) {\n      int a = heap.top(); heap.pop();\n      int b = heap.top(); heap.pop();\n      sum += a + b;\n      heap.push(a + b);\n  }\n  std :: println(\"总共 {}\", sum);\n  std::priority_queue<int, std::vector<int>, std::greater<int>> best;\n  for (int x : {88, 95, 72, 91}) {\n      best.push(x);\n      if (best.size() > 3) best.pop();\n  }\n  while ( ! best.empty ( ) ) { std::print(\"{} \", best.top()); best.pop(); }\n  std::println(\"\");\n}\n"
+    ]
+  }
+}

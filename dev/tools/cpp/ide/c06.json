@@ -1,0 +1,67 @@
+{
+  "cid": "c06",
+  "note": "const 改单编辑器：任务 1 是「上一行 const 声明 + 那行非法写入（可以留在注释里，因为任务要求注释回去）+ 旁边一行报错记录」，任务 2 是「const 常量 15 + 365 乘它的打印」，旧七题知识点收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "先锁上一只盒子：写一行 const 的 int 常量，名字全大写，值当场给出来。",
+      "acceptRegex": ["const\\s+int\\s+[A-Z][A-Z0-9_]*\\s*=\\s*\\d+\\s*;"],
+      "sample": "const int MAX_SCORE = 750;",
+      "why": "锁上的盒子必须当场交货：const 没有初值编译器不放行；名字全大写是本项目给读代码的人的信号。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务 1 那一行：把「往锁上的盒子再写一次」那个赋值写出来（值给 800），并在它旁边留一行至少四个字的注释记下报错里的说法。",
+      "acceptRegex": ["[A-Z][A-Z0-9_]{2,}\\s*=\\s*800\\s*;", "//[^\\n]{4,}"],
+      "sample": "// MAX_SCORE = 800;   // 报错说 expression must be a modifiable lvalue",
+      "why": "往只读的盒子里写，编译期就被拦下；任务要求看完报错再注释回去，所以这一行落在注释里也算 —— 正则只能验你写了注释，抄得对不对要复盘核对。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务 2：声明你选的常量「每天背单词数」，const 的 int，值给 15，名字全大写。",
+      "acceptRegex": ["const\\s+int\\s+[A-Z][A-Z0-9_]*\\s*=\\s*15\\s*;"],
+      "sample": "const int DAILY_WORDS = 15;",
+      "why": "一个值整个程序都不该变，就锁起来给它起名字；以后要改每天 20 个，只改这一处。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 打出一年背多少个：让 365 乘上你那个常量，别把 15 又光秃秃写一遍。",
+      "acceptRegex": ["365\\s*\\*|\\*\\s*365", "std::println\\s*\\("],
+      "sample": "std::println(\"一年能背 {} 个单词\", 365 * DAILY_WORDS);",
+      "why": "常量只是个名字，读的时候跟直接写数字一样参与运算：365 乘 15 等于 5475。",
+      "coversTask": 2,
+      "score": 25
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "score": 20
+    }
+  ],
+  "notes": [
+    "const 的含义就是这只盒子上生只准赋值一次；往只读的盒子里写，错误在编译期就判定，不会等到运行。",
+    "const 变量声明时必须初始化：没有初值的锁盒子，C++ 不允许存在。",
+    "常量名按习惯全大写加下划线，比如 DAILY_WORDS、MAX_SCORE；编译器不强制，但那是给人看的信号。",
+    "「魔法数字」是直接写在代码里、没人知道含义的数字；提成具名常量后，满分变了只需要改一处。",
+    "const 不会让盒子占的字节数变少；该不该锁，看的是这个值在整个程序里会不会变。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    const int MAX_SCORE = 750;\n    // MAX_SCORE = 800;   // 报错说 expression must be a modifiable lvalue\n    // const int DAYS;    // 也报错：const 没有初值\n\n    const int DAILY_WORDS = 15;\n    std::println(\"一年能背 {} 个单词\", 365 * DAILY_WORDS);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int daily_words = 15;\n    std::println(\"{}\", daily_words);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    const int MAX_SCORE = 750;\n    MAX_SCORE = 800;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include   < print >\nint  main ( )\n{\n  const  int   LIMIT = 750;\n  LIMIT = 800;      // 编译器说不让往只读盒子里写\n  const int WORDS_PER_DAY = 15;\n  std::println( \"{}\", WORDS_PER_DAY * 365 );\n}\n"
+    ]
+  }
+}

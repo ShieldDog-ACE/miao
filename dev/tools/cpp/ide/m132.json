@@ -1,0 +1,67 @@
+{
+  "cid": "m132",
+  "note": "选型课摊不成选择题：改成把三个盒子真摆出来、用 value_or 打一次，任务那条判断写成签名加注释。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一格 optional：写一个 std::optional 盒子，里面装一个可能有、也可能压根没有的值。",
+      "acceptRegex": ["\\bstd\\s*::\\s*optional\\s*<\\s*[^>]+\\s*>\\s*[A-Za-z_]\\w*\\s*[={]"],
+      "sample": "std::optional<char> grade = 'A';",
+      "why": "optional 管的就是「可能压根没有这个值」这一种不普通。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "开一格 variant：尖括号里给出两种类型，盒子当前装其中一种。",
+      "acceptRegex": ["\\bstd\\s*::\\s*variant\\s*<[^>]*,[^>]*>\\s*[A-Za-z_]\\w*\\s*[={]"],
+      "sample": "std::variant<int, std::string> who = 7;",
+      "why": "值一定在、只是类型在两样里二选一，这才是 variant；只写一种类型等于没选型。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "开一格 expected：尖括号里一头是成功的类型，另一头是失败原因的类型。",
+      "acceptRegex": ["\\bstd\\s*::\\s*expected\\s*<[^>]*,[^>]*>\\s*[A-Za-z_]\\w*\\s*[={]"],
+      "sample": "std::expected<int, std::string> r = 99;",
+      "why": "expected 同时握着成功和失败两半，失败那一半专门用来装原因。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一条 std::println 打 optional 或 expected 那一格，取值要走 value_or 兜底。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*\\.\\s*value_or\\s*\\("],
+      "sample": "std::println(\"expected 里: {}\", r.value_or(-1));",
+      "why": "value_or 是 optional 和 expected 的兜底：没值或失败时照样打出东西，不至于当场崩。",
+      "score": 20
+    },
+    {
+      "stem": "任务第 1 条：挑一个你写过的函数，把它改成返回三兄弟中的一格（写出返回类型加函数名和括号），在旁边用一行注释说清为什么是它。",
+      "acceptRegex": ["\\bstd\\s*::\\s*(?:optional|variant|expected)\\s*<[^>]*>\\s*[A-Za-z_]\\w*\\s*\\(", "//[^\\n]{4,}"],
+      "sample": "std::expected<int, std::string> safe_divide(int a, int b);   // 除数是 0 要把原因交给调用者，所以选 expected",
+      "why": "先问两句：没有和失败是不是一回事，值会不会有时是数有时是字；这一条判的是签名里真写了那个盒子，为什么落在注释里，注释的内容这块编辑器判不动。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "只需要区分有还是没有、不追问原因，是 optional 的活；硬用 expected 要凑一个没意义的失败类型。",
+    "值一定在、只是类型在两样里二选一，是 variant 的定义；optional 管有没有，expected 管成不成。",
+    "既要结果又要失败原因，正是 expected 的两半；老式返回码把原因压成一个数，容易和正常的数撞车。",
+    "value_or 是 optional 和 expected 都有的兜底，holds_alternative 是 variant 那一套里的，接口不能串门。",
+    "选型口诀：可能没有用 optional，类型几选一用 variant，成败还要带原因用 expected。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <optional>\n#include <variant>\n#include <expected>\n#include <string>\n\nstd::expected<int, std::string> safe_divide(int a, int b);   // 除数是 0 要把原因交给调用者，所以选 expected\n\nint main() {\n    std::optional<char> grade = 'A';\n    std::variant<int, std::string> who = 7;\n    std::expected<int, std::string> r = 99;\n    std::println(\"optional 里: {}\", grade.value_or('?'));\n    std::println(\"variant 现在是 int 吗: {}\", std::holds_alternative<int>(who));\n    std::println(\"expected 里: {}\", r.value_or(-1));\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int grade = 'A';\n    std::println(\"{}\", grade);\n}\n",
+      "#include <print>\n#include <optional>\n#include <variant>\n#include <expected>\n#include <string>\n\nint main() {\n    std::optional<char> grade = 'A';\n    std::optional<int, std::string> who = 7;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < optional >\n#  include < variant >\n#  include < expected >\n#  include < string >\n\n// 这格可能是数也可能是字，值一定在，所以是 variant\nstd :: variant < int , std :: string > cell_of ( const std :: string & s ) ;\n\nstd :: expected < int , std :: string > divide ( int x , int y ) ;   // 除 0 要交代原因\n\nstd :: optional < char > mark = 'B' ;\nint  main ( )\n{\n  std :: variant < int , std :: string > id = 7 ;\n  std :: expected < int , std :: string > ans = 99 ;\n  std :: println ( \"算出来 {}\" , ans . value_or ( - 1 ) ) ;\n}\n"
+    ]
+  }
+}

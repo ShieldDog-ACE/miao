@@ -1,0 +1,95 @@
+{
+  "cid": "m181",
+  "note": "手写迷你 vector 这课：条件按骨架四本账、没满那条路、2 倍搬家、搬到 100 件打三本账、再加每次只多买 1 格的坏版本；任务里的「差多少倍」只能收进 buffer 注释。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写出 struct MiniVec 的骨架：盒子 d 用 unique_ptr 管一段 int 数组，再配上 n、cap、moves 三本 int 账，都从 0 起。",
+      "acceptRegex": [
+        "struct\\s+MiniVec",
+        "unique_ptr\\s*<\\s*int\\s*\\[\\s*\\]\\s*>\\s+d\\s*;",
+        "\\bint\\s+n\\s*=\\s*0",
+        "\\bcap\\s*=\\s*0",
+        "\\bmoves\\s*=\\s*0"
+      ],
+      "sample": "std::unique_ptr<int[]> d;\nint n = 0, cap = 0, moves = 0;",
+      "why": "三本库存账 d、n、cap 加一本流水账 moves，push 的每条分支都在维护它们；缺哪本都算不清这笔账。",
+      "score": 15
+    },
+    {
+      "stem": "把 push 里格子没满那条路写出来：判断 n 小于 cap 就放在第 n 格、n 往后挪一格，然后直接返回。",
+      "acceptRegex": [
+        "if\\s*\\(\\s*n\\s*<\\s*cap\\s*\\)",
+        "d\\s*\\[\\s*n\\s*\\+\\+\\s*\\]",
+        "\\breturn\\b"
+      ],
+      "sample": "if (n < cap) { d[n++] = v; return; }",
+      "why": "n 是已放件数、cap 是格子数，n 小于 cap 才有下一格可放；没满就搬家是白干活。",
+      "score": 15
+    },
+    {
+      "stem": "写满了那条路：按现在容量的 2 倍造一个新盒，再把旧东西一件一件搬过去。",
+      "acceptRegex": [
+        "make_unique\\s*<\\s*int\\s*\\[\\s*\\]\\s*>\\s*\\(",
+        "cap\\s*\\*\\s*2",
+        "\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*=\\s*d\\s*\\[\\s*\\w+\\s*\\]"
+      ],
+      "sample": "auto nd = std::make_unique<int[]>(cap ? cap * 2 : 2);\nfor (int i = 0; i < n; ++i) nd[i] = d[i];",
+      "why": "cap 为 0 时 cap * 2 还是 0，起步那两格要靠三元表达式给；搬家必须逐件搬，抄漏一件就丢了数据。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把连放 6 件改成连放 100 件，跑完用一条 std::println 把件数、容量、累计搬运三本账一起打出来。",
+      "acceptRegex": [
+        "<=\\s*100\\s*;",
+        "std::println\\s*\\([^;]*\\.moves\\s*\\)"
+      ],
+      "sample": "for (int i = 1; i <= 100; ++i) v.push(i * 10);\nstd::println(\"装了 {} 个，容量 {} 格，搬运 {} 次\", v.n, v.cap, v.moves);",
+      "why": "装到 100 件才看得见策略的差距：2 倍扩容这时累计搬运 126 件，容量停在 128 格。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把坏版本也写成能跑的形：新盒长度只比现在多 1 格，cap 也按多买 1 格来记，其余照旧。",
+      "acceptRegex": [
+        "make_unique\\s*<\\s*int\\s*\\[\\s*\\]\\s*>\\s*\\(\\s*cap\\s*\\+\\s*1\\s*\\)",
+        "cap\\s*=\\s*cap\\s*\\+\\s*1"
+      ],
+      "sample": "auto nd = std::make_unique<int[]>(cap + 1);\nmoves += n; d = std::move(nd); cap = cap + 1;",
+      "why": "只多买 1 格就意味着每放一件都要搬一次家，这份代码就是让账本自己说出来差多少。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "两版各跑到 100 件之后，在旁边用一行注释写下你看到的搬运件数和大概倍数（至少四个字）。",
+      "acceptRegex": [
+        "//[^\\n]{4,}"
+      ],
+      "sample": "// 坏版本搬 4950 件，2 倍版本搬 126 件，差约 39 倍",
+      "why": "这一步只判你确实留了一行注释，注释里写的倍数这块编辑器判不了；本机实测是 4950 对 126。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "三本库存账 d、n、cap 加一本流水账 moves，push 的每条分支都在维护它们。",
+    "n 是已放件数、cap 是格子数，n 小于 cap 才有下一格可放；cap 从 0 起步时第一条路走不通，自动落到搬家分支。",
+    "2 倍扩容装到 100 件，搬家发生在放第 1、3、5、9、17、33、65 件时，各搬 0、2、4、8、16、32、64 件，合计 126 件。",
+    "每次只多买 1 格时装 100 件累计搬运 0+1+2+…+99 = 4950 件，约是 2 倍策略的 39 倍。",
+    "搬完家忘了把新来的那件放进去，东西会悄悄丢；moves 记的是累计搬运件数，不是容量。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <memory>\n#include <utility>\n\nstruct MiniVec {\n    std::unique_ptr<int[]> d;\n    int n = 0, cap = 0, moves = 0;\n    void push(int v) {\n        if (n < cap) { d[n++] = v; return; }\n        auto nd = std::make_unique<int[]>(cap ? cap * 2 : 2);\n        for (int i = 0; i < n; ++i) nd[i] = d[i];\n        moves += n; d = std::move(nd); cap = cap ? cap * 2 : 2;\n        d[n++] = v;\n    }\n};\n\nstruct SlowVec {\n    std::unique_ptr<int[]> d;\n    int n = 0, cap = 0, moves = 0;\n    void push(int v) {\n        if (n < cap) { d[n++] = v; return; }\n        auto nd = std::make_unique<int[]>(cap + 1);\n        for (int i = 0; i < n; ++i) nd[i] = d[i];\n        moves += n; d = std::move(nd); cap = cap + 1;\n        d[n++] = v;\n    }\n};\n\nint main() {\n    MiniVec v;\n    SlowVec s;\n    for (int i = 1; i <= 100; ++i) {\n        v.push(i * 10);\n        s.push(i * 10);\n    }\n    std::println(\"装了 {} 个，容量 {} 格，累计搬运 {} 次\", v.n, v.cap, v.moves);\n    std::println(\"坏版本装了 {} 个，容量 {} 格，累计搬运 {} 次\", s.n, s.cap, s.moves);\n    // 坏版本搬 4950 件，2 倍版本搬 126 件，差约 39 倍\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nstruct MiniVec {\n    int n = 0, cap = 0, moves = 0;\n};\nint main() { std::println(\"{}\", 1); return 0; }\n",
+      "#include <print>\n#include <memory>\n#include <utility>\n\nstruct MiniVec {\n    std::unique_ptr<int[]> d;\n    int n = 0, cap = 0, moves = 0;\n    void push(int v) {\n        if (n < cap) { d[n++] = v; return; }\n    }\n};\n\nint main() {\n    MiniVec v;\n    for (int i = 1; i <= 6; ++i) v.push(i);\n    std::println(\"{}\", v.n);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\n# include <memory>\n# include <utility>\n\nstruct MiniVec\n{\n  std::unique_ptr<int [ ] > d;\n  int n = 0; int cap = 0; int moves = 0;\n  void push ( int v )\n  {\n    if ( n < cap ) { d[n ++] = v; return; }\n    auto fresh = std::make_unique<int[]>(cap ? cap*2 : 2);\n    for (int k = 0; k < n; ++k) fresh[k] = d[k];\n    moves += n; d = std::move(fresh); cap = cap ? 2*cap : 2;\n    d[n++] = v;\n  }\n};\n\nstruct AddOneVec\n{\n  std::unique_ptr<int[]> d;\n  int n = 0, cap = 0, moves = 0;\n  void push (int v)\n  {\n    if (n < cap) { d[n++] = v; return; }\n    auto fresh = std::make_unique<int[]>(cap + 1);\n    for (int k = 0; k < n; ++k) fresh[k] = d[k];\n    moves += n; d = std::move(fresh);\n    cap = cap + 1;\n    d[n++] = v;\n  }\n};\n\nint main ()\n{\n  MiniVec v; AddOneVec w;\n  for (int i = 1; i <= 100; i ++) { v.push(i); w.push(i); }\n  std::println(\"快 {} 格 {} 搬 {}\", v.n, v.cap, v.moves);\n  std::println(\"慢 {} 格 {} 搬 {}\", w.n, w.cap, w.moves);\n  // 搬运次数 4950 比 126，大约 39 倍\n  return 0;\n}\n"
+    ]
+  }
+}

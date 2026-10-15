@@ -1,0 +1,75 @@
+{
+  "cid": "c10",
+  "note": "装不下的大数改单编辑器：任务 1 拆成「int 硬装 4000 亿 + 打印那只盒子 + 旁边一行注释记怪数」，任务 2 拆成「int 装 90 亿 + long long 带 LL 装同一个数 + sizeof 探差距」。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务 1 那一改：把一个 int 盒子的初值直接写成 400000000000（别加 LL），硬塞给它。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*400000000000\\s*;"],
+      "sample": "int broken = 400000000000;",
+      "why": "类型对得上（都是整数），超出的只是数值：编译器通常只警告不拦，数从天花板绕回地面。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把这只装爆的盒子原样打出来，看看打出什么鬼数字。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"本应 400000000000，实际打出: {}\", broken);",
+      "why": "程序照跑照错，常见机器上打出 568041472 —— 这就是「不报错的错误」最阴的地方。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "在这一行旁边留一行注释（至少四个字），记下屏幕上那个实际打出来的数。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 打出来是 568041472，不是 400000000000",
+      "why": "正则只能验你写了注释，抄下来的数对不对要复盘核对 —— 看输出这一步这块编辑器判不动。",
+      "coversTask": 1,
+      "score": 10,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务 2 的第一半：用 int 装 90 亿 —— 写一行 int 声明，右边是 9000000000，不带后缀。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*9000000000\\s*;"],
+      "sample": "int bad = 9000000000;",
+      "why": "int 的正数上限大约在 21 亿（2147483647）：90 亿早就翻过天花板，绕回来的数很多机器上是 410065408。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "任务 2 的第二半：同一个数给 long long 作对照 —— 写一行 long long 声明，数字尾巴上带上 LL。",
+      "acceptRegex": ["long\\s+long\\s+\\w+\\s*=\\s*9000000000\\s*LL\\s*;"],
+      "sample": "long long big = 9000000000LL;",
+      "why": "不写后缀时类型由编译器先猜；写了 LL，这个数从一开始就住在大盒子里，90 亿轻松装下。",
+      "coversTask": 2,
+      "score": 25
+    },
+    {
+      "stem": "用一条 std::println 把 sizeof 打出来，看清两只盒子的字节数差距。",
+      "acceptRegex": ["std::println\\s*\\([^)]*sizeof\\s*\\("],
+      "sample": "std::println(\"long long 占 {} 字节\", sizeof(long long));",
+      "why": "int 是 4 字节、long long 是 8 字节 —— 差距就是「21 亿」和「92 亿亿」的区别。",
+      "score": 10
+    }
+  ],
+  "notes": [
+    "装爆之后程序不报错：类型匹配、只是值超范围，编译器一般只给警告，盒子多大它替你决定不了。",
+    "第 3 课那条「类型对不上就拦下」管的是类型，本课是数值超出，两道关卡不是一回事。",
+    "int 的正数上限大约在 21 亿；从 1970 年元旦算起的秒级时间戳早已超过它，那种量就该用 long long。",
+    "long long 也会溢出：阶乘、指数增长照样爆，「想装多大就多大」是错觉。",
+    "两个 int 相乘先按 int 算，乘积超出照样绕回来；把一边写成 100000LL，才按 long long 算。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int broken = 400000000000;   // 打出来是 568041472，不是 400000000000\n    std::println(\"本应 400000000000，实际打出: {}\", broken);\n\n    int bad = 9000000000;\n    long long big = 9000000000LL;\n    std::println(\"int      : {}\", bad);\n    std::println(\"long long: {}\", big);\n\n    std::println(\"int 占 {} 字节\", sizeof(int));\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    long long big = 400000000000LL;\n    std::println(\"{}\", big);\n    return 0;\n}\n",
+      "int x = 100;\nstd::println(\"{}\", x);\n"
+    ],
+    "loose": [
+      "#  include   < print >\nint  main ( )\n{\n  int  x = 400000000000;   // 屏幕上是个 568041472 这样的怪数\n  std::println( \"{}\", x );\n  int  y = 9000000000;\n  long  long   z = 9000000000 LL;\n  std::println( \"{}\",  y );\n  std::println( \"{}\", sizeof( int ) );\n}\n"
+    ]
+  }
+}

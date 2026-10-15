@@ -1,0 +1,80 @@
+{
+  "cid": "m114",
+  "note": "const 成员函数改单编辑器：源稿真实任务只有 1 条（旧卷那 7 道题挂着 1 号，别处无虚号）。拆成「带 const 的只读方法 + 不带 const 的改值方法 + 真把 done_ = 0 那一行塞进 const 方法 + const 引用的只读函数」，报错那个词按规矩五收进 buffer 注释档；位置、承诺兑现时机这些进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱（#include <print>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "类定义写在 main 外面；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "写一个类，里面有一个只读的 int 方法：const 挂在参数表后面，像 int remaining() const。",
+      "acceptRegex": ["class\\s+\\w+", "int\\s+\\w+\\s*\\(\\s*\\)\\s*const"],
+      "sample": "class Score {\npublic:\n    int remaining() const { return total_ - done_; }",
+      "why": "位置不同管的东西不同：const 只有挂在参数表后面才修饰这个方法；写在返回值前面一样合法，却什么也没承诺。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "再开一个不带 const 的方法：收一个 int 的 void 函数，函数体里用 += 改那个成员。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*int\\s+\\w+\\s*\\)\\s*\\{", "\\w+_\\s*\\+="],
+      "sample": "void add(int n) { done_ += n; }",
+      "why": "它要写 done_，挂了 const 反而编译不过；要不要挂只看这个函数动不动成员。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在那个带 const 的方法里手滑一行 —— 直接给成员赋值 0（done_ = 0; 这样一句），就是要编译器当场拦你。",
+      "acceptRegex": ["[\\n;]\\s*\\w+_\\s*=\\s*0\\s*;"],
+      "sample": "int remaining() const {\n    done_ = 0;\n    return total_ - done_;\n}",
+      "why": "这个方法把自己签成了只读，只读的方法里不能写成员；同样的赋值挪进不带 const 的 add 里立刻合法。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：在旁边用一行注释抄下报错里那个词（read-only object，至少四个字），确认之后把那行删掉再说。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 报错说 assignment of member in read-only object：拦你的是参数表后面那个 const",
+      "why": "正则只能验你写了注释，抄得对不对判不了 —— 这一处是这块编辑器判不动的部分。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把只读这件事再做一层：写一个函数，参数是那个类的 const 引用，里面只用带 const 的方法。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*const\\s+\\w+\\s*&\\s*\\w+\\s*\\)"],
+      "sample": "void report(const Score& s) {\n    std::println(\"还剩 {} 个\", s.remaining());\n}",
+      "why": "交出去的是只读对象，不带 const 的方法一个也敲不开；所以 s.add(1) 那一行要先删掉才过得去。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "const 写在参数表后面才算本课的 const 成员函数；只写在返回值前面一样合法，但方法内部照样能写成员。",
+    "那行赋值被拦下时报的是 assignment of member in read-only object：方法把自己签成了只读，一写成员就撞编译器。",
+    "标了 const，收 const 引用的函数才调得动这个方法；在带 const 的方法里调同类另一个不带 const 的方法，同样被拦。",
+    "一个方法挂了 const，并不保证这个对象在整个程序期间不变 —— const 管的是这个方法动不动成员，管不住别的方法什么时候改对象。",
+    "该不该挂 const 的口径只看函数体里既没写成员、也没调不带 const 的方法，跟名字、可见性、有没有返回值都无关。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nclass Score {\npublic:\n    Score(int total) : total_(total), done_(0) {}\n    int remaining() const {\n        done_ = 0;\n        return total_ - done_;\n    }\n    double progress() const { return static_cast<double>(done_) / total_; }\n    void add(int n) { done_ += n; }\nprivate:\n    int total_, done_;\n};\n\nvoid report(const Score& s) {\n    std::println(\"还剩 {} 个\", s.remaining());\n}\n\nint main() {\n    Score s(10);\n    s.add(4);\n    report(s);\n    return 0;\n}\n// 报错原话：assignment of member Score::done_ in read-only object，删掉那一行才过\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nclass Score {\npublic:\n    int remaining() { return total_ - done_; }\n    void add(int n) { done_ += n; }\nprivate:\n    int total_ = 10;\n    int done_ = 0;\n};\n\nint main() {\n    Score s;\n    s.add(4);\n    std::println(\"{}\", s.remaining());\n    return 0;\n}\n",
+      "#include <print>\n\nclass Score {\npublic:\n    const int remaining() const { return total_; }\n    void add(int n) { done_ = n; }\nprivate:\n    int total_ = 10;\n    int done_ = 0;\n};\n\nint main() {\n    Score s;\n    std::println(\"{}\", s.remaining());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n\nclass  Score\n{\n  public :\n      int  left ( )  const {\n          done_ = 0;\n          return total_ - done_;\n      }\n      void  add ( int n ) { done_ += n; }\n  private :\n      int total_ = 10;\n      int done_ = 0;\n};\n\nvoid  tell ( const  Score & obj ) { std::println(\"{}\", obj.left()); }\n\nint  main ( )\n{\n  Score s;\n  s.add(3);\n  tell(s);\n  return 0;\n}\n// 报错里有 read-only object 这个词，那一行删掉就编译过了\n"
+    ]
+  }
+}

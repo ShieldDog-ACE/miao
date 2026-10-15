@@ -1,0 +1,76 @@
+{
+  "cid": "c44",
+  "note": "修改元素改单编辑器：任务 1 拆成「盒子 + 带 & 的 range-for + 乘 2 + 只读打印核对」，任务 2 按规矩第五条摊成一对（真写一个不带 & 的改动循环 + 一条记录观察的 buffer 注释），旧六道笔试题的结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "用花括号造一只装 int 的分数盒子，至少列三个数。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{[^}]*,[^}]*\\}"],
+      "sample": "std::vector<int> scores = {85, 92, 78};",
+      "why": "花括号那条是「列内容」，格子数跟着内容自动定下来；先有盒子才谈得上改它。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写一个全员改值的 range-for：冒号左边要带上那个 &，这样手里才是原件本尊。",
+      "acceptRegex": ["for\\s*\\(\\s*auto\\s*&\\s*\\w+\\s*:\\s*\\w+\\s*\\)"],
+      "sample": "for (auto& s : scores) {",
+      "why": "那个 & 是开关：有它 = 原件本尊，没它 = 每轮新建一份复印件。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "在这个带 & 的循环里把每一格改成原来的 2 倍。",
+      "acceptRegex": ["\\w+\\s*(?:\\*=\\s*2|=\\s*\\w+\\s*\\*\\s*2)\\s*;"],
+      "sample": "s *= 2;",
+      "why": "带 & 的那一句才是真的写进原件；同样的算式写在不带 & 的循环里，结果一个字都不变。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "改完再打印一次核对：用一个只读的 range-for（不带 & 就够）把每一格打出来。",
+      "acceptRegex": ["for\\s*\\(\\s*auto\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std::print(?:ln)?\\s*\\(\\s*\"[^\"]*\\{\\}"],
+      "sample": "for (auto s : scores) {\n    std::print(\"{} \", s);\n}",
+      "why": "本课改动失败时和成功时看起来一样，「改前打一次、改后打一次、两个对照」是唯一靠得住的自查流程；只读的时候复印件就够。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：把 & 删掉再跑 —— 写一个冒号左边只有 auto 的 range-for，在它的花括号里给手上那份副本乘 2。",
+      "acceptRegex": ["for\\s*\\(\\s*auto\\s+\\w+\\s*:\\s*\\w+\\s*\\)\\s*\\{[^}]*\\*="],
+      "sample": "for (auto s : scores) {\n    s *= 2;\n}",
+      "why": "少了 &，这个乘 2 加在复印件身上，出了花括号就被扔掉，原件还是出生时那几个数。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "看一眼屏幕：在旁边用一行注释写下你观察到的 —— 分数到底加没加动。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 编译通过、运行到底，值一个都没变，也不报错",
+      "why": "这一条只能验你确实记了一行笔记，验不了笔记内容对不对 —— 那是这块编辑器判不动的部分。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "方括号在等号左边就是「写」：scores[门牌] = 新值 换掉那一格，读和写用的是同一个门牌号。",
+    "「很成功地什么都没做」是本课要认出来的那种安静失败：复印件也是合法的盒子，往里加 5 完全没问题，只是没人把副本搬回原件，所以不报错、也不见效。",
+    "auto& 里那个 & 读作引用，意思是这个名字直接接在原件身上，不再复印一份；本课先记「有 & 摸原件，没 & 摸复印件」。",
+    "只读用 auto，要改就必须 auto&；带 & 的循环在空盒子里一轮都不执行。",
+    "只有 3 个元素的盒子写 scores[10] = 1，编译器不会当场拦住 —— 那是直接往盒子外面写内存，可能崩、可能改坏别的变量、也可能表面正常。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78};\n\n    for (auto& s : scores) {\n        s *= 2;\n    }\n    for (auto s : scores) {\n        std::print(\"{} \", s);\n    }\n    std::println(\"\");\n\n    for (auto s : scores) {\n        s *= 2;   // 少了 &，原件一点没加动，只有手上那份副本被改了\n    }\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78};\n    for (auto s : scores) {\n        std::print(\"{} \", s);\n    }\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78};\n    for (auto& s : scores) {\n        s *= 2;\n    }\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include <vector>\nint  main ( )\n{\n  std::vector<int>  fs = {60, 70, 80} ;\n  for ( auto& v : fs ) { v = v * 2 ; }\n  for ( auto v : fs ) std::print( \"{} \" , v ) ;\n  std::println( \"\" ) ;\n\n  for( auto v : fs ) { v *= 2 ; }   // 把 & 删掉之后原件纹丝不动\n  return 0;\n}\n"
+    ]
+  }
+}

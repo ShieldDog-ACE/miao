@@ -1,0 +1,92 @@
+{
+  "cid": "m171",
+  "title": "第 171 课考试 · BFS 走迷宫",
+  "task": "任务题目：用队列把迷宫一圈圈淹开，给每个格子记下第一次被淹到时走了几步；先把整张 dist 表打出来看水波怎么扩，再把（1,0）那一格也砌成墙，看看终点那一格变成什么。",
+  "hint": "卡住了回看本课「演示 1 · 起点入队，一圈圈扩散」和「演示 2 · 把整个 dist 表打印出来」那两节，家什都在那两段里。",
+  "note": "这一课从来没排过考：两个任务一条拆成「两层循环 + 逐格定宽打印 + 行尾换行」，一条拆成「那行墙 + 重打终点那一格 + 注释记下看到的结果」，dist 表和队列的起手各占一条；这一场没有旧题，notes 从正文的小结与常见坑里压出来。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一行：开一张和迷宫一样大的二维整数表，还没被淹到的格子先填 -1 当记号。",
+      "acceptRegex": [
+        "std\\s*::\\s*vector\\s*<\\s*std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s*>\\s+\\w+\\s*\\(",
+        "std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s*\\(\\s*\\w+\\s*,\\s*-\\s*1\\s*\\)"
+      ],
+      "sample": "std::vector<std::vector<int>> dist(R, std::vector<int>(C, -1));",
+      "why": "一张表兼做两件事：既是答案册又是签到表。-1 是「还没淹到」的记号，标过数就说明这格已经排过队，省掉另一份 visited。",
+      "score": 15
+    },
+    {
+      "stem": "写两行：开出装行列一对的队列，把起点 (0,0) 请进队。",
+      "acceptRegex": [
+        "std\\s*::\\s*queue\\s*<\\s*std\\s*::\\s*pair\\s*<\\s*int\\s*,\\s*int\\s*>\\s*>",
+        "\\w+\\s*\\.\\s*push\\s*\\(\\s*\\{\\s*0\\s*,\\s*0\\s*\\}\\s*\\)"
+      ],
+      "sample": "std::queue<std::pair<int, int>> q;\nq.push({0, 0});",
+      "why": "队列管的就是「一圈处理完才轮到下一圈」的秩序；起点第一步都不欠，所以进队的同时把它的步数定成 0。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：用一层行循环套一层列循环走完整张表 —— 一个 for 里头再套一个 for。",
+      "acceptRegex": [
+        "for\\s*\\([^)]*\\)[\\s\\S]{0,60}?for\\s*\\("
+      ],
+      "sample": "for (int r = 0; r < R; ++r) {\n    for (int c = 0; c < C; ++c)",
+      "why": "整张表要一格不落地过一遍，行、列各一层循环；上限拿行列数来写，才不用把 3、4 抄死在代码里。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：格子里用 std::print 打出一格（宽度写在大括号里），每走完一行再用一条不填内容的 std::println 换行。",
+      "acceptRegex": [
+        "std\\s*::\\s*print\\s*\\(\\s*\"\\{[^\\\"}]*\\}\"\\s*,\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\[\\s*\\w+\\s*\\]",
+        "std\\s*::\\s*println\\s*\\(\\s*\"\\s*\"\\s*\\)"
+      ],
+      "sample": "for (int c = 0; c < C; ++c) std::print(\"{:3}\", dist[r][c]);\nstd::println(\"\");",
+      "why": "std::print 不管换行，宽度写在大括号里，每格占一样宽才看得出「水波」是一圈圈往外推的；行尾那条空的 std::println 负责把这一行收掉。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：把迷宫第二行改写成开头两格都是墙的那一串，其余两行照旧。",
+      "acceptRegex": [
+        "\"##[^\\\"]*\""
+      ],
+      "sample": "const char* maze[3] = {\"S.#.\", \"##..\", \"...G\"};",
+      "why": "原来只有第二行第二格一堵墙，第一个格还是通的；把 (1,0) 也堵上，整条左路就断了，其余代码一个字不用动。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：改完墙再重跑一次，用一条 std::println 把终点那一格（最后一行最后一列）打出来，再在旁边留一行注释写下你看到的那个值说明了什么。",
+      "acceptRegex": [
+        "std\\s*::\\s*println\\s*\\(\\s*\"[^\\\"]*\\{\\}[^\\\"]*\"\\s*,\\s*\\w+\\s*\\[\\s*(2|3|R\\s*-\\s*1)\\s*\\]\\s*\\[\\s*(3|2|C\\s*-\\s*1)\\s*\\]",
+        "//[^\\n]{4,}"
+      ],
+      "sample": "std::println(\"S 到 G 最少 {}\", dist[2][3]);   // 变成 -1，说明这格压根没被淹到",
+      "why": "终点没被淹到时那一格还留着 -1 那个记号，所以打出来是 -1 而不是某个步数。正则只能验你确实打了终点那一格、确实留了一行注释，注释写得到不到位得人来读。",
+      "coversTask": 2,
+      "score": 25,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "BFS 用队列维持「一圈处理完才轮到下一圈」的秩序，dist 一张表兼做答案与签到，入队即标数、出队只发散 —— 第一次淹到谁，谁的步数就定死为最少。",
+    "四扇门写成上下左右四个偏移，逐个算出新格子，再一次判断：越界、是墙、已经标过数，三种情况都直接 continue 跳过。",
+    "新格子的步数 = 上一格的步数 + 1，就这么一格接一格往外推。",
+    "迷宫改了一格就得从头再淹一遍：表里的数全是从起点推出来的，改墙之后旧数统统作废。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <queue>\n#include <vector>\n\nint main() {\n    const char* maze[3] = {\"S.#.\", \".#..\", \"...G\"};\n    int R = 3, C = 4;\n    std::vector<std::vector<int>> dist(R, std::vector<int>(C, -1));\n    std::queue<std::pair<int, int>> q;\n    q.push({0, 0}); dist[0][0] = 0;\n    while (!q.empty()) {\n        auto [r, c] = q.front(); q.pop();\n        for (auto [dr, dc] : {std::pair{0,1}, std::pair{1,0}, std::pair{0,-1}, std::pair{-1,0}}) {\n            int nr = r + dr, nc = c + dc;\n            if (nr < 0 || nr >= R || nc < 0 || nc >= C || maze[nr][nc] == '#' || dist[nr][nc] != -1) continue;\n            dist[nr][nc] = dist[r][c] + 1;\n            q.push({nr, nc});\n        }\n    }\n    for (int r = 0; r < R; ++r) {\n        for (int c = 0; c < C; ++c) std::print(\"{:3}\", dist[r][c]);\n        std::println(\"\");\n    }\n    const char* wall[3] = {\"S.#.\", \"##..\", \"...G\"};\n    std::println(\"S 到 G 最少 {}\", dist[2][3]);   // 变成 -1，说明这格压根没被淹到\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    std::println(\"{}\", 0);\n}\n",
+      "#include <print>\n#include <queue>\n#include <vector>\nint main() {\n    const char* maze[3] = {\"S.#.\", \".#..\", \"...G\"};\n    int R = 3, C = 4;\n    std::vector<std::vector<int>> dist(R, std::vector<int>(C, 0));\n    std::queue<std::pair<int, int>> q;\n    while (!q.empty()) { }\n    std::println(\"走完了\");\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < queue >\n#  include < vector >\nint  main ( )\n{\n  const  char * grid [ 3 ]  =  { \"S.#.\" , \"##..\" , \"...G\" } ;\n  int  rows = 3 , cols = 4 ;\n  std :: vector < std :: vector < int > >  step ( rows , std :: vector < int > ( cols , - 1 ) ) ;\n  std :: queue < std :: pair < int , int > >  water ;\n  water . push ( { 0 , 0 } ) ;  step [ 0 ] [ 0 ] = 0 ;\n  while ( ! water . empty ( ) )  { }\n  for ( int  i = 0 ; i < rows ;  ++ i )  {\n    for ( int  j = 0 ; j < cols ;  ++ j )  std :: print ( \"{:4}\" ,  step [ i ] [ j ] ) ;\n    std :: println ( \"\" ) ;\n  }\n  std :: println ( \"最少 {} 步\" ,  step [ 2 ] [ 3 ] ) ;  // 是 - 1 ，终点那一格没被淹到\n}\n"
+    ]
+  }
+}

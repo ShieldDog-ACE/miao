@@ -1,0 +1,74 @@
+{
+  "cid": "m177",
+  "note": "两条任务：任务一走币种加 3 元、正着走那圈 for、比小转移；任务二走起点写 1、取加法转移；最少版那张表的初值单独一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 1 条：往面额表里加一枚 3 元硬币，四个数按从小到大写全。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{\\s*1\\s*,\\s*3\\s*,\\s*4\\s*,\\s*5\\s*\\}"],
+      "sample": "std::vector<int> coins = {1, 3, 4, 5};",
+      "why": "多一枚面值就是外层多刷一遍表；实测加 3 之后凑 8 元仍是 2 枚（5+3 或 4+4），新硬币没带来更省的组合。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把最少版那张表铺好：按目标金额加一开格，初值统统填成一个凑不出时顶着的 1000，再把起点那一格写成 0。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s*\\w+\\s*\\(\\s*\\w+\\s*\\+\\s*1\\s*,\\s*1000\\s*\\)", "\\w+\\s*\\[\\s*0\\s*\\]\\s*=\\s*0\\s*;"],
+      "sample": "std::vector<int> dp(target + 1, 1000);\ndp[0] = 0;",
+      "why": "1000 是「凑不出」的标记：只要比目标金额大就够了，比小的时候永远赢不了真实答案；起点写 0 表示凑 0 元要 0 枚。",
+      "score": 20
+    },
+    {
+      "stem": "内层这一圈正着走：从这枚硬币的面值起步，一格一格走到目标金额。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*\\w+\\s*;\\s*\\w+\\s*<=\\s*\\w+\\s*;\\s*[^;\\n]*\\+\\+"],
+      "sample": "for (int j = c; j <= target; ++j)",
+      "why": "正着走时 dp[j - c] 可能本轮刚被更新过，等于这枚硬币还能再拿一次 —— 0-1 背包怕的事，这里要的正是它。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "最少版那一行更新：多一枚更少就换过来（拿这一格与「退开一枚面值再加一枚」比小）。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*\\[\\s*\\w+\\s*-\\s*\\w+\\s*\\]\\s*\\+\\s*1\\s*<\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\)"],
+      "sample": "if (dp[j - c] + 1 < dp[j]) dp[j] = dp[j - c] + 1;",
+      "why": "比小取的是两布里省的那一布：不拿这枚硬币的旧答案，与退开 c 元再补一枚的新答案。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：换成数凑法的那版，起点那一格要写成 1（空手凑 0 元也算一种）。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*0\\s*\\]\\s*=\\s*1\\s*;"],
+      "sample": "std::vector<long long> cnt(target + 1, 0);\ncnt[0] = 1;",
+      "why": "数凑法时每一格都是「若干种之和」，起点必须是 1 才能往下加；填 0 会让整张表一路加成全 0，看着像代码错了其实是地基没打。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "把比小那一行换成取加法：这一格累加上退开一枚面值的那一格。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\+=\\s*\\w+\\s*\\[\\s*\\w+\\s*-\\s*\\w+\\s*\\]\\s*;"],
+      "sample": "cnt[j] += cnt[j - c];",
+      "why": "取加法把「不用这枚面值」与「用这枚面值」两拨凑法并起来；外层按面值一币一币过，先 4 后 1 与先 1 后 4 只会数一次，所以数的是组合不是顺序 —— 实测凑 8 元是 4 种。",
+      "coversTask": 2,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "面额加一枚 3 元后，凑 8 元最少仍是 2 枚：5+3 与 4+4 都行，没有 8 元面值就凑不出 1 枚。",
+    "凑法版跑 {1,4,5} 凑 8 元得 4 种：八个 1 元、四个 1 元加一个 4 元、三个 1 元加一个 5 元、两个 4 元；先 4 后 1 与先 1 后 4 算同一种。",
+    "正着走让同一枚硬币本轮就被复用，这恰好是「每种随便拿几枚」的意思；0-1 背包那件只装一次才要倒着走。",
+    "最少版与凑法版差三处：初值一个是 1000 一个是 0，起点一格一个写 0 一个写 1，转移一个比小取、一个取加法 —— 内层两版都正着走。",
+    "凑不出的格子在数凑法时天然是 0（0 种凑法），不会被加法污染；那个 1000 哨兵只在比小的版本里需要。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    int target = 8;\n    std::vector<int> coins = {1, 3, 4, 5};\n    std::vector<int> dp(target + 1, 1000);\n    dp[0] = 0;\n    for (int c : coins)\n        for (int j = c; j <= target; ++j)\n            if (dp[j - c] + 1 < dp[j]) dp[j] = dp[j - c] + 1;\n    std::println(\"凑 {} 元最少 {} 枚\", target, dp[target]);\n    std::vector<int> cnt(target + 1, 0);\n    cnt[0] = 1;\n    for (int c : coins)\n        for (int j = c; j <= target; ++j)\n            cnt[j] += cnt[j - c];\n    std::println(\"凑 8 元有 {} 种凑法\", cnt[target]);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    int target = 8;\n    std::vector<int> coins = {1, 4, 5};\n    std::vector<int> dp(target + 1, 1000);\n    dp[0] = 0;\n    for (int c : coins)\n        for (int j = target; j >= c; --j)\n            if (dp[j - c] + 1 < dp[j]) dp[j] = dp[j - c] + 1;\n    std::println(\"凑 {} 元最少 {} 枚\", target, dp[target]);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> coins = {1, 3, 4, 5};\n    int n = 8;\n    std::vector<int> dp(n + 1, 0);\n    for (int c : coins)\n        for (int j = c; j <= n; ++j)\n            dp[j] = dp[j] + 1;\n    std::println(\"{}\", dp[n]);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\nint  main ( )\n{\n  int  goal = 8 ;\n  std :: vector < int >  money = { 1 , 3 , 4 , 5 } ;\n  std :: vector < int >  best ( goal + 1 , 1000 ) ;\n  best [ 0 ] = 0 ;\n  for ( int  c : money )\n    for ( int  j  =  c ;  j  <=  goal ;  ++ j )\n      if ( best [ j - c ] + 1 < best [ j ] ) best [ j ] = best [ j - c ] + 1 ;\n  std :: println ( \" {} 元最少 {} 枚 \" , goal , best [ goal ] ) ;\n  std :: vector < int >  ways ( goal + 1 , 0 ) ;\n  ways [ 0 ] = 1 ;\n  for ( int  c : money )\n    for ( int  j  =  c ;  j  <=  goal ;  ++ j )\n      ways [ j ] += ways [ j - c ] ;\n  std :: println ( \" 凑法 {} 种 \" , ways [ goal ] ) ;\n  return 0 ;\n}\n"
+    ]
+  }
+}

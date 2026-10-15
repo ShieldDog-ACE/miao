@@ -1,0 +1,81 @@
+{
+  "cid": "m98",
+  "note": "map 的陷阱改单编辑器：任务 1 拆成「声明加方括号写入 + 读的时候真用 at 去碰那个不存在的键 + if 里用 contains 先问」，任务 2 拆成「先用方括号踩一次雷再用 erase 删掉 + 打 size 看条数回来」；at 会当场终止、erase 不报错这些进 notes，程序不必真跑到底。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "备好那张词典：std::map 尖括号里写明键是 std::string、值是 int，再用方括号写进一条记录。",
+      "acceptRegex": ["std::map\\s*<\\s*std::string\\s*,\\s*int\\s*>\\s+\\w+", "\\w+\\s*\\[\\s*\"[^\"]+\"\\s*\\]\\s*=\\s*\\d+\\s*;"],
+      "sample": "std::map<std::string, int> scores;\nscores[\"小明\"] = 88;",
+      "why": "写用方括号是这一课的默认动作：等号左边那个方括号保证有这一条，然后把值交给你。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条那一改：读新同学的时候别再写方括号，改成点 at 再递这个名字。",
+      "acceptRegex": ["\\w+\\.at\\s*\\(\\s*\"新同学\"\\s*\\)"],
+      "sample": "std::println(\"新同学 = {}\", scores.at(\"新同学\"));",
+      "why": "at 的脾气是查不到就明说：宁可当场报错终止，也绝不替你造一条没打算要的记录。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把安全读法写一遍：if 的条件里用 contains 问一句有没有，确认了再去取值。",
+      "acceptRegex": ["if\\s*\\(\\s*!?\\s*\\w+\\.contains\\s*\\("],
+      "sample": "if (scores.contains(\"小明\"))\n    std::println(\"小明的分数: {}\", scores.at(\"小明\"));",
+      "why": "问用 contains：它只回答有没有，真假，什么都改不了；三个动作分给三个函数，词典就不会长出你没打算要的那一行。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：先用方括号读一次新同学（这一步会凭空造一条），再用 erase 把这个名字删掉。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*\"新同学\"\\s*\\]", "\\w+\\.erase\\s*\\(\\s*\"新同学\"\\s*\\)"],
+      "sample": "std::println(\"新同学 = {}\", scores[\"新同学\"]);   // 坑！凭空造出来，返回 0\nscores.erase(\"新同学\");                       // 删掉误创建的那一条",
+      "why": "中间那个 0 不是查无此人的回答，是新记录的默认值；erase 删的就是这一条，名字不存在也不报错。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "用一条 std::println 把条数打出来，看看被写脏之后有没有擦干净：逗号后面给那个 size 调用。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{[^}\"]*\\}[^\"]*\"\\s*,\\s*\\w+\\.size\\s*\\(\\s*\\)"],
+      "sample": "std::println(\"删完 size = {}\", scores.size());",
+      "why": "怀疑被写脏时先看 size：方括号那一下它就从 1 变 2，erase 之后才回得去。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：请进 map 的头和 string 的头，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*map\\s*>", "#\\s*include\\s*<\\s*string\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <map>\n#include <string>\n\nint main() {",
+      "why": "std::map 住在 map 这个头里；键是文字就还得请进 std::string。",
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "词典里没有新同学这个键，此时写 scores[\"新同学\"]：当场新建这个键，值是默认的 0，size 加 1 —— 读也照样会新建。",
+    "at 只给值，查不到就报错终止，但它绝不新增；想让程序在查不到时继续跑，就先用 contains 问一句再 at。",
+    "拿方括号当判断条件是最隐蔽的一种踩雷：if (scores[\"转学生\"] == 0) 这一句先把词典弄脏了，size 多出一条。",
+    "erase 不存在的名字也安全，不报错，返回 0 条被删；它删不掉你打算留着的那几条。",
+    "三个动作分给三个函数：写用方括号，读用 at，问用 contains；size 是那条怀疑自己踩雷时的检查口。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <map>\n#include <print>\n#include <string>\n\nint main() {\n    std::map<std::string, int> scores;\n    scores[\"小明\"] = 88;\n    std::println(\"size = {}\", scores.size());\n    if (scores.contains(\"小明\"))                        // 先问有没有\n        std::println(\"小明的分数: {}\", scores.at(\"小明\"));   // 确认了再取\n    std::println(\"新同学 = {}\", scores[\"新同学\"]);      // 方括号：凭空造出来，返回 0\n    std::println(\"脏了以后 size = {}\", scores.size());\n    std::println(\"换成 at 读一次新同学: {}\", scores.at(\"新同学\"));   // 这一句换成 at 就不会新增\n    scores.erase(\"新同学\");                            // 任务 2：删掉误创建的那一条\n    std::println(\"删完 size = {}\", scores.size());\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <map>\n#include <print>\n#include <string>\n\nint main() {\n    std::map<std::string, int> scores;\n    scores[\"小明\"] = 88;\n    std::println(\"新同学 = {}\", scores[\"新同学\"]);\n    std::println(\"size = {}\", scores.size());\n    return 0;\n}\n",
+      "#include <map>\n#include <string>\n\nint main() {\n    std::map<std::string, int> scores;\n    scores[\"小明\"] = 88;\n    std::println(\"{}\", scores.at(\"小明\"));\n    return 0;\n}\n",
+      "#include <map>\n#include <print>\n#include <string>\n\nint main() {\n    std::map<std::string, int> scores;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < string >\n# include < map >\n# include < print >\n\nint  main ( )\n{\n    std::map< std::string , int >  book ;\n    book[\"小明\"] = 88;\n    if ( ! book.contains(\"老同学\") ) std::println(\"老同学不存在，也没被创建\");\n    book [ \"新同学\" ] = 0 ;\n    std::println( \"新同学 {}\" , book.at ( \"新同学\" ) ) ;\n    book.erase( \"新同学\" ) ;\n    std::println(\"size 现在 {}\", book.size());\n    return 0;\n}\n"
+    ]
+  }
+}

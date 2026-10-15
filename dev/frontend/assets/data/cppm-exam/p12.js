@@ -6,77 +6,91 @@
 window.MIAO_CPPM_EXAM_P12 = {
   papers: [
     {
-      cid: "m121", kind: "paper", mode: "code", authored: "7a764f68", pass: 60, title: "第 121 课考试 · unique_ptr 独占", task: "任务题目：用 std::make_unique 造一个装三个 int 的数组，填 1、2、3 并把 arr[2] 打出来，再挨个打印整串", hint: "想不起来就回看本课【演示 1 · 数组版本：尖括号里写方括号】。",
+      cid: "m121", kind: "paper", mode: "ide", authored: "7a764f68", file: "main.cpp", pass: 60, title: "第 121 课考试 · unique_ptr 独占", task: "任务题目：用 std::make_unique 造一个装三个 int 的数组，填 1、2、3 并把 arr[2] 打出来，再挨个打印整串", hint: "想不起来就回看本课【演示 1 · 数组版本：尖括号里写方括号】。",
+      notes: [],
       questions: [
-        { id: "q1", type: "code", score: 27, coversTask: 1, stem: "（任务题）写出这两句：用一个变量 arr 保管着三个 int 的数组；再把第三格填成 3。", acceptRegex: ["make_unique\\s*<\\s*int\\s*\\[\\s*\\]\\s*>\\s*\\(\\s*3\\s*\\)", "arr\\s*\\[\\s*2\\s*\\]\\s*=\\s*3"], sample: "auto arr = std::make_unique<int[]>(3);\narr[2] = 3;", why: "数组版本在尖括号里写方括号、圆括号里写格数；下标 arr[2] 正是第三格，出作用域走的是数组那套释放，不用你区分。" },
-        { id: "q2", type: "code", score: 18, coversTask: 1, stem: "（任务题）写出把 arr 的三个数挨个打印出来的那一行：下标变量叫 i，从 0 数到 2，每格打一个数。", acceptRegex: ["for\\s*\\(", "arr\\s*\\[\\s*i\\s*\\]"], sample: "for (size_t i = 0; i < 3; ++i) std::print(\"{} \", arr[i]);", why: "数组版本的 unique_ptr 下标照旧能用，arr[i] 就是第 i 格；一串三格就数到小于 3。" },
-        { id: "q3", type: "code", score: 27, coversTask: 1, stem: "写一行：用 arr 保管着三格 int 的数组，把 1、2、3 挨个填进这三格。", acceptRegex: ["arr\\s*\\[\\s*0\\s*\\]\\s*=\\s*1", "arr\\s*\\[\\s*1\\s*\\]\\s*=\\s*2", "arr\\s*\\[\\s*2\\s*\\]\\s*=\\s*3"], sample: "arr[0] = 1; arr[1] = 2; arr[2] = 3;", why: "make_unique 造出来的数组是清零的，要什么内容得一格一格自己填；下标从 0 起，三格就是 0、1、2。" },
-        { id: "q4", type: "code", score: 28, coversTask: 1, stem: "写一行打印：把 arr 第三格（下标 2 那格）的值打出来，前面带上「arr[2] = 」这几个字。", acceptRegex: ["std\\s*::\\s*println\\s*\\(", "\\{\\s*\\}", "arr\\s*\\[\\s*2\\s*\\]"], sample: "std::println(\"arr[2] = {}\", arr[2]);", why: "数组版本的 unique_ptr 下标照用，arr[2] 就是第三格；填了 3 之后这一行打出 arr[2] = 3。" }
+        { id: "q1", type: "code", score: 27, coversTask: 1, stem: "（任务题）写出这两句：用一个变量 arr 保管着三个 int 的数组；再把第三格填成 3。", acceptRegex: ["make_unique\\s*<\\s*int\\s*\\[\\s*\\]\\s*>\\s*\\(\\s*3\\s*\\)", "arr\\s*\\[\\s*2\\s*\\]\\s*=\\s*3"], acceptOn: "code", sample: "auto arr = std::make_unique<int[]>(3);\narr[2] = 3;", why: "数组版本在尖括号里写方括号、圆括号里写格数；下标 arr[2] 正是第三格，出作用域走的是数组那套释放，不用你区分。" },
+        { id: "q2", type: "code", score: 18, coversTask: 1, stem: "（任务题）写出把 arr 的三个数挨个打印出来的那一行：下标变量叫 i，从 0 数到 2，每格打一个数。", acceptRegex: ["for\\s*\\(", "arr\\s*\\[\\s*i\\s*\\]"], acceptOn: "code", sample: "for (size_t i = 0; i < 3; ++i) std::print(\"{} \", arr[i]);", why: "数组版本的 unique_ptr 下标照旧能用，arr[i] 就是第 i 格；一串三格就数到小于 3。" },
+        { id: "q3", type: "code", score: 27, coversTask: 1, stem: "写一行：用 arr 保管着三格 int 的数组，把 1、2、3 挨个填进这三格。", acceptRegex: ["arr\\s*\\[\\s*0\\s*\\]\\s*=\\s*1", "arr\\s*\\[\\s*1\\s*\\]\\s*=\\s*2", "arr\\s*\\[\\s*2\\s*\\]\\s*=\\s*3"], acceptOn: "code", sample: "arr[0] = 1; arr[1] = 2; arr[2] = 3;", why: "make_unique 造出来的数组是清零的，要什么内容得一格一格自己填；下标从 0 起，三格就是 0、1、2。" },
+        { id: "q4", type: "code", score: 28, coversTask: 1, stem: "写一行打印：把 arr 第三格（下标 2 那格）的值打出来，前面带上「arr[2] = 」这几个字。", acceptRegex: ["std\\s*::\\s*println\\s*\\(", "\\{\\s*\\}", "arr\\s*\\[\\s*2\\s*\\]"], acceptOn: "code", sample: "std::println(\"arr[2] = {}\", arr[2]);", why: "数组版本的 unique_ptr 下标照用，arr[2] 就是第三格；填了 3 之后这一行打出 arr[2] = 3。" }
       ],
       selftest: {
         refs: [
-          {q1: "auto arr = std::make_unique<int[]>(3);\narr[2] = 3;", q2: "for (size_t i = 0; i < 3; ++i) std::print(\"{} \", arr[i]);", q3: "arr[0] = 1; arr[1] = 2; arr[2] = 3;", q4: "std::println(\"arr[2] = {}\", arr[2]);"}],
+          "#include <print>\n#include <memory>\nint main() {\n    auto arr = std::make_unique<int[]>(3);\n    arr[2] = 3;\n    for (size_t i = 0; i < 3; ++i) std::print(\"{} \", arr[i]);\n    arr[0] = 1; arr[1] = 2; arr[2] = 3;\n    std::println(\"arr[2] = {}\", arr[2]);\n    return 0;\n}\n"],
         wrongs: [
-          {q1: "int arr[3];\narr[2] = 3;", q2: "std::println(\"{}\", arr);", q3: "arr[0] = 1; arr[1] = 2;", q4: "std::println(\"arr[1] = {}\", arr[1]);"}],
+          "",
+          "int arr[3];\narr[2] = 3;",
+          "std::println(\"{}\", arr);",
+          "arr[0] = 1; arr[1] = 2;",
+          "std::println(\"arr[1] = {}\", arr[1]);"],
         loose: [
-          {q1: "auto arr = std :: make_unique < int [ ] > ( 3 ) ;\n arr [ 2 ] = 3 ;", q2: "for ( size_t i = 0 ; i < 3 ; ++ i ) std . print ( \"{}\", arr [ i ] ) ;", q3: "arr [ 0 ] = 1 ;\narr [ 1 ] = 2 ;\narr [ 2 ] = 3 ;", q4: "std :: println ( \"arr[2] = {}\" , arr [ 2 ] ) ;"}]
+          "int main() {\n    auto arr = std :: make_unique < int [ ] > ( 3 ) ;\n    arr [ 2 ] = 3 ;\n    for ( size_t i = 0 ; i < 3 ; ++ i ) std . print ( \"{}\", arr [ i ] ) ;\n    arr [ 0 ] = 1 ;\n    arr [ 1 ] = 2 ;\n    arr [ 2 ] = 3 ;\n    std :: println ( \"arr[2] = {}\" , arr [ 2 ] ) ;\n    return 0;\n}\n"]
       }
     },
     {
-      cid: "m122", kind: "paper", mode: "quiz", pass: 60, title: "第 122 课考试 · 转移所有权", task: "任务题目：把源码里注释掉的那行复印写法放开，看清编译器怎么拦住「两张纸条管同一块内存」，再用过户的写法把程序改对", hint: "想不起来就回看本课【怎么做】与【演示 1 · 函数把纸条交回给你】。",
+      cid: "m122", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 122 课考试 · 转移所有权", task: "任务题目：把源码里注释掉的那行复印写法放开，看清编译器怎么拦住「两张纸条管同一块内存」，再用过户的写法把程序改对", hint: "想不起来就回看本课【怎么做】与【演示 1 · 函数把纸条交回给你】。",
+      notes: ["两张纸条各自 delete 同一块内存就是双重释放，所以 unique_ptr 把复制构造显式删掉；复印在编译期就被拒。", "四条路只有一条能换保管人：复印不过、过户要 std::move、借用只给引用、放弃用 release。", "按值收 unique_ptr 参数的函数就是接手：不写 move 编译不过；交出去之后原变量变成空。", "release 把保管权讨回你手上，那张纸条变空，从那一刻起这块内存归你 delete。", "现造的直接 push_back 进容器不用 move；已经握在手里的纸条进容器必须过户。"],
       questions: [
-        { id: "q1", type: "choice", score: 15, coversTask: 1, stem: "（任务题）已有 auto p1 = std::make_unique<int>(7);，把注释里的 auto p2 = p1; 放开，结果是？", options: ["编译期就拒：报错里出现 use of deleted function，指向 unique_ptr 被写成 delete 的复制构造", "能编译，跑到 p2 那一行才崩", "只是警告，程序照跑，两份纸条各自释放一次", "编译通过，但 p1 会自动变空"], answer: 0, why: "标准库不是劝你别复印，而是在类型上把这条路堵死：两张纸条各自 delete 同一块内存就是双重释放，所以复制构造被显式删掉。" },
-        { id: "q2", type: "choice", score: 15, coversTask: 1, stem: "（任务题）改成过户 auto p2 = std::move(p1); 之后，哪一句描述是对的？", options: ["p1 与 p2 共同保管，出作用域各释放一次", "p1 被写成空指针，保管权只剩 p2 一份，p2 离开作用域才释放", "p1 依旧管着那个 7，p2 只是它的别名", "对象被复制了一份，两人各管各的"], answer: 1, why: "move 干的是抢地址加置空两步，全程仍然只有一张有效纸条 —— 这就是「过户」和「复印」的区别。" },
-        { id: "q3", type: "blank", score: 15, stem: "把变量标成「我打算弃用它」、从而让编译器选中移动构造的那个标准库名字是____。", accept: ["std::move", "move"], why: "std::move 自己不搬任何东西，它只是许可；真正抢地址并置空旧纸条的是 unique_ptr 的移动构造。" },
-        { id: "q4", type: "output", score: 20, coversTask: 1, stem: "（任务题）这段打印两行，分别是什么？\nauto p1 = std::make_unique<int>(7);\nauto p2 = std::move(p1);\nstd::println(\"p1 空了吗: {}\", p1 == nullptr);\nstd::println(\"p2 的值: {}\", *p2);", acceptLines: ["p1 空了吗: true", "p2 的值: 7"], why: "过户完 p1 是空纸条，判空能问出来；那个 7 现在归 p2 管，穿过一层星号才读到它。本机实测两行就是这个。" },
-        { id: "q5", type: "choice", score: 16, stem: "函数返回一个 unique_ptr 时，return 那一行为什么不用写 std::move？", options: ["返回值不能移动，只能复制", "返回局部对象时编译器自己会走移动这条路，硬写 move 反倒是老习惯", "unique_ptr 不许从函数往外传", "因为 return 会自动复制一份出来"], answer: 1, why: "「函数在堆上造、把保管权交回调用者」是 unique_ptr 最常用的一条路线：义务写在返回类型上，跟着返回值走，调用处不用 delete。机制以后再细讲，先记用法。" },
-        { id: "q6", type: "multi", score: 19, stem: "关于过户与借用，哪些说法对？（多选，错一项整题 0 分）", options: ["往 vector 里 push 一张已有的纸条必须 std::move，否则报的是一大片落在标准库内部的模板错误", "release 之后纸条变空，那块内存的收尾义务回到你手上，得自己 delete", "只想让对方看一眼时，参数写引用或裸指针比按值收一张 unique_ptr 合适", "过户之后再用旧名字读值，编译器会拦住你"], answers: [0, 1, 2], why: "第四条不拦：旧名字是空指针，读它是未定义行为，防线在程序员这边 —— 要么判空，要么把它当已失效不再提。" }
+        { id: "q1", type: "code", score: 15, stem: "把这份程序写成能跑的形：把智能指针工具箱（#include <memory>）搬进来，再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*memory\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <memory>\n\nint main() {", why: "unique_ptr 与 make_unique 住在 memory 里；没有 main，链接器找不到入口。" },
+        { id: "q2", type: "code", score: 15, coversTask: 1, stem: "任务第 1 条的那张纸条：用 std::make_unique 造一个装 int 的独占指针，交给一个 auto 变量。", acceptRegex: ["auto\\s+\\w+\\s*=\\s*std\\s*::\\s*make_unique\\s*<\\s*int\\s*>\\s*\\("], acceptOn: "code", sample: "auto p1 = std::make_unique<int>(7);", why: "make_unique 现造一个对象并把保管权交给你这张纸条；保管人始终只有一个。" },
+        { id: "q3", type: "code", score: 20, coversTask: 1, stem: "任务第 1 条：把注释掉的那行复印放开，让它真留在代码里 —— 用一个 auto 变量直接等于另一张已有的纸条（auto p2 = p1; 这种写法）。", acceptRegex: ["auto\\s+\\w+\\s*=\\s*\\w+\\s*;"], acceptOn: "code", sample: "auto p2 = p1;", why: "标准库不是劝你别复印，而是在类型上把这条路堵死：复制构造被显式 delete，所以这一行当场编译不过。" },
+        { id: "q4", type: "code", score: 20, coversTask: 1, stem: "任务第 1 条的对照组：把复印改成过户再跑一次 —— 等号右边写 std::move 套住原来那张纸条。", acceptRegex: ["=\\s*std\\s*::\\s*move\\s*\\(\\s*\\w+\\s*\\)\\s*;"], acceptOn: "code", sample: "auto p2 = std::move(p1);", why: "move 自己不搬任何东西，它只是许可；真正抢地址并置空旧纸条的是 unique_ptr 的移动构造。" },
+        { id: "q5", type: "code", score: 15, coversTask: 1, stem: "过户之后查一句：用一条 println 打出旧纸条跟 nullptr 比的结果（它是不是已经空了）。", acceptRegex: ["==\\s*nullptr|nullptr\\s*==", "std\\s*::\\s*println\\s*\\("], acceptOn: "code", sample: "std::println(\"p1 空了吗: {}\", p1 == nullptr);", why: "move 干的是抢地址加置空两步，全程仍然只有一张有效纸条 —— 这就是过户和复印的区别。" },
+        { id: "q6", type: "code", score: 15, coversTask: 1, stem: "任务第 1 条：用一行注释抄下编译器拦复印时说的那个词（use of deleted function，至少四个字）。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 放开那行就报 use of deleted function：两张纸条各自释放同一块内存就是双重释放", why: "正则只能验你写了注释，抄得对不对判不了；这一处是这块编辑器判不动的部分。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: 1, q3: "std::move", q4: "p1 空了吗: true\np2 的值: 7", q5: 1, q6: [0, 1, 2]}],
+          "#include <print>\n#include <memory>\n#include <utility>\n\nint main() {\n    auto p1 = std::make_unique<int>(7);\n    auto p2 = p1;\n    auto p3 = std::move(p1);\n    std::println(\"p1 空了吗: {}\", p1 == nullptr);\n    std::println(\"p3 的值: {}\", *p3);\n    return 0;\n}\n// 放开复印那行报 use of deleted function：两张纸条各自释放同一块内存就是双重释放\n"],
         wrongs: [
-          {q1: 1, q2: 0, q3: "std::copy", q4: "p1 空了吗: false\np2 的值: 0", q5: 0, q6: [2, 3]}],
+          "",
+          "#include <print>\n\nint main() {\n    int* a = new int(7);\n    int* b = a;\n    std::println(\"{}\", *b);\n    delete a;\n    return 0;\n}\n",
+          "#include <print>\n#include <memory>\n#include <utility>\n\nint main() {\n    auto p1 = std::make_unique<int>(7);\n    auto p2 = std::move(p1);\n    std::println(\"{}\", *p2);\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: "1", q3: "MOVE", q4: " p1 空了吗: true \np2 的值: 7 ", q5: "1", q6: [0, 1, 2]}]
+          "#  include < memory >\n#  include < print >\n#  include < utility >\n\nint  main ( )\n{\n  auto  one = std :: make_unique < int > ( 5 ) ;\n  auto  two = one;\n  auto  three = std::move(one);\n  std::println(\"one 空了吗 {}\", one == nullptr);\n  return 0;\n}\n// 放开那行复印就是 use of deleted function，编译器当场拒\n"]
       }
     },
     {
-      cid: "m123", kind: "paper", mode: "quiz", pass: 60, title: "第 123 课考试 · shared_ptr 共享", task: "任务题目：从 b 再复制一张纸条给新变量 d，打印 use_count，再让 d 出作用域，看计数怎么变；每一步先把数字猜出来再验", hint: "想不起来就回看本课【怎么做】与【演示 1 · 从别人的纸条再复制一张】。",
+      cid: "m123", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 123 课考试 · shared_ptr 共享", task: "任务题目：从 b 再复制一张纸条给新变量 d，打印 use_count，再让 d 出作用域，看计数怎么变；每一步先把数字猜出来再验", hint: "想不起来就回看本课【怎么做】与【演示 1 · 从别人的纸条再复制一张】。",
+      notes: ["shared_ptr 允许复印，代价是计数加一：被复制的是纸条，不是对象；收尾时机是计数减到 0 的那一刻。", "unique_ptr 那张纸条 8 字节，shared_ptr 是 16 字节：一个对象地址加一个计数卡片地址。", "按值传参与 push_back 进容器都会悄悄加一：回来之后计数照旧，因为临时那张也走了。", "必须在堆上、主人只有一个时用 unique_ptr；真的有几个人共同保管、且顺序说不清才换 shared_ptr。", "两个人互相牵着就谁也走不了：两个节点的 peer 各指着对方，计数永远落不到 0，两个拆除都没打印 —— 这就是 shared_ptr 开始漏内存的地方。"],
       questions: [
-        { id: "q1", type: "choice", score: 15, coversTask: 1, stem: "（任务题）复制一张 shared_ptr，会发生什么？", options: ["对象被复制一份，两张纸条各管一个副本", "多一张纸条，卡片上的计数加一，对象还是同一个", "计数不变，直到有人 reset 才更新", "原来的那张纸条立刻失效，像过户一样"], answer: 1, why: "共享纸条允许复印，复印的代价就是计数加一；被复制的是纸条，不是对象。" },
-        { id: "q2", type: "blank", score: 12, coversTask: 1, stem: "（任务题）问「此刻一共几张纸条在管着它」用的那个成员函数叫____。", accept: ["use_count", "use_count()", "d.use_count()"], why: "它读的是那张计数卡片，所以用哪一张纸条去问，答案都一样。" },
-        { id: "q3", type: "output", score: 23, coversTask: 1, stem: "（任务题）这段打印四行，依次是什么？\nauto a = std::make_shared<std::string>(\"共享数据\");\nstd::println(\"刚创建，计数 = {}\", a.use_count());\n{ auto b = a; auto c = a; std::println(\"两个朋友加入，计数 = {}\", a.use_count()); }\nstd::println(\"朋友走了，计数 = {}\", a.use_count());\nstd::println(\"数据还在: {}\", *a);", acceptLines: ["刚创建，计数 = 1", "两个朋友加入，计数 = 3", "朋友走了，计数 = 1", "数据还在: 共享数据"], why: "计数把 a 自己那张也算进去，所以两位朋友加入是 3；b、c 出作用域只减计数，对象照旧还在。本机实测四行如此。" },
-        { id: "q4", type: "choice", score: 16, stem: "shared_ptr 保管的对象，真正被执行 delete 的时刻是？", options: ["最后一张纸条离开作用域、计数落到 0 的那一刻", "每一次复制纸条的那一刻", "对象被读到的那一刻", "任何一个保管人出作用域的那一刻"], answer: 0, why: "归零才打扫 —— 这就是它替你回答「谁来收尾」的方式，也是它比 unique_ptr 多付的那点代价换来的东西。" },
-        { id: "q5", type: "output", score: 16, stem: "a 的计数本来是 1。接着依次做三件事：把它 push 进一个装 shared_ptr 的 vector（打印一次 a.use_count()）；把它按值传进一个参数是 shared_ptr 的函数（函数里打印 p.use_count()）；函数回来后自己再打印一次。这三行数字依次是什么？", acceptLines: ["2", "3", "2"], why: "进箱子是长期多一个保管人，所以是 2；按值传参临时再加一，函数里 3；参数销毁后掉回 2。" },
-        { id: "q6", type: "multi", score: 18, stem: "关于 shared_ptr，哪些说法对？（多选，错一项整题 0 分）", options: ["两个对象互相用 shared_ptr 指着，计数回不到 0，析构根本不会发生", "本机实测 sizeof 一个 shared_ptr 是 16 字节，比 unique_ptr 的 8 字节胖，因为它要多记一张计数卡片", "拿 get 得到的地址再单独开一张 shared_ptr，会造成双重释放", "shared_ptr 不能放进 vector，容器只能装值类型"], answers: [0, 1, 2], why: "第四条错：装纸条进容器完全合法，push 一次就多一个保管人，计数会跟着加一 —— 演示里那三行数字正是这么来的。" }
+        { id: "q1", type: "code", score: 15, stem: "把这份程序写成能跑的形：把智能指针工具箱（#include <memory>）搬进来，再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*memory\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <memory>\n\nint main() {", why: "make_shared 与 shared_ptr 住在 memory 里；没有 main 就没入口。" },
+        { id: "q2", type: "code", score: 15, coversTask: 1, stem: "先有一张共享纸条：用 std::make_shared 造一个对象，交给一个 auto 变量。", acceptRegex: ["auto\\s+\\w+\\s*=\\s*std\\s*::\\s*make_shared\\s*<"], acceptOn: "code", sample: "auto a = std::make_shared<std::string>(\"共享数据\");", why: "共享纸条从这一刻起计数为 1；被复制的永远是纸条，不是对象。" },
+        { id: "q3", type: "code", score: 15, coversTask: 1, stem: "任务第 1 条：连着复印两张 —— 先写一张纸条等于已有纸条，再写一张等于第一张（b 再复制给 d 那一步）。", acceptRegex: ["auto\\s+\\w+\\s*=\\s*\\w+\\s*;[\\s\\S]{0,200}auto\\s+\\w+\\s*=\\s*\\w+\\s*;"], acceptOn: "code", sample: "auto b = a;\nauto d = b;   // 从 b 再抄一张", why: "共享的那一路允许复印：每加一张纸条，卡片上的计数就加一，对象还是同一个。" },
+        { id: "q4", type: "code", score: 20, coversTask: 1, stem: "任务第 1 条：把这两张复印关进一层自己的作用域 —— 另起一行开一对花括号，把抄纸条的语句写在括号里。", acceptRegex: ["\\n\\s*\\{[\\s\\S]{0,300}?auto\\s+\\w+\\s*=\\s*\\w+\\s*;[\\s\\S]{0,300}?\\n\\s*\\}"], acceptOn: "code", sample: "{\n    auto b = a;\n    auto d = b;\n    std::println(\"三张在手，计数 = {}\", d.use_count());\n}", why: "格子一合上，里面的纸条当场销毁、计数就往下掉 —— 这一步是任务要你亲眼看的变化。" },
+        { id: "q5", type: "code", score: 20, coversTask: 1, stem: "任务第 1 条：用 use_count 问两次计数，各配一条 println —— 一次在格子合上之前，一次在之后。", acceptRegex: ["use_count\\s*\\(\\s*\\)[\\s\\S]{0,200}use_count\\s*\\(\\s*\\)", "std\\s*::\\s*println\\s*\\("], acceptOn: "code", sample: "std::println(\"三张在手，计数 = {}\", d.use_count());\nstd::println(\"他们走了，计数 = {}\", a.use_count());", why: "计数写在卡片上，用哪一张纸条去问答案都一样；收尾时机是计数减到 0 的那一刻。" },
+        { id: "q6", type: "code", score: 15, coversTask: 1, stem: "任务第 1 条：用一行注释写下你看到的计数怎么涨怎么落（至少四个字，正则只验你写了注释）。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 计数从 1 涨到 3，格子合上又落回 1 —— 对象一直是那一个", why: "注释内容判不了；这一档只确认你把跑出来的变化记下来了。" }
       ],
       selftest: {
         refs: [
-          {q1: 1, q2: "use_count", q3: "刚创建，计数 = 1\n两个朋友加入，计数 = 3\n朋友走了，计数 = 1\n数据还在: 共享数据", q4: 0, q5: "2\n3\n2", q6: [0, 1, 2]}],
+          "#include <print>\n#include <memory>\n#include <string>\n\nint main() {\n    auto a = std::make_shared<std::string>(\"共享数据\");\n    std::println(\"刚创建，计数 = {}\", a.use_count());\n    {\n        auto b = a;\n        auto d = b;\n        std::println(\"三张在手，计数 = {}\", d.use_count());\n    }\n    std::println(\"他们走了，计数 = {}\", a.use_count());\n    std::println(\"数据还在: {}\", *a);\n    return 0;\n}\n// 计数从 1 涨到 3，格子一合上又落回 1：对象始终是同一个\n"],
         wrongs: [
-          {q1: 0, q2: "count", q3: "刚创建，计数 = 1\n两个朋友加入，计数 = 2\n朋友走了，计数 = 0\n数据还在: 共享数据", q4: 3, q5: "1\n2\n1", q6: [1, 3]}],
+          "",
+          "#include <print>\n#include <memory>\n#include <utility>\n\nint main() {\n    auto a = std::make_unique<int>(7);\n    auto b = std::move(a);\n    std::println(\"{}\", *b);\n    return 0;\n}\n",
+          "#include <print>\n#include <memory>\n\nint main() {\n    auto a = std::make_shared<int>(7);\n    auto b = a;\n    std::println(\"计数 {}\", a.use_count());\n    std::println(\"计数 {}\", b.use_count());\n    return 0;\n}\n"],
         loose: [
-          {q1: "1", q2: "USE_COUNT( )", q3: " 刚创建，计数 = 1 \n两个朋友加入，计数 = 3 \n朋友走了，计数 = 1 \n数据还在: 共享数据 ", q4: "0", q5: " 2\n3\n2 ", q6: [0, 1, 2]}]
+          "#  include < memory >\n#  include < print >\n\nint  main ( )\n{\n  auto  owner = std :: make_shared < int > ( 9 ) ;\n  std::println(\"起始 {}\", owner.use_count());\n  {\n      auto  second = owner;\n      auto  third = second;\n      std::println(\"三张 {}\", third.use_count());\n  }\n  std::println(\"散了 {}\", owner.use_count());\n  return 0;\n}\n// 计数上去又下来，东西只有一份\n"]
       }
     },
     {
-      cid: "m124", kind: "paper", mode: "quiz", pass: 60, title: "第 124 课考试 · 三种持有方式怎么选", task: "任务题目：翻出你以前写过的代码，找到裸 new 和 delete 的地方，把它们改成用 unique_ptr 保管；改完数一数少写了哪几行、多写了哪几行", hint: "想不起来就回看本课【它被设计成什么样】那张顺序表和【演示 2 · 非纸条不可的一排不同形状】。",
+      cid: "m124", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 124 课考试 · 三种持有方式怎么选", task: "任务题目：翻出你以前写过的代码，找到裸 new 和 delete 的地方，把它们改成用 unique_ptr 保管；改完数一数少写了哪几行、多写了哪几行", hint: "想不起来就回看本课【它被设计成什么样】那张顺序表和【演示 2 · 非纸条不可的一排不同形状】。",
+      notes: ["问自己那一句再排顺序：值 → unique_ptr → shared_ptr，裸指针只用来看一眼，不负责收尾。", "收尾义务各家不同：值类型由类型自己扫尾，独占纸条在那张纸条出作用域时释放，共享纸条等计数落到 0 的那一刻。", "本机实测成本：unique_ptr 纸条 8 字节，shared_ptr 16 字节，裸指针 8 字节。", "非纸条不可的一排不同形状：派生对象装进装基类纸条的 vector，靠基类的虚函数统一调用，加一个新图形那段循环一个字都不用改。", "取地址与 get() 都是借出去看一眼；空地址那一路靠 if 挡掉，什么都不打。"],
       questions: [
-        { id: "q1", type: "choice", score: 16, coversTask: 1, stem: "（任务题）按本课给的决策顺序，四条路应该这么排：", options: ["shared_ptr → unique_ptr → 值 → 裸指针", "值 → unique_ptr → shared_ptr，裸指针只用来看一眼", "裸指针 → 值 → unique_ptr → shared_ptr", "unique_ptr → shared_ptr → 值，裸指针可以替纸条长期保管"], answer: 1, why: "顺序是按「你还要额外操多少心」排的：值类型自己扫尾，独占纸条替你记那一次释放，共享纸条要算计数；裸指针不表态，所以只配当眼睛。" },
-        { id: "q2", type: "choice", score: 18, coversTask: 1, stem: "（任务题）下面哪一处才真的需要把东西放上堆、用纸条管着？", options: ["函数里造一个 string，用完打印就丢", "一排里要同时装圆和方两种派生对象，靠基类的虚函数统一调用", "一个只在当前大括号内用的整数", "把三个字符拼起来打印一次"], answer: 1, why: "容器每格的尺寸必须一样，装不进大小不同的两类对象；让每个对象各自住堆上、排里只放 unique_ptr，是这一课给的非用纸条不可的场合。" },
-        { id: "q3", type: "output", score: 19, stem: "这段打印三行，依次是什么？\nstd::string best = \"值类型\";\nauto up = std::make_unique<int>(10);\nauto sp = std::make_shared<int>(20);\nstd::println(\"{}\", best);\nstd::println(\"{}\", *up);\nstd::println(\"{}\", *sp);", acceptLines: ["值类型", "10", "20"], why: "值直接写名字，两张纸条要穿过一层星号。多的那一层如果没换来任何东西，就不该套纸条 —— 给一个只在作用域内用的 int 上纸条就是这种浪费。" },
-        { id: "q4", type: "blank", score: 16, coversTask: 1, stem: "（任务题）这一章要从你代码里赶出去的那两个词是 new 和____。", accept: ["delete", "delete[]", "手动 delete"], why: "还的路交给类型或者纸条，你不再手动写；写一次 delete 就多一处可能被跳过、被忘、被做两遍。" },
-        { id: "q5", type: "choice", score: 13, stem: "有一个借看的函数 void peek(const int* p)。关于它的规矩，哪一条对？", options: ["里面可以 delete p，用完就还回去", "只读不还：判空再用，永远不 delete，也不把拿到的地址存成长期成员", "必须把它转成 shared_ptr 才安全", "参数不能接空地址，只能传真地址"], answer: 1, why: "裸指针在这一章只是眼睛，收尾义务还在原主人手里。存成长期成员更危险：纸条出作用域之后，那个地址就悬空了。" },
-        { id: "q6", type: "multi", score: 18, stem: "关于三种持有方式，哪些说法对？（多选，错一项整题 0 分）", options: ["string 和 vector 的数据本来就住在堆上，选值不等于不用堆，只是收尾被类型管着", "按值收一个 shared_ptr 参数等于临时多配一把钥匙，函数里数出来的计数会比外面大一", "通过基类指针销毁对象时，基类析构必须是虚的，否则派生类那一半不会被拆", "函数要把一个对象交回调用者，只能返回指针"], answers: [0, 1, 2], why: "第四条错：返回值本来就会活到调用者那个变量出作用域，交回东西先考虑值；纸条是给「必须留在堆上」的场合准备的。" }
+        { id: "q1", type: "code", score: 15, stem: "把这份程序写成能跑的形：把持有方式那条工具箱（#include <memory>）搬进来，再开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*memory\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <memory>\n\nint main() {", why: "make_unique 与 make_shared 都住在 memory 里；没有 main 就没入口。" },
+        { id: "q2", type: "code", score: 20, coversTask: 1, stem: "任务第 1 条：把那一处裸 new 改成纸条 —— 用 std::make_unique 造一个对象，交给一个 auto 变量，后面不再自己 delete。", acceptRegex: ["auto\\s+\\w+\\s*=\\s*std\\s*::\\s*make_unique\\s*<", "std\\s*::\\s*println\\s*\\("], acceptOn: "code", sample: "auto up = std::make_unique<int>(10);\nstd::println(\"② unique_ptr: {}\", *up);", why: "独占纸条替你记住那一次释放：纸条出作用域就收尾，不用再有一行 delete。" },
+        { id: "q3", type: "code", score: 20, coversTask: 1, stem: "任务第 1 条先走第一步：能用在栈上活到作用域结束就够 —— 直接声明一个 std::string 值类型变量并给初值，再用一条 println 打它。", acceptRegex: ["std\\s*::\\s*string\\s+\\w+\\s*=\\s*\"[^\"]*\"\\s*;", "std\\s*::\\s*println\\s*\\("], acceptOn: "code", sample: "std::string best = \"值类型\";\nstd::println(\"① 值: {}\", best);", why: "顺序是按你还要额外操多少心排的：值类型自己扫尾，九成场景就到这一格为止。" },
+        { id: "q4", type: "code", score: 25, coversTask: 1, stem: "任务第 1 条的最后一条路：裸指针只当眼睛 —— 写一个参数是 const 指针的函数，再把纸条用 .get() 借给它。", acceptRegex: ["void\\s+\\w+\\s*\\(\\s*const\\s+\\w+\\s*\\*\\s*\\w+\\s*\\)", "\\.get\\s*\\(\\s*\\)"], acceptOn: "code", sample: "void peek(const int* p) { if (p) std::println(\"看一眼: {}\", *p); }\n// main 里：peek(up.get());", why: "get() 借出去的是地址，保管权不动；谁也不许拿这只眼睛去 delete。" },
+        { id: "q5", type: "code", score: 20, coversTask: 1, stem: "任务第 1 条：用一行注释写下你把哪一处从裸 new 与 delete 改成了 unique_ptr，还有没有剩下的（至少四个字，正则只验你写了注释）。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 原来是 new 一个 int 再 delete，现在交给 make_unique：谁出作用域谁收尾", why: "自查这一件只能靠你把它写下来：判分器读不懂注释内容，也扫不到你另一个文件。" }
       ],
       selftest: {
         refs: [
-          {q1: 1, q2: 1, q3: "值类型\n10\n20", q4: "delete", q5: 1, q6: [0, 1, 2]}],
+          "#include <print>\n#include <memory>\n#include <string>\n\nvoid peek(const int* p) { if (p) std::println(\"看一眼: {}\", *p); }\n\nint main() {\n    std::string best = \"值类型\";\n    auto up = std::make_unique<int>(10);\n    std::println(\"① 值: {}\", best);\n    std::println(\"② unique_ptr: {}\", *up);\n    peek(up.get());\n    peek(nullptr);\n    return 0;\n}\n// 以前这里是 int* p = new int(10); 用完 delete p;，现在换成 make_unique，收尾不用再操心\n"],
         wrongs: [
-          {q1: 0, q2: 0, q3: "值类型\n20\n10", q4: "free", q5: 0, q6: [1, 3]}],
+          "",
+          "#include <print>\n\nint main() {\n    int* p = new int(10);\n    std::println(\"{}\", *p);\n    delete p;\n    return 0;\n}\n",
+          "#include <print>\n#include <memory>\n\nint main() {\n    auto up = std::make_unique<int>(10);\n    std::println(\"{}\", *up);\n    return 0;\n}\n",
+          "#include <print>\n#include <memory>\n#include <string>\n\nint main() {\n    std::string s = \"值\";\n    auto sp = std::make_shared<int>(5);\n    std::println(\"{}\", *sp);\n    return 0;\n}\n"],
         loose: [
-          {q1: "1", q2: "1", q3: "值类型\n10\n20", q4: "DELETE", q5: "1", q6: [0, 1, 2]}]
+          "#  include < memory >\n#  include < print >\n\nvoid  look ( const int * q ) { if ( q ) std::println(\"看一眼 {}\", *q); }\n\nint  main ( )\n{\n  std :: string  label = \"先看值\" ;\n  auto  holder = std :: make_unique < int > ( 3 ) ;\n  std::println(\"{}\", label);\n  std::println(\"{}\", *holder);\n  look(holder.get());\n  return 0;\n}\n// 这一处原来是 new 加 delete，改成 make_unique 之后没人再管收尾\n"]
       }
     },
   ]

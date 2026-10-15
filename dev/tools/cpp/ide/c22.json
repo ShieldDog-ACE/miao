@@ -1,0 +1,73 @@
+{
+  "cid": "c22",
+  "note": "比较运算这场的旧题在判「输 60 和 90 之后每行印 true 还是 false」，编辑器判不了输出，就把任务摊成看得见的四行：连着读两个数、把 > 的结果打出来、把 == 的结果打出来、把 != 的结果打出来；bool 盒子和 = 与 == 之别收进 notes 加一条存进 bool 的加分条件。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把键盘和打印两个工具箱都搬进来（两行 #include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*iostream\\s*>", "#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <iostream>\n#include <print>\n\nint main() {",
+      "why": "std::cin 和 std::print 住在 iostream 里，std::println 住在 print 里，缺一个就没人认识它们；没有 main，链接器找不到入口。",
+      "score": 15
+    },
+    {
+      "stem": "开两只 int 盒子并给上初值 0，再用一条 std::cin 连着读进两个数。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*0\\s*;[\\s\\S]*int\\s+\\w+\\s*=\\s*0\\s*;", "std::cin\\s*>>\\s*\\w+\\s*>>\\s*\\w+"],
+      "sample": "int a = 0;\nint b = 0;\nstd::cin >> a >> b;",
+      "why": "程序按个数收，一行敲 60 空格 90 就各灌进一只盒子；读不进去时盒子保持初值 0。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 打出「前者大于后者吗」的比较结果：逗号后面就写那两个变量之间的 >。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*>\\s*\\w+"],
+      "sample": "std::println(\"a > b  是 {}\", a > b);",
+      "why": "比较式先算成一个真假值再进占位坑，和塞一个变量名进去是同一回事；60 对 90 这一行打 false。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条要的那一句：用一条 std::println 打出两个数 == 的结果（两个等号，不是一个）。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*==\\s*\\w+"],
+      "sample": "std::println(\"a == b 是 {}\", a == b);",
+      "why": "== 是问一句，单个 = 是装进去；写成 a = b 编译器不报错，还把 b 的值悄悄灌进 a。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "再补一条 std::println，打这两个数 != 的结果。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*!=\\s*\\w+"],
+      "sample": "std::println(\"a != b 是 {}\", a != b);",
+      "why": "两个数一样时 == 点头、!= 摇头，这一对正好互为反面，是任务 2 要你逐行对照的那一组。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "把一次比较的结果先存起来：开一只 bool 盒子，右边写一次比较。",
+      "acceptRegex": ["bool\\s+\\w+\\s*=\\s*\\w+\\s*(==|!=|>=|<=|>|<)"],
+      "sample": "bool pass = a >= 60;",
+      "why": "比较算完得到的是一个 bool 值，可以先用 bool 盒子装着，之后再打印或反复用。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "六个比较符号里，>= 和 <= 带等号，正好卡边界时也算过线：60 >= 60 是 true。",
+    "单个 = 是装进去，== 才是问一句；a = 5 当比较写不报错，因为赋值本身也是个表达式，代价是盒子的值被换掉。",
+    "比较只是回答一个问题，回答是一个真假值，既不改变 a 也不改变 b。",
+    "照数学课的写法写 60 <= score <= 90，在 C++ 里恒为 true：先算 60 <= score 得一个 bool，再把它当成 1 或 0 去和 90 比。",
+    "std::println 打 bool 会印出 true 或 false 这两个词，不会印 1 和 0。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <iostream>\n#include <print>\n\nint main() {\n    int a = 0;\n    int b = 0;\n\n    std::print(\"输入两个整数: \");\n    std::cin >> a >> b;\n\n    std::println(\"a > b  是 {}\", a > b);\n    std::println(\"a == b 是 {}\", a == b);\n    std::println(\"a != b 是 {}\", a != b);\n\n    bool same = a == b;\n    std::println(\"先存起来的 {}\", same);\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <iostream>\n#include <print>\nint main() {\n    int a = 0;\n    std::cin >> a;\n    std::println(\"{}\", a);\n    return 0;\n}\n",
+      "#  include <print>\nint main() {\n    int a = 60;\n    int b = 90;\n    std::println(\"{}\", a = b);\n    std::println(\"{}\", a < b);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < iostream >\n#  include <print>\n\nint main ( )\n{\n  int  x = 0;\n  int y = 0;\n  std::print ( \"来两个数 : \" );\n  std::cin >> x >> y;\n  std::println( \"谁大 {}\", x > y );\n  std::println( \"一样吗 {}\", x == y );\n  std::println( \"不一样 {}\", x != y );\n  bool  bigger = x >= y;\n}\n"
+    ]
+  }
+}

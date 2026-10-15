@@ -1,0 +1,73 @@
+{
+  "cid": "m160",
+  "note": "任务是两个 target 各跑一遍并观察指针怎么走：每步打印与观察记录两条压分量给任务，骨架三条不盖任务，保证没改的源稿判不过线。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "两个下标站到两头去：一个从 0 起，另一个用 static_cast 把元素个数变成 int 再减 1。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*0\\s*[,;]", "static_cast\\s*<\\s*int\\s*>\\s*\\(\\s*\\w+\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*\\)\\s*-\\s*1"],
+      "sample": "int lo = 0, hi = static_cast<int>(v.size()) - 1;",
+      "why": "不转类型就在无符号数上减一，空容器会绕回类型最大值；转成 int 算出的 -1 正好让循环一圈都不转。",
+      "score": 15
+    },
+    {
+      "stem": "两只手还没碰头就继续：while 的条件是 lo 小于 hi，圈里先算一次和。",
+      "acceptRegex": ["while\\s*\\(\\s*\\w+\\s*<\\s*\\w+\\s*\\)", "\\w+\\s*=\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\+\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*;"],
+      "sample": "while (lo < hi) {\n    int sum = v[lo] + v[hi];",
+      "why": "每步只算一次和；敢一次排除一整列的理由是有序时 v[lo] 配不上 v[hi]，就配不上 hi 左边的任何人。",
+      "score": 15
+    },
+    {
+      "stem": "三条岔路写全：和相等就记一笔再 break，和小就抬左，和大就压右。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*==\\s*\\w+\\s*\\)[\\s\\S]{0,60}?break\\s*;", "\\+\\+\\s*\\w+\\s*;[\\s\\S]{0,20}?--\\s*\\w+"],
+      "sample": "if (sum == target) { found = true; break; }\nif (sum < target) ++lo; else --hi;",
+      "why": "退出循环后不判那个 found 就直接打印两头，实测 target=100 会打出 15 + 15 = 100 这种假答案。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把 target 先写成 100 跑一遍，再写成 6 跑一遍，两处赋值都要在代码里。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*100\\s*;", "int\\s+\\w+\\s*=\\s*6\\s*;"],
+      "sample": "int target = 100;\nint target = 6;",
+      "why": "100 那跑六步一路都小、撞上判据退出；6 那跑命中 2 + 4，源稿特意挑它是让它落在中间。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "每一步把指针怎么走打出来：格式串里带上这是第几步，占位坑给到四个以上（步数、两个下标、当前那个和）。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*步[^\"]*\"", "std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\\{\\}"],
+      "sample": "std::println(\"第 {} 步 lo={} hi={} 和 {}\", steps, lo, hi, sum);",
+      "why": "这一行就是本课的望远镜：实测 100 那跑的六步和依次是 16、17、19、21、23、26，每一步都带走一整列而不是试掉一个候选。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "观察到了什么，用一行注释记下来（带上你看到的那个数字）。",
+      "acceptRegex": ["//[^\\n]{4,}", "//[^\\n]*[0-9]"],
+      "sample": "// 6 那一跑走满 6 步，命中时 lo=1、hi=2，两只手正好并排",
+      "why": "判的是你确实记了一行；记的对不对这块编辑器核对不了 —— 实测 6 那跑前四步全是大、一路压右，第五步 1+4 得 5 才抬左，第六步 2+4 命中。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "这套办法的前提是数组已经排好序：实测拿打乱的那串跑，target 从 1 到 26 有 11 个判错，而且一声不响。",
+    "一步排除的不是一格而是一整列：最小的配上最大的都不够，配上中间任何人更不够。",
+    "双指针买的是最坏情况的上限：target=5 那一组双重循环第 2 对就撞上 1+4，双指针却走了 5 步。",
+    "一万两千个数时是 11999 步对 71994000 对 —— 对拍要的就是这种诚实账。",
+    "要排完还认得原来的位次，就把值和下标配成一对再排；下标会被排序洗掉。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {1, 2, 4, 6, 8, 11, 15};      // 必须有序\n\n    {   // 第一跑：target 取 100\n        int target = 100;\n        int lo = 0, hi = static_cast<int>(v.size()) - 1;\n        bool found = false;\n        int steps = 0;\n        while (lo < hi) {\n            int sum = v[lo] + v[hi];\n            ++steps;\n            std::println(\"第 {} 步 lo={} hi={} 和 {}\", steps, lo, hi, sum);\n            if (sum == target) { found = true; break; }\n            if (sum < target) ++lo; else --hi;\n        }\n        if (found) std::println(\"找到 {} + {}\", v[lo], v[hi]);\n        else std::println(\"没有两个数能凑出 {}\", target);\n        // 六步一路都和小，最后 lo 撞上 hi 才退出\n    }\n    {   // 第二跑：target 取 6\n        int target = 6;\n        int lo = 0, hi = static_cast<int>(v.size()) - 1;\n        bool found = false;\n        int steps = 0;\n        while (lo < hi) {\n            int sum = v[lo] + v[hi];\n            ++steps;\n            std::println(\"第 {} 步 lo={} hi={} 和 {}\", steps, lo, hi, sum);\n            if (sum == target) { found = true; break; }\n            if (sum < target) ++lo; else --hi;\n        }\n        // 6 那一跑走满 6 步，命中时 lo=1、hi=2\n        std::println(\"命中时 lo={} hi={}\", lo, hi);\n    }\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {1, 2, 4, 6, 8, 11, 15};\n    int target = 10;\n    int lo = 0, hi = static_cast<int>(v.size()) - 1;\n    bool found = false;\n    while (lo < hi) {\n        int sum = v[lo] + v[hi];\n        if (sum == target) { found = true; break; }\n        if (sum < target) ++lo; else --hi;\n    }\n    if (found) std::println(\"找到了\");\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {8, 1, 11, 4, 15, 2, 6};\n    int target = 100;\n    int lo = 0, hi = 6;\n    while (lo < hi) { ++lo; }\n    std::println(\"{}\", lo);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\nint  main ( )\n{\n  std :: vector < int >  v  =  { 1 , 2 , 4 , 6 , 8 , 11 , 15 } ;\n  {\n    int  target  =  100 ;\n    int  lo  =  0 ,  hi  =  static_cast < int > ( v . size ( ) ) - 1 ;\n    bool  got  =  false ;\n    int  n  =  0 ;\n    while ( lo < hi ) {\n      int  sum  =  v [ lo ] + v [ hi ] ;\n      ++ n ;\n      std :: println ( \" 第 {} 步 lo={} hi={} 的和是 {}\" , n , lo , hi , sum ) ;\n      if ( sum == target ) { got = true ; break ; }\n      if ( sum < target )  ++ lo ;  else  -- hi ;\n    }\n    std :: println ( \" 凑不凑得出：{}\" , got ) ;\n  }\n  {\n    int  target  =  6 ;\n    int  lo  =  0 ,  hi  =  static_cast < int > ( v . size ( ) ) - 1 ;\n    bool  got  =  false ;\n    int  n  =  0 ;\n    while ( lo < hi ) {\n      int  sum  =  v [ lo ] + v [ hi ] ;\n      ++ n ;\n      std :: println ( \" 第 {} 步 lo={} hi={} 的和是 {}\" , n , lo , hi , sum ) ;\n      if ( sum == target ) { got = true ; break ; }\n      if ( sum < target )  ++ lo ;  else  -- hi ;\n    }\n    // 看到 6 用了 6 步，最后两只手停在 1 和 2\n  }\n}\n"
+    ]
+  }
+}

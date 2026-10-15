@@ -1,0 +1,64 @@
+{
+  "cid": "c25",
+  "note": "优先级这场的旧题在判「折成算式树三步、各行得几」，编辑器判不了心算结果，就把任务 1 摊成把 5 + 2 * 3 % 4 原样打出来、任务 2 摊成给加法套上括号再打一遍；平均分那对带括号与忘括号的行是正文的原型，各要一行。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "用一条 std::println 把 5 + 2 * 3 % 4 原样打出来：逗号后面照抄这个式子，一个括号都别加。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\"\\s*,\\s*5\\s*\\+\\s*2\\s*\\*\\s*3\\s*%\\s*4"],
+      "sample": "std::println(\"5 + 2 * 3 % 4 = {}\", 5 + 2 * 3 % 4);",
+      "why": "乘和取余同一层，从左往右：先 2 * 3 得 6，再 6 % 4 得 2，最后才轮到 5 + 2，打出来是 7。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "任务第 2 条：用一条 std::println 把它改成加法先算：给 5 + 2 套上括号，后面的乘和取余照旧。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\"\\s*,\\s*\\(\\s*5\\s*\\+\\s*2\\s*\\)\\s*\\*\\s*3\\s*%\\s*4"],
+      "sample": "std::println(\"(5 + 2) * 3 % 4 = {}\", (5 + 2) * 3 % 4);",
+      "why": "括号最优先这一条永远不会错：7 * 3 得 21，21 % 4 余 1，一个括号就把结果从 7 挪到 1。",
+      "coversTask": 2,
+      "score": 25
+    },
+    {
+      "stem": "算一次平均分：开一只 int 盒子，右边先把三个数用括号括起来求和，再除以一个数。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*\\(\\s*\\d+\\s*\\+\\s*\\d+\\s*\\+\\s*\\d+\\s*\\)\\s*/\\s*\\d+\\s*;"],
+      "sample": "int avg = (85 + 92 + 78) / 3;",
+      "why": "先加括号求和再除，255 / 3 得 85（整数除法，小数砍掉）；这一对在正文里救过很多程序的命。",
+      "score": 20
+    },
+    {
+      "stem": "把同一道平均分去掉括号再算一遍：另开一只 int 盒子，右边是同样的三个数加加加，最后除，不带任何括号。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*\\d+\\s*\\+\\s*\\d+\\s*\\+\\s*\\d+\\s*/\\s*\\d+\\s*;"],
+      "sample": "int wrong = 85 + 92 + 78 / 3;",
+      "why": "除号抢先：78 / 3 得 26，再加 85 和 92 得 203；编译器一个字都不说，这就是优先级最坑人的地方。",
+      "score": 15
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include <print> 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "这条阶梯是：括号最优先，其次 * / %，再是 + -，赋值排在最后；同一层从左往右算。",
+    "拿不准就加括号，多余的括号不会多生成一条代码。",
+    "100 - 20 - 5 是 75，100 - (20 - 5) 是 85：减法同层从左往右，括号能把顺序整个扳过来。",
+    "赋值排在最底下：total += 10 + 4 * 2 先把等号右边整个算成 18，才并进 total。",
+    "2 + 3 * 4 打 14 不是 20：乘号比加号高，3 * 4 先折成 12 再加。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    std::println(\"原式 = {}\", 5 + 2 * 3 % 4);\n    std::println(\"括号改一下 = {}\", (5 + 2) * 3 % 4);\n\n    int avg = (85 + 92 + 78) / 3;\n    std::println(\"平均分 = {}\", avg);\n\n    int wrong = 85 + 92 + 78 / 3;\n    std::println(\"去掉括号 = {}\", wrong);\n\n    int total = 0;\n    total += 10 + 4 * 2;\n    std::println(\"total = {}\", total);\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    std::println(\"{}\", 5 + 2);\n    std::println(\"{}\", 3 * 4);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int avg = 85 + 92 + 78 / 3;\n    std::println(\"{}\", avg);\n    std::println(\"{}\", 1 + 2 * 3);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  std::println( \"第一个 {}\" , 5 + 2 * 3 % 4 );\n  std::println( \"加了括号 {}\" , ( 5 + 2 ) * 3 % 4 );\n  int  pingjun = ( 80 + 90 + 100 ) / 3 ;\n  int  cuowu = 80 + 90 + 100 / 3;\n  std::println( \"{} 和 {}\", pingjun, cuowu );\n}\n"
+    ]
+  }
+}

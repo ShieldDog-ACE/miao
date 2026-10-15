@@ -1,0 +1,76 @@
+{
+  "cid": "m136",
+  "note": "任务是把元素改成一千家再跑一次看移动是不是依旧几乎是 0：秒表、一千个元素、两格交接、换算微秒各一条，实测数字落在 buffer 注释里。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "按下秒表两次：用 std::chrono::steady_clock::now() 各取一个时刻，中间夹住要量的活儿。",
+      "acceptRegex": ["std\\s*::\\s*chrono\\s*::\\s*steady_clock\\s*::\\s*now\\s*\\(\\s*\\)[\\s\\S]*?std\\s*::\\s*chrono\\s*::\\s*steady_clock\\s*::\\s*now\\s*\\("],
+      "sample": "auto t1 = std::chrono::steady_clock::now();\nstd::vector<int> copy = big;\nauto t2 = std::chrono::steady_clock::now();",
+      "why": "两个 now 紧贴着要量的活儿，别把 println 夹在中间；steady 说的是这个钟只朝前走，量隔了多久该用它。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把那一千个元素的 vector 写出来（元素个数写一千，带撇的写法也算）。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s+\\w+\\s*\\(\\s*1'?0{3}\\s*,"],
+      "sample": "std::vector<int> big(1000, 1);",
+      "why": "这一跑的关键就是这个数字：百万元素缩成一千个，复制的账跟着缩一千倍。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写一格复制：新的 std::vector<int> 直接拿原件赋值。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\w+\\s*;"],
+      "sample": "std::vector<int> copy = big;",
+      "why": "复制要新申请一块内存逐个抄，个数多少直接写在这一档的耗时里。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写一格移动：新的 std::vector<int> 赋值时对原件用 std::move。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*std\\s*::\\s*move\\s*\\("],
+      "sample": "std::vector<int> moved = std::move(big);",
+      "why": "移动只交接手里那几根指针，从不看元素个数，所以个数怎么改它都一动不动。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "把两个时刻相减换算成微秒，再取那个数：用 std::chrono::duration_cast 配上 count()。",
+      "acceptRegex": ["duration_cast\\s*<[^>]*>\\s*\\(\\s*\\w+\\s*-\\s*\\w+\\s*\\)", "\\.\\s*count\\s*\\("],
+      "sample": "return std::chrono::duration_cast<std::chrono::microseconds>(b - a).count();",
+      "why": "两时刻相减是一个 duration，duration_cast 换成微秒刻度，count() 才取出那个数。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 打移动那一档：格式串里带「微秒」，参数按顺序给那一格的元素个数；再在旁边写一行注释，记下你实测到的那个数。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*微秒[^\"]*\"\\s*,\\s*\\w+\\s*\\.\\s*size\\s*\\(", "//[^\\n]{4,}"],
+      "sample": "std::println(\"移动 {} 个元素耗时 {} 微秒\", moved.size(), diff_us(t2, t3));   // 一千个元素，移动这一行还是一微秒都不到",
+      "why": "这一条判的是那句打印和「你确实记了一行」；你记的数字对不对这块编辑器判不动，本机实测是 0 微秒 —— 那只是低于尺子的最小刻度，纳秒下是几十到一百多纳秒。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "steady 说的是这个钟只朝前走、不会因为系统时间被调而倒退；问现在几点是另一个钟的事。",
+    "微秒刻度下移动是 0，这个 0 只等于它低于这把尺子的最小刻度，不等于没有成本。",
+    "复制的账按元素个数走，个数缩一千倍它就跟着缩；移动从不看元素个数，所以一动不动。",
+    "同一份程序连跑几次、报中间那个，并把摆差一起说出来；第一次冷跑的数字先丢掉。",
+    "本机这组数字只是同一台机器上的一次实测，不能当常数抄进文档；加不加 -O2，数字都在同一档。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <chrono>\n#include <print>\n#include <vector>\n#include <utility>\n\nlong diff_us(std::chrono::steady_clock::time_point a,\n             std::chrono::steady_clock::time_point b) {\n    return std::chrono::duration_cast<std::chrono::microseconds>(b - a).count();\n}\n\nint main() {\n    std::vector<int> big(1000, 1);\n    auto t1 = std::chrono::steady_clock::now();\n    std::vector<int> copy = big;\n    auto t2 = std::chrono::steady_clock::now();\n    std::vector<int> moved = std::move(big);\n    auto t3 = std::chrono::steady_clock::now();\n    std::println(\"复制 {} 个元素耗时 {} 微秒\", copy.size(), diff_us(t1, t2));\n    std::println(\"移动 {} 个元素耗时 {} 微秒\", moved.size(), diff_us(t2, t3));   // 一千个元素这一跑，移动那一行还是 0\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n#include <utility>\n\nint main() {\n    std::vector<int> big(1000000, 1);\n    std::vector<int> copy = big;\n    std::println(\"{}\", copy.size());\n    return 0;\n}\n",
+      "#include <chrono>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> big(1000, 1);\n    auto t1 = std::chrono::steady_clock::now();\n    auto t2 = std::chrono::steady_clock::now();\n    std::println(\"耗时 {} 微秒\", std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < chrono >\n#  include < print >\n#  include < vector >\n#  include < utility >\n\nlong  us_between ( std :: chrono :: steady_clock :: time_point  p ,\n                   std :: chrono :: steady_clock :: time_point  q )\n{\n  return std :: chrono :: duration_cast < std :: chrono :: microseconds > ( q - p ) . count ( ) ;\n}\n\nint  main ( )\n{\n  std :: vector < int >  data ( 1000 , 7 ) ;\n  auto  s1  =  std :: chrono :: steady_clock :: now ( ) ;\n  std :: vector < int >  dup  =  data ;\n  auto  s2  =  std :: chrono :: steady_clock :: now ( ) ;\n  std :: vector < int >  handed  =  std :: move ( data ) ;\n  auto  s3  =  std :: chrono :: steady_clock :: now ( ) ;\n  std :: println ( \"dup {} 个 用了 {} 微秒\" , dup . size ( ) , us_between ( s1 , s2 ) ) ;\n  std :: println ( \"handed {} 个 用了 {} 微秒\" , handed . size ( ) , us_between ( s2 , s3 ) ) ;\n  // 一千个元素这一跑，复制落到一两微秒，移动照旧是 0\n}\n"
+    ]
+  }
+}

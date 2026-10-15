@@ -1,0 +1,75 @@
+{
+  "cid": "c33",
+  "note": "while 这场的旧题在判「跑几圈、sum 的轨迹是什么」，编辑器判不了圈数，就把任务 1 摊成真写一句 while (sum <= 10) 加循环体里的 += 和循环外的两个坑打印，任务 2 摊成先要有那句 n++ 再补一条 buffer 注释记下删掉它之后的现场；判据在进门前问、忘初值一圈不跑只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "先把循环三件套的两只盒子摆好：一只装第几圈，初值 1；一只装已攒的总数，初值 0。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*1\\s*;", "int\\s+\\w+\\s*=\\s*0\\s*;"],
+      "sample": "int n = 1;\nint sum = 0;",
+      "why": "累计盒先清零是老规矩；忘了给初值，里面是内存留下的垃圾，可能一进门条件就是假，一圈都没跑。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把上限换成 10 —— 写一条 while，括号里的条件就是总数小于等于 10，后面跟上花括号。",
+      "acceptRegex": ["while\\s*\\(\\s*\\w+\\s*<=\\s*10\\s*\\)\\s*\\{"],
+      "sample": "while (sum <= 10) {",
+      "why": "条件是进门前问的：10 那一圈开始时问「10 小于等于 10」仍为真，于是明知会超标还是把 5 加了进去。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "在循环体里写一句 +=：把这一圈的圈数并进总数那只盒子。",
+      "acceptRegex": ["\\w+\\s*\\+=\\s*\\w+\\s*;"],
+      "sample": "sum += n;",
+      "why": "循环体里干的事就是这一句并加；sum 的轨迹因此是 1、3、6、10、15。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再写一句推进：单独一行的 ++（这一句就是你待会儿要删掉、亲眼去看死循环的那一句）。",
+      "acceptRegex": ["\\w+\\s*\\+\\+\\s*;"],
+      "sample": "n++;",
+      "why": "循环体里必须有人推进条件，否则就是死循环；少了这一句，这一圈就白干。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "跳出循环之后再打一行：一条 std::println，格式串里两个占位坑，逗号后面按顺序给总数和圈数（圈数就是那只计数器减一）。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*-\\s*1"],
+      "sample": "std::println(\"一共跑了 {} 圈，总数是 {}\", n - 1, sum);",
+      "why": "n 出口时已经多走一步，所以报圈数要减一；这一行在循环的大括号之外，只执行一次。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "删掉那一句 ++ 再跑一遍（屏幕刷不停就按 Ctrl+C 停），然后用一行注释写下你看到的现象（至少写四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 没有 n++ 之后屏幕一直刷，非 Ctrl+C 停不下来",
+      "why": "这一条只能判「你写了一行像样的注释」，写没写对现场这块编辑器判不了 —— 这是它判不动的部分。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "while 的执行顺序是问、进、干、再问：判据永远在门口等着，答真才迈进大括号。",
+    "条件一开始就不成立时，循环体一次都不会执行，程序直接从大括号后面接着走。",
+    "判据只管这一圈开始之前的状态，所以超标的那一圈照样干完了才被打断。",
+    "while (sum = 50) 这种写法编译器不一定拦在门外：赋值表达式的值就是 50，非零即为真，条件永远成立，顶多一句警告，程序照跑照死。",
+    "删掉推进那一句并不一定立刻死循环：如果总数还在每圈变，它迟早越过上限，坏掉的是圈数统计 —— 删代码前先想清楚谁在推动条件。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int n = 1;\n    int sum = 0;\n\n    while (sum <= 10) {\n        sum += n;\n        std::println(\"加上 {} 后 sum = {}\", n, sum);\n        n++;\n    }\n\n    std::println(\"总数 {} 一共跑了 {} 圈\", sum, n - 1);\n    // 把 n++ 删掉再跑，屏幕刷不停，只能 Ctrl+C\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int sum = 0;\n    while (sum <= 50) {\n        sum += 1;\n    }\n    std::println(\"{}\", sum);\n    return 0;\n}\n",
+      "int n = 1;\nint sum = 0;\nwhile (sum <= 10) {\n    sum += n;\n}\nstd::println(\"{}\", sum);\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  int  round = 1;\n  int  total = 0 ;\n  while ( total <= 10 )\n  {\n    total += round ;\n    round ++ ;\n  }\n  std::println( \"{} 和 {}\", total, round - 1 );\n  // 少一句推进就一直刷字\n}\n"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "cid": "m170",
+  "note": "DFS 数岛屿改单编辑器：一条任务拆成「改出斜角那块陆地 + 扫描撞到陆地就计数 + 把岛数打出来」，淹岛递归自己的三件事（函数头带越界判断、先盖章再扩散）各占一条，不挂 coversTask。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一行：开一张二维整数地图，用花括号把每一行的陆地与水一次性填好（1 是陆地）。",
+      "acceptRegex": [
+        "std\\s*::\\s*vector\\s*<\\s*std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s*>\\s+\\w+\\s*=\\s*\\{"
+      ],
+      "sample": "std::vector<std::vector<int>> g = { {1, 1, 0, 0}, {1, 0, 0, 1}, {0, 0, 1, 1} };",
+      "why": "地图直接拿花括号初始化，行列都在纸上，改一格只需把那一行的数换掉；标记也写进这张表，省掉另一份已踩过的表。",
+      "score": 15
+    },
+    {
+      "stem": "写一行递归函数的开头：两个整数参数（行、列），第一句就把出界的和不是陆地的格子挡回去。",
+      "acceptRegex": [
+        "void\\s+\\w+\\s*\\(\\s*int\\s+\\w+\\s*,\\s*int\\s+\\w+\\s*\\)",
+        "if\\s*\\([^)]*<\\s*0[\\s\\S]{0,80}?\\]\\s*\\[\\s*\\w+\\s*\\]\\s*!=\\s*1\\s*\\)\\s*return"
+      ],
+      "sample": "void sink(int r, int c) {\n    if (r < 0 || r >= R || c < 0 || c >= C || g[r][c] != 1) return;",
+      "why": "出界检查一句都不能少：拿负数当下标或者越过行数，实测本机当场中止、退出码 134；不是陆地也直接 return，水格没什么可淹的。",
+      "score": 15
+    },
+    {
+      "stem": "写两行：先把这一格改成 0 盖章，再往行号加一和减一的两个方向各递一次。",
+      "acceptRegex": [
+        "\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\[\\s*\\w+\\s*\\]\\s*=\\s*0\\s*;",
+        "\\w+\\s*\\(\\s*\\w+\\s*\\+\\s*1\\s*,\\s*\\w+\\s*\\)",
+        "\\w+\\s*\\(\\s*\\w+\\s*-\\s*1\\s*,\\s*\\w+\\s*\\)"
+      ],
+      "sample": "g[r][c] = 0;\nsink(r+1, c); sink(r-1, c); sink(r, c+1); sink(r, c-1);",
+      "why": "先盖章再扩散：邻居递回来时看到 0 就停；反过来先递后盖章，相邻两格互相递进个没完，栈被压穿。上下左右四个方向都这么递，斜角不在其中。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：按只在对角线接触的样子改地图 —— 第一行改成两头各一块陆地、中间两格是水的那一串，其余两行照旧。",
+      "acceptRegex": [
+        "1\\s*,\\s*0\\s*,\\s*1\\s*,\\s*0"
+      ],
+      "sample": "std::vector<std::vector<int>> g = { {1, 0, 1, 0},\n                                    {1, 0, 0, 1},\n                                    {0, 0, 1, 1} };",
+      "why": "这样 (0,2) 那一格上下左右四邻全是水，只在斜角挨着别的陆地；相邻只认四个方向，它守得住独立，实测数出 3 座。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写两行：扫完整张图的嵌套循环里，撞到一格还是 1 就把那个计数器加一，再派递归去淹它。",
+      "acceptRegex": [
+        "for\\s*\\([^)]*<\\s*\\w+[\\s\\S]{0,60}?for\\s*\\(",
+        "if\\s*\\(\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\[\\s*\\w+\\s*\\]\\s*==\\s*1\\s*\\)",
+        "(\\+\\+\\s*\\w+|\\w+\\s*\\+=\\s*1)"
+      ],
+      "sample": "for (int r = 0; r < R; ++r) for (int c = 0; c < C; ++c)\n    if (g[r][c] == 1) { ++islands; sink(r, c); }",
+      "why": "被淹过的格子早就成了 0，扫描再撞上去也不会重复计数；撞到 1 就说明挖到一座新岛，计一次、淹一片。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把数出来的岛数打出来：格式串里说明白这是岛屿数量，留一个占位坑，逗号后给那个计数器。",
+      "acceptRegex": [
+        "std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*(岛|[Ii]sland)[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"
+      ],
+      "sample": "std::println(\"岛屿数量 = {}\", islands);",
+      "why": "几个方向就几个格子：淹了几次，岛就有几座，最后这一行就是答案。",
+      "coversTask": 1,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "相邻只认上下左右四个方向：四邻全是水、只在斜角沾着别的陆地，才叫只在对角线方向接触。",
+    "把斜角方向也加进扩散，实测这张图就从 3 座并成 2 座。",
+    "标记直接写进地图本身，省掉一份单独的已访问数组；旧岛的陆地早被淹成 0，所以扫描撞到 1 就一定是新岛。",
+    "「数得对」靠的是先盖章再扩散这一下 —— 顺序反了不是算错，是当场把栈压穿。",
+    "预测输出这件事这块编辑器判不了：先在心里说改完该是几座，再跑一遍对照，对不上就回头看哪一行的方向少了。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nstd::vector<std::vector<int>> g = { {1, 0, 1, 0},\n                                    {1, 0, 0, 1},\n                                    {0, 0, 1, 1} };\nint R = 3, C = 4, islands = 0;\nvoid sink(int r, int c) {\n    if (r < 0 || r >= R || c < 0 || c >= C || g[r][c] != 1) return;\n    g[r][c] = 0;\n    sink(r+1, c); sink(r-1, c); sink(r, c+1); sink(r, c-1);\n}\nint main() {\n    for (int r = 0; r < R; ++r) for (int c = 0; c < C; ++c)\n        if (g[r][c] == 1) { ++islands; sink(r, c); }\n    std::println(\"岛屿数量 = {}\", islands);\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\nint main() {\n    std::vector<std::vector<int>> g = { {1, 1, 0}, {0, 1, 0} };\n    std::println(\"岛屿数量 = {}\", 1);\n}\n",
+      "#include <print>\n#include <vector>\nstd::vector<std::vector<int>> g = { {1, 0, 1, 0}, {1, 0, 0, 1}, {0, 0, 1, 1} };\nint R = 3, C = 4, islands = 0;\nvoid sink(int r, int c) {\n    g[r][c] = 0;\n    sink(r+1, c);\n}\nint main() {\n    for (int r = 0; r < R; ++r) ++islands;\n    std::println(\"{}\", islands);\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\nstd :: vector < std :: vector < int > >  land  =  { { 1 , 0 , 1 , 0 } ,  { 1 , 0 , 0 , 1 } ,  { 0 , 0 , 1 , 1 } } ;\nint  rows = 3 ,  cols = 4 ,  cnt = 0 ;\nvoid  flood ( int  x ,  int  y )\n{\n  if ( x  <  0  ||  x  >= rows  ||  y  <  0  ||  y  >= cols  ||  land [ x ] [ y ]  !=  1 )  return ;\n  land [ x ] [ y ]  =  0 ;\n  flood ( x + 1 ,  y ) ;  flood ( x - 1 ,  y ) ;  flood ( x ,  y + 1 ) ;  flood ( x ,  y - 1 ) ;\n}\nint  main ( )\n{\n  for ( int  i = 0 ; i < rows ;  ++ i )\n    for ( int  j = 0 ; j < cols ;  ++ j )\n      if ( land [ i ] [ j ]  ==  1 )  {  cnt  +=  1 ;  flood ( i ,  j ) ;  }\n  std :: println ( \"岛有 {} 座\" ,  cnt ) ;\n}\n"
+    ]
+  }
+}

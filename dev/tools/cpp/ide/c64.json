@@ -1,0 +1,76 @@
+{
+  "cid": "c64",
+  "note": "冒泡完整版改单编辑器：源稿只有一条任务（拿空盒子 {} 和单元素 {42} 试一遍，确认不崩，并想明白 i + 1 < size() 为什么比 i < size() - 1 安全），coversTask 全写 1；代码条件按正文那套两层 for 拆成「两只边界盒子 + 外层 + 内层少比一次 + 相邻比与换 + 各传一次再打印对照」，想明白那件事落成一条 buffer 注释，旧六道笔试题的结论进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "备好两种边界数据：一只花括号里什么都不写的空盒子，和一只只装 42 的盒子。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{\\s*\\}", "std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{\\s*42\\s*\\}"],
+      "sample": "std::vector<int> e = {};\nstd::vector<int> one = {42};",
+      "why": "边界数据 + 调用 + 打印对照，是查任何函数是否安全的通用套路；空盒子和单元素正是排序最容易翻车的两种。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写外层 for：编号从无符号的 0 起，条件写成 i 加 1 还小于 size() —— 一共走 n - 1 轮。",
+      "acceptRegex": ["for\\s*\\(\\s*(?:size_t|int)\\s+\\w+\\s*=\\s*0\\s*;[^\\n]*\\+\\s*1\\s*<[^\\n]*\\.\\s*size\\s*\\(\\s*\\)"],
+      "sample": "for (size_t i = 0; i + 1 < v.size(); i++) {",
+      "why": "空盒子时这一句是 1 < 0，不成立，所以一轮都不进、安静地原样退出来；写成 i < size() - 1 就等着 0 减 1 绕回一个极大的数。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在外层的花括号里再套内层 for：j 从 0 起，上界写成 size() 减去 i，比到还没归位那一段的末尾就收。",
+      "acceptRegex": ["for\\s*\\(\\s*(?:size_t|int)\\s+\\w+\\s*=\\s*0\\s*;[^\\n]*<[^\\n]*\\.\\s*size\\s*\\(\\s*\\)\\s*-\\s*\\w+\\s*;"],
+      "sample": "for (size_t j = 0; j + 1 < v.size() - i; j++) {",
+      "why": "每走完一轮右边就多一个归位的大数，内层因此能少比一次：五格走 4、3、2、1 次共 10 次，忘了减 i 结果照样对，只是白比成 16 次。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "内层里比一比再换：if 问左边那格是不是比右边大，大就调用 std::swap 换这两格 —— 别忘了请进 std::swap 住的那个头文件 utility。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*>\\s*\\w+\\s*\\[\\s*\\w+\\s*\\+\\s*1\\s*\\]", "std::swap\\s*\\(", "#\\s*include\\s*<\\s*utility\\s*>"],
+      "sample": "if (v[j] > v[j + 1]) std::swap(v[j], v[j + 1]);",
+      "why": "相邻两格比一比、大的往后挪，上一课那三只盒子的活这里用 std::swap 一句话替掉；它住在 utility 里。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "把两只边界盒子各传给排序的那把工具一次，再用一条 std::println 三个占位坑把它们的此刻内容一起打出来对照。",
+      "acceptRegex": ["\\w+\\s*\\(\\s*\\w+\\s*\\)\\s*;[\\s\\S]*\\w+\\s*\\(\\s*\\w+\\s*\\)\\s*;", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\\{\\}"],
+      "sample": "bubble_all(e); bubble_all(one);\nstd::println(\"空 {} 单 {} 四个 {}\", e, one, v);",
+      "why": "对照出生时的值，确认没崩也没被改坏：空盒子照旧空，那只 42 照旧是 42。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一行注释写下你想明白的那件事：i + 1 < size() 为什么比 i < size() - 1 安全。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 空盒子时 1 < 0 不成立；0 减 1 是无符号下溢，翻成一个极大的数，条件看着还成立就冲进盒子外面了",
+      "why": "这一条只能验你确实写了一行想法，验不了写得对不对 —— 无符号下溢这种事得你自己跑出来看见。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "空盒子传给 bubble_all：外层条件是 i + 1 < v.size()，空盒子时是 1 < 0，不成立，所以一轮都不进、安静地原样退出来。",
+    "size() 回的是无符号整数，一个元素都没有时 0 减 1 不会变成 -1，而是绕回最大值附近（实测打印是 18446744073709551615），循环条件看着仍然成立，程序就冲进不存在的格子里了。",
+    "五个格子四个空隙：每轮的比较数是 4、3、2、1，加起来 10 次，也就是 n * (n - 1) / 2 —— 数据量翻一倍、活儿翻四倍。",
+    "每一轮的保证：右边 i + 1 格已经是全场最大的那几个，而且已经排好；外层走满 n - 1 轮就够，最后剩的那个数天然归位。",
+    "参数里少写那个 & 编译不报错：那是排复印件，跑到底外面那只盒子一动不动，是本课最难查的坑；内层上界忘了减 i 不影响结果，只把 10 次比较变成 16 次。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <utility>\n#include <vector>\n\nvoid bubble_all(std::vector<int>& v) {\n    for (size_t i = 0; i + 1 < v.size(); i++) {\n        for (size_t j = 0; j + 1 < v.size() - i; j++) {\n            if (v[j] > v[j + 1]) std::swap(v[j], v[j + 1]);\n        }\n    }\n}\n\nint main() {\n    std::vector<int> e = {};\n    std::vector<int> one = {42};\n    std::vector<int> v = {5, 2, 8, 1};\n\n    bubble_all(e);\n    bubble_all(one);\n    bubble_all(v);\n\n    std::println(\"空 {} 单 {} 四个 {}\", e, one, v);\n\n    // 空盒子时 1 < 0 不成立，一轮都不进；0 减 1 是无符号下溢，翻成极大的数，条件看着还成立就冲进盒子外面了\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <utility>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {5, 2, 8, 1};\n    for (size_t i = 0; i + 1 < v.size(); i++) {\n        for (size_t j = 0; j + 1 < v.size(); j++) {\n            if (v[j] > v[j + 1]) std::swap(v[j], v[j + 1]);\n        }\n    }\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> e = {};\n    std::vector<int> one = {42};\n    std::println(\"空 {} 单 {}\", e, one);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n#  include < utility >\n#  include <vector>\nvoid  sort_it ( std::vector<int> & box )\n{\n  for ( size_t a = 0 ; a + 1 < box.size ( ) ; a ++ )\n  {\n    for ( size_t b = 0 ; b + 1 < box.size ( ) - a ; b ++ )\n    {\n      if ( box[b] > box[b+1] ) std::swap ( box[b] , box[b+1] ) ;\n    }\n  }\n}\nint main ( )\n{\n  std::vector<int> zero = {} ;\n  std::vector<int> single = { 42 } ;\n  sort_it(zero);\n  sort_it(single);\n  std::println( \"零 {} 单 {} 完 {}\" , zero , single , single ) ;  // 空盒子时 1 < 0 不成立，一轮都不进\n  return 0;\n}\n"
+    ]
+  }
+}

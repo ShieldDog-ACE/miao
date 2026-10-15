@@ -1,0 +1,74 @@
+{
+  "cid": "m186",
+  "note": "vector 与 list 比速度这课：条件按头文件齐、N 改成一百万、两位选手各 push_back、掐 steady_clock 的表、用 {:.2f} 打毫秒，差距是不是更大收进 buffer 注释。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：打印、动态数组、链表、计时四样工具箱都搬进来（四行 #include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*vector\\s*>", "#\\s*include\\s*<\\s*list\\s*>", "#\\s*include\\s*<\\s*chrono\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <vector>\n#include <list>\n#include <chrono>\n\nint main() {",
+      "why": "std::list 在 list 里，std::chrono 里的秒表在 chrono 里，少一行编译器就不认那个名字。",
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把件数 N 定成一百万（写成 1000000 或 1'000'000 都行），后面两组实验都按它来放。",
+      "acceptRegex": ["\\bN\\s*=\\s*1'?0'?0'?0'?0'?0'?0\\s*;"],
+      "sample": "constexpr int N = 1000000;",
+      "why": "十万的时候差距只有约 7 倍，规模再上一个台阶才看得出 list 每节点申请内存、找门牌的亏越吃越大。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写一个循环，让 std::vector 和 std::list 这两位选手各用 push_back 往尾部放同样多件。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s+\\w+", "std::list\\s*<\\s*int\\s*>\\s+\\w+", "\\.push_back\\s*\\(", "\\bfor\\s*\\("],
+      "sample": "std::vector<int> v;\nstd::list<int> lst;\nfor (int i = 0; i < N; ++i) v.push_back(i);",
+      "why": "同一件事做两遍才叫对照：只测一位选手，那叫记录，不叫比较。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "掐表：从标准秒表里借一个只进不退的钟（steady_clock），每组实验前后各取一次时刻存进变量。",
+      "acceptRegex": ["steady_clock", "std::chrono::steady_clock::now", "=\\s*now\\s*\\(\\s*\\)"],
+      "sample": "auto now = std::chrono::steady_clock::now;\nauto t0 = now();",
+      "why": "挂墙上的那个钟会被校时拨动，耗时可能算出负数；只进不退的钟才是掐表专用的。",
+      "score": 15
+    },
+    {
+      "stem": "用一条 std::println 把两边的毫秒数打出来：格式串里给耗时留 {:.2f} 这样的坑，件数那个坑照旧用花括号。",
+      "acceptRegex": ["std::println\\s*\\(", "\\{\\s*:\\s*\\.\\s*2\\s*f\\s*\\}"],
+      "sample": "std::println(\"尾部放 {} 个: vector {:.2f} ms，list {:.2f} ms\", N, ms(t0, t1), ms(t1, t2));",
+      "why": "耗时是带小数的秒表读数，两位小数刚好看得清差距；坑和值按顺序一个一个对上。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "跑完之后，用一行注释写下把 N 拉到一百万之后两边的差距是拉大了还是没变（至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 差距从约 7 倍拉大到约 10 倍",
+      "why": "这一步只判你确实留了一行注释，注释内容这块编辑器判不了；本机连跑三次方向稳定，是拉大了。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "vector 从头走到尾快，是因为元素在内存里一格挨一格，CPU 顺路把旁边整块带进缓存；list 是散装节点，每走一步都要重新找门牌。",
+    "掐表测耗时要用只进不退的 steady_clock，system_clock 会被校时拨动。",
+    "本机实测 N=100000 时 vector 约 0.43 ms、list 约 2.9 ms；N=1000000 时约 2.9 ms 对 28.5 ms，差距从约 7 倍拉大到约 10 倍。",
+    "list 每放一个数都要向系统申请一次节点内存，但头部插入它不用挪人，实测反赢约 80 倍 —— 不是任何操作都比 vector 慢。",
+    "选容器的口诀是默认无脑选 vector，结论按操作分布算，不是背一句谁快。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n#include <list>\n#include <chrono>\n\nint main() {\n    constexpr int N = 1000000;\n    std::vector<int> v;\n    std::list<int> lst;\n\n    auto now = std::chrono::steady_clock::now;\n    auto ms = [](auto a, auto b) {\n        return std::chrono::duration<double, std::milli>(b - a).count();\n    };\n\n    auto t0 = now();\n    for (int i = 0; i < N; ++i) v.push_back(i);\n    auto t1 = now();\n    for (int i = 0; i < N; ++i) lst.push_back(i);\n    auto t2 = now();\n\n    std::println(\"尾部放 {} 个: vector {:.2f} ms，list {:.2f} ms\", N, ms(t0, t1), ms(t1, t2));\n    // 差距从约 7 倍拉大到约 10 倍\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <vector>\nint main() {\n    std::vector<int> v;\n    for (int i = 0; i < 100; ++i) v.push_back(i);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n#include <list>\n\nint main() {\n    constexpr int N = 100000;\n    std::vector<int> v;\n    std::list<int> lst;\n    for (int i = 0; i < N; ++i) v.push_back(i);\n    for (int i = 0; i < N; ++i) lst.push_back(i);\n    std::println(\"放完了\");\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\n# include <list>\n# include <vector>\n# include <chrono>\n\nint main ( )\n{\n  const int N = 1'000'000;\n  std::vector<int> vec;\n  std::list<int> lin;\n  auto now = std::chrono::steady_clock::now;\n  auto a0 = now();\n  for (int i = 0; i < N; i ++) vec.push_back(i);\n  auto a1 = now();\n  for (int i = 0; i < N; i ++) lin.push_back(i);\n  auto a2 = now();\n  auto ms = [](auto x, auto y) { return std::chrono::duration<double, std::milli>(y - x).count(); };\n  std::println(\"一百万件: vector {:.2f} 毫秒, list {:.2f} 毫秒\", ms(a0,a1), ms(a1,a2));\n  // 拉到一百万，差距明显更大，约十倍\n  return 0;\n}\n"
+    ]
+  }
+}

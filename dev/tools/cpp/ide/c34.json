@@ -1,0 +1,74 @@
+{
+  "cid": "c34",
+  "note": "do-while 这场的旧题在判「k 从 5 起连跑几次、倒计时打哪四行」，编辑器判不了圈数，就把任务 1 摊成初值 5 的 do 循环加循环体里的打印与 k++ 加末尾带分号的 while (k < 100)，任务 2 摊成 t 从 3 起、循环体里 t--、末尾 while (t > 0) 再补一行发射；先干再问与分号是语法一部分只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一只 int 盒子当计数器，初值给 5，然后用 do 和一对花括号起头写一条先干再问的循环。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*5\\s*;", "\\bdo\\s*\\{"],
+      "sample": "int k = 5;\ndo {",
+      "why": "同样的初值、条件、循环体，while 先问是 0 次，do-while 先干是 1 次；差别全在问的时机。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在循环体里干两件事：用一条 std::println 把计数器打进占位坑，再来一句单独的 ++ 推进它。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)", "\\w+\\s*\\+\\+\\s*;"],
+      "sample": "std::println(\"跑一圈，k = {}\", k);\nk++;",
+      "why": "推进条件这件事 do-while 和 while 一字不差：循环体里必须有人动那只盒子，否则末尾的条件永远为真。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "给这条循环收尾：写 } while (计数器小于 100)，右括号后面那个分号别丢。",
+      "acceptRegex": ["\\}\\s*while\\s*\\(\\s*\\w+\\s*<\\s*100\\s*\\)\\s*;"],
+      "sample": "} while (k < 100);",
+      "why": "结尾这个分号是语法的一部分：大括号后面的 while(条件) 单独看是句没说完的话，忘写是本课最快的报错来源。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：再写一条倒计时循环：一只 int 盒子初值 3，循环体里先把它打进一条 std::println，再单独一句 --，末尾条件问它还大于 0 吗，右括号后带分号。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*3\\s*;", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)", "\\w+\\s*--\\s*;", "\\}\\s*while\\s*\\(\\s*\\w+\\s*>\\s*0\\s*\\)\\s*;"],
+      "sample": "int t = 3;\ndo {\n    std::println(\"{}\", t);\n    t--;\n} while (t > 0);",
+      "why": "先干再问：打印 3 后 t 变 2，条件为真再来一圈；打印 1 后 t 变 0，问到 0 大于 0 为假出圈，0 不会被打印。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "倒计时跑完之后，在循环外面再打一行 std::println，内容就是发射！。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"发射！\"\\s*\\)"],
+      "sample": "std::println(\"发射！\");",
+      "why": "这一行在 do-while 的大括号之外，整趟只执行一次，正好接在 3、2、1 后面。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱搬进来（#include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include <print> 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "do-while 和 while 的唯一区别是问的时机：条件挪到末尾，循环体因此至少执行一次。",
+    "至少一次不等于只有一次：条件为真就一圈圈继续，do-while 一样可能死循环。",
+    "int k 不初始化是不能省的：垃圾初值照样进圈做一次，还可能让末尾条件一直为真而停不下来。",
+    "「先把菜单打出来，再问要不要继续」这类天生要做一次的活最适合 do-while，换成 while 得先在圈外重复写一遍。",
+    "k 从 5 一路打到 99、每圈末尾 k++ 再问，圈数是上限减起点：5 到 99 一共 95 圈。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int k = 5;\n\n    do {\n        std::println(\"跑一圈，k = {}\", k);\n        k++;\n    } while (k < 100);\n\n    int t = 3;\n    do {\n        std::println(\"{}\", t);\n        t--;\n    } while (t > 0);\n\n    std::println(\"发射！\");\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int k = 5;\n    while (k < 100) {\n        std::println(\"{}\", k);\n        k++;\n    }\n    std::println(\"发射！\");\n    return 0;\n}\n",
+      "int k = 5;\ndo {\n    std::println(\"{}\", k);\n    k++;\n} while (k < 100)\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  int  cnt = 5 ;\n  do\n  {\n    std::println( \"第 {} 次\", cnt );\n    cnt ++ ;\n  }\n  while ( cnt < 100 ) ;\n\n  int  left = 3;\n  do { std::println(\"{}\", left); left --; } while ( left > 0 ) ;\n  std::println( \"发射！\" ) ;\n}\n"
+    ]
+  }
+}

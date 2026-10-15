@@ -1,0 +1,75 @@
+{
+  "cid": "c29",
+  "note": "套娃 if 这场的旧题在判「true 16 / true 20 / false 20 各走哪条路」，编辑器判不了走了哪条，就把任务 1 摊成真写出两道门（外层判那只 bool 盒子、内层判 age < 18 并带 else 两支），任务 2 摊成 char grade = 'A' 加第三道门再多打一行；悬挂 else、缩进不算语法只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开两只盒子：一只 bool 装是不是学生，一只 int 装年龄，都直接给上值。",
+      "acceptRegex": ["bool\\s+\\w+\\s*=\\s*(true|false)\\s*;", "int\\s+\\w+\\s*=\\s*\\d+\\s*;"],
+      "sample": "bool is_student = true;\nint age = 16;",
+      "why": "两道门各问一件事：身份是一只 bool 盒子，年龄是一只 int 盒子，先把它们装好才谈得上放行还是跳过。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写第一道门：if 的括号里就放那只 bool 盒子，后面跟上花括号。",
+      "acceptRegex": ["bool\\s+(\\w+)\\s*=\\s*(true|false)\\s*;[\\s\\S]*if\\s*\\(\\s*\\1\\s*\\)\\s*\\{"],
+      "sample": "if (is_student) {",
+      "why": "if 的括号里要是一对括号圈起来的真假值；把盒子名直接放进去就够了，不用再写 == true。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "在第一道门的花括号里面再写第二道门：if 判年龄小于 18，跟上花括号。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*<\\s*18\\s*\\)\\s*\\{"],
+      "sample": "    if (age < 18) {",
+      "why": "能被执行到内层这一行，说明外层的条件已经成立，所以内层不必再把 is_student 重复写一遍。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "给第二道门补一条 else：用 } else { 开头，里面用一条 std::println 打出成年学生。",
+      "acceptRegex": ["\\}\\s*else\\s*\\{", "std::println\\s*\\(\\s*\"[^\"]*成年学生"],
+      "sample": "} else {\n            std::println(\"成年学生\");",
+      "why": "else 认领的是最近的、还没有配对的那个 if，也就是内层那一道；花括号写全，认领关系一眼可见。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务第 2 条：先声明 char grade = 'A';，再在未成年学生那一段里加第三道门：if 判这只 char 盒子等于 'A'。",
+      "acceptRegex": ["char\\s+\\w+\\s*=\\s*'A'\\s*;", "if\\s*\\(\\s*\\w+\\s*==\\s*'A'\\s*\\)\\s*\\{"],
+      "sample": "char grade = 'A';\nif (grade == 'A') {",
+      "why": "char 盒子装一个字符，用单引号；第三道门套在第二道里面，只有未成年学生那拨人才会被问到它。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "在第三道门里多打印一行：一条 std::println，话里带上还是学霸四个字。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*还是学霸"],
+      "sample": "std::println(\"还是学霸\");",
+      "why": "三道门一路放行时输出是两行：先落进未成年学生那段，再在里面命中 grade 等于 A，顺序也是输出顺序。",
+      "coversTask": 2,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "C++ 编译器完全不看缩进，它只认花括号；嵌套时省掉花括号，代码的层次就可能和你以为的不一样，一律写花括号最稳。",
+    "外层关了门，里面那道门一次都不会被问：is_student 为 false 时只打一行不是学生，age 根本没被看过。",
+    "只挑同时满足两个条件的一群人，用一条 if (is_student && (age < 18)) 更平；进了门还要按下一个条件走不同的路，嵌套更贴合。",
+    "嵌套每加一层，需要验证的组合数就翻一倍：身份两种乘年龄两种，一共四条路都要试一遍。",
+    "外层兜底只有一句话时也可以写成一行：else { std::println(\"不是学生\"); }，花括号照样不能省。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    bool is_student = true;\n    int age = 16;\n    char grade = 'A';\n\n    if (is_student) {\n        if (age < 18) {\n            std::println(\"未成年学生\");\n            if (grade == 'A') {\n                std::println(\"还是学霸\");\n            }\n        } else {\n            std::println(\"成年学生\");\n        }\n    } else {\n        std::println(\"不是学生\");\n    }\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    bool is_student = true;\n    int age = 20;\n    if (is_student) {\n        std::println(\"是学生\");\n    }\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    bool ok = true;\n    int age = 16;\n    if (age < 18) {\n        std::println(\"未成年学生\");\n    } else {\n        std::println(\"成年学生\");\n    }\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n\nint main ( )\n{\n  bool  is_pupil = true;\n  int   years = 15 ;\n  char  level = 'A';\n  if ( is_pupil )\n  {\n    if ( years < 18 ) {\n      std::println( \"未成年学生\" );\n      if ( level == 'A' ) { std::println( \"还是学霸一只\" ); }\n    }\n    else { std::println( \"成年学生啦\" ); }\n  }\n}\n"
+    ]
+  }
+}

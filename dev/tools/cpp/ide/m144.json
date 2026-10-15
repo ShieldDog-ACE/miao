@@ -1,0 +1,78 @@
+{
+  "cid": "m144",
+  "note": "两条任务一条拆文件一条是配置文本：代码侧判菜单、后厨、调用，编译命令与 CMakeLists 那四行、cmake 两条都按 shell 文本走 buffer。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把 square 的实现搬进 namespace tools 那一格里：函数体里 return 乘出来的结果。",
+      "acceptRegex": ["namespace\\s+\\w+\\s*\\{[^}]*int\\s+square\\s*\\([^)]*\\)\\s*\\{[^}]*return"],
+      "sample": "namespace tools { int square(int x) { return x * x; } }",
+      "why": "这一格就是 utils.cpp：实现住在后厨，头文件里别写函数体。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再给同一格只写签名的那一行：namespace 里 int square 加参数后面直接是分号。",
+      "acceptRegex": ["namespace\\s+\\w+\\s*\\{[^}]*int\\s+square\\s*\\([^)]*\\)\\s*;"],
+      "sample": "namespace tools { int square(int x); }",
+      "why": "这是 utils.h 那份菜单：顾客只认签名，链接那站再去找实现。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "在 main 里用一条 std::println 打那次 tools::square 的调用结果。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*tools\\s*::\\s*square\\s*\\("],
+      "sample": "std::println(\"{}\", tools::square(9));",
+      "why": "点名要走命名空间限定；这一句打出来的是 9 的平方 81。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：在注释里写下把两个 .cpp 一起编过的那条命令，带上标准开关，名单列 main.cpp 与 utils.cpp，再用 -o 给产物起名。",
+      "acceptRegex": ["g\\s*\\+\\s*\\+[^\\n]*main\\.cpp[^\\n]*utils\\.cpp[^\\n]*-o\\s*\\w+", "-std\\s*=\\s*c\\+\\+23"],
+      "sample": "// g++ -std=c++23 -Wall -Wextra main.cpp utils.cpp -o app",
+      "why": "一个 .cpp 是一个编译单元，g++ 替每一份各走前三站再一起链接；头文件不列，它早在每个 .cpp 里被抄过了。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务第 2 条：把 CMakeLists.txt 的第四行写进注释 —— add_executable 里产物名后面跟那两份源文件。",
+      "acceptRegex": ["add_executable\\s*\\(\\s*\\w+\\s+\\w+\\.cpp\\s+\\w+\\.cpp\\s*\\)"],
+      "sample": "// add_executable(app main.cpp utils.cpp)",
+      "why": "那一行就是名单，等价于命令里 main.cpp utils.cpp 那一段；和命令一样只列源文件，不列头文件。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "把 cmake 那两条命令各写一行注释：一条 -B build 做配置，一条 --build build 才真干活。",
+      "acceptRegex": ["cmake[^\\n]*-B\\s*build", "cmake[^\\n]*--build\\s*build"],
+      "sample": "// cmake -B build\n// cmake --build build",
+      "why": "前一条把 build 目录建出来并写好转译清单，后一条照清单替你敲编译器；顺序不能颠倒，中间产物一律隔在 build 目录里。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "名单上一人一份 .cpp，头文件不列：实测本机把它列进命令也不拦，做的是白活。",
+    "命令里忘了 -std=c++23，第二站就拦下：报 println 不是 std 的成员，因为本机默认按老标准走。",
+    "-Wall -Wextra 是免费纠错老师：不开也能编过，开了才看得见未用参数、无符号数与 int 比大小这类暗坑。",
+    "少列一个文件，链接期报 undefined reference；两份 .cpp 各写一遍同一个 square，链接器报 multiple definition 并告诉你 first defined here。",
+    "本机没装 cmake，那两条命令这一层是按设计讲的；实跑过的是它替你敲的那条 g++。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nnamespace tools { int square(int x); }                      // utils.h 那份菜单\n\nnamespace tools { int square(int x) { return x * x; } }   // utils.cpp 后厨\n\nint main() {\n    std::println(\"{}\", tools::square(9));\n    return 0;\n}\n// g++ -std=c++23 -Wall -Wextra main.cpp utils.cpp -o app\n// CMakeLists.txt 四行：cmake_minimum_required(VERSION 3.15)、project(app CXX)、set(CMAKE_CXX_STANDARD 23)\n// add_executable(app main.cpp utils.cpp)\n// cmake -B build\n// cmake --build build\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint square(int x) { return x * x; }\n\nint main() {\n    std::println(\"{}\", square(9));\n    return 0;\n}\n",
+      "#include <print>\n\nnamespace tools { int square(int x) { return x * x; } }\n\nint main() {\n    std::println(\"{}\", tools::square(9));\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\nnamespace  tools  {  int  square ( int  n ) ;  }\nnamespace  tools  {  int  square ( int  n )  {  return  n * n ;  }  }\n\nint  main ( )\n{\n  std :: println ( \" 平方 {}\" , tools :: square ( 9 ) ) ;\n}\n// 一次编两个： g++ -std=c++23 main.cpp utils.cpp -o app\n// add_executable ( app  main.cpp  utils.cpp )\n// cmake -B build  先把清单写出来\n// cmake --build build  再照清单干活\n"
+    ]
+  }
+}

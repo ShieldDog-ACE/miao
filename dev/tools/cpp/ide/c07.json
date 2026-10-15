@@ -1,0 +1,75 @@
+{
+  "cid": "c07",
+  "note": "命名规范改单编辑器：正则按「名字由两个词组成」判规范（snake_case 与小驼峰二选一都放过，A、x1、price_r_m_b 三种坏形状都拦下），任务 1 另配一条注释对照，旧七题知识点收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务 1：把那几个不合格的名字改成规范的写出来 —— 一个 int 变量，名字由两个词组成（小写加下划线，或者小驼峰），值当场给。",
+      "acceptRegex": ["\\bint\\s+(?:[a-z]{2,}(?:_[a-z]{2,})+|[a-z]{2,}(?:[A-Z][a-z]+)+)\\s*=\\s*\\d+\\s*;"],
+      "sample": "int magazine_price = 45;",
+      "why": "单字母、字母加数字尾巴、缩写叠三层都做不到见名知意；名字由两个词组成，念出来就知道它装的是什么。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "在改好的那一行旁边留一行注释（至少四个字），记下它原来那个不合格的名字长什么样。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 原来写的是 int price_r_m_b; 三个缩写叠一起没人能还原",
+      "why": "演示 3 就是把反面教材注释掉留着对照；正则只能验你写了注释，写得对不对要复盘核对。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务 2：声明「班级人数」这个变量 —— 一个 int，名字照样由两个词组成，值给一个人数。",
+      "acceptRegex": ["\\bint\\s+(?:[a-z]{2,}(?:_[a-z]{2,})+|[a-z]{2,}(?:[A-Z][a-z]+)+)\\s*=\\s*\\d+\\s*;"],
+      "sample": "int class_count = 42;",
+      "why": "班级人数会变小但一眼知道是什么：见名知意比风格统一更要紧，风格是为它服务的。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "声明「上学方式」这个变量：用 std::string 装一段双引号里的文字，名字也由两个词组成。",
+      "acceptRegex": ["\\bstd::string\\s+(?:[a-z]{2,}(?:_[a-z]{2,})+|[a-z]{2,}(?:[A-Z][a-z]+)+)\\s*=\\s*\"[^\"]*\"\\s*;"],
+      "sample": "std::string school_way = \"bus\";",
+      "why": "方式是一段文字，就得用字符串盒子；名字照样要念得出含义。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把这两个一起打出来：格式串里两个占位坑，逗号后面按顺序给这两个变量。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+"],
+      "sample": "std::println(\"{} 人，坐 {}\", class_count, school_way);",
+      "why": "两个坑就给两个值，顺序对上；名字起得好，读代码的人不用回头数。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "把这份程序写成能跑的形：打印和字符串两个工具箱都搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*string\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <string>\n\nint main() {",
+      "why": "缺 #include <print> 就没人认识 std::println；std::string 这个工具来自 #include <string>。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "编译器不在乎名字的含义：只要符合标识符规则（字母数字下划线、不能数字开头、不占关键字）就照样编译。",
+    "见名知意是命名的唯一硬标准，风格、大小写都是为它服务的。",
+    "snake_case 是全小写加下划线；camelCase 是第一个词全小写、后面每个词首字母大写，写成 myAge 而不是 MyAge。",
+    "同一个项目里两种风格别混着用：混用会逼读代码的人反复判断这两个名字是不是同一个变量。",
+    "坏名字阴在程序照样编译、结果也正确，看不见的成本落在以后每次读这段代码的人身上。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nint main() {\n    int magazine_price = 45;   // 原来写的是 int price_r_m_b; 三个缩写叠一起\n    int days_per_week = 7;       // 原来那个 x1 装的如果是 7，它就是「一周几天」\n    int class_count = 42;\n    std::string school_way = \"bus\";\n\n    std::println(\"{} 人，坐 {}\", class_count, school_way);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    int a = 15;\n    int x1 = 700;\n    std::println(\"{}\", a);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int price_r_m_b = 45;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include   < print >\n# include < string >\nint  main ( )\n{\n  int daysPerWeek = 7;   // 原名 x1 等于没起名字\n  int  goSchoolWayCount = 3;\n  std::string  wayToSchool = \"bus\";\n  std::println( \"{} {}\" ,  goSchoolWayCount , wayToSchool );\n}\n"
+    ]
+  }
+}

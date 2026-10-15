@@ -1,0 +1,81 @@
+{
+  "cid": "m97",
+  "note": "map 入门改单编辑器：任务 1 拆成「声明词典 + 至少两条方括号写入 + 结构化绑定遍历把键值一起打」再加「同一个键再写一次并打印 size 确认没新增」，任务 2 判「把 scores[小红] 当查询放进 println 的坑里」；按名字排好序这件事要读者自己看，进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "开一张词典：std::map 的尖括号里写明键是 std::string、值是 int。",
+      "acceptRegex": ["std::map\\s*<\\s*std::string\\s*,\\s*int\\s*>\\s+\\w+"],
+      "sample": "std::map<std::string, int> scores;",
+      "why": "键 → 值这么存：树按键比大小生长，值只是挂在键上的东西。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条那几条记录：用方括号写进至少两条，等号左边是键、右边是值。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*\"[^\"]+\"\\s*\\]\\s*=\\s*\\d+\\s*;[\\s\\S]*\\w+\\s*\\[\\s*\"[^\"]+\"\\s*\\]\\s*=\\s*\\d+\\s*;"],
+      "sample": "scores[\"小明\"] = 88;\nscores[\"小强\"] = 72;\nscores[\"小红\"] = 95;",
+      "why": "写入这件事就这么一句话；键已经有了就是改值，不新增。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "遍历这张词典：用 for (const auto& [名字, 分数] : 词典) 把键和值拆出来，再用一条 std::println 把这一组打出来：格式串里两个坑（写不写对齐都行），逗号后面按顺序给键和值。",
+      "acceptRegex": ["for\\s*\\(\\s*const\\s+auto\\s*&?\\s*\\[\\s*\\w+\\s*,\\s*\\w+\\s*\\]\\s*:\\s*\\w+\\s*\\)", "std::println\\s*\\(\\s*\"[^\"]*\\{[^}\"]*\\}[^\"]*\\{[^}\"]*\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+"],
+      "sample": "for (const auto& [name, score] : scores) {\n    std::println(\"{:<6} {}\", name, score);\n}",
+      "why": "打出来的顺序是键的顺序，不是你写入的顺序 —— 这一眼就是任务要你确认的东西。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：单独打一条小红的分数 —— 同一个方括号写法放进逗号后面，这次是查询。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\[\\s*\"小红\"\\s*\\]"],
+      "sample": "std::println(\"小红 = {}\", scores[\"小红\"]);",
+      "why": "写在等号左边是登记，写在 println 的坑里就是查账：同一个写法两份工。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "再看覆盖这件事：同一个键再写一次别的值，然后用一条 std::println 打出这张词典的条数。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*(\"[^\"]+\")\\s*\\]\\s*=\\s*\\d+\\s*;[\\s\\S]{0,600}\\w+\\s*\\[\\s*\\1\\s*\\]\\s*=\\s*\\d+\\s*;", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\.size\\s*\\(\\s*\\)"],
+      "sample": "scores[\"小明\"] = 90;\nstd::println(\"一共 {} 条记录\", scores.size());",
+      "why": "map 的键天生唯一，「加一条」和「改一条」是同一个动作：条数不变，这正是它适合做统计的原因。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：请进 map 的头和 string 的头，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*map\\s*>", "#\\s*include\\s*<\\s*string\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <map>\n#include <string>\n\nint main() {",
+      "why": "std::map 住在 map 这个头里；键是文字就还得请进 std::string。",
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "登记表是平铺的，只能一格一格看；map 里那棵树按键比大小，一步就走到，省的是每来一个词就从表头扫到表尾找行号那一步。",
+    "遍历时按键从小到大出现，值不参与排序：依次写入小明、小强、小红，打出来是小强、小明、小红。",
+    "想让记录按分数从高到低排，map 不会直接帮你排：它只认键，按值排队得把记录搬进 vector 再 sort。",
+    "遍历的时候顺手挑个最值是合法的：一边拆键值一边比较，比完再打 —— 但别在遍历里增删记录。",
+    "键换成整数、值换成文字照样成立：rank[3] 铜牌、rank[1] 金牌，打出来是第 1、第 2、第 3 名 —— 顺序由键说了算。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <map>\n#include <print>\n#include <string>\n\nint main() {\n    std::map<std::string, int> scores;\n    scores[\"小明\"] = 88;                     // 写入：键 → 值\n    scores[\"小强\"] = 72;\n    scores[\"小红\"] = 95;\n    for (const auto& [name, score] : scores) {\n        std::println(\"{:<6} {}\", name, score);\n    }\n    scores[\"小明\"] = 90;                      // 键已经有了：改值，不新增\n    std::println(\"一共 {} 条记录\", scores.size());\n    std::println(\"小红 = {}\", scores[\"小红\"]);      // 同一个写法，这次是查询\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n#include <vector>\n\nint main() {\n    std::vector<std::string> names = {\"小明\", \"小强\", \"小红\"};\n    std::vector<int> vals = {88, 72, 95};\n    for (size_t i = 0; i < names.size(); ++i) std::println(\"{} {}\", names[i], vals[i]);\n    return 0;\n}\n",
+      "#include <map>\n#include <print>\n#include <string>\n\nint main() {\n    std::map<std::string, int> scores;\n    scores[\"小明\"] = 88;\n    scores[\"小红\"] = 95;\n    std::println(\"{}\", scores[\"小明\"]);\n    return 0;\n}\n",
+      "#include <map>\n#include <string>\n\nint main() {\n    std::map<std::string, int> scores;\n    scores[\"小明\"] = 88;\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < map >\n# include < print >\n# include < string >\n\nint  main ( )\n{\n    std::map < std::string , int >  book ;\n    book [ \"小强\" ] = 72 ;\n    book [ \"小明\" ] = 88 ;\n    book [ \"小红\" ] = 95 ;\n    for (const auto& [who, pts] : book)\n        std::println(\"{:<6} {}\", who, pts);\n    book [ \"小明\" ] = 90;\n    std::println(\"条数 {}\", book.size());\n    std::println( \"小红 {}\" , book[ \"小红\" ] ) ;\n    return 0;\n}\n"
+    ]
+  }
+}

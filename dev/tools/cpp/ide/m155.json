@@ -1,0 +1,75 @@
+{
+  "cid": "m155",
+  "note": "任务是两个 target 各跑一次并数轮数：有序表、两个 target 字面量、计数器、区间条件、扔半边两句、收尾那行打印各一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把那张有序表摆出来：一个 vector<int>，初值写成排好序的几个数。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*,"],
+      "sample": "std::vector<int> v = {1, 3, 5, 7, 9, 11, 13, 15};",
+      "why": "折半的前提是有序：实测只把第一个数换成 21，就只有 1 找不到，另外七个照旧命中 —— 最难查的就是这种错。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把 target 先写成 8 跑一遍，再把它写成 1 跑一遍，两个赋值都要出现。",
+      "acceptRegex": ["int\\s+target\\s*=\\s*8\\s*;", "int\\s+target\\s*=\\s*1\\s*;"],
+      "sample": "int target = 8;\nint target = 1;",
+      "why": "一个不在表里、一个在头一格：两轮都花 3 次，但结局不同 —— 前者把区间砍空，后者命中就收工。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "给轮数摆一个计数器：先写成 0 声明好，每问一轮就在循环里给它加一。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*0\\s*;", "\\+\\+\\s*\\w+\\s*;"],
+      "sample": "int steps = 0;\nwhile (lo <= hi) {\n    ++steps;",
+      "why": "这一课要数的是问了几轮：实测 11 用 2 轮、8 用 3 轮、15 和 16 用 4 轮。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写出区间还没见底的那个条件：用小于等于，两头还没碰上就继续问。",
+      "acceptRegex": ["while\\s*\\(\\s*\\w+\\s*<=\\s*\\w+\\s*\\)"],
+      "sample": "while (lo <= hi) {",
+      "why": "只剩一格的段也得被问一次；实测把等于号去掉，那一格就永远没轮到被看。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "把扔掉的那半边的边界挪对：一句让下界等于中点加一，一句让上界等于中点减一。",
+      "acceptRegex": ["\\w+\\s*=\\s*\\w+\\s*\\+\\s*1\\s*;", "\\w+\\s*=\\s*\\w+\\s*-\\s*1\\s*;"],
+      "sample": "if (v[mid] < target) lo = mid + 1; else hi = mid - 1;",
+      "why": "mid 已经被问过一轮，它比 target 小已是已知条件，留着只会被重问；实测写成 lo = mid 会让两个指针卡住不动、一行输出都没有。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "每跑完一轮用一条 std::println 报一次：格式串里两个占位坑，参数按顺序给 target 和那个计数器。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*target\\s*,"],
+      "sample": "std::println(\"target={} 循环 {} 次 pos={} 收手 lo={} hi={}\", target, steps, pos, lo, hi);",
+      "why": "这一行就是任务要的两档结果：实测 8 那跑 pos 还是初值 -1、收手时 lo 越过 hi；1 那跑命中即 break，两个指针停在 0。",
+      "coversTask": 1,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "中点写 lo + (hi - lo) / 2 而不是 (lo + hi) / 2：实测后者在 lo 十六亿、hi 二十亿那一档打出 -347483648，那是有符号溢出，标准没规定结果。",
+    "找不到时循环靠 lo 大于 hi 退出，收手那一刻 lo 恒比 hi 大 1：lo 指着第一个不小于 target 的格子，想知道该插哪一格看的是 lo。",
+    "八个格子的区间最多砍四刀就见底，一路是 8、4、2、1；找不到的值也要把区间砍空才敢说没有。",
+    "猜 1 到 100 每个秘密数都跑一遍，最坏 7 次，其中恰好 37 个数用满这 7 次，平均只有 5.80 次。",
+    "把撞上就 break 那一行删掉，循环照样收手，只是 pos 永远是初值 —— 差一错误常常不报错，只给一个像样的错数。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {1, 3, 5, 7, 9, 11, 13, 15};\n    int steps = 0;\n\n    {   // 第一跑：target 取 8\n        int target = 8;\n        int lo = 0, hi = static_cast<int>(v.size()) - 1, pos = -1;\n        while (lo <= hi) {\n            ++steps;\n            int mid = lo + (hi - lo) / 2;\n            if (v[mid] == target) { pos = mid; break; }\n            if (v[mid] < target) lo = mid + 1; else hi = mid - 1;\n        }\n        std::println(\"target={} 循环 {} 次 pos={} 收手 lo={} hi={}\", target, steps, pos, lo, hi);\n    }\n    {   // 第二跑：target 取 1\n        int target = 1;\n        int lo = 0, hi = static_cast<int>(v.size()) - 1, pos = -1;\n        steps = 0;\n        while (lo <= hi) {\n            ++steps;\n            int mid = lo + (hi - lo) / 2;\n            if (v[mid] == target) { pos = mid; break; }\n            if (v[mid] < target) lo = mid + 1; else hi = mid - 1;\n        }\n        std::println(\"target={} 循环 {} 次 pos={}\", target, steps, pos);\n    }\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {1, 3, 5, 7, 9, 11, 13, 15};\n    int target = 8;\n    int pos = -1;\n    for (size_t i = 0; i < v.size(); ++i)\n        if (v[i] == target) { pos = static_cast<int>(i); break; }\n    std::println(\"在下标 {}\", pos);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {1, 3, 5, 7, 9, 11, 13, 15};\n    int target = 11;\n    int lo = 0, hi = static_cast<int>(v.size()) - 1, pos = -1;\n    while (lo <= hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (v[mid] == target) { pos = mid; break; }\n        if (v[mid] < target) lo = mid + 1; else hi = mid - 1;\n    }\n    std::println(\"找到了，在下标 {}\", pos);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\n\nint  main ( )\n{\n  std :: vector < int >  tab  =  { 1 , 3 , 5 , 7 , 9 , 11 , 13 , 15 } ;\n  int  rounds  =  0 ;\n  int  target  =  8 ;\n  {\n    int  low  =  0 ,  high  =  static_cast < int > ( tab . size ( ) ) - 1 ,  where  =  - 1 ;\n    while ( low <= high )\n    {\n      ++ rounds ;\n      int  middle  =  low + ( high - low ) / 2 ;\n      if ( tab [ middle ] == target ) { where = middle ; break ; }\n      if ( tab [ middle ] < target )  low = middle + 1 ;  else  high = middle - 1 ;\n    }\n    std :: println ( \" 找 {} 用了 {} 轮\" , target , rounds ) ;\n  }\n  rounds  =  0 ;\n  {\n    int  target  =  1 ;\n    int  low  =  0 ,  high  =  static_cast < int > ( tab . size ( ) ) - 1 ,  where  =  - 1 ;\n    while ( low <= high )\n    {\n      ++ rounds ;\n      int  middle  =  low + ( high - low ) / 2 ;\n      if ( tab [ middle ] == target ) { where = middle ; break ; }\n      if ( tab [ middle ] < target )  low = middle + 1 ;  else  high = middle - 1 ;\n    }\n    std :: println ( \" 找 {} 用了 {} 轮，落在 {}\" , target , rounds , where ) ;\n  }\n}\n"
+    ]
+  }
+}

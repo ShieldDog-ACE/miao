@@ -1,0 +1,67 @@
+{
+  "cid": "m140",
+  "note": "任务就是 QUAD 那一档和不给括号的 RAWQUAD 那一档并排打印，两条宏定义加两条打印各判一条；看展开结果的 -E 命令属 shell，走 buffer。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一个带参数的宏 QUAD：把参数先括起来，再整体括起来，乘 4。",
+      "acceptRegex": ["#\\s*define\\s+QUAD\\s*\\(\\s*\\w+\\s*\\)\\s*\\(\\s*\\(\\s*\\w+\\s*\\)\\s*\\*\\s*4"],
+      "sample": "#define QUAD(x) ((x) * 4)",
+      "why": "抄写员把 TRIPLE(7) 抄成 ((7) * 3)：参数是什么字面就搬什么字面，括号的意义就在这里。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把 QUAD(1 + 1) 打出来（宏名当参数传给打印，不是写进字符串里）。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*,\\s*QUAD\\s*\\(\\s*1\\s*\\+\\s*1\\s*\\)"],
+      "sample": "std::println(\"QUAD(1 + 1) = {}\", QUAD(1 + 1));",
+      "why": "这一句要验的就是结果 8：括号把 1 + 1 先算成 2，再乘 4。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再写一个故意不括的宏 RAWQUAD：参数不括、整体也不括，直接写 x * 4。",
+      "acceptRegex": ["#\\s*define\\s+RAWQUAD\\s*\\(\\s*\\w+\\s*\\)\\s*\\w+\\s*\\*\\s*4"],
+      "sample": "#define RAWQUAD(x) x * 4",
+      "why": "少一层括号，你就在赌传进来的表达式里没有别的运算符。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把 RAWQUAD(1 + 1) 也打出来，跟前一行并排看结果。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*,\\s*RAWQUAD\\s*\\(\\s*1\\s*\\+\\s*1\\s*\\)"],
+      "sample": "std::println(\"RAWQUAD(1 + 1) = {}\", RAWQUAD(1 + 1));",
+      "why": "这一档打出 5：抄写员把 1 + 1 原样搬进去成了 1 + 1 * 4，先乘后加 —— 这一对 8 和 5 就是任务要的结果。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在注释里写下那条只看抄写员成品、不进编译器的命令：g++ 带上 -E，后面跟你的文件名。",
+      "acceptRegex": ["g\\s*\\+\\s*\\+[^\\n]*-E[^\\n]*\\.cpp"],
+      "sample": "// g++ -std=c++23 -E mac.cpp 只干活到抄完为止，把展开结果打到屏幕上",
+      "why": "-E 的成品里能亲眼看见 ((1 + 1) * 4) 和 1 + 1 * 4 这两种字面；判的是你写出了这条命令，展开结果对不对得自己看。",
+      "acceptOn": "buffer",
+      "score": 20
+    }
+  ],
+  "notes": [
+    "本课的 #include 是在编译开始前把那份文件的内容原样抄进你这一行的位置；编译器睁眼时看到的已经是一份抄好的巨大文本。",
+    "这位抄写员不懂 C++，只会照字面抄文件、换名字；实测本机一个只 include print 的文件展开后有六万多行。",
+    "宏没有作用域：从它被定义那一刻起，这份文件剩下的每一处都换；那句 int LIMIT = 5 会直接变成 int 100 = 5。",
+    "打印用的字符串里那几个宏名字不会被换掉；把宏名手滑写成 QUD，编译器报的是某某未声明，先查 define 那行的拼写。",
+    "成品里那些井号加行号加文件名的行，是给编译器对位置用的门牌号。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\n#define QUAD(x) ((x) * 4)\n#define RAWQUAD(x) x * 4\n\nint main() {\n    std::println(\"QUAD(1 + 1) = {}\", QUAD(1 + 1));\n    std::println(\"RAWQUAD(1 + 1) = {}\", RAWQUAD(1 + 1));\n    return 0;\n}\n// 用 g++ -std=c++23 -E mac.cpp 看展开成品，两行分别是 ((1 + 1) * 4) 和 1 + 1 * 4\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\n#define QUAD(x) x * 4\n\nint main() {\n    std::println(\"{}\", QUAD(7));\n    return 0;\n}\n",
+      "#include <print>\n\n#define DOUBLE(x) ((x) * 2)\n\nint main() {\n    std::println(\"{}\", DOUBLE(1 + 1));\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  define  QUAD ( n ) ( ( n ) * 4 )\n#  define  RAWQUAD ( n ) n * 4\n\nint  main ( )\n{\n  std :: println ( \" 带括号 {}\" , QUAD ( 1 + 1 ) ) ;\n  std :: println ( \" 不带括号 {}\" , RAWQUAD ( 1 + 1 ) ) ;\n}\n// g++ -std=c++23 -E quad.cpp | tail -5 看到的就是 8 和 5 这两行\n"
+    ]
+  }
+}

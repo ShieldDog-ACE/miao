@@ -1,0 +1,80 @@
+{
+  "cid": "m122",
+  "note": "转移所有权改单编辑器：源稿真实任务只有 1 条（放开那行复印，看编译器怎么拦），coversTask 全部只打 1。拆成「make_unique 造纸条 + 把 auto b = a 那行复印真写出来 + std::move 过户版 + 打印旧变量是不是 nullptr」，报错原话按规矩五收进一条 buffer 注释档。禁止复制的理由、release 归你还进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把智能指针工具箱（#include <memory>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*memory\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <memory>\n\nint main() {",
+      "why": "unique_ptr 与 make_unique 住在 memory 里；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条的那张纸条：用 std::make_unique 造一个装 int 的独占指针，交给一个 auto 变量。",
+      "acceptRegex": ["auto\\s+\\w+\\s*=\\s*std\\s*::\\s*make_unique\\s*<\\s*int\\s*>\\s*\\("],
+      "sample": "auto p1 = std::make_unique<int>(7);",
+      "why": "make_unique 现造一个对象并把保管权交给你这张纸条；保管人始终只有一个。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：把注释掉的那行复印放开，让它真留在代码里 —— 用一个 auto 变量直接等于另一张已有的纸条（auto p2 = p1; 这种写法）。",
+      "acceptRegex": ["auto\\s+\\w+\\s*=\\s*\\w+\\s*;"],
+      "sample": "auto p2 = p1;",
+      "why": "标准库不是劝你别复印，而是在类型上把这条路堵死：复制构造被显式 delete，所以这一行当场编译不过。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条的对照组：把复印改成过户再跑一次 —— 等号右边写 std::move 套住原来那张纸条。",
+      "acceptRegex": ["=\\s*std\\s*::\\s*move\\s*\\(\\s*\\w+\\s*\\)\\s*;"],
+      "sample": "auto p2 = std::move(p1);",
+      "why": "move 自己不搬任何东西，它只是许可；真正抢地址并置空旧纸条的是 unique_ptr 的移动构造。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "过户之后查一句：用一条 println 打出旧纸条跟 nullptr 比的结果（它是不是已经空了）。",
+      "acceptRegex": ["==\\s*nullptr|nullptr\\s*==", "std\\s*::\\s*println\\s*\\("],
+      "sample": "std::println(\"p1 空了吗: {}\", p1 == nullptr);",
+      "why": "move 干的是抢地址加置空两步，全程仍然只有一张有效纸条 —— 这就是过户和复印的区别。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用一行注释抄下编译器拦复印时说的那个词（use of deleted function，至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 放开那行就报 use of deleted function：两张纸条各自释放同一块内存就是双重释放",
+      "why": "正则只能验你写了注释，抄得对不对判不了；这一处是这块编辑器判不动的部分。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "两张纸条各自 delete 同一块内存就是双重释放，所以 unique_ptr 把复制构造显式删掉；复印在编译期就被拒。",
+    "四条路只有一条能换保管人：复印不过、过户要 std::move、借用只给引用、放弃用 release。",
+    "按值收 unique_ptr 参数的函数就是接手：不写 move 编译不过；交出去之后原变量变成空。",
+    "release 把保管权讨回你手上，那张纸条变空，从那一刻起这块内存归你 delete。",
+    "现造的直接 push_back 进容器不用 move；已经握在手里的纸条进容器必须过户。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <memory>\n#include <utility>\n\nint main() {\n    auto p1 = std::make_unique<int>(7);\n    auto p2 = p1;\n    auto p3 = std::move(p1);\n    std::println(\"p1 空了吗: {}\", p1 == nullptr);\n    std::println(\"p3 的值: {}\", *p3);\n    return 0;\n}\n// 放开复印那行报 use of deleted function：两张纸条各自释放同一块内存就是双重释放\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    int* a = new int(7);\n    int* b = a;\n    std::println(\"{}\", *b);\n    delete a;\n    return 0;\n}\n",
+      "#include <print>\n#include <memory>\n#include <utility>\n\nint main() {\n    auto p1 = std::make_unique<int>(7);\n    auto p2 = std::move(p1);\n    std::println(\"{}\", *p2);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < memory >\n#  include < print >\n#  include < utility >\n\nint  main ( )\n{\n  auto  one = std :: make_unique < int > ( 5 ) ;\n  auto  two = one;\n  auto  three = std::move(one);\n  std::println(\"one 空了吗 {}\", one == nullptr);\n  return 0;\n}\n// 放开那行复印就是 use of deleted function，编译器当场拒\n"
+    ]
+  }
+}

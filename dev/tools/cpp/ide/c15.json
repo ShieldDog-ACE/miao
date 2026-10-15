@@ -1,0 +1,74 @@
+{
+  "cid": "c15",
+  "note": "按门牌号取字符改单编辑器：任务 1 拆成「装四个字符以上的 string + 打印下标 3（第 4 个）+ 用 length() 减一打最后一个」，任务 2 拆成「盒子[1] 换成 'X' + 打印改过的整串」，越界不拦那些知识点收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一行 std::string 声明，右边给一段至少四个字符的文字 —— 后面要按门牌号取床位，床位得先存在。",
+      "acceptRegex": ["std::string\\s+\\w+\\s*=\\s*\"[^\"]{4,}\"\\s*;"],
+      "sample": "std::string s = \"ABCDE\";",
+      "why": "方括号取的是盒子里现成的床位：先有一段文字，才谈得上第 0 号、第 1 号。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务 1：用一条 std::println 打出这段文字的第 4 个字符 —— 方括号里填的门牌号要比 4 小一号。",
+      "acceptRegex": ["std::string\\s+(\\w+)\\s*=\\s*\"[^\"]{4,}\"\\s*;[\\s\\S]*std::println\\s*\\([^)]*\\1\\s*\\[\\s*3\\s*\\]"],
+      "sample": "std::println(\"第 4 个 = {}\", s[3]);",
+      "why": "门牌号从 0 数起：第 4 个字符的门牌号是 4 减 1 等于 3，取出来是单个字符 D。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再用一条 std::println 打最后一个字符：方括号里放「长度减一」这个算式，别手写成死的数字。",
+      "acceptRegex": ["std::println\\s*\\(", "\\[[^\\]]*\\.length\\s*\\(\\s*\\)\\s*-\\s*1[^\\]]*\\]"],
+      "sample": "std::println(\"最后一个 = {}\", s[s.length() - 1]);",
+      "why": "最后一个门牌号等于长度减一；方括号里可以放算式，文字变长变短它都跟着走。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务 2：写一行赋值，把 1 号床位换成 'X' —— 盒子和方括号写在等号左边。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*1\\s*\\]\\s*=\\s*'X'\\s*;"],
+      "sample": "s[1] = 'X';",
+      "why": "门牌号写在等号左边就是换那个床位上的人：1 号是第二个字符，其余一个字没动。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把改过之后的整串打出来，看看是不是 AXCDE。",
+      "acceptRegex": ["(\\w+)\\s*\\[\\s*1\\s*\\]\\s*=\\s*'X'\\s*;[\\s\\S]*std::println\\s*\\([^)]*\\1\\s*\\)"],
+      "sample": "std::println(\"改过后 = {}\", s);",
+      "why": "打印整个盒子打的是那一整段文字；上一行只动了 1 号床位那一个字符。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "把两个工具箱都请进来：打印用的 #include 和 string 用的 #include 各写一行，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*string\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <string>\n\nint main() {",
+      "why": "std::string 住在 string 工具箱里，std::println 住在 print 工具箱里，缺一个都不认。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "门牌号从 0 数起：第 n 个字符的门牌号是 n 减 1，所以第 4 个要填 3。",
+    "最后一个字符的门牌号等于长度减一：s.length() 报 5 时最后一号是 4，写 s[5] 那个床位根本没有。",
+    "方括号里那个数说的不是「第几个」，而是离起点多远：起点本身离起点 0 步，所以从 0 数起。",
+    "按门牌号取出来是一个 char，不是一整段：s[3] 是 D，不是 ABCD；想要字符的编号就用 static_cast 当 int 看。",
+    "这一版下标不做检查：越界时编译器当场不拦，程序会读到不该读的地方 —— 「没报错」不等于「对了」。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nint main() {\n    std::string s = \"ABCDE\";\n\n    std::println(\"第一个 s[0] = {}\", s[0]);\n    std::println(\"第 4 个 = {}\", s[3]);\n    std::println(\"最后一个 s[{}] = {}\", s.length() - 1, s[s.length() - 1]);\n\n    s[1] = 'X';\n    std::println(\"改过后 = {}\", s);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\nint main() {\n    std::string s = \"ABCDE\";\n    std::println(\"{}\", s);\n    return 0;\n}\n",
+      "std::string s = \"ABC\";\nstd::println(\"{}\", s[4]);\n"
+    ],
+    "loose": [
+      "#  include  < print >\n# include < string >\nint  main ( )\n{\n  std::string  word = \"abcdef\";\n  std::println( \"{}\", word[3] );\n  std::println( \"{}\", word[word.length() - 1] );\n  word[ 1 ]  =  'X';\n  std::println( \"{}\", word );\n}\n"
+    ]
+  }
+}

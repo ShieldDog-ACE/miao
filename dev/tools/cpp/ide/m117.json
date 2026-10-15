@@ -1,0 +1,80 @@
+{
+  "cid": "m117",
+  "note": "抽象类与 explicit 改单编辑器：任务 1 拆成「纯虚 = 0 的爹 + 收两个 double 的 Rectangle + override 的 area + 两字段相乘」，任务 2 按规矩五拆成「真把 Circle c = 3.0; 那行写出来」加一条 buffer 注释记反应。=0 是记号、隐式转换通道进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱（#include <print>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "类写在 main 外面；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：先有那个留空洞的爹 —— class Shape 里写一句 virtual double area() const = 0;，自己不填。",
+      "acceptRegex": ["class\\s+Shape", "virtual\\s+double\\s+area\\s*\\(\\s*\\)\\s*const\\s*=\\s*0\\s*;"],
+      "sample": "class Shape {\npublic:\n    virtual double area() const = 0;\n};",
+      "why": "= 0 是个记号，不是返回值：父类不实现，孩子必须写一份；含空洞的类只能当爹，不能直接造对象。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：补一个 Rectangle —— 用冒号 public Shape 继承过去，再写一个收两个 double 的构造，函数体里用 override 实现 area。",
+      "acceptRegex": ["class\\s+Rectangle\\s*:\\s*public\\s+Shape", "\\w+\\s*\\(\\s*double\\s+\\w+\\s*,\\s*double\\s+\\w+\\s*\\)", "double\\s+area\\s*\\(\\s*\\)\\s*const\\s+override"],
+      "sample": "class Rectangle : public Shape {\npublic:\n    Rectangle(double w, double h) : w_(w), h_(h) {}\n    double area() const override { return w_ * h_; }",
+      "why": "纯虚那一格空洞由孩子填；填不上就还是抽象类，造不出对象。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：area 那一行 return 两个私有成员相乘的结果（宽乘高那个式子）。",
+      "acceptRegex": ["return\\s+\\w+_\\s*\\*\\s*\\w+_\\s*;"],
+      "sample": "private:\n    double w_, h_;\npublic:\n    double area() const override { return w_ * h_; }",
+      "why": "零件锁在 private，孩子只能在自己的类里用它们；同一句 p->area() 走的就是这一条算法。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：把 Circle 构造前面的 explicit 删掉，然后在 main 里按 Circle c = 3.0; 这种写法造一个圆 —— 这一行就是要你亲眼见它过不过。",
+      "acceptRegex": ["Circle\\s+\\w+\\s*=\\s*3\\.0\\s*;"],
+      "sample": "Circle c = 3.0;   // 删掉 explicit 之后居然编译通过",
+      "why": "单参数构造不加 explicit 就成了一条隐式转换通道，编译器替你调用了一次构造；危险恰恰在于它能编译。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：在这一行旁边用注释写下挂着 explicit 时和删掉之后各是什么反应（至少四个字，正则只验你写了注释）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 有 explicit 时这行报 no matching constructor，删掉 explicit 它一声不响地过了",
+      "why": "这是这块编辑器判不动的部分：两边的报错要你自己各跑一遍抄下来。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "普通虚函数是父类给一个版本、孩子愿意就盖掉；末尾写 = 0 才是纯虚：父类一格都没填，孩子必须自己写。",
+    "含空洞的类叫抽象类：动作列出来了，算法没填，所以它只能当爹，不能直接造对象。",
+    "explicit 堵的就是一个数悄悄变成一个圆那条路；不加 explicit 时 Circle c = 3.0 能编译，参数顺序写反、类型想错都一路放行。",
+    "Shape& s = c 是爹的引用指着儿子的对象，Shape* p = &r 是指针姿势，一样好用；同一类爹指针底下可以装着不同的儿子。",
+    "遍历那一段圈里没有一个字提到 Circle 或 Rectangle，各算各的面积 —— 这就是这批形状各算各的写法。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nclass Shape {\npublic:\n    virtual ~Shape() = default;\n    virtual double area() const = 0;\n};\n\nclass Circle : public Shape {\npublic:\n    Circle(double r) : r_(r) {}\n    double area() const override { return 3.14159265 * r_ * r_; }\nprivate:\n    double r_;\n};\n\nclass Rectangle : public Shape {\npublic:\n    Rectangle(double w, double h) : w_(w), h_(h) {}\n    double area() const override { return w_ * h_; }\nprivate:\n    double w_, h_;\n};\n\nint main() {\n    Circle c = 3.0;\n    Rectangle r(3.0, 4.0);\n    Shape* p = &r;\n    std::println(\"长方形 = {:.2f}\", p->area());\n    std::println(\"圆 = {:.2f}\", c.area());\n    return 0;\n}\n// 挂着 explicit 时 Circle c = 3.0 编译不过，删掉 explicit 它居然过了\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nclass Shape {\npublic:\n    double area() const { return 0.0; }\n};\n\nclass Circle : public Shape {\npublic:\n    double area() const override { return 1.0; }\n};\n\nint main() {\n    Circle c;\n    std::println(\"{}\", c.area());\n    return 0;\n}\n",
+      "#include <print>\n\nclass Shape {\npublic:\n    virtual double area() const = 0;\n};\n\nclass Rectangle : public Shape {\npublic:\n    Rectangle(double w, double h) : w_(w), h_(h) {}\n    double area() const override { return w_ + h_; }\nprivate:\n    double w_, h_;\n};\n\nint main() {\n    Rectangle r(2.0, 3.0);\n    std::println(\"{}\", r.area());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n\nclass  Shape\n{\n  public :\n      virtual  double  area ( )  const  =  0 ;\n};\n\nclass  Circle : public Shape {\npublic:\n    Circle(double r) : r_(r) {}\n    double area() const override { return r_ * r_;\n    }\n};\n\nclass  Rectangle  :  public  Shape\n{\n  public :\n      Rectangle ( double wide , double high ) : a_(wide), b_(high) {}\n      double  area ( )  const  override { return a_ * b_; }\n  private :\n      double a_, b_;\n};\n\nint  main ( )\n{\n  Circle  cc = 3.0 ;\n  std::println(\"{}\", cc.area());\n  return 0;\n}\n// 挂着 explicit 那行报的是没有匹配的构造，删掉之后它就过了\n"
+    ]
+  }
+}

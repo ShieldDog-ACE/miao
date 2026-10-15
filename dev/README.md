@@ -114,7 +114,17 @@ node dev/tools/enword-words.js "$MIAO_ENWORDS_JSON"                             
    登记进 `assemble` —— 数据层每拉进一片要再拼一次；不能重入的装配层过不了 `gen-index.js` 那道闸。
    不要往 `index.html` 里加 `<script>` —— 那等于把首屏从 57 KB（gzip）打回 1.3 MB，
    UI E2E 的请求账断言会当场红。
-2. **考卷**：题数据写成一份文件，在登记里填 `examFiles` 与 `engine`（`code` / `en` / `enword`，留空就是不排考）；
+   - 浏览器跑不动的语言（`engine: "paper"`，现在是 C++ 两门课 187 场）：**一屏到底** —— 与 Python 考场共用 exam-ui.js 那件 IDE 外壳，
+     一场卷 = 一块编辑器 + 逐条判定（`mode:"ide"`）。规矩写在 `tools/cpp-单编辑器出题规矩.md`：
+     条件 3–6 条、每条 `acceptRegex` 与 `sample` 都得给、权重和正好 100、任务条件 ≥50、
+     `starter` 单独交卷不许过线、三档自测都是**整份代码**的字符串（refs 判 100 / wrongs 判 <60 / loose 判 ≥60）。
+     判分先按独行 `//` 取出读者自己写的那一段、再剥注释 —— 把条件抄进注释不白拿分；
+     只有「写编译命令」「记观察到的报错」这种判的不是程序本体的条件才配 `acceptOn:"buffer"`。
+     顶上两颗按钮都是真的：`cpp-compile.js` 查形状（括号 / 少分号 / 没 main / 没搬头，报「真编译还要过类型检查，这一步站内不做」），
+     `cpp-sim.js` 是站内写的 C++ 子集机器，27 例与本机 g++ 的 stdout 逐拍逐字一致（`node dev/tests/cpp-sim-test.js`）。
+     旧的选择 / 填空 / 勾线形状仍留在笔试引擎里（`gradePaper` + 卡片界面），是给以后 java / c / 汇编这类课用的，
+     但 C++ 的卷上不许再出现 —— 闸逐场判形状。
+2. **考卷**：题数据写成一份文件，在登记里填 `examFiles` 与 `engine`（`code` / `paper` / `en` / `enword`，留空就是不排考）；
    排了考的课，阅读页只给「进入考试」，**考过才打完成标记**。
    - Python（`engine: "code"`）：检查项与 `ast` 特征名的契约写在 `assets/data/py-exam-data.js` 文件头，只能用里面列出的；
      权重合计 100，地板项（跑通 / 无报错）合计 ≤45，本课要点那一项 ≥45；写完跑 `node dev/tests/exam-test.js <课次>`。

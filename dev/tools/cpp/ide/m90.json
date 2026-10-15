@@ -1,0 +1,82 @@
+{
+  "cid": "m90",
+  "note": "管道 filter 改单编辑器：任务 1 拆成「ranges 头 + 数据竖线 std::views::filter + range-for 遍历带竖线的视图并打印 + 谓词里真写大于 5」，任务 2 拆成「一只空的中间容器 push_back + if 挑偶数」；哪个好读是判断，进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把那段数据接上第一段筛子：写一竖线，右边是 std::views::filter 递进去一把 lambda。",
+      "acceptRegex": ["\\w+\\s*\\|\\s*std::views::filter\\s*\\(\\s*\\["],
+      "sample": "nums | std::views::filter([](int x) { return x > 5; })",
+      "why": "竖线读作「然后」：数据，然后筛，一次只干一件事；这一刻还没算，只是把看法定下来。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条那一改：谓词里现在放行的是大于 5 的数（return 一个数大于 5）。",
+      "acceptRegex": ["return\\s+\\w+\\s*>\\s*5\\s*;"],
+      "sample": "[](int x) { return x > 5; }",
+      "why": "进来一个数、出来一个 bool，只干判断这一件事；大于 5 的按原顺序放行，顺序不变也不留空洞。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "请进这一族住的那个头文件：#include <ranges>。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*ranges\\s*>"],
+      "sample": "#include <ranges>",
+      "why": "只请 vector 和 print 两个头是拿不到 std::views 的，报错通常长成 std 里没有 views 这个成员。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "用一个 range-for 走那个带竖线的视图，把每个放行的数用 std::print 打出来。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\|", "std::print\\s*\\("],
+      "sample": "for (int v : nums | std::views::filter([](int x) { return x > 5; }))\n    std::print(\"{} \", v);",
+      "why": "for 圈真去读的那一刻才逐个问谓词；这一步一停，筛子等于没干活。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条的手写那份：先开一只空的 std::vector<int> 当中间容器，再用 push_back 把挑中的搬进去。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s+\\w+\\s*;", "\\w+\\.push_back\\s*\\("],
+      "sample": "std::vector<int> even;\neven.push_back(v);",
+      "why": "手写那份多养了一个容器，它存在的唯一理由是把中间结果存下来；管道那份不存，只现读。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "手写那份挑的是偶数：if 里把这个数模 2 跟 0 比相等。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*%\\s*2\\s*==\\s*0\\s*\\)"],
+      "sample": "if (v % 2 == 0) even.push_back(v);",
+      "why": "判断与搬运缠在同一行 —— 这就是要摆在一起比的那份；条件挪进 lambda 就只剩判断。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "竖线是从 shell 管道搬来的「然后」：nums，然后筛偶数，然后取前 3 个；每段只干一件事。",
+    "视图是惰性的看法，不复制数据也不预先算；筛完之后原数据毫发无损，还是原来那份。",
+    "filter 出来的视图不是容器，不能像 vector 那样用下标随机取，它只保证能被从头到尾走一遍。",
+    "std::views::filter(p) 单写是筛子本身，还没接上数据，想接几列就接几列；数据加筛子才等于一个视图。",
+    "条件误写成 return !x % 2; 会一行都不输出：感叹号优先级高于取模，先取反得 0 或 1，再模 2 恒为 0。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {5, 2, 8, 1, 9, 3, 7, 4, 6, 10};\n\n    for (int v : nums | std::views::filter([](int x) { return x > 5; }))\n        std::print(\"{} \", v);\n    std::println(\"\");\n\n    std::vector<int> even;\n    for (int v : nums) {\n        if (v % 2 == 0) even.push_back(v);\n    }\n    for (int v : even) std::print(\"{} \", v);\n    std::println(\"\");\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {5, 2, 8, 1, 9, 3, 7, 4, 6, 10};\n    std::vector<int> even;\n    for (int v : nums) {\n        if (v % 2 == 0) even.push_back(v);\n    }\n    for (int v : even) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <print>\n#include <ranges>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {5, 2, 8, 1, 9, 3, 7, 4, 6, 10};\n    for (int v : nums | std::views::filter([](int x) { return x % 2 == 0; })) std::print(\"{} \", v);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> nums = {5, 2, 8, 1, 9, 3, 7, 4, 6, 10};\n    for (int v : nums) if (v % 2 == 0) std::print(\"{} \", v);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < vector >\n# include < ranges >\n# include < print >\n\nint  main ( )\n{\n    std::vector<int> data = {5, 2, 8, 1, 9, 3, 7, 4, 6, 10};\n\n    for (int  n : data  | std::views::filter ( []( int  y ) {  return  y > 5 ; } ) )\n        std::print( \"{} \", n );\n    std::println(\"\");\n\n    std::vector< int >  keep ;\n    for (int n : data) {\n        if ( n % 2 == 0 )  keep . push_back ( n ) ;\n    }\n    for (int n : keep) std::print(\"{} \", n);\n    return 0;\n}\n"
+    ]
+  }
+}

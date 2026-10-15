@@ -1,0 +1,98 @@
+{
+  "cid": "m102",
+  "note": "stack 改单编辑器：任务 1 拆成「char 栈 + 遍历压左括号 + 右括号跟栈顶配对 pop + 最后 return 栈的 empty」，任务 2 拆成「do-while 压余数」和「while 不空逐个弹出」。top/pop 分工、计数法判不了顺序这些概念题进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把栈工具箱（#include <stack>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": [
+        "#\\s*include\\s*<\\s*stack\\s*>",
+        "\\bint\\s+main\\s*\\("
+      ],
+      "sample": "#include <stack>\n\nint main() {",
+      "why": "缺 #include <stack> 就没人认识 std::stack；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：开一只装 char 的栈，用一条 for 遍历那个字符串，遇到左括号就 push 摞起来。",
+      "acceptRegex": [
+        "stack\\s*<\\s*char\\s*>\\s+\\w+",
+        "for\\s*\\(\\s*char\\s+\\w+\\s*:\\s*\\w+\\s*\\)",
+        "\\w+\\.push\\s*\\("
+      ],
+      "sample": "std::stack<char> left;\nfor (char c : s) {\n    if (c == '(' || c == '[' || c == '{') left.push(c);\n}",
+      "why": "还没配对的左括号先摞起来：最后打开的那一只，正是最先要闭合的那一只。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：右括号来了，先问栈空不空，再把栈顶的 top 跟它对应的左括号比一比，配上了才 pop 消掉。",
+      "acceptRegex": [
+        "\\.top\\s*\\(\\s*\\)[^;]{0,24}(!=|==)|(!=|==)[^;]{0,24}\\.top\\s*\\(\\s*\\)",
+        "\\w+\\.pop\\s*\\("
+      ],
+      "sample": "if (left.empty() || left.top() != p) return false;\nleft.pop();",
+      "why": "光数左右括号各几个不够 —— 反例 \"())(\" 数量相等却不匹配；要判的是顺序，而空栈上调用 top 或 pop 是未定义行为。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：整个串走完后，把「栈里到底配干净没有」当结果交出去 —— 写一句 return 加这个栈的 empty()。",
+      "acceptRegex": [
+        "return\\s+\\w+\\.empty\\s*\\("
+      ],
+      "sample": "return left.empty();",
+      "why": "还剩左括号就是没闭合；少了这一句，\"((\" 这种没报错但没配完的会被判成匹配。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：十进制转二进制 —— 用 do 先跑一遍再判条件的写法，把 n % 2 那一位只只压进栈，每压一次 n 除以 2。",
+      "acceptRegex": [
+        "do\\s*\\{",
+        "\\w+\\.push\\s*\\(\\s*\\w+\\s*%\\s*2\\s*\\)"
+      ],
+      "sample": "do {\n    bits.push(n % 2);\n    n /= 2;\n} while (n > 0);",
+      "why": "取余是从最低位开始算的；写成 while 时条件一次不满足就整圈跳过，n 本来就是 0 就一位都不会输出。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：写一句 while，条件是栈不空，循环体里先打印 top 再 pop，把压进去的位一起弹出来。",
+      "acceptRegex": [
+        "while\\s*\\(\\s*!\\s*\\w+\\.empty\\s*\\(\\s*\\)\\s*\\)",
+        "std\\s*::\\s*print"
+      ],
+      "sample": "while (!bits.empty()) { std::print(\"{}\", bits.top()); bits.pop(); }",
+      "why": "栈的后进先出正好把顺序倒回来：先压的最低位最后一个打出来，屏幕上就是高位在前。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "top 只看不拿走，pop 只负责删且返回 void：想拿走并使用，得先读 top 再 pop。",
+    "括号匹配要的不只是左右数量相等，还要最后打开的那一只最先闭合这个顺序，栈记住的正是顺序。",
+    "空栈上调用 top 或 pop 是未定义行为，它不会抛异常，也不会返回 -1。",
+    "栈不能遍历也不能按下标取，硬要遍历得先复制一份再折腾。",
+    "除二取余先产生的是最低位，弹出的循环要一路弹到栈空为止，最先压进去的那一位最后才打出来。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <stack>\n#include <string>\n\nchar partner(char c) {\n    if (c == ')') return '(';\n    if (c == ']') return '[';\n    if (c == '}') return '{';\n    return 0;\n}\n\nbool ok3(const std::string& s) {\n    std::stack<char> left;\n    for (char c : s) {\n        if (c == '(' || c == '[' || c == '{') left.push(c);\n        else if (char p = partner(c)) {\n            if (left.empty() || left.top() != p) return false;\n            left.pop();\n        }\n    }\n    return left.empty();\n}\n\nint main() {\n    for (std::string s : {\"(()())\", \"([)]\", \"[(\"})\n        std::println(\"{} -> {}\", s, ok3(s) ? \"匹配\" : \"不匹配\");\n    int n = 13;\n    std::stack<int> bits;\n    do {\n        bits.push(n % 2);\n        n /= 2;\n    } while (n > 0);\n    while (!bits.empty()) { std::print(\"{}\", bits.top()); bits.pop(); }\n    std::println(\"\");\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n\nint main() {\n    std::string s = \"([])\";\n    int open = 0;\n    for (char c : s) if (c == '(') open++;\n    std::println(\"{}\", open);\n    return 0;\n}\n",
+      "#include <print>\n#include <stack>\n\nint main() {\n    std::stack<int> bits;\n    int n = 13;\n    while (n > 0) { bits.push(n % 2); n /= 2; }\n    while (!bits.empty()) { std::print(\"{}\", bits.top()); bits.pop(); }\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < stack >\n#  include < string >\n\nbool  check ( const std :: string & s )\n{\n  std :: stack < char >  st ;\n  for ( char ch : s ) {\n      if ( ch == '(' || ch == '[' || ch == '{' ) st.push(ch);\n      else if ( ! st.empty ( ) ) {\n          if ( '[' != st.top() ) return false;\n          st.pop();\n      }\n  }\n  return st.empty();\n}\n\nint  main ( )\n{\n  std :: println(\"{}\", check(\"([])\"));\n  int n = 0;\n  std :: stack < int >  bit ;\n  do {\n      bit.push( n % 2 );\n      n = n / 2;\n  } while ( n > 0 );\n  while ( ! bit.empty ( ) ) { std :: print(\"{}\", bit.top()); bit.pop(); }\n  std :: println(\"\");\n}\n"
+    ]
+  }
+}

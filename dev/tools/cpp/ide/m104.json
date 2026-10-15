@@ -1,0 +1,79 @@
+{
+  "cid": "m104",
+  "note": "pair 与结构化绑定改单编辑器：任务 1 拆成「pair 榜单 + sort 的 lambda 两个关键字」，任务 2 拆成「建 map + const auto& [键, 值] 绑定遍历」；默认字典序、绑定是复制这些概念题进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把 pair 住的那个工具箱（#include <utility>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*utility\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <utility>\n\nint main() {",
+      "why": "缺 #include <utility> 就没人认识 std::pair；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：开一排名次 —— 一个装 pair 的 vector，每个 pair 是「分数在前、名字在后」，初值至少给三条。",
+      "acceptRegex": ["vector\\s*<\\s*(std::)?pair\\s*<\\s*int\\s*,\\s*(std::)?string\\s*>\\s*>\\s+\\w+", "\\{\\s*\\{"],
+      "sample": "std::vector<std::pair<int, std::string>> ranked = {\n    {95, \"小红\"}, {95, \"小明\"}, {88, \"小强\"}};",
+      "why": "谁优先排谁占 first：默认比较先看 first，所以分数要放前面那一格。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：给 std::sort 补上第三个参数 —— 一个收两个 pair 引用当参数的 lambda：分数不等时让 first 大的在前，同分时让 second 小的在前。",
+      "acceptRegex": ["sort\\s*\\(", "\\]\\s*\\(", "first\\s*>", "second\\s*<"],
+      "sample": "std::sort(ranked.begin(), ranked.end(),\n          [](const std::pair<int, std::string>& a, const std::pair<int, std::string>& b) {\n              if (a.first != b.first) return a.first > b.first;\n              return a.second < b.second;\n          });",
+      "why": "比较器回答的是「a 该不该排在 b 前面」：first 用大于把方向翻成降序，平局那一句再用小于给名字升序。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "先写一条 println，直接按 first 与 second 这两个名字把一张 pair 的两格一起打出来。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(", "\\.first\\s*,\\s*\\w+\\.second"],
+      "sample": "std::pair<std::string, int> p = {\"数学\", 92};\nstd::println(\"first = {} second = {}\", p.first, p.second);",
+      "why": "pair 就是给两个值捆了一个疙瘩，两格分别叫 first 与 second；两个坑给两个值，顺序不能反。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：建一张单词计数的 map —— 键是 string、值是 int，初值给两三档。",
+      "acceptRegex": ["map\\s*<\\s*(std::)?string\\s*,\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{"],
+      "sample": "std::map<std::string, int> freq = {{\"cat\", 3}, {\"dog\", 2}};",
+      "why": "map 的每一项本来就是一张 pair：first 是键，second 是值。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：用一次拆成两个变量的写法遍历那张 map —— for 的头写成 const auto& 加方括号里的两个名字，圈里用一条 println 把这两个名字打出来。",
+      "acceptRegex": ["for\\s*\\(\\s*(const\\s+)?auto\\s*&?\\s*\\[\\s*\\w+\\s*,\\s*\\w+\\s*\\]\\s*:\\s*\\w+\\s*\\)", "std\\s*::\\s*print"],
+      "sample": "for (const auto& [word, count] : freq)\n    std::println(\"{} 出现 {} 次\", word, count);",
+      "why": "绑定写成两个名字，比一格一格去问 first 与 second 好读得多；按 const 引用遍历才不会把每对都复制一份。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "std::sort 不带规则排一排 pair 时比的是字典序：先比 first，first 相等才比 second；想让谁优先排，就把谁摆在 first。",
+    "带等号的 auto [a, b] = p; 绑定出来的是两份复制，改 a 不会动 p；要改原件得显式写 auto& [a, b]。",
+    "结构化绑定的名字写在 auto 后面的方括号里，名字个数必须和 pair 的格数一致，对不上编译器直接拒绝。",
+    "只写 auto x = p; 得到的是一个 pair，而不是两个变量 —— 那对括号才是绑定的记号。",
+    "函数也能一次回两个值：返回 std::pair<int, int>，外面用 auto [value, where] 接住就行。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <map>\n#include <string>\n#include <utility>\n#include <vector>\n#include <algorithm>\n\nint main() {\n    std::pair<std::string, int> p = {\"数学\", 92};\n    std::println(\"first = {} second = {}\", p.first, p.second);\n    auto [subject, score] = p;\n    std::println(\"拆开: {} = {}\", subject, score);\n    std::vector<std::pair<int, std::string>> ranked = {\n        {95, \"小红\"}, {95, \"小明\"}, {88, \"小强\"}, {72, \"小美\"}};\n    std::sort(ranked.begin(), ranked.end(),\n              [](const std::pair<int, std::string>& a, const std::pair<int, std::string>& b) {\n                  if (a.first != b.first) return a.first > b.first;\n                  return a.second < b.second;\n              });\n    for (const auto& [sc, name] : ranked)\n        std::println(\"{} {}\", name, sc);\n    std::map<std::string, int> freq = {{\"cat\", 3}, {\"dog\", 2}, {\"owl\", 1}};\n    for (const auto& [word, count] : freq)\n        std::println(\"{} 出现 {} 次\", word, count);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <utility>\n#include <vector>\n#include <string>\n\nint main() {\n    std::vector<std::pair<int, std::string>> ranked = {{88, \"小明\"}, {95, \"小红\"}};\n    std::sort(ranked.begin(), ranked.end());\n    for (auto x : ranked) std::println(\"{}\", x.first);\n    return 0;\n}\n",
+      "#include <print>\n#include <map>\n#include <string>\n\nint main() {\n    std::map<std::string, int> freq = {{\"cat\", 3}};\n    for (const auto& kv : freq) std::println(\"{}\", kv.first);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < utility >\n#  include < vector >\n#  include < string >\n#  include < map >\n#  include < algorithm >\n\nint  main ( )\n{\n  pair < string , int >  row = { \"语文\" , 88 } ;\n  std::println(\"{} {}\", row.first, row.second);\n  std::vector<std::pair<int, std::string>> board = {{72, \"甲\"}, {88, \"乙\"}, {88, \"丙\"}};\n  std :: sort ( board.begin ( ) , board.end ( ) ,\n      [ ] ( const pair < int , string > & a , const pair < int , string > & b ) {\n          if (a.first != b.first) return a.first > b.first;\n          return a.second < b.second;\n      } );\n  std::map<std::string, int> cnt = {{\"a\", 1}, {\"b\", 2}};\n  for (const auto & [key , num ] : cnt) std::println(\"{} -> {}\", key, num);\n}\n"
+    ]
+  }
+}

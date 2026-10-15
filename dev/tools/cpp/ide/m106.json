@@ -1,0 +1,80 @@
+{
+  "cid": "m106",
+  "note": "二分查找改单编辑器：任务 1 拆成「带重复的有序数组 + lower/upper 各一次 + 两个位置相减打印」，任务 2（想想没排序会出什么错）按规矩五配成「真把没排序的 binary_search 写出来」加一条 buffer 注释档。含等号口诀、走到 end 这些概念题进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把查找工具箱（#include <algorithm>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*algorithm\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <algorithm>\n\nint main() {",
+      "why": "lower_bound、upper_bound、binary_search 三兄弟都住在 algorithm 里。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：造一段有序但带重复的数组 —— 用一个装 int 的 vector，初值里让 7 至少出现两次。",
+      "acceptRegex": ["vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{[^{}]*7[^{}]*7[^{}]*\\}"],
+      "sample": "std::vector<int> d = {3, 5, 7, 7, 7, 9, 11};",
+      "why": "二分的前提是有序：这一列数已经从小到大排好，重复的那几只正好留给两个 bound 去夹。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：对同一个 7 各调一次 std::lower_bound 和 std::upper_bound，区间照旧给 begin 与 end，两个结果各用一个 auto 接住。",
+      "acceptRegex": ["lower_bound\\s*\\(", "upper_bound\\s*\\(", "\\.begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.end\\s*\\(\\s*\\)"],
+      "sample": "auto lo = std::lower_bound(d.begin(), d.end(), 7);\nauto hi = std::upper_bound(d.begin(), d.end(), 7);",
+      "why": "lower 含等号，找第一个不小于 7 的；upper 不含等号，找第一个严格大于 7 的 —— 记反了个数就会算错。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用一条 println 把这两个位置相减的结果打出来，那就是 7 的个数。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*-\\s*\\w+"],
+      "sample": "std::println(\"7 有 {} 个\", hi - lo);",
+      "why": "两个位置之间夹着的正好是那一串 7；减法直接给你个数，下标还白送「比 7 小的有几个」。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：故意再备一段没排序的数组，对里面确实存在的那个数调一次 std::binary_search，并把返回值用一条 println 打出来。",
+      "acceptRegex": ["binary_search\\s*\\(", "\\.begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.end\\s*\\(\\s*\\)", "std\\s*::\\s*println\\s*\\("],
+      "sample": "std::vector<int> u = {5, 2, 8, 1, 9, 3};\nstd::println(\"没排序找 8: {}\", std::binary_search(u.begin(), u.end(), 8));",
+      "why": "这一步只能验你真把那次查找写出来了；它安静地给你一个错答案，没有编译错误也没有运行警告。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：在旁边用一行注释写下你看到的结果和原因（至少四个字，正则只验你写了注释，验不了内容）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 8 明明在第 3 格，二分却说没有，因为它砍掉的那一半里正好装着答案",
+      "why": "这是这块编辑器判不动的部分：正则只能确认你记下了观察，结论要你自己跑出来对照。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "二分每比一次就敢扔掉一半，靠的是数据已经排好序：看一眼中间那格就能断定另一半没答案，而标准库不报警。",
+    "口诀：lower_bound 含等号找第一个不小于目标的，upper_bound 不含等号找第一个严格大于目标的。",
+    "找不到的答案是一个位置而不是错误码：一个都不满足时它走到 end，解引用之前要先判它等不等于 end。",
+    "数组没排序就二分是逻辑错误不是编译错误，binary_search 可能对确实存在的数返回 false；想二分就必须自己先 sort，或者靠来路保证有序。",
+    "把 std::lower_bound 的位置交给 insert，插完整表仍然有序 —— 位置语义是白送的。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <algorithm>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> d = {3, 5, 7, 7, 7, 9, 11};\n    auto lo = std::lower_bound(d.begin(), d.end(), 7);\n    auto hi = std::upper_bound(d.begin(), d.end(), 7);\n    std::println(\"7 有 {} 个\", hi - lo);\n    std::vector<int> u = {5, 2, 8, 1, 9, 3};\n    std::println(\"没排序找 8: {}\", std::binary_search(u.begin(), u.end(), 8));\n    // 8 明明在第 3 格，二分却说没有：它砍掉的那一半里正好装着答案\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <algorithm>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> d = {3, 5, 7, 7, 9};\n    int n = 0;\n    for (int v : d) if (v == 7) n++;\n    std::println(\"{}\", n);\n    return 0;\n}\n",
+      "#include <algorithm>\n#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {1, 3, 5, 7, 9, 11};\n    auto lb = std::lower_bound(a.begin(), a.end(), 6);\n    std::println(\"{}\", *lb);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < algorithm >\n#  include < print >\n#  include < vector >\n\nint  main ( )\n{\n  std :: vector < int >  data = { 2 , 7 , 7 , 7 , 9 } ;\n  auto  first7 = std::lower_bound(data.begin(), data.end(), 7);\n  auto  after7 = std::upper_bound(data.begin(), data.end(), 7);\n  std::println(\"几个 7 {}\", after7 - first7);\n  std::vector<int> mess = {9, 4, 7, 1};\n  std::println(\"找 4 的结果 {}\", std::binary_search(mess.begin(), mess.end(), 4));\n  // 表没排序时它说没有，其实 4 就在第 2 格\n  return 0;\n}\n"
+    ]
+  }
+}

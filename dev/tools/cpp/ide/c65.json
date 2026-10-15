@@ -1,0 +1,81 @@
+{
+  "cid": "c65",
+  "note": "冒泡优化改单编辑器：任务只有一条（排 1 2 3 5 4，想走几轮），拆成「那份数据 + 每轮按开关 + 换过记账 + 没换就 break + 每轮打印 + 能跑的形」六道代码条件；走了几轮是预测，按规矩收进 notes 不判分。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把要排的那一串数装进一只整型 vector：值按源稿给的就是 1、2、3、5、4。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{\\s*1\\s*,\\s*2\\s*,\\s*3\\s*,\\s*5\\s*,\\s*4\\s*\\}"],
+      "sample": "std::vector<int> v = {1, 2, 3, 5, 4};",
+      "why": "vector 是整串数据的盒子，花括号里按顺序把初值写全；排的就是这一串。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "给外层循环装一只开关：每一轮开始、进内层之前，用一个 bool 变量把它按成 false。",
+      "acceptRegex": ["\\bbool\\s+\\w+\\s*=\\s*false\\s*;"],
+      "sample": "bool swapped = false;",
+      "why": "开关表示这轮还没换过，所以每轮都要重新按下一次；写在两层循环之外只按一次，之后每轮开头它都还是 true。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "内层里相邻两个前面比后面大就交换，换完紧跟一句把那只开关记成 true。",
+      "acceptRegex": ["std::swap\\s*\\(\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*,\\s*\\w+\\s*\\[\\s*\\w+\\s*\\+\\s*1\\s*\\]\\s*\\)", "\\b\\w+\\s*=\\s*true\\s*;"],
+      "sample": "std::swap(v[j], v[j + 1]);\nswapped = true;",
+      "why": "交换用 std::swap 一句办妥；换过必须记账，否则程序不知道这轮动过，已经有序时也不肯停。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "内层走完、这一轮结束之前看一眼开关：还是 false 就 break，不再开下一轮。",
+      "acceptRegex": ["if\\s*\\(\\s*!\\s*\\w+\\s*\\)\\s*\\{?\\s*break\\s*;"],
+      "sample": "if (!swapped) break;",
+      "why": "一轮一次都没换就说明已经排好，当场收工；这一步搬进内层会变成这一对没换就跳出全部。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "每轮结束用一条 std::println 把第几轮和这轮的开关状态一起打出来：格式串里至少两个占位坑，按顺序给对应的值。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,"],
+      "sample": "std::println(\"第 {} 轮后 {}，这轮换过吗？{}\", i + 1, v, swapped);",
+      "why": "开关是 bool，打出来就是 true 或 false；坑和值的个数对不上在编译期就被拦下。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱和 vector 头搬进来（两条 #include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*vector\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <vector>\n\nint main() {",
+      "why": "缺头文件就没人认识 std::println 和 std::vector；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "1 2 3 5 4 加了开关走 2 轮 7 次比较就停：第一轮比 4 次、换 1 次（5 与 4 那对），第二轮比 3 次一次都没换，打印 false 然后 break。",
+    "不优化那版是 4 轮 10 次；完全有序的 1 2 3 4 5 优化后 1 轮 4 次就收工，最坏情况 5 4 3 2 1 一轮都省不掉。",
+    "已经有序的串也得走完一整轮才能停，因为「这轮一次都没换」这件事只有走完一轮才知道。",
+    "开关的四个动作有固定顺序：内层之前按成 false，交换之后记成 true，内层走完之后看一眼，还是 false 就 break。",
+    "std::sort 是放在 algorithm 里的函数，写 std::sort(v.begin(), v.end())，右端那个位置不包含自己的数据；v.sort() 报的是没有这个名字的成员。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <utility>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {1, 2, 3, 5, 4};\n    for (size_t i = 0; i + 1 < v.size(); i++) {\n        bool swapped = false;\n        for (size_t j = 0; j + 1 < v.size() - i; j++) {\n            if (v[j] > v[j + 1]) {\n                std::swap(v[j], v[j + 1]);\n                swapped = true;\n            }\n        }\n        std::println(\"第 {} 轮后 {}，这轮换过吗？{}\", i + 1, v, swapped);\n        if (!swapped) break;\n    }\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\nint main() {\n    std::vector<int> v = {1, 2, 3, 5, 4};\n    for (size_t i = 0; i + 1 < v.size(); i++) {\n        for (size_t j = 0; j + 1 < v.size(); j++) {\n            if (v[j] > v[j + 1]) {\n                std::swap(v[j], v[j + 1]);\n            }\n        }\n    }\n    std::println(\"{}\", v);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> data = {1, 2, 3, 5, 4};\n    for (size_t i = 0; i + 1 < data.size(); i++) {\n        bool changed = false;\n        for (size_t j = 0; j + 1 < data.size(); j++) {\n            if (data[j] < data[j + 1]) {\n                std::swap(data[j], data[j + 1]);\n            }\n        }\n    }\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < vector >\n#  include < print >\nint  main ( )\n{\n  std::vector<int> nums = {1, 2, 3, 5, 4};\n  for (size_t r = 0; r + 1 < nums.size(); r++) {\n    bool flag = false;\n    for (size_t k = 0; k + 1 < nums.size() - r; k++) {\n      if (nums[k] > nums[k + 1]) {\n        std::swap( nums[k], nums[k + 1] );\n        flag = true;\n      }\n    }\n    std::println( \"round {} now {} flag {}\" , r + 1 , nums , flag );\n    if (!flag) { break; }\n  }\n  return 0;\n}\n"
+    ]
+  }
+}

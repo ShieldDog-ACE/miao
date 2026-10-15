@@ -1,0 +1,75 @@
+{
+  "cid": "m147",
+  "note": "任务是把进度改成报满 15 个并列出被跳过的数：状态变量、两条规则、并排的或、跳过那行打印、收尾一行各判一条。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把进度记在循环外面：先有一个用 int 声明、用来数报了几个的变量，循环条件比的是它和 15。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=", "\\w+\\s*<\\s*15\\s*;"],
+      "sample": "int reported = 0, cur = 1;\nfor (; reported < 15; ++cur) {",
+      "why": "停止条件听题目里那句报满：声明提到 for 前面，循环结束后才读得到它。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "规则一写成代码：逢 7 的倍数，用取余比 0。",
+      "acceptRegex": ["\\w+\\s*%\\s*7\\s*==\\s*0"],
+      "sample": "cur % 7 == 0",
+      "why": "这一条是纯算术：除以 7 余数为 0 就是 7 的倍数。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "规则二用文本判：把当前这个数变成字符串，找字符 7，判它没等于那个找不到的专门值。",
+      "acceptRegex": ["std\\s*::\\s*to_string\\s*\\(", "\\.\\s*find\\s*\\(\\s*'7'\\s*\\)", "!\\s*=\\s*(?:std\\s*::\\s*)?string\\s*::\\s*npos"],
+      "sample": "std::to_string(cur).find('7') != std::string::npos",
+      "why": "find 的返回值是下标，没地方可给就返回 npos，所以判找到了要写成不等于 npos，而不是直接放进 if。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "两条规则并排放进一个 bool：中间用表示任一命中的那个双竖线。",
+      "acceptRegex": ["\\bbool\\s+\\w+\\s*=\\s*[^;]*\\|\\|"],
+      "sample": "bool skip = (cur % 7 == 0) || std::to_string(cur).find('7') != std::string::npos;",
+      "why": "两条是并排关系：实测把双竖线写成双与号，1 到 60 里只剩 7 一个数被跳。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：命中跳过时，用一条 std::println 把那个被跳过的数列出来（格式串里带上跳过的字样，一个占位坑给那个数）。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*跳过[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "if (skip) std::println(\"被跳过的数：{}\", cur);",
+      "why": "这一步只打印、不加进度：跳过的数不占报数的名额，实测 15 个正常数要在 18 那里才凑齐。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "收尾用一条 std::println 打最后一个报出来的数：参数给那个变量减 1。",
+      "acceptRegex": ["std\\s*::\\s*println\\s*\\([^;]*\\w+\\s*-\\s*1\\s*\\)"],
+      "sample": "std::println(\"报满 15 个，最后一个报出的是 {}\", cur - 1);",
+      "why": "循环退出时 cur 已经往前多走了一步，所以要减一才是真正报出的最后一个。",
+      "coversTask": 1,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "循环条件听题目里那句直到：跳过的数也占掉 cur 的一步，用 cur 当进度就报不满，实测只报出 17 个。",
+    "动手前先问两件事：手上要记什么状态、一步怎么推进；模拟不像穷举，不懂题目就翻不成代码。",
+    "把进度加一挪到 if 外面，跳过也算报了一个，等于自定 20 轮而不是 20 个真数。",
+    "for 的初始化段有自己的作用域，出了那对花括号变量就不存在。",
+    "实测这一版打印四行：被跳过的是 7、14、17，最后一个报出的是 18。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nint main() {\n    int reported = 0, cur = 1;\n    for (; reported < 15; ++cur) {\n        bool skip = (cur % 7 == 0) || std::to_string(cur).find('7') != std::string::npos;\n        if (skip) {\n            std::println(\"被跳过的数：{}\", cur);\n        } else {\n            ++reported;\n        }\n    }\n    std::println(\"报满 15 个，最后一个报出的是 {}\", cur - 1);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n\nint main() {\n    int reported = 0;\n    for (int cur = 1; reported < 20; ++cur) {\n        bool skip = (cur % 7 == 0) || std::to_string(cur).find('7') != std::string::npos;\n        if (!skip) {\n            ++reported;\n        } else {\n            std::println(\"第 {} 个正常数之后，跳过了 {}\", reported, cur);\n        }\n    }\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    for (int i = 1; i <= 15; ++i) std::println(\"{}\", i);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < string >\nint  main ( )\n{\n  int  done  =  0 ,  n  =  1 ;\n  for ( ;  done  <  15 ;  ++ n )\n  {\n    bool  hit  =  n % 7 == 0 || std :: to_string ( n ) . find ( '7' ) != std :: string :: npos ;\n    if ( hit )  std :: println ( \" 这个数跳过 {}\" , n ) ;\n    else  ++ done ;\n  }\n  std :: println ( \" 报满十五个，最后一个是 {}\" , n - 1 ) ;\n}\n"
+    ]
+  }
+}

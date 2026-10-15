@@ -15,78 +15,92 @@
 window.MIAO_CPP_EXAM_P17 = {
   papers: [
     {
-      cid: "c71", kind: "paper", mode: "code", authored: "a2fb9d87", pass: 60, title: "第 71 课考试 · 递归：函数调用自己", task: "任务题目：写一个递归的 sum_to，收一个 n，返回 1+2+…+n；动手之前先把出口想清楚 —— n 等于 1 的时候该 return 什么", hint: "想不起来就回看正文【演示 3】那个 sum_to、【演示 1】的 factorial 两行结构，还有【常见坑】第一条没有出口会怎样。",
+      cid: "c71", kind: "paper", mode: "ide", authored: "a2fb9d87", file: "main.cpp", pass: 60, title: "第 71 课考试 · 递归：函数调用自己", task: "任务题目：写一个递归的 sum_to，收一个 n，返回 1+2+…+n；动手之前先把出口想清楚 —— n 等于 1 的时候该 return 什么", hint: "想不起来就回看正文【演示 3】那个 sum_to、【演示 1】的 factorial 两行结构，还有【常见坑】第一条没有出口会怎样。",
+      notes: [],
       questions: [
-        { id: "q1", type: "code", score: 26, coversTask: 1, stem: "补出 sum_to 里递归那一句：把当前的 n 和下层还回来的和加起来交上去。", acceptRegex: ["n\\s*\\+\\s*sum_to\\s*\\(\\s*n\\s*-\\s*1\\s*\\)"], sample: "return n + sum_to(n - 1);", why: "整句是 return n + sum_to(n - 1); —— 加号左边是手里已有的 n，右边是等下层还的活儿，而 n - 1 就是那句「让规模变小」。return 不能漏，漏了上层收到的是空。" },
-        { id: "q2", type: "code", score: 37, coversTask: 1, stem: "补出 sum_to 的出口那一句：只有 1 个数时，和就是 1，直接交货，不再喊自己。", acceptRegex: ["if\\s*\\(\\s*n\\s*(==|<=)\\s*1\\s*\\)\\s*return\\s+1\\s*;"], sample: "if (n == 1) return 1;", why: "出口就是那级最矮的楼梯：if 先问一句能不能直接答，能答就 return 交货，一句都不再往下问。漏了它，那叠欠条没有底，运行时栈被吃光。" },
-        { id: "q3", type: "code", score: 37, coversTask: 1, stem: "写出 sum_to 的函数头：返回整数、名字叫 sum_to、收一个整数。", acceptRegex: ["int\\s+sum_to\\s*\\(\\s*int"], sample: "int sum_to(int n) {", why: "还回来的是一份和，所以返回值写 int；收进来的那步数是原料，也写成 int。返回值一省，编译器就不认这个定义了。" }
+        { id: "q1", type: "code", score: 26, coversTask: 1, stem: "补出 sum_to 里递归那一句：把当前的 n 和下层还回来的和加起来交上去。", acceptRegex: ["n\\s*\\+\\s*sum_to\\s*\\(\\s*n\\s*-\\s*1\\s*\\)"], acceptOn: "code", sample: "return n + sum_to(n - 1);", why: "整句是 return n + sum_to(n - 1); —— 加号左边是手里已有的 n，右边是等下层还的活儿，而 n - 1 就是那句「让规模变小」。return 不能漏，漏了上层收到的是空。" },
+        { id: "q2", type: "code", score: 37, coversTask: 1, stem: "补出 sum_to 的出口那一句：只有 1 个数时，和就是 1，直接交货，不再喊自己。", acceptRegex: ["if\\s*\\(\\s*n\\s*(==|<=)\\s*1\\s*\\)\\s*return\\s+1\\s*;"], acceptOn: "code", sample: "if (n == 1) return 1;", why: "出口就是那级最矮的楼梯：if 先问一句能不能直接答，能答就 return 交货，一句都不再往下问。漏了它，那叠欠条没有底，运行时栈被吃光。" },
+        { id: "q3", type: "code", score: 37, coversTask: 1, stem: "写出 sum_to 的函数头：返回整数、名字叫 sum_to、收一个整数。", acceptRegex: ["int\\s+sum_to\\s*\\(\\s*int"], acceptOn: "code", sample: "int sum_to(int n) {", why: "还回来的是一份和，所以返回值写 int；收进来的那步数是原料，也写成 int。返回值一省，编译器就不认这个定义了。" }
       ],
       selftest: {
         refs: [
-          {q1: "return n + sum_to(n - 1);", q2: "if (n == 1) return 1;", q3: "int sum_to(int n) {"}],
+          "int sum_to(int n) {\n}\nint main() {\n    return n + sum_to(n - 1);\n    if (n == 1) return 1;\n    return 0;\n}\n"],
         wrongs: [
-          {q1: "sum_to(n - 1);", q2: "if (n == 1) return 0;", q3: "void sum_to(int n) {"}],
+          "",
+          "sum_to(n - 1);",
+          "if (n == 1) return 0;",
+          "void sum_to(int n) {"],
         loose: [
-          {q1: "return  n  +  sum_to ( n - 1 ) ;", q2: "if( n <= 1 ) return  1 ;", q3: "int   sum_to ( int   n ) {"}]
+          "int   sum_to ( int   n ) {\n}\nint main() {\n    return  n  +  sum_to ( n - 1 ) ;\n    if( n <= 1 ) return  1 ;\n    return 0;\n}\n"]
       }
     },
     {
-      cid: "c72", kind: "paper", mode: "quiz", pass: 60, title: "第 72 课考试 · 先声明后定义：函数的预告片", task: "任务题目：把源稿里那行 is_prime 的声明整个删掉，再编译一次，看编译器甩来哪句错；把这句错的长相记下来，想清楚它为什么正好证明声明有用", hint: "想不起来就回看正文【演示 1】那三段的摆法、【演示 2】那两个互相喊的函数，还有【常见坑】第一条和第四条。",
+      cid: "c72", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 72 课考试 · 先声明后定义：函数的预告片", task: "任务题目：把源稿里那行 is_prime 的声明整个删掉，再编译一次，看编译器甩来哪句错；把这句错的长相记下来，想清楚它为什么正好证明声明有用", hint: "想不起来就回看正文【演示 1】那三段的摆法、【演示 2】那两个互相喊的函数，还有【常见坑】第一条和第四条。",
+      notes: ["声明只讲形状、以分号结尾；定义带花括号身体，同一个函数的定义只能有一份。", "同一个函数的声明可以出现好几次，只要形状一样；声明末尾的分号不能少，少了编译器会把下一行的开头当成续写。", "声明里参数的类型必须和定义一字不差，参数名可以各写各的，圆括号里也可以只写类型不写名字。", "没写声明是 use of undeclared identifier，红线画在调用那一行；没写定义卡在链接那一步报 undefined reference，两个长相不同。", "even 和 odd 互相喊就靠开头两行预告片：我喊你、你喊我，光排顺序排不出来。"],
       questions: [
-        { id: "q1", type: "choice", score: 18, coversTask: 1, stem: "源稿那个程序，把第一行 bool is_prime 的声明整个删掉，其余一字不动。编译时最可能看到哪句错？", options: ["use of undeclared identifier 'is_prime'，红线画在 main 里那次调用上", "undefined reference to is_prime，卡在链接那一步", "no matching function for call to 'println'", "no viable conversion from returned value of type int"], answer: 0, why: "本子上压根没登记过这个名字，编译器扫到调用那一行不认识 is_prime，当场拦下 —— 这正是那条任务要你亲眼看的东西。第二条是没写定义才会出现的链接错，长相完全不同。" },
-        { id: "q2", type: "output", score: 13, stem: "这段程序打印什么？（一行一条，四行）\nbool is_prime(int n);                  // 声明：预告片\nint main() {\n    for (int n : {2, 9, 17, 21}) {\n        std::println(\"{} {}\", n, is_prime(n) ? \"是素数\" : \"不是\");\n    }\n    return 0;\n}\nbool is_prime(int n) {                  // 定义：正片\n    if (n < 2) return false;\n    for (int i = 2; i * i <= n; ++i)\n        if (n % i == 0) return false;\n    return true;\n}", acceptLines: ["2 是素数", "9 不是", "17 是素数", "21 不是"], why: "2 进不了那个内层循环，一路走到 return true；9 撞上 i 等于 3，21 也撞上 3，两个都提前 return false。行的顺序就是那四个初值的顺序。" },
-        { id: "q3", type: "choice", score: 13, stem: "下面关于声明和定义的说法，哪一句是对的？", options: ["声明只讲形状、以分号结尾；定义带花括号身体，同一个函数的定义只能有一份", "声明必须带上身体，否则编译器找不到函数", "定义可以写两三份，编译器自己挑一份", "声明必须写在 main 的后面，否则调用不合法"], answer: 0, why: "形状和身体是两件事：前者让人提前认识，后者才是真东西。定义写多份，接线那一步不知道该用哪个；声明则爱重复几次都行，只要形状一致。" },
-        { id: "q4", type: "blank", score: 16, coversTask: 1, stem: "编译器扫源码是一路向____扫的，所以调用之前必须先见到那个函数的名字 —— 要么把定义写在上面，要么先来一行声明。（填一个字）", accept: ["上", "上面", "从上"], why: "先见后喊这条规矩的根子就在这儿：一遍扫到底，没见过的名字就是不认识。任务 1 那一删，删的正是先见到那一步。" },
-        { id: "q5", type: "multi", score: 12, stem: "关于这一课的声明，下面哪些说法是对的？（多选，错勾任何一项整题 0 分）", options: ["同一个函数的声明可以出现好几次，只要形状一样", "声明末尾的分号不能少，少了编译器会把下一行的开头当成续写", "声明里参数的类型可以和定义不一样，反正名字各写各的", "声明里那对圆括号可以只写类型、不写参数名"], answers: [0, 1, 3], why: "第三条说反了：参数名可以各写各的，类型却必须一字不差，否则调用处配不上号，报 declaration 与声明冲突。其余三条就是这一课的三条硬规矩。" },
-        { id: "q6", type: "output", score: 12, stem: "这段程序打印什么？（就一行）\nbool even(int n);\nbool odd(int n);\nbool even(int n) { if (n == 0) return true; return odd(n - 1); }\nbool odd(int n) { if (n == 0) return false; return even(n - 1); }\nstd::println(\"{} {}\", even(3), odd(4));", acceptLines: ["false false"], why: "两个格子都是 false：3 是奇数，所以 even(3) 假；4 是偶数，所以 odd(4) 假。两条链都是一路减到 0 才撞上出口。这场你喊我、我喊你靠的正是开头那两行声明 —— 光排顺序排不出来。" },
-        { id: "q7", type: "order", score: 16, coversTask: 1, stem: "把编译器带着 is_prime 干完的这几件事排成正确顺序。", answer: [1, 2, 3, 0, 4], steps: ["把调用和身体接上头；找不到身体就在这一步报 undefined reference", "扫到那行声明，在本子上登记 is_prime 的形状：收 int、还 bool", "扫到 main 里的调用，照本子核对参数类型与返回类型", "扫到文件下方带花括号的那一段，收下真正的身体", "程序跑起来，每次调用都跳进那具身体干活"], why: "先登记形状，才谈得上核对调用；核对完才轮到收身体；形状与身体都齐了才接线，最后才是运行。任务 1 那一删，卡死的是第二步。" }
+        { id: "q1", type: "code", score: 15, coversTask: 1, stem: "在文件开头给 is_prime 写一行预告片：只有形状、以分号结尾，没有花括号。", acceptRegex: ["\\bbool\\s+\\w+\\s*\\(\\s*(int\\s*\\w*)?\\s*\\)\\s*;"], acceptOn: "code", sample: "bool is_prime(int n);", why: "声明只讲形状、以分号结尾，编译器先在本子上记下这个名字；定义才带花括号身体。" },
+        { id: "q2", type: "code", score: 15, coversTask: 1, stem: "在 main 里调用一次 is_prime，把一只 int 变量或一个数递给它。", acceptRegex: ["is_prime\\s*\\(\\s*(?!int\\b)(\\w+|\\d+)\\s*\\)"], acceptOn: "code", sample: "is_prime(n)", why: "调用之前必须先见到那个函数的名字 —— 要么定义写在上面，要么先来一行声明，编译器是一遍扫到底的。" },
+        { id: "q3", type: "code", score: 20, coversTask: 1, stem: "把 is_prime 的身体写成真正的定义放在 main 后面：签名收一个 int、带花括号，里面 return true 和 return false 都得有。", acceptRegex: ["\\bbool\\s+\\w+\\s*\\(\\s*int\\s+\\w+\\s*\\)\\s*\\{", "\\breturn\\s+false\\s*;", "\\breturn\\s+true\\s*;", "\\bint\\s+main[\\s\\S]*\\bbool\\s+\\w+\\s*\\("], acceptOn: "code", sample: "bool is_prime(int n) {\n    if (n < 2) return false;\n    return true;\n}", why: "定义只能有一份；把它写在 main 后面正是这一行预告片换来的自由。" },
+        { id: "q4", type: "code", score: 15, coversTask: 1, stem: "用一条 std::println 在那个循环里把数和判断结果一起打出来：格式串里两个占位坑，逗号后面按顺序给值。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,"], acceptOn: "code", sample: "std::println(\"{} {}\", n, is_prime(n) ? \"是素数\" : \"不是\");", why: "几个坑就给几个值；三目那一句把 bool 换成两段文字，打出来比 true false 好看。" },
+        { id: "q5", type: "code", score: 15, coversTask: 1, stem: "把这份程序写成能跑的形：搬进打印工具箱（#include <print>），开出 main 这个入口。", acceptRegex: ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("], acceptOn: "code", sample: "#include <print>\n\nint main() {", why: "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。" },
+        { id: "q6", type: "code", score: 20, coversTask: 1, stem: "任务那一删：把声明那行删掉再编译一次，在原处留一行注释写下报错里你认出的那个词（四个字以上），然后把声明加回来交卷。", acceptRegex: ["//[^\\n]{4,}"], acceptOn: "buffer", sample: "// 报错说 use of undeclared identifier is_prime，红线画在调用那一行", why: "本子上没登记过这个名字，扫到调用那行当场拦下；正则只能验你确实写了注释，写的内容对不对得人来读，这一条判不严格。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: "2 是素数\n9 不是\n17 是素数\n21 不是", q3: 0, q4: "上", q5: [0, 1, 3], q6: "false false", q7: [1, 2, 3, 0, 4]}],
+          "#include <print>\n\nbool is_prime(int n);                  // 声明：预告片，注意分号\n\nint main() {\n    for (int n : {2, 9, 17, 21}) {\n        std::println(\"{} {}\", n, is_prime(n) ? \"是素数\" : \"不是\");\n    }\n    return 0;\n}\n\nbool is_prime(int n) {                 // 定义：正片放在 main 后面\n    if (n < 2) return false;\n    for (int i = 2; i * i <= n; ++i)\n        if (n % i == 0) return false;\n    return true;\n}\n"],
         wrongs: [
-          {q1: 1, q2: "2 是素数\n9 是素数\n17 是素数\n21 是素数", q3: 1, q4: "下", q5: [0, 2], q6: "true true", q7: [1, 2, 3, 4, 0]}],
+          "",
+          "#include <print>\n\nbool is_prime(int n) {\n    if (n < 2) return false;\n    return true;\n}\n\nint main() {\n    int n = 17;\n    if (is_prime(n)) {\n        n = 1;\n    }\n    return 0;\n}\n",
+          "#include <print>\n\nint main() {\n    std::println(\"{}\", 7);\n    return 0;\n}\n",
+          "#include <print>\nbool is_prime(int n) { return n > 1; }\nint main() {\n    std::println(\"{}\", is_prime(7));\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: "2 是素数 \n 9 不是\n17 是素数\n21 不是", q3: "0", q4: " 上", q5: [0, 1, 3], q6: "false  false", q7: [1, 2, 3, 0, 4]}]
+          "# include  <print>\nbool  is_prime ( int ) ;        // 预告片可以只写类型\n\nint  main ( )\n{\n    int  n = 17;\n    bool  ok = is_prime ( n );\n    std::println( \"数 {} 是素数吗 {}\" , n , ok );   // 删掉上面那行时编译器说认不出 is_prime\n    return 0;\n}\n\nbool is_prime(int k)\n{\n    if (k < 2) return false;\n    for (int i = 2; i * i <= k; ++i)\n        if (k % i == 0) return false;\n    return true;\n}\n"]
       }
     },
     {
-      cid: "c73", kind: "paper", mode: "quiz", pass: 60, title: "第 73 课考试 · 内存与地址：变量住在哪一号柜子", task: "任务题目：把 age 的地址打印出来，同一个程序编译运行两次，比对两次的号；再自己加一行打印 &age2，确认它和 &age 不是同一个柜子；最后说清楚地址为什么写成 0x 开头", hint: "想不起来就回看正文【演示 2】那行 false、【演示 3】的 sizeof 两行比对，还有【常见坑】第三条关于两次运行的号会不会一样。",
+      cid: "c73", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 73 课考试 · 内存与地址：变量住在哪一号柜子", task: "任务题目：把 age 的地址打印出来，同一个程序编译运行两次，比对两次的号；再自己加一行打印 &age2，确认它和 &age 不是同一个柜子；最后说清楚地址为什么写成 0x 开头", hint: "想不起来就回看正文【演示 2】那行 false、【演示 3】的 sizeof 两行比对，还有【常见坑】第三条关于两次运行的号会不会一样。",
+      notes: ["程序每次被放到内存的哪个位置是系统临场定的，所以两趟运行之间号不同；同一趟里问同一个变量，号才是稳的，任何逻辑都不该写死某个具体地址。", "& 站在变量前面是取地址，站在类型后面是起外号 —— 同一个符号两份工。", "占几格由类型定：int 通常占 4 格，跟装的是 15 还是一百万无关；sizeof 就是问这个的，写 sizeof c 这种形式。", "两个变量的地址相同，说明它们是同一组柜子的两个名字，不是互不相干的两个盒子。", "机器执行 int age = 15; 是先把地址和名字对上，再按 int 腾 4 个连续的柜子、把 15 摊进去；编号是腾出来那一刻就定好的。"],
       questions: [
-        { id: "q1", type: "choice", score: 16, coversTask: 2, stem: "int age = 15; 之后写 int age2 = age;。把 &age2 打印出来，跟 &age 一比，最可能看到什么？", options: ["两个号不同 —— age2 是新腾出来的一组柜子，各住各家", "两个号相同 —— 复制值就是把盒子也复制了一份地址", "编译器报错，不许打印一个 int 变量的地址", "两个号只差 1，因为 age2 写在下一行"], answer: 0, why: "复制过去的是柜子里摊着的那个值，起编号得重新腾一组才有，所以两家的号不同。真正同号的是第 58 课那种起外号：两个名字、一个盒子。" },
-        { id: "q2", type: "blank", score: 14, coversTask: 3, stem: "地址打出来形如 0x7ffd1234，开头那个 0x 说明这个数是用____进制写的 —— 几十亿格柜子的编号，用这种写法能短一半。（填一个数字或一个词）", accept: ["16", "16进制", "十六", "十六进制"], why: "0x 是十六进制的前缀。选它是因为每一位正好顶 4 个二进制位，换算不打架，而且比十进制短得多。" },
-        { id: "q3", type: "output", score: 16, stem: "这段程序打印什么？（一行一条，三行）\nint a = 10;\nint b = a;\nb = 20;\nstd::println(\"{}\", &a == &b);\nstd::println(\"{}\", a == b);\nstd::println(\"{} {}\", a, b);", acceptLines: ["false", "false", "10 20"], why: "b 是复制出来的新盒子，地址不同 → 第一行 false；值也被改成了 20，跟 a 的 10 不相等 → 第二行 false；第三行 a 仍是 10、b 是 20，各改各的。" },
-        { id: "q4", type: "choice", score: 14, coversTask: 1, stem: "源稿任务 1 让你把同一个程序编译运行两次，比对打印出来的地址。绝大多数情况下两次的号不一样，原因是？", options: ["程序每次被放到内存的哪个位置，是系统临场定的，号当然会变", "第二次运行必然出了 bug", "编译器把变量悄悄改了名字", "地址会跟着变量的值一起变"], answer: 0, why: "这正是任务要你亲眼确认的事：号不同是正常的，不是错。所以任何逻辑都不该写死某个具体地址；同一趟运行之内问同一个变量，号才是稳的。" },
-        { id: "q5", type: "multi", score: 14, coversTask: [1, 3], stem: "关于内存与地址，下面哪些说法是对的？（多选，错勾任何一项整题 0 分）", options: ["同一个变量，一趟运行里问几次地址，号都一样", "int 通常占 4 格，占几格由类型定，跟装的是 15 还是一百万无关", "地址写成 0x 开头，是因为每一位正好顶 4 个二进制位", "两个变量的地址相同，说明它们是两个互不相干的盒子"], answers: [0, 1, 2], why: "第四条正好说反：号相同说明压根是同一组柜子，也就是第 58 课那种「一个盒子两个名字」。其余三条是这一课要留下的三块基石。" },
-        { id: "q6", type: "blank", score: 11, coversTask: 2, stem: "站在变量前面、读作「你住几号柜」的那个符号是____。（填一个符号或它的读法）", accept: ["&", "取地址", "& 号"], why: "& 站在变量前面是取地址，站在类型后面是起外号 —— 同一个符号两份工，这一课的判断题全靠这一眼。" },
-        { id: "q7", type: "order", score: 15, coversTask: 1, stem: "把机器执行 int age = 15; 之后跟地址有关的这几件事排成正确顺序。", answer: [1, 2, 0, 3], steps: ["把这一组的起始编号和名字 age 对上，以后喊 age 就是喊这组柜子", "按 int 这个类型腾出 4 个连续的柜子", "把 15 按 int 的读法摊进这 4 格", "等你写 &age，问出来的是这一组的起始编号"], why: "先腾地方，再摊值，再把名字拴到起始编号上 —— 编号是腾出来那一刻就定好的；只有这些都做完了，& 才问得到号。" }
+        { id: "q1", type: "code", score: 15, coversTask: 1, stem: "用一条 std::println 问出 age 的门牌号：格式串里用 {:p} 这个坑，逗号后面写 & 再加变量名。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{:p\\}[^\"]*\"\\s*,\\s*&\\s*\\w+"], acceptOn: "code", sample: "std::println(\"age   的地址: {:p}\", &age);", why: "& 读作取地址，写在变量前面就问这个变量住在几号柜；打地址要用 {:p} 这个坑，普通 {} 打不出规整的号。" },
+        { id: "q2", type: "code", score: 15, coversTask: 1, stem: "把这份程序编译运行两次，在那行打印旁边留一行注释，写下你看到的两个号是相同还是不同。", acceptRegex: ["//[^\\n]*(不同|一样|相同|变)"], acceptOn: "buffer", sample: "// 跑两次这里的号不一样，程序每次被放到哪儿是系统临场定的", why: "号不同是正常的，不是 bug；正则只能验你确实写了这么一行注释，写的内容对不对得人来读，这一条判不严格。" },
+        { id: "q3", type: "code", score: 15, coversTask: 2, stem: "复制一份：再声明一只 int，初值不给数字，直接把第一只变量的值抄过来。", acceptRegex: ["\\bint\\s+\\w+\\s*=\\s*[A-Za-z_]\\w*\\s*;"], acceptOn: "code", sample: "int age2 = age;", why: "复制过去的是柜子里摊着的那个值，不是柜子本身；起编号得重新腾一组才有。" },
+        { id: "q4", type: "code", score: 20, coversTask: 2, stem: "验证各住各家：用一条 std::println 把「两只的地址是不是同一个」打出来，逗号后面写 & 一只 == & 另一只。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*&\\s*\\w+\\s*==\\s*&\\s*\\w+"], acceptOn: "code", sample: "std::println(\"同一个柜子吗？{}\", &age == &age2);", why: "比较号用 & 取地址再 ==，打出来是 bool；两个名字同号说明压根是同一组柜子，那就是起外号。" },
+        { id: "q5", type: "code", score: 20, coversTask: 2, stem: "把 age2 改成一个新值，再用一条 std::println 把两只的值一起打出来：格式串里两个占位坑。", acceptRegex: ["\\w+\\s*=\\s*\\d+\\s*;", "std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+"], acceptOn: "code", sample: "age2 = 16;\nstd::println(\"age = {}, age2 = {}\", age, age2);", why: "各改各的：改副本不碰原件，这也是传值那种「改了白改」的底子。" },
+        { id: "q6", type: "code", score: 15, coversTask: 3, stem: "任务第 3 条：在文件里另起一行注释，写下地址为什么用 0x 开头（要点到它是几进制）。", acceptRegex: ["//[^\\n]*(16|十六)"], acceptOn: "buffer", sample: "// 0x 是十六进制的前缀，每一位正好顶 4 个二进制位，几十亿格的编号这样写短一半", why: "这一条为什么这么出：思考题在这块编辑器里只能验「你写了注释、而且点到进制」，句子本身对不对要靠人读。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: "十六", q3: "false\nfalse\n10 20", q4: 0, q5: [0, 1, 2], q6: "&", q7: [1, 2, 0, 3]}],
+          "#include <print>\n\nint main() {\n    int age = 15;\n    double score = 92.5;\n\n    std::println(\"age   的值  : {}\", age);\n    std::println(\"age   的地址: {:p}\", &age);      // 跑两次这里的号不一样，程序被放到哪儿是系统临场定的\n    std::println(\"score 的地址: {:p}\", &score);    // 0x 打头是 16 进制，编号这样写短一半\n\n    int age2 = age;\n    std::println(\"age2 的地址: {:p}\", &age2);\n    std::println(\"同一个柜子吗？{}\", &age == &age2);\n\n    age2 = 16;\n    std::println(\"age = {}, age2 = {}\", age, age2);\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 1, q2: "十", q3: "false\ntrue\n20 20", q4: 1, q5: [0, 1, 3], q6: "值", q7: [1, 2, 3, 0]}],
+          "",
+          "#include <print>\n\nint main() {\n    int age = 15;\n    std::println(\"age = {}\", age);\n    return 0;\n}\n",
+          "#include <print>\n\nint main() {\n    int age = 15;\n    int age2 = age;\n    std::println(\"age2 = {}\", age2);\n    return 0;\n}\n",
+          "#include <print>\n\nint main() {\n    int age = 15;\n    std::println(\"{:p}\", &age);   // 两次的号不同\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: "16 进制", q3: " false \nfalse\n10  20", q4: "0", q5: [0, 1, 2], q6: " 取地址 ", q7: [1, 2, 0, 3]}]
+          "#  include <print>\nint  main ( )\n{\n    int  n1 = 15;\n    std::println( \"n1 的值 {}\" , n1 );\n    std::println( \"n1 门牌 {:p}\" , & n1 );      // 再跑一次门牌变了，两趟之间不同是正常\n    int  n2 = n1 ;\n    std::println( \"n2 门牌 {:p}\" , &n2 );       // 0x 打头是十六进制，长编号写起来短\n    std::println( \"同一个家吗 {}\" , &n1 == &n2 );\n    n2 = 20;\n    std::println(\"n1 {} n2 {}\", n1, n2);\n    return 0;\n}\n"]
       }
     },
     {
-      cid: "c74", kind: "paper", mode: "quiz", pass: 60, title: "第 74 课考试 · 指针基础：一张写着门牌号的纸条", task: "任务题目：声明一个 double 变量 d 给它 1.5，做一张 double* 的纸条指向它，再通过这张纸条把 d 改成 9.9；再写一个 void swap_ptr，收两个 int 指针，把两个数的值真交换掉；最后说清楚 int* p 里那个星号和 *p = 100 里那个星号各干什么", hint: "想不起来就回看正文【演示 2】那句 p = &other; 和【演示 3】那三句 tmp 打头的交换，还有【常见坑】第一条和第四条。",
+      cid: "c74", kind: "paper", mode: "ide", file: "main.cpp", pass: 60, title: "第 74 课考试 · 指针基础：一张写着门牌号的纸条", task: "任务题目：声明一个 double 变量 d 给它 1.5，做一张 double* 的纸条指向它，再通过这张纸条把 d 改成 9.9；再写一个 void swap_ptr，收两个 int 指针，把两个数的值真交换掉；最后说清楚 int* p 里那个星号和 *p = 100 里那个星号各干什么", hint: "想不起来就回看正文【演示 2】那句 p = &other; 和【演示 3】那三句 tmp 打头的交换，还有【常见坑】第一条和第四条。",
+      notes: ["挨着类型写的 * 是户口，说明纸条记的是哪种门牌；挨着变量写在表达式里的 * 是动作，叫解引用。", "int* p = &age; 之后写 *p = 100，等价于 age = 100；想让纸条换个指向就写 p = &other;，左边不带星号。", "纸条上还没抄号就顺着 *p 去写，编译一路放行，跑起来直接 Segmentation fault：p 里是那一格留下的旧数字。", "一行写 int* a, b; 只有 a 是指针，b 是普通的 int；规矩是一条：一行只声明一个指针，或者老老实实写成 int *a, *b;。", "p == &age 打出来是 true：纸条记的号就是 &age 问出来的那个号。"],
       questions: [
-        { id: "q1", type: "choice", score: 20, coversTask: 3, stem: "int* p = &age; 里那个星号，和 *p = 100; 里那个星号，是一回事吗？", options: ["不是：前者属于类型那一截，说这张纸条记的是 int 的门牌；后者是动作，顺着号找到内容", "是一回事：两个都是在解引用", "不是：前者是取地址，后者是解引用", "是一回事：两个都必须在声明里出现"], answer: 0, why: "这就是任务 3 的答案：挨着类型写的那个 * 是户口，说明 p 是什么类型；挨着变量写在表达式里的那个 * 是动作，叫解引用。判据永远是看它站在哪儿。" },
-        { id: "q2", type: "output", score: 19, stem: "这段程序打印什么？（一行一条，三行）\nint age = 15;\nint* p = &age;\nstd::println(\"{}\", *p);\nstd::println(\"{}\", p == &age);\n*p = 100;\nstd::println(\"{}\", age);", acceptLines: ["15", "true", "100"], why: "p 记的号就是 &age 问出来的号，所以第二行 true；*p 顺着那个号读，拿到 15；最后 *p = 100 写的正是 age 那一格，所以第三行打出 100 —— 改的就是本人。" },
-        { id: "q3", type: "output", score: 17, coversTask: 2, stem: "这段程序打印什么？（就一行）\nvoid swap_ptr(int* a, int* b) {\n    int tmp = *a;\n    *a = *b;\n    *b = tmp;\n}\nint x = 1, y = 9;\nswap_ptr(&x, &y);\nstd::println(\"x = {}, y = {}\", x, y);", acceptLines: ["x = 9, y = 1"], why: "递进去的是两个号，函数里 a 记着 x 的家、b 记着 y 的家，所以三句话换的是本人的值：x 变 9、y 变 1。这正是第 55 课那台「复印件碰不到原件」的天花板被打通的地方。" },
-        { id: "q4", type: "multi", score: 17, coversTask: [1, 2], stem: "关于这一课的纸条，下面哪些说法是对的？（多选，错勾任何一项整题 0 分）", options: ["int* p = &age; 之后写 *p = 100，等价于 age = 100", "想让纸条换个指向，写 p = &other;，左边不带星号", "纸条上还没抄号就顺着 *p 去写，编译器一定当场拦住", "*p 读的是 p 记的那个号里的内容"], answers: [0, 1, 3], why: "第三条错得最要命：号没抄就顺着找，编译一路放行，跑起来直接 Segmentation fault —— 因为 p 里是那一格留下的旧数字，顺着一个乱写的号找上门，那块地根本不归你。" },
-        { id: "q5", type: "blank", score: 14, coversTask: 3, stem: "课上的口诀：& 从东西拿到号，* 从号拿到____。（填两个字）", accept: ["内容", "东西", "值"], why: "两个符号方向相反：& 站在变量前面问门牌号，* 顺着门牌号找回柜子里摊着的东西。这一眼分清，整课的错就避掉一大半。" },
-        { id: "q6", type: "choice", score: 13, coversTask: 3, stem: "有人一行写了 int* a, b;，以为两张纸条都有了。实际上呢？", options: ["只有 a 是指针，b 是个普通的 int", "a 和 b 都是指针", "b 是 double 指针", "编译器当场报错"], answer: 0, why: "星号只在声明那一截跟着第一个名字走，逗号后面的 b 拿到的是 int。后面想用 b 记号就报类型对不上。规矩是一条：一行只声明一个指针，或者老老实实写成 int *a, *b;。" }
+        { id: "q1", type: "code", score: 15, coversTask: 1, stem: "声明一只 double 把 1.5 装进去，再写一张 double* 的纸条记住它的地址。", acceptRegex: ["\\bdouble\\s+\\w+\\s*=\\s*\\d*\\.\\d+\\s*;", "\\bdouble\\s*\\*\\s*\\w+\\s*=\\s*&\\s*\\w+\\s*;"], acceptOn: "code", sample: "double d = 1.5;\ndouble* p = &d;", why: "星号挨着类型写，是这张纸条的户口：它记的是 double 的门牌；右边用 & 问到号再抄进去。" },
+        { id: "q2", type: "code", score: 15, coversTask: 1, stem: "别写 d 的名字，顺着纸条把那格改成 9.9。", acceptRegex: ["\\*\\s*\\w+\\s*=\\s*\\d+\\.\\d+\\s*;"], acceptOn: "code", sample: "*p = 9.9;", why: "表达式里挨着变量写的那个 * 是动作，叫解引用：顺着号找上门直接写，等价于 d = 9.9。" },
+        { id: "q3", type: "code", score: 15, coversTask: 1, stem: "再打一条 std::println，把顺着纸条摸出来的内容打出来：逗号后面写 * 加纸条名。", acceptRegex: ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\*\\s*\\w+"], acceptOn: "code", sample: "std::println(\"*p 顺藤摸瓜 : {}\", *p);", why: "& 从东西拿到号，* 从号拿到内容：打 *p 就是打 d 那一格里摊着的值。" },
+        { id: "q4", type: "code", score: 20, coversTask: 2, stem: "写 swap_ptr 那一类的函数头部：两个参数都得是记 int 门牌的纸条，各带一个 *。", acceptRegex: ["\\bvoid\\s+\\w+\\s*\\(\\s*int\\s*\\*\\s*\\w+\\s*,\\s*int\\s*\\*\\s*\\w+\\s*\\)"], acceptOn: "code", sample: "void swap_ptr(int* a, int* b) {", why: "递进去的是门牌号不是值，函数里才碰得到原件 —— 这是复印件那套碰不到的天花板。" },
+        { id: "q5", type: "code", score: 20, coversTask: 2, stem: "在这个函数体里用三句话换掉两格的内容：先把 *a 的内容抄进一只 int 备用盒，再把 *b 写进 *a，最后把备用盒那份写回 *b。", acceptRegex: ["\\bint\\s+\\w+\\s*=\\s*\\*\\s*\\w+\\s*;", "\\*\\s*\\w+\\s*=\\s*\\*\\s*\\w+\\s*;", "\\*\\s*\\w+\\s*=\\s*\\w+\\s*;"], acceptOn: "code", sample: "int tmp = *a;\n*a = *b;\n*b = tmp;", why: "左边带 * 才写进别人的柜子；抄下来那一份是不带 * 的普通 int。" },
+        { id: "q6", type: "code", score: 15, coversTask: 3, stem: "任务第 3 条：在文件里用一行注释写清楚，int* p 里的 * 和 *p = 100 里的 * 各自是什么。", acceptRegex: ["//[^\\n]*(类型|户口|动作|解引用|内容|地址)"], acceptOn: "buffer", sample: "// 挨着类型写的 * 是户口，说这张纸条记的是 int 的门牌；写在表达式里的 * 是动作，顺着号取内容", why: "判据永远是看它站在哪儿。正则只能验注释里点到了这些词，句子对不对得人来读，这一条判不严格。" }
       ],
       selftest: {
         refs: [
-          {q1: 0, q2: "15\ntrue\n100", q3: "x = 9, y = 1", q4: [0, 1, 3], q5: "内容", q6: 0}],
+          "#include <print>\n\nvoid swap_ptr(int* a, int* b) {\n    int tmp = *a;\n    *a = *b;\n    *b = tmp;\n}\n\nint main() {\n    double d = 1.5;\n    double* p = &d;\n    *p = 9.9;\n    std::println(\"d = {}\", d);\n    std::println(\"*p 顺藤摸瓜 : {}\", *p);\n\n    int x = 1, y = 9;\n    swap_ptr(&x, &y);\n    std::println(\"换完：x = {}, y = {}\", x, y);\n    // 挨着类型写的 * 是户口，说 p 记的是 double 的门牌；表达式里的 * 是顺着地址取内容\n    return 0;\n}\n"],
         wrongs: [
-          {q1: 1, q2: "15\nfalse\n15", q3: "x = 1, y = 9", q4: [0, 2, 3], q5: "地址", q6: 1}],
+          "",
+          "#include <print>\n\nvoid swap_ptr(int a, int b) {\n    int tmp = a;\n    a = b;\n    b = tmp;\n}\n\nint main() {\n    int x = 1, y = 9;\n    swap_ptr(x, y);\n    std::println(\"x = {}, y = {}\", x, y);\n    return 0;\n}\n",
+          "#include <print>\n\nint main() {\n    double d = 1.5;\n    double* p = &d;\n    std::println(\"{:p}\", p);\n    return 0;\n}\n",
+          "#include <print>\n\nint main() {\n    double d = 1.5;\n    double* p = &d;\n    *p = 9.9;\n    std::println(\"{}\", *p);\n    return 0;\n}\n"],
         loose: [
-          {q1: "0", q2: " 15 \ntrue\n100 ", q3: "x = 9,  y = 1", q4: [0, 1, 3], q5: "内 容", q6: "0"}]
+          "# include <print>\nvoid  trade ( int *  left , int *  right )\n{\n    int  hold = * left ;\n    * left  = * right ;\n    * right  = hold ;\n}\n\nint  main ( )\n{\n    double  price = 1.5 ;\n    double *  tag = & price ;\n    * tag = 9.9 ;\n    std::println(\"price {}\", price);\n    std::println( \"摸出来 {}\" , * tag ) ;\n    int  a = 1 ,  b = 9;\n    trade( &a , &b );\n    std::println(\"a {} b {}\", a, b);\n    // 类型旁边的星号是户口，表达式里的星号才是顺着门牌取内容\n    return 0;\n}\n"]
       }
     },
   ]

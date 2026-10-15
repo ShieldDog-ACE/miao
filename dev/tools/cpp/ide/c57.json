@@ -1,0 +1,68 @@
+{
+  "cid": "c57",
+  "note": "lambda 捕获改单编辑器：这一场原来带一道勾线配对题，四条配对知识全部收进 notes。任务 1 拆成「外面先声明赋 5 + auto 接住带中括号的工具 + return 相加 + 喊一次打出来」，任务 2 是「后面会讲」的思考题，代码条件只判得了对照实验（改原件再喊一次），出路那句落成一条 buffer 注释。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "在外面先把那个加成值声明好、赋上 5：一个 int，出生就给值。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*5\\s*;"],
+      "sample": "int bonus = 5;",
+      "why": "变量得先存在，才能被中括号点名；先在外面把它声明好、赋上值，是这四步里的第一步。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写这把小工具并用 auto 接住：中括号里点上要带走的那个名字，圆括号里收一个 int，身体里用 return 把收到的值和带走的那份相加交回。",
+      "acceptRegex": ["auto\\s+\\w+\\s*=\\s*\\[\\s*\\w+\\s*\\]\\s*\\(\\s*int\\s+\\w+\\s*\\)", "return\\s+\\w+\\s*\\+\\s*\\w+\\s*;"],
+      "sample": "auto add = [bonus](int s) {\n    return s + bonus;\n};",
+      "why": "申领单就写在中括号里：点了谁，定义那一行就把谁的值复印一份带在身上。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "喊它一次，把拿到的结果用一条 std::println 打出来：逗号后面直接写那次调用。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\(\\s*\\d+\\s*\\)\\s*\\)"],
+      "sample": "std::println(\"80 + 5 = {}\", add(80));",
+      "why": "抄进来的 bonus 是 5，喊一次就把收到的分数加上包里那份 5：80 变 85。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条那个思考要从对照实验出发：定义之后把外面那个变量改成另一个三位数，再喊一次这把工具并打出结果，看它用的是新值还是抄下的那份。",
+      "acceptRegex": ["\\w+\\s*=\\s*(?:1[0-9]{2}|[2-9]\\d{2})\\s*;", "\\w+\\s*\\(\\s*\\d+\\s*\\)[\\s\\S]*\\w+\\s*\\(\\s*\\d+\\s*\\)"],
+      "sample": "bonus = 200;\nstd::println(\"{}\", add(1));",
+      "why": "复印早就完成了：原件后来换成 200，跟包里那份没关系，喊它算的还是 100 加 1 —— 这一课最容易想歪的就是这个时机。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "把你想到的出路用一行注释写在旁边：想永远用最新值，得换什么样的带法。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 出路是包里不存复印件，存能跟着原件走的东西 —— 往后一课的带 & 的写法",
+      "why": "这一条只能验你确实记了一行笔记，验不了笔记内容对不对；那一课还没讲，本场判不了代码。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "中括号里点名，是在那一行被执行的这一刻复印一份带走：之后原件改成 200，跟包里那份没关系，算的还是抄下的 100 加 1。",
+    "「抄」发生在程序跑到定义这把工具那一行的时候，不是编译器读源码时，也不是每次喊它时。",
+    "抄进来的那份是只读的：在工具身体里给它赋值会被编译器拦下来，报错里带 captured by a copy 那几个字；想动它就在包里另开一个盒子（int inside = base + x;）。",
+    "同一个工具喊两次用的还是同一份复印件，外面的原件后来被改掉也不会跟着变；申领单上点两个名字就各抄一份，连文字也一起抄。",
+    "想让包里那份一直连着原件，要换的是带法（往后一课讲）；空着中括号只会让它压根看不见那个变量，把变量写成 const 或多喊几次都追不到最新值。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    int bonus = 5;\n\n    auto add = [bonus](int s) {\n        return s + bonus;\n    };\n\n    std::println(\"{}\", add(80));\n    std::println(\"{}\", add(60));\n\n    bonus = 200;\n    std::println(\"外面的 bonus 换了衣服，用的还是抄下的 5：{}\", add(1));\n\n    // 想永远用最新值，得换一种带法：包里存能跟着原件走的东西，后面一课讲\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nint main() {\n    int bonus = 5;\n    auto add = [bonus](int s) {\n        return s + bonus;\n    };\n    return 0;\n}\n",
+      "#include <print>\n\nint add(int s) {\n    return s + 5;\n}\n\nint main() {\n    std::println(\"{}\", add(80));\n    std::println(\"{}\", add(60));\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\nint  main ( )\n{\n  int extra=5 ;\n  auto  f = [ extra ]( int x ) { return x + extra ; } ;\n  std::println( \"{}\" , f ( 10 ) ) ;\n  std::println( \"第二次 {}\" , f ( 20 ) ) ;\n  extra = 300 ;\n  std::println( \"{}\" , f ( 1 ) ) ;\n  // 出路是换一种带法，让包里一直连着原件，下一课再讲\n  return 0;\n}\n"
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "cid": "c11",
+  "note": "double 小数盒改单编辑器：任务 1 拆成「double 装体重 + 用 {:.1f} 打」，任务 2 拆成「装一个位数很多的 double + 先用 {:.2f} 打 + 再用 {:.5f} 打」，四舍五入和近似值那些知识点收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一行：用一个 double 装你的体重，值要带小数点。",
+      "acceptRegex": ["\\bdouble\\s+\\w+\\s*=\\s*\\d+\\.\\d+\\s*;"],
+      "sample": "double weight = 63.4567;",
+      "why": "带小数点的数归 double；同一个数写进 int 盒会被砍成 1，尾巴当场蒸发。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把体重打出来，占位坑写成 {:.1f}：小数点后只留 1 位。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{:\\.1f\\}[^\"]*\"\\s*,\\s*\\w+"],
+      "sample": "std::println(\"体重 {:.1f}\", weight);",
+      "why": "{:.1f} 表示留 1 位并四舍五入：63.4567 圆成 63.5 —— 但它只管打印，盒子里的值一个字都没改。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "任务 2 的主角：再用一个 double 装一个小数点后有一长串位数的数（小数点后至少 5 位）。",
+      "acceptRegex": ["\\bdouble\\s+\\w+\\s*=\\s*\\d+\\.\\d{5,}\\s*;"],
+      "sample": "double pi = 3.14159265358979;",
+      "why": "位数给够，才看得出「留 2 位」和「留 5 位」打出来的差别。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "先用 {:.2f} 把这个数打一遍。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{:\\.2f\\}[^\"]*\"\\s*,\\s*\\w+"],
+      "sample": "std::println(\"pi 保留 2 位 = {:.2f}\", pi);",
+      "why": "留几位就把小数点后打出几位：这里打出 3.14。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "再把同一个数用 {:.5f} 打一遍，亲眼看到多出来的是第 3 到第 5 位。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{:\\.5f\\}[^\"]*\"\\s*,\\s*\\w+"],
+      "sample": "std::println(\"pi 保留 5 位 = {:.5f}\", pi);",
+      "why": "3.14159 是多打了三位而不是补零；要求的位数比实际多时才末尾补 0（1.5 用 {:.3f} 打出 1.500）。",
+      "coversTask": 2,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "带小数点的数归 double：int 会砍成 1，char 只装一个字符，bool 只有真和假。",
+    "{:.1f} 这类格式说明只管打印时留几位，末尾四舍五入，盒子里的近似值一个字都没改。",
+    "要求的位数比实际多时末尾补 0，不截断：double x = 1.5 用 {:.3f} 打出来是 1.500。",
+    "double 存的十进制小数往往是近似值：0.1 加 0.2 打出来是 0.30000000000000004。",
+    "两个 int 相除尾巴蒸发：1 / 2 得 0；让一边带上小数点（1 / 2.0）才得 0.5，平均分 271 / 3 同理。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    double weight = 63.4567;\n    std::println(\"体重 {:.1f}\", weight);\n\n    double pi = 3.14159265358979;\n    std::println(\"pi 默认打印 = {}\", pi);\n    std::println(\"pi 保留 2 位 = {:.2f}\", pi);\n    std::println(\"pi 保留 5 位 = {:.5f}\", pi);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    double weight = 63.4567;\n    std::println(\"{}\", weight);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    int weight = 63;\n    std::println(\"{:.1f}\", weight);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include   < print >\nint  main ( )\n{\n  double  my_weight = 55.23814;\n  std::println( \"{:.1f}\",  my_weight );\n  double  e_value = 2.718281828;\n  std::println( \"{:.2f}\" , e_value );\n  std::println( \"{:.5f}\" , e_value );\n}\n"
+    ]
+  }
+}

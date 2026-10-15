@@ -1,0 +1,68 @@
+{
+  "cid": "c04",
+  "note": "auto 改单编辑器：任务 1 拆成「三个 auto 声明 + 用 sizeof 探一次」，任务 2 拆成「把 172.5 换成 172 + 探整数字面量 + 旁边一行注释写为什么」。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写出三个 auto：右边分别给一个整数、一个小数、一个 true 或 false，类型全交给编译器猜。",
+      "acceptRegex": ["\\bauto\\s+\\w+\\s*=\\s*\\d+\\s*;", "\\bauto\\s+\\w+\\s*=\\s*\\d+\\.\\d+\\s*;", "\\bauto\\s+\\w+\\s*=\\s*(true|false)\\s*;"],
+      "sample": "auto count = 10;\nauto height = 172.5;\nauto flag = true;",
+      "why": "auto 不是一种类型，是「替你写类型」：右边是整数就猜 int，带小数点就猜 double，true/false 就猜 bool。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "用一条 std::println 把某个 auto 变量占的字节数打出来：把 sizeof 塞进这条打印里。",
+      "acceptRegex": ["std::println\\s*\\([^)]*sizeof\\s*\\("],
+      "sample": "std::println(\"height 占 {} 字节\", sizeof(height));",
+      "why": "sizeof(x) 返回 x 占的字节数，是验证类型猜测的探针；先在心里猜一个数再打，猜没猜中一眼就看见。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "任务 2 那一改：把原来那个 172.5 换成整数 172，重新写一行 auto。",
+      "acceptRegex": ["\\bauto\\s+\\w+\\s*=\\s*172\\s*;"],
+      "sample": "auto height = 172;",
+      "why": "auto 只看右边那一刻：右边从 172.5 换成 172，盒子就跟着从 double 换成 int，不会自动升级。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "用 std::println 把 sizeof(172) 打出来，亲眼看到整数字面量是 4 字节不是 8 字节。",
+      "acceptRegex": ["std::println\\s*\\([^)]*sizeof\\s*\\(\\s*172\\s*\\)"],
+      "sample": "std::println(\"{}\", sizeof(172));",
+      "why": "整数字面量本身是 int，sizeof 就是 4 —— 这就是上一行字节数从 8 掉到 4 的原因。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "在改完那一行旁边留一行注释（至少四个字），写下你觉得字节数为什么会变。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 右边是整数就猜成 int，只有 4 字节",
+      "why": "正则只能验你写了注释，写得对不对要复盘时核对 —— 预测这一步本身这块编辑器判不动。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "auto 不是一种类型，是「替你写类型」：只在声明那一刻看右边。",
+    "auto 猜完就定死，之后该拦的照拦：给字符串装 double 盒一样报错。",
+    "int 占 4 字节、double 占 8 字节、bool 占 1 字节 —— 字节数是猜测的证据。",
+    "不写变量也能直接探字面量：sizeof(10) 是 4，sizeof(10.0) 是 8，sizeof(1e3) 也是 8。",
+    "auto 不帮你升级类型：想让 x 做小数除法，就把右边写成 10.0。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nint main() {\n    auto count = 10;\n    auto height = 172.5;\n    auto flag = true;\n    std::println(\"count  占 {} 字节\", sizeof(count));\n    std::println(\"height 占 {} 字节\", sizeof(height));\n    std::println(\"flag   占 {} 字节\", sizeof(flag));\n\n    auto new_height = 172;   // 右边是整数就猜成 int，字节数从 8 掉到 4\n    std::println(\"{}\", sizeof(172));\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\nint main() {\n    auto count = 10;\n    std::println(\"{}\", count);\n    return 0;\n}\n",
+      "auto x = 10;\nstd::println(\"{}\", x);\n"
+    ],
+    "loose": [
+      "#  include  <  print  >\nint  main ( )\n{\n  auto c = 10; auto h = 172.5; auto b = false;\n  std::println( \"h 占 {}\", sizeof( h ) );\n  auto  hh = 172;   // 换成整数就退成 int 只有 4 字节\n  std::println(\"{}\",  sizeof (172));\n}\n"
+    ]
+  }
+}

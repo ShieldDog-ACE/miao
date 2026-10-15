@@ -1,0 +1,76 @@
+{
+  "cid": "c14",
+  "note": "字符串拼接与长度改单编辑器：任务 1 拆成「用 + 拼出新句子 + 打印它的 length() + 旁边一行先数出来的位数」，任务 2 拆成「空字符串声明 + 打印它的 empty()」，字节数不是字数那些知识点收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务 1：拼出一句新句子 —— 一个 std::string 声明，右边用 + 把两段接起来，其中一段换成你的拼音。",
+      "acceptRegex": ["std::string\\s+\\w+\\s*=\\s*\\w+\\s*\\+", "std::string\\s+\\w+\\s*=\\s*\"[^\"]*\"\\s*\\+"],
+      "matchAny": true,
+      "sample": "std::string message = greeting + \", \" + name + \"!\";",
+      "why": "加号在这里是拼接：得有一边是真 string；两段接完交出一整句，原来那两个盒子一个字没变。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用一条 std::println 打出这句新句子的长度：逗号后面写「盒子.length()」这种点号句式。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\.length\\s*\\(\\s*\\)\\s*\\)"],
+      "sample": "std::println(\"长度 = {}\", message.length());",
+      "why": "问内容长度是叫盒子自己做事：点号后面写 length 加括号；sizeof 量的是盒子本身占几字节，跟内容多少无关。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "在这一行旁边留一行注释（至少四个字），写下你先用手指数出来的位数。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 先数到 18，再让 length() 验证",
+      "why": "正则只能验你写了注释，数得对不对要拿 length() 的输出对 —— 数数这一步这块编辑器判不动。",
+      "coversTask": 1,
+      "score": 10,
+      "acceptOn": "buffer"
+    },
+    {
+      "stem": "任务 2：声明一个空字符串 —— std::string 盒子，右边给挨在一起的一对双引号，里面什么都没有。",
+      "acceptRegex": ["std::string\\s+\\w+\\s*=\\s*\"\"\\s*;"],
+      "sample": "std::string s = \"\";",
+      "why": "空字符串是合法的：账本上 0 位；它跟「装了一个空格」不是一回事。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 打印这个空盒子的 empty()，亲眼看到它答 true 还是 false。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\.empty\\s*\\(\\s*\\)\\s*\\)"],
+      "sample": "std::println(\"是空的吗 = {}\", s.empty());",
+      "why": "empty() 只认「账本上是 0 位」：盒子存在不等于装了东西，所以这里打出 true。",
+      "coversTask": 2,
+      "score": 20
+    },
+    {
+      "stem": "把两个工具箱都请进来：打印用的 #include 和 string 用的 #include 各写一行，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*string\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <string>\n\nint main() {",
+      "why": "std::string 住在标准库的 string 工具箱里，不先请进来编译器就不认这个名字。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "length() 数的是字节数不是字数：UTF-8 里一个汉字占 3 字节，所以「小明」的 length() 是 6。",
+    "空格和标点跟字母一样占位：\"Hi, \" 加 LiLei 加感叹号，数出来是 10 位。",
+    "empty() 只认账本上是 0 位：盒子存在不等于装了东西；装一个空格就不算空了。",
+    "加号造的是新盒子：message + 一段文本 不会把 message 自己撑长，要改自己得把结果写回等号左边。",
+    "「盒子名字、一个点、要它做的事」这种句式叫成员调用：点号左边是那个东西，右边是它自己的动作。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <string>\n\nint main() {\n    std::string greeting = \"Hello\";\n    std::string name = \"FuKai\";\n    std::string message = greeting + \", \" + name + \"!\";\n    message = message + \" Welcome\";\n\n    std::println(\"{}\", message);\n    // 先数到 26，再让 length() 验证\n    std::println(\"长度 = {}\", message.length());\n\n    std::string s = \"\";\n    std::println(\"是空的吗 = {}\", s.empty());\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\nint main() {\n    std::string name = \"LiLei\";\n    std::println(\"{}\", name);\n    return 0;\n}\n",
+      "std::string a = \"a\";\nint n = a.length();\n"
+    ],
+    "loose": [
+      "#  include   < print >\n# include < string >\nint  main ( )\n{\n  std::string head = \"Hi\";\n  std::string  py = \"XiaoMing\";\n  std::string  line = py + \" ok\";\n  std::println( \"{}\", line.length() );   // 我数到 11 个字节\n  std::string  note  =  \"\";\n  std::println( \"{}\", note.empty() );\n}\n"
+    ]
+  }
+}

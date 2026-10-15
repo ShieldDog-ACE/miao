@@ -1,0 +1,84 @@
+{
+  "cid": "m100",
+  "note": "set 去重改单编辑器：任务 1 拆成「整列倒进去去重 + 遍历一只去另一只 contains + 接住 insert 的返回值」，任务 2 拆成「第二个尖括号参数 std::greater<int> 加 functional」。旧 6 道选择题的知识点原话收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把集合工具箱（#include <set>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": [
+        "#\\s*include\\s*<\\s*set\\s*>",
+        "\\bint\\s+main\\s*\\("
+      ],
+      "sample": "#include <set>\n\nint main() {",
+      "why": "缺 #include <set> 就没人认识 std::set；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：建一只装整数的集合，把一列有重复的数字倒进去（花括号整列给，或用 begin 和 end 把 vector 整列灌进去都行），让它自动去重自动排序。",
+      "acceptRegex": [
+        "(set\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{[^{}]*\\}|set\\s*<\\s*int\\s*>\\s+\\w+\\s*\\(\\s*\\w+\\.begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.end\\s*\\(\\s*\\)\\s*\\))"
+      ],
+      "sample": "std::set<int> a = {5, 3, 8, 3, 5, 1};",
+      "why": "重复值在进门那一刻就被挡掉：同一列数倒进 set，剩下的就是不同值，而且已经从小到大排好。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：再建第二只集合并倒进另一列数，然后用一条 for 遍历其中一只，每拿出一个就用另一只的 contains 问一句，两边都有的才打印出来。",
+      "acceptRegex": [
+        "for\\s*\\(\\s*(int|auto)\\s+\\w+\\s*:\\s*\\w+\\s*\\)",
+        "\\w+\\.contains\\s*\\(\\s*\\w+\\s*\\)"
+      ],
+      "sample": "std::set<int> b = {8, 9, 3, 12, 3};\nfor (int v : a)\n    if (b.contains(v)) std::print(\"{} \", v);",
+      "why": "contains 是 log n 的问话，不用扫全表；a 里重复的 3、5 早就没了，所以公有的数只报一次。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "往那只集合里再塞一个已经存在的数，把 insert 的返回值接住，并用一条 println 打里面那个 second（它老实汇报这一次收没收）。",
+      "acceptRegex": [
+        "\\w+\\s*=\\s*\\w+\\.insert\\s*\\(",
+        "\\.second"
+      ],
+      "sample": "auto r1 = a.insert(3);\nstd::println(\"再塞 3：收下 = {}\", r1.second);",
+      "why": "已有 3 时 insert 不崩也不吵，只是不收；唯一的情报藏在返回值的 second 里，不接住就等于放弃。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：另写一只从大到小排的集合 —— 声明时给 set 补上第二个尖括号参数 std::greater<int>，并把装这条比较规则的工具箱 #include <functional> 也搬进来。",
+      "acceptRegex": [
+        "set\\s*<\\s*int\\s*,\\s*(std::)?greater\\s*<\\s*int\\s*>\\s*>",
+        "#\\s*include\\s*<\\s*functional\\s*>"
+      ],
+      "sample": "#include <functional>\nstd::set<int, std::greater<int>> desc = {5, 3, 8, 3, 1};\nfor (int v : desc) std::print(\"{} \", v);",
+      "why": "那棵树靠比较规则长：第二个参数换成 std::greater<int>，遍历出来就是大的在前，不用你自己排序。",
+      "coversTask": 2,
+      "score": 25,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "set 的元素天生唯一，遍历出来自动有序，问某个值在不在用 contains，不用扫全表。",
+    "insert 遇到已有的值不收，只在返回值里说 false；size 数的是不同的值，重复的早被挡在门外。",
+    "set 没有方括号那扇门（它没有值可填），往里加东西只能靠 insert。",
+    "顺序由大小决定，放进去的先后它不记 —— 要保序就回 vector，这是选容器时最想清楚的一件事。",
+    "想改排序规则就换第二个尖括号参数：std::set<int, std::greater<int>> 就是从大到小，得 #include <functional>。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <set>\n#include <vector>\n#include <functional>\n\nint main() {\n    std::vector<int> nums = {5, 3, 8, 3, 5, 1, 8, 9};\n    std::set<int> unique_nums(nums.begin(), nums.end());\n    std::set<int> a = {5, 3, 8, 3, 5, 1};\n    std::set<int> b = {8, 9, 3, 12, 3};\n    for (int v : a)\n        if (b.contains(v)) std::print(\"{} \", v);\n    std::println(\"\");\n    auto r1 = a.insert(3);\n    std::println(\"再塞 3：收下 = {}\", r1.second);\n    std::set<int, std::greater<int>> desc = {5, 3, 8, 3, 1};\n    for (int v : desc) std::print(\"{} \", v);\n    std::println(\"\");\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <set>\n\nint main() {\n    std::set<int> s = {5, 3, 8, 3};\n    s.insert(3);\n    std::println(\"{}\", s.size());\n    return 0;\n}\n",
+      "std::vector<int> nums = {5, 3, 8, 3, 5, 1};\nfor (int v : nums) std::print(\"{} \", v);\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < set >\n#  include < functional >\n\nint  main ( )\n{\n  std :: set < int , greater < int > >  big = { 5 , 3 , 8 , 3 , 1 } ;\n  std::set<int> left = {8, 3, 9, 3, 12};\n  for (auto one : big)\n      if (left.contains(one)) std::print(\"{} \", one);\n  std::println(\"\");\n  auto answer = left.insert(3);\n  std::println(\"收下 {}\", answer.second);\n  std::set<int> seed = {1, 1, 2, 3, 3};\n  return 0;\n}\n"
+    ]
+  }
+}

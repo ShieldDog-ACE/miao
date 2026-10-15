@@ -1,0 +1,72 @@
+{
+  "cid": "m154",
+  "note": "这一场本来就是代码卷，但旧稿有几条缺 sample：按底稿那六条重写一遍，每条补齐参考写法，分数挪进 15 到 30 一档。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "任务第 1 条：把第三条规则补进比较器 —— 前两条都打平的时候，按名字的字典序定出谁在前，写出那一句 return。",
+      "acceptRegex": ["return\\s+a\\s*\\.\\s*name\\s*<\\s*b\\s*\\.\\s*name\\s*;"],
+      "sample": "return a.name < b.name;",
+      "why": "源稿那句提示原样落地就是这一行；它必须排在另外两条之后，前两条都得是不同才定案的写法，控制流才轮得到它。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "写出第一条规则的 return 那半句：分高的排在前头。",
+      "acceptRegex": ["a\\s*\\.\\s*score\\s*>\\s*b\\s*\\.\\s*score"],
+      "sample": "return a.score > b.score;",
+      "why": "比较器问的是 a 该不该排在 b 前面，要降序就得写 a.score > b.score；照冒泡的口径写成小于，榜整个反过来。",
+      "score": 15
+    },
+    {
+      "stem": "写一行：给这张榜调排序，三个参数一个不能少 —— 从哪到哪，再加那条由比较器填进去的规则（lambda 的那对中括号要出现）。",
+      "acceptRegex": ["std\\s*::\\s*sort\\s*\\(", "\\.\\s*begin\\s*\\(\\s*\\)\\s*,", "\\.\\s*end\\s*\\(\\s*\\)\\s*,", "\\[\\s*\\]"],
+      "sample": "std::sort(ps.begin(), ps.end(), [](const Player& a, const Player& b) { /* 规则 */ });",
+      "why": "只给两个参数的 sort 按默认大小排；规则是第三个参数，位置错不了，那对中括号加一对圆括号就是 lambda。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "写整行：第二条规则 —— 只有罚时不一样时才当场定案，罚时少的排在前头。",
+      "acceptRegex": ["a\\s*\\.\\s*penalty\\s*!=\\s*b\\s*\\.\\s*penalty", "return\\s+a\\s*\\.\\s*penalty\\s*<\\s*b\\s*\\.\\s*penalty"],
+      "sample": "if (a.penalty != b.penalty) return a.penalty < b.penalty;",
+      "why": "不等号是这条规则的开关：罚时不同才把结论交出去，一样就继续往后轮；写成等号，同罚时的人永远轮不到名字那条。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把两条规则的先后调换：先判罚时不同就 return，再直接 return 比分那一句，两行都写在比较器的花括号里。",
+      "acceptRegex": ["if\\s*\\(\\s*a\\s*\\.\\s*penalty\\s*!=\\s*b\\s*\\.\\s*penalty\\s*\\)\\s*return\\s+a\\s*\\.\\s*penalty\\s*<\\s*b\\s*\\.\\s*penalty", "return\\s+a\\s*\\.\\s*score\\s*>\\s*b\\s*\\.\\s*score"],
+      "sample": "if (a.penalty != b.penalty) return a.penalty < b.penalty;\nreturn a.score > b.score;",
+      "why": "比较器从上往下走，先写的那条先判 —— 顺序本身就是优先级；写法一个字没动，换了先后，280 分那个就因为罚时少挤到前面去。",
+      "score": 15
+    },
+    {
+      "stem": "同分的人想保住原来的先后：把记着原始位置的那个下标写成最后一条规则，写出那一句 return。",
+      "acceptRegex": ["return\\s+a\\s*\\.\\s*idx\\s*<\\s*b\\s*\\.\\s*idx\\s*;"],
+      "sample": "struct Row { std::string name; int score; int idx; };\nstd::sort(r.begin(), r.end(), [](const Row& a, const Row& b) {\n    if (a.score != b.score) return a.score > b.score;\n    return a.idx < b.idx;\n});",
+      "why": "下标互不相等，任何两个人都能判出胜负，排序就不会再随手把同键的人打乱；写在最后，等于只在前面几条都打平时才启用。",
+      "score": 15
+    }
+  ],
+  "notes": [
+    "比较器只回答一个问题：a 严格排在 b 前面吗；要升序写小于，要降序写大于。",
+    "实测把等号让给右边，同键元素的相对顺序就会翻过来；想保住原顺序就把原始下标写成最后一条规则。",
+    "规则顺序就是优先级：先写的那条先判，后面几条只在前面打平时才轮得到。",
+    "一条规则写错方向，排序算法会照错的方向把榜翻过来，还会随手打乱同键的人。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <algorithm>\n#include <print>\n#include <string>\n#include <vector>\n\nstruct Player { std::string name; int score; int penalty; };\nstruct Row { std::string name; int score; int idx; };\n\nint main() {\n    std::vector<Player> ps = {{\"小明\", 300, 120}, {\"小强\", 300, 90}, {\"小红\", 280, 100}};\n    std::sort(ps.begin(), ps.end(), [](const Player& a, const Player& b) {\n        if (a.score != b.score) return a.score > b.score;\n        if (a.penalty != b.penalty) return a.penalty < b.penalty;\n        return a.name < b.name;\n    });\n    for (size_t i = 0; i < ps.size(); ++i)\n        std::println(\"第{}名 {} {}分\", i + 1, ps[i].name, ps[i].score);\n\n    std::sort(ps.begin(), ps.end(), [](const Player& a, const Player& b) {\n        if (a.penalty != b.penalty) return a.penalty < b.penalty;\n        return a.score > b.score;\n    });\n\n    std::vector<Row> r = {{\"阿一\", 300, 0}, {\"阿二\", 300, 1}, {\"阿三\", 280, 2}};\n    std::sort(r.begin(), r.end(), [](const Row& a, const Row& b) {\n        if (a.score != b.score) return a.score > b.score;\n        return a.idx < b.idx;\n    });\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <algorithm>\n#include <string>\n#include <vector>\n\nstruct Player { std::string name; int score; int penalty; };\n\nint main() {\n    std::vector<Player> ps = {{\"小明\", 300, 120}};\n    std::sort(ps.begin(), ps.end(), [](const Player& a, const Player& b) {\n        if (a.score != b.score) return a.score > b.score;\n        return a.penalty < b.penalty;\n    });\n    return 0;\n}\n",
+      "#include <string>\n#include <vector>\n\nstruct Player { std::string name; int score; int penalty; };\n\nint main() {\n    std::vector<Player> ps;\n    std::sort(ps.begin(), ps.end());\n    return 0;\n}\n",
+      "#include <algorithm>\n#include <string>\n\nstruct Player { std::string name; int score; int penalty; };\n\nbool rule(const Player& a, const Player& b) {\n    return a.score > b.score;\n}\n\nint main() {\n    Player x{\"小明\", 300, 120};\n    Player y{\"小强\", 300, 90};\n    bool first = rule(x, y);\n    std::vector<Player> ps;\n    ps.push_back(x);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < algorithm >\n#  include < print >\n#  include < string >\n#  include < vector >\n\nstruct  Player  {  std :: string  name ;  int  score ;  int  penalty ; } ;\nstruct  Row  {  std :: string  name ;  int  score ;  int  idx ; } ;\n\nint  main ( )\n{\n  std :: vector < Player >  board  =  { { \"阿一\" , 300 , 120 } ,  { \"阿二\" , 300 , 90 } } ;\n  std :: sort ( board . begin ( ) ,  board . end ( ) , [ ] ( const Player &  a , const Player &  b )  {\n      if ( a . penalty != b . penalty )  return a . penalty < b . penalty ;\n      return a . score > b . score ;\n  } ) ;\n  std :: vector < Player >  board2  =  { { \"阿一\" , 300 , 120 } ,  { \"阿二\" , 300 , 90 } } ;\n  std :: sort ( board2 . begin ( ) , board2 . end ( ) , [ ] ( const Player & a , const Player & b )  {\n      if ( a . score != b . score )  return a . score > b . score ;\n      if ( a . penalty != b . penalty )  return a . penalty < b . penalty ;\n      return a . name < b . name ;\n  } ) ;\n  std :: vector < Row >  rows  =  { { \"甲\" , 10 , 0 } ,  { \"乙\" , 10 , 1 } } ;\n  std :: sort ( rows . begin ( ) , rows . end ( ) , [ ] ( const Row & a , const Row & b )  {\n      return a . idx < b . idx ;\n  } ) ;\n}\n"
+    ]
+  }
+}

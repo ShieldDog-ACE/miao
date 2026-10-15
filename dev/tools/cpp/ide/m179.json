@@ -1,0 +1,73 @@
+{
+  "cid": "m179",
+  "note": "容量与元素个数分家这一课：让读者自己建空盒、循环 push_back、每轮打两个数，观察台阶收在 buffer 注释里；旧六题的知识点原话进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把打印工具箱和动态数组工具箱都搬进来（两行 #include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*vector\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n#include <vector>\n\nint main() {\n    ...\n}",
+      "why": "std::println 在 print 里，std::vector 在 vector 里，少一行编译器就不认这个名字；没有 main 就没有入口。",
+      "score": 15
+    },
+    {
+      "stem": "写一行：先造一个空的 int 动态数组，一件也不放。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s+\\w+\\s*(=\\s*\\{\\s*\\})?\\s*;"],
+      "sample": "std::vector<int> v;",
+      "why": "空盒子才有得看：刚创建时容量和元素个数都是 0，两个数还没分家。",
+      "score": 15
+    },
+    {
+      "stem": "写一个循环，在循环体里用 push_back 一件一件往里放。",
+      "acceptRegex": ["\\bfor\\s*\\(", "\\.push_back\\s*\\("],
+      "sample": "for (int i = 1; i <= 8; ++i) {\n    v.push_back(i * 10);\n}",
+      "why": "一件一件放才看得见涨的过程；一次塞八件就跳过了所有中间那一轮。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "每放完一件打一行：同一条 std::println 里先给容量再给元素个数，两个成员函数都真调用到。",
+      "acceptRegex": ["std::println\\s*\\([^;]*\\.capacity\\s*\\(\\s*\\)[^;]*\\.size\\s*\\("],
+      "sample": "std::println(\"放入 {} 后: 容量 {}，元素 {}\", i * 10, v.capacity(), v.size());",
+      "why": "capacity 报现在有几格，size 报实际放了几件；两个数并排打出来，哪一轮跳一眼就看出来。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再打一行盒子地址：调用 data() 拿到盒子所在地，用 const void 指针的形式打出来。",
+      "acceptRegex": ["\\.data\\s*\\(", "const\\s+void"],
+      "sample": "std::println(\"盒子在 {}\", static_cast<const void*>(v.data()));",
+      "why": "搬家就是换了一块地皮：地址换了说明这次放入触发搬家，没换就说明格子还够。",
+      "score": 20
+    },
+    {
+      "stem": "跑完之后，在代码里用一行注释写下你看到的容量台阶（至少四个字，把跳到的那几档写出来）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 容量台阶 0 1 2 4 8，每次翻倍",
+      "why": "这一步只判你确实留了一行注释，注释内容这块编辑器判不了；台阶落在放不下的那一件上，一次翻倍。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "size 数放过的实格，capacity 数包括空格在内的全部格子，从放入第 3 件起两个数就分家。",
+    "从空盒子开始连放，本机实测台阶是 0、1、2、4、8、16、32，每次翻倍，不是每放一件涨一格。",
+    "容量够不等于住得进：装了 5 件、容量 8 时写 v[5] = 99 是越界，没登记的格子不能住人，放东西走 push_back。",
+    "搬家那一刻旧盒整块归还，之前记下的盒子地址全部作废。",
+    "用初始化列表一次装 8 件就只占 8 格，第 9 件挤不下才又搬一次家。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v;\n    for (int i = 1; i <= 8; ++i) {\n        v.push_back(i * 10);\n        std::println(\"放入 {} 后: 容量 {}，元素 {}\", i * 10, v.capacity(), v.size());\n    }\n    std::println(\"盒子在 {}\", static_cast<const void*>(v.data()));\n    // 容量台阶 0 1 2 4 8，每次翻倍\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "std::vector<int> v;\nv.push_back(10);\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v;\n    v.push_back(10);\n    v.push_back(20);\n    std::println(\"有几件 {}\", v.size());\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include <print>\n# include <vector>\n\nint main ()\n{\n  std::vector<int> box ;\n  for (int k=1; k<=9; ++k) {\n    box.push_back(k);\n    std::println(\"第 {} 件: 容量 {} 元素 {}\", k, box.capacity(), box.size());\n  }\n  std::println(\"地址 {}\", static_cast<const void *>(box.data()));\n  // 看到容量在 1 2 4 8 16 上跳\n}\n"
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "cid": "m159",
+  "note": "任务是换一场区间再先猜后验：结构与排序走 code，猜与验那一对合做成一条 buffer（打印那句加一行记猜的注释），coversTask 只用底稿编号 1。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "先把一场会写成一小格：struct 里两个 int，开场和散场。",
+      "acceptRegex": ["struct\\s+\\w+\\s*\\{\\s*int\\s+\\w+\\s*,\\s*\\w+", "struct\\s+\\w+\\s*\\{\\s*int\\s+\\w+\\s*;\\s*int\\s+\\w+"],
+      "matchAny": true,
+      "sample": "struct Meet { int start, end; };",
+      "why": "一段区间就是两个数：它占住的是散场之前那段日历。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：把那张会议表列出来，最后那一格写成 4 到 5（原来那格 8 到 9 换掉）。",
+      "acceptRegex": ["std\\s*::\\s*vector\\s*<\\s*\\w+\\s*>\\s+\\w+\\s*=\\s*\\{\\s*\\{", "\\{\\s*4\\s*,\\s*5\\s*\\}"],
+      "sample": "std::vector<Meet> ms = {{1,4}, {3,5}, {0,6}, {5,7}, {5,9}, {4,5}};",
+      "why": "换进来的这场接得上：散场即进场，1~4 之后 4~5 刚好塞进来。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "按散场时刻排：std::sort 三个参数，规则里比较的是两场的 end 那一列。",
+      "acceptRegex": ["std\\s*::\\s*sort\\s*\\(", "\\.\\s*end\\s*<\\s*\\w+\\s*\\.\\s*end"],
+      "sample": "std::sort(ms.begin(), ms.end(), [](const Meet& a, const Meet& b) { return a.end < b.end; });",
+      "why": "越早散场就把后面的时间还得越早；实测只把规则换成按开场时间排，同一批会少选一个。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "扫描那句判据：开场不早于 last_end 就参加，并把 last_end 换成这一场的散场时刻。",
+      "acceptRegex": ["\\w+\\s*\\.\\s*start\\s*>=", "\\w+\\s*=\\s*\\w+\\s*\\.\\s*end\\s*;"],
+      "sample": "if (m.start >= last_end) { ++count; last_end = m.end; }",
+      "why": "整段的对错全压在这个大于等于上：实测把等于号去掉，改过的这组数据从 3 个掉到 2 个。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "先猜再验：跑之前用一行注释写下你猜的个数，再用一条 std::println 把最多参加几个报出来。",
+      "acceptRegex": ["//[^\\n]*[0-9]", "std\\s*::\\s*println\\s*\\(\\s*\"[^\"]*最多参加[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "// 我猜还是 3 个\nstd::println(\"最多参加 {} 个\", count);",
+      "why": "判的是你确实先写了一个数并跑出了结论；猜得对不对这块编辑器核对不了 —— 实测个数还是 3，但被选中的场次整批改了：3~5 撞在 1~4 里被挡掉，4~5 因为散场即进场刚好接上。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "三步骨架：按结束时间排序、从头扫、开场不早于 last_end 就参加，然后把 last_end 换成这一场的结束时刻。",
+    "不变量：扫到一半时 last_end 是已参加的会里最晚的散场时刻，且已选的会彼此都不撞。",
+    "last_end 只在自己被选中时才更新，挪到 if 外面实测六个会只剩 1 个 —— 那等于把空会议室报成有人用。",
+    "结束时间相同的两场，std::sort 不保证谁在前，要名次唯一得再写一条比较规则。",
+    "给每场会加上权重之后，这套按结束时间排的贪心就翻车；哨兵那个 -1 在起点带负数的数据上会漏掉最早那场。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n#include <algorithm>\n\nstruct Meet { int start, end; };\n\nint main() {\n    std::vector<Meet> ms = {{1,4}, {3,5}, {0,6}, {5,7}, {5,9}, {4,5}};\n    std::sort(ms.begin(), ms.end(), [](const Meet& a, const Meet& b) { return a.end < b.end; });\n    int count = 0, last_end = -1;\n    for (const Meet& m : ms)\n        if (m.start >= last_end) { ++count; last_end = m.end;\n            std::println(\"参加 {}~{} 的会\", m.start, m.end); }\n    // 我猜个数还是 3，但被选中的场次整批换了\n    std::println(\"最多参加 {} 个\", count);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n#include <algorithm>\n\nstruct Meet { int start, end; };\n\nint main() {\n    std::vector<Meet> ms = {{1,4}, {3,5}, {0,6}, {5,7}, {5,9}, {8,9}};\n    std::sort(ms.begin(), ms.end(), [](const Meet& a, const Meet& b) { return a.end < b.end; });\n    int count = 0, last_end = -1;\n    for (const Meet& m : ms)\n        if (m.start >= last_end) { ++count; last_end = m.end; }\n    std::println(\"最多参加 {} 个\", count);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n#include <algorithm>\n\nstruct Meet { int start, end; };\n\nint main() {\n    std::vector<Meet> ms = {{1,4}, {3,5}, {0,6}, {5,7}, {5,9}, {4,5}};\n    std::sort(ms.begin(), ms.end(), [](const Meet& a, const Meet& b) { return a.start < b.start; });\n    int count = 0, last_end = -1;\n    for (const Meet& m : ms)\n        if (m.start >= last_end) { ++count; last_end = m.end; }\n    std::println(\"个数 {}\", count);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\n#  include < algorithm >\n\nstruct  Item  {  int  start ;  int  end ; } ;\n\nint  main ( )\n{\n  std :: vector < Item >  list  =  { { 1 , 4 } , { 3 , 5 } , { 0 , 6 } , { 5 , 7 } , { 5 , 9 } , { 4 , 5 } } ;\n  std :: sort ( list . begin ( ) , list . end ( ) , [ ] ( const Item &  a , const Item &  b ) { return a . end < b . end ; } ) ;\n  int  pick  =  0 ,  busy  =  - 1 ;\n  for ( const Item &  it : list )\n    if ( it . start >= busy ) { ++ pick ;  busy  =  it . end ;\n        std :: println ( \" 参加 {} 到 {}\" , it . start , it . end ) ; }\n  // 猜一把：应该是 3 场\n  std :: println ( \" 最多参加 {} 个\" , pick ) ;\n}\n"
+    ]
+  }
+}

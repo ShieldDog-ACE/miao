@@ -1,0 +1,75 @@
+{
+  "cid": "c26",
+  "note": "整段读一行这场的旧题在判「两次输入之后两个变量各装了什么、删掉 ignore 会怎样」，编辑器判不了运行现场，就把任务 1 摊成舀词的 >>、端整行的 getline、两个一起打印三句，任务 2 摊成先要有那句 std::cin.ignore(); 再补一条 buffer 注释记下删掉它之后的现象。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把键盘、打印、字符串三个工具箱都搬进来（三行 #include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*iostream\\s*>", "#\\s*include\\s*<\\s*print\\s*>", "#\\s*include\\s*<\\s*string\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <iostream>\n#include <print>\n#include <string>\n\nint main() {",
+      "why": "std::cin 和 std::cin.ignore 住在 iostream 里，std::println 住在 print 里，std::string 和 std::getline 住在 string 里，缺一个就没人认识它们。",
+      "score": 15
+    },
+    {
+      "stem": "开两只 std::string 盒子（一只装单词、一只装整句），然后用一条 std::cin >> 舀第一个词。",
+      "acceptRegex": ["std::string\\s+\\w+[\\s\\S]*std::string\\s+\\w+", "std::cin\\s*>>\\s*\\w+\\s*;"],
+      "sample": "std::string word = \"??\";\nstd::string line = \"??\";\nstd::cin >> word;",
+      "why": ">> 是勺子，只舀到下一个空白为止：打 I am a student 它只拿走 I，剩下的 am a student 全留在缓冲区里。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "再用 std::getline 端走一整行：第一个参数写 std::cin，第二个参数给那只装整句的盒子。",
+      "acceptRegex": ["std::getline\\s*\\(\\s*std::cin\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::getline(std::cin, line);",
+      "why": "getline 空格照收，读到换行符为止，而且那个换行符不会进字符串；第二个参数必须是一只 std::string 盒子。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 把这两样一起打出来：格式串里两个占位坑，逗号后面按顺序给那两只盒子。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+"],
+      "sample": "std::println(\"单词 = {} / 整句 = {}\", word, line);",
+      "why": "两个坑按顺序填两个值，这一行就是任务 1 要你看的那张对照表：先输 hello 再输 I am a student，出来正好一个是单词一个是整句。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "在两次读中间夹一句擦回车：std::cin.ignore(); 单独占一行（这一句就是你待会儿要删掉重跑的那一行）。",
+      "acceptRegex": ["std::cin\\s*\\.\\s*ignore\\s*\\(\\s*\\)\\s*;"],
+      "sample": "std::cin.ignore();",
+      "why": ">> 把内容舀走，却把结束那行的回车留在缓冲区；ignore 就是擦掉它，否则 getline 一睁眼撞上的就是这个回车。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "删掉那一行再跑一遍，然后用一行注释写下第二句打出来的东西（至少写四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 没等你输入，整句打出来是一对空中括号",
+      "why": "这一条只能判「你写了一行像样的注释」，写没写对现象这块编辑器判不了 —— 这是它判不动的部分。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    ">> 设计成遇空白就停，是为了让一行里连着读好几个数：std::cin >> a >> b >> c; 靠的就是把空白当终点。",
+    "getline 一点空白都不跳，这是它和 >> 脾气上最大的不同，也是那起空行事故的根因。",
+    "同一次运行里 >> 之后直接 getline，通常要先 ignore；擦回车这一步必须夹在两次读之间，顺序不能调。",
+    "删掉 ignore 之后程序不会卡住等你：getline 读到那个残留回车就满足结束条件，交出一个空字符串。",
+    "std::string 盒子也可以一次开两只：std::string word = \"??\", line = \"??\"; 逗号接着写下去。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <iostream>\n#include <print>\n#include <string>\n\nint main() {\n    std::string word = \"??\";\n    std::string line = \"??\";\n\n    std::print(\"输入一个单词: \");\n    std::cin >> word;\n    std::cin.ignore();\n    std::print(\"再输入一句话: \");\n    std::getline(std::cin, line);\n\n    std::println(\"单词 = {} / 整句 = {}\", word, line);\n    // 把 ignore 那行删掉再跑，整句打出来是一对空中括号\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <iostream>\n#include <print>\n#include <string>\nint main() {\n    std::string word = \"??\";\n    std::cin >> word;\n    std::println(\"{}\", word);\n    return 0;\n}\n",
+      "std::string s = \"??\";\nstd::string t = \"??\";\nstd::cin >> s;\nstd::getline(std::cin, t);\n"
+    ],
+    "loose": [
+      "#  include < string >\n#  include <iostream>\n#  include <print>\n\nint main ( )\n{\n  std::string  one = \"??\",  whole = \"??\";\n  std::print ( \"单词 : \" );\n  std::cin >> one ;\n  std::cin . ignore ( ) ;\n  std::print ( \"整句 : \" );\n  std::getline ( std::cin , whole );\n  std::println( \"{} 配 {}\", one , whole );\n  // 少了 ignore 那句就跳过去，整句是空的\n}\n"
+    ]
+  }
+}

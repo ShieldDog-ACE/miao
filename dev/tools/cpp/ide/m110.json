@@ -1,0 +1,80 @@
+{
+  "cid": "m110",
+  "note": "下一个排列改单编辑器：任务 1 拆成「起点给最小排列 1 2 3 4 + do-while 里 next_permutation + int 计数器与总数打印」，任务 2（换成 3 2 1 还能枚举吗）拆成「真把 {3,2,1} 那次跑出来」加一条 buffer 观察注释。do-while 心法、字典序这些进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把排列工具箱（#include <algorithm>）搬进来，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*algorithm\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <algorithm>\n\nint main() {",
+      "why": "next_permutation 住在 algorithm 里；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：起点必须是最小的那个排列 —— 开一个装 int 的 vector，初值正好是 1 2 3 4 按从小到大写。",
+      "acceptRegex": ["vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{\\s*1\\s*,\\s*2\\s*,\\s*3\\s*,\\s*4\\s*\\}"],
+      "sample": "std::vector<int> a = {1, 2, 3, 4};",
+      "why": "从最小排列起步才谈得上不重不漏：起点是 3 2 1 时它已经是字典序最大者，一步都变不出去。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：用 do 先进圈、再用 while 问能不能变 —— 圈里用一条 for 把当前排列打出来，while 的条件位上写 std::next_permutation，区间给 begin 与 end。",
+      "acceptRegex": ["do\\s*\\{", "while\\s*\\([^;]{0,40}next_permutation\\s*\\(\\s*\\w+\\.begin\\s*\\(\\s*\\)\\s*,\\s*\\w+\\.end\\s*\\(\\s*\\)", "for\\s*\\(\\s*int\\s+\\w+\\s*:\\s*\\w+\\s*\\)"],
+      "sample": "do {\n    for (int v : a) std::print(\"{} \", v);\n    std::println(\"\");\n} while (std::next_permutation(a.begin(), a.end()));",
+      "why": "顺序不能倒：写成 while 会先叫一次 next_permutation，最小的那个排列就被跳过去了，六个变五个、二十四个变二十三个。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 1 条：数数一共几个 —— 备一个从 0 起步的 int 计数器，每轮先加一，退出圈以后用一条 println 把总数打出来。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*0\\s*;", "\\+\\+\\s*\\w+\\s*;", "std\\s*::\\s*println\\s*\\("],
+      "sample": "int n = 0;\n++n;\nstd::println(\"一共 {} 个排列\", n);",
+      "why": "拿计数器代替手点数屏幕；四个位置依次有 4、3、2、1 种选法，乘法原理给的正是 24。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：另开一个初值是 3 2 1 的 vector，照同样的 do-while 再跑一次，看它还能不能枚举全排列。",
+      "acceptRegex": ["vector\\s*<\\s*int\\s*>\\s+\\w+\\s*=\\s*\\{\\s*3\\s*,\\s*2\\s*,\\s*1\\s*\\}", "next_permutation\\s*\\("],
+      "sample": "std::vector<int> b = {3, 2, 1};\nint m = 0;\ndo { ++m; for (int v : b) std::print(\"{} \", v); std::println(\"\"); }\nwhile (std::next_permutation(b.begin(), b.end()));",
+      "why": "这一步要的是你亲手跑一次：它变不出下一个，返回 false 并顺手把区间重排回最小。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务第 2 条：用一行注释写下你看到的情况 —— 打出来几行、收尾时那个 vector 变成了什么（至少四个字）。",
+      "acceptRegex": ["//[^\\n]{4,}"],
+      "sample": "// 只打了 3 2 1 一行，收尾时 b 却是 1 2 3",
+      "why": "正则只能验你写了观察记录，内容判不了；这一处的反直觉要靠你自己看见。",
+      "coversTask": 2,
+      "score": 15,
+      "acceptOn": "buffer"
+    }
+  ],
+  "notes": [
+    "起点本身就是一个合法排列，得先处理它再问能不能变：写成 while 会先叫一次 next_permutation，把最小的那个排列跳过去。",
+    "按字典序，1 2 3 的下一个排列是 1 3 2：从左往右第一个不同的位置决定谁在前，永远是最右边的两位先换。",
+    "变不出下一个时它返回 false，并顺手把区间重排回最小，所以 3 2 1 起跑只打一行，收尾却是 1 2 3。",
+    "四个位置依次有 4、3、2、1 种选法，一共 24 个排列；字典序的最大者就是从大到小那一个。",
+    "它内部三步走：从右往左找第一个上升点，在右边的降尾里挑刚好比它大的一位交换，再把那段尾巴倒成升序。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <algorithm>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {1, 2, 3, 4};\n    int n = 0;\n    do {\n        ++n;\n        for (int v : a) std::print(\"{} \", v);\n        std::println(\"\");\n    } while (std::next_permutation(a.begin(), a.end()));\n    std::println(\"一共 {} 个排列\", n);\n    std::vector<int> b = {3, 2, 1};\n    int m = 0;\n    do {\n        ++m;\n        for (int v : b) std::print(\"{} \", v);\n        std::println(\"\");\n    } while (std::next_permutation(b.begin(), b.end()));\n    std::println(\"跑了 {} 轮\", m);\n    // 只打了一行 3 2 1，收尾时 b 被重排回 1 2 3\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <algorithm>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {1, 2, 3, 4};\n    while (std::next_permutation(a.begin(), a.end())) {\n        for (int v : a) std::print(\"{} \", v);\n        std::println(\"\");\n    }\n    return 0;\n}\n",
+      "#include <print>\n#include <algorithm>\n#include <vector>\n\nint main() {\n    std::vector<int> a = {1, 2, 3, 4};\n    std::sort(a.begin(), a.end());\n    for (int v : a) std::print(\"{} \", v);\n    std::println(\"\");\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < algorithm >\n#  include < print >\n#  include < vector >\n\nint  main ( )\n{\n  std :: vector < int >  arr = { 1 , 2 , 3 , 4 } ;\n  int  count = 0 ;\n  do {\n      ++ count ;\n      for ( int v : arr ) std::print(\"{} \", v);\n      std::println(\"\");\n  } while ( std :: next_permutation ( arr.begin ( ) , arr.end ( ) ) ) ;\n  std::println(\"一共 {} 个\", count);\n  std::vector<int> back = {3, 2, 1};\n  int round = 0;\n  do {\n      ++round;\n      for (int v : back) std::print(\"{} \", v);\n      std::println(\"\");\n  } while (std::next_permutation(back.begin(), back.end()));\n  // 这一趟只打了一行，收尾却是升序\n  return 0;\n}\n"
+    ]
+  }
+}

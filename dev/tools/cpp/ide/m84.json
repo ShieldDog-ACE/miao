@@ -1,0 +1,73 @@
+{
+  "cid": "m84",
+  "note": "自定义打印改单编辑器：任务只有一条（把说明书的格式串改成 学生{}:{}），拆成「类型本体 + 登记 formatter 的骨架与 parse + 格式串真写成那一串 + format_to 的实参给全 + main 里把整个对象放进坑」；今天不求懂每一行，只考照抄与改格式。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "定义好要印的那个类型：一个 struct，里面一栏 int、一栏 std::string。",
+      "acceptRegex": ["\\bstruct\\s+\\w+\\s*\\{[^}]*\\bint\\s+\\w+", "std::string\\s+\\w+"],
+      "sample": "struct Student { int id; std::string name; };",
+      "why": "先确定要印哪几栏：int、double、std::string 这些标准库类型本来就在 println 的名单上，自创的类型不在。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "登记说明书：template <> 后面写 struct std::formatter<你的类型>，并把 parse 那一行照抄进来（收一个 std::format_parse_context 引用）。",
+      "acceptRegex": ["template\\s*<>", "std::formatter\\s*<\\s*\\w+\\s*>", "parse\\s*\\(\\s*std::format_parse_context\\s*&\\s*\\w+\\s*\\)"],
+      "sample": "template <>\nstruct std::formatter<Student> {\n    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }",
+      "why": "std::formatter<你的类型> 就是往标准库预留的那个空格里填东西；parse 和骨架照抄，今天真正要写的是 format。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "任务那一改：format 里用 std::format_to 往 ctx.out() 写，格式串换成源稿要的那一句 学生{}:{}。",
+      "acceptRegex": ["std::format_to\\s*\\(\\s*\\w+\\.out\\s*\\(\\s*\\)", "\"学生\\{\\}:\\{\\}\""],
+      "sample": "return std::format_to(ctx.out(), \"学生{}:{}\", s.id, s.name);",
+      "why": "换一种格式只改这一处：工程里所有打印这个类型的点都跟着变，一处没漏。",
+      "coversTask": 1,
+      "score": 25,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把那两个坑的实参给全：按顺序递上这个对象的两栏（点号取成员，逗号隔开）。",
+      "acceptRegex": ["std::format_to\\s*\\(", "\\w+\\.\\w+\\s*,\\s*\\w+\\.\\w+"],
+      "sample": "std::format_to(ctx.out(), \"学生{}:{}\", s.id, s.name)",
+      "why": "几个坑就给几个值，顺序就是名单里那两栏的顺序；冒号和方括号都是格式串里的普通字符。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "在 main 里把整个对象直接放进坑里打一次：std::println 的格式串一个占位坑，逗号后面给那个对象。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"名单：{}\", s);",
+      "why": "登记过说明书之后，println 才认得这个类型；临时造出来的 Student{1002, 小红} 也能直接印。",
+      "coversTask": 1,
+      "score": 20,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "println 认类型：int、double、std::string 在册，你自创的 struct 不在，得给它登记一份怎么写。",
+    "parse 那一整行和 template <> 那一行照抄就行，需要你自己写的是 format 里的格式串与实参。",
+    "登记一次，工程里所有打印点都跟着变；临时只印一次的情况，直接写 s.id 与 s.name 更省事。",
+    "忘 #include <format> 会甩一大串模板内部报错，那不是你的类型错了，是说明书压根没地方登记。",
+    "一个类型一份说明书，两份互不打扰；formatter 只管怎么写，怎么比是另一件事。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <format>\n#include <print>\n#include <string>\n\nstruct Student { int id; std::string name; };\n\ntemplate <>\nstruct std::formatter<Student> {\n    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }\n    auto format(const Student& s, std::format_context& ctx) const {\n        return std::format_to(ctx.out(), \"学生{}:{}\", s.id, s.name);   // 任务：只改这一处\n    }\n};\n\nint main() {\n    Student s{1001, \"小明\"};\n    std::println(\"{}\", s);\n    std::println(\"名单：{}\", s);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <string>\n\nstruct Student { int id; std::string name; };\n\nint main() {\n    Student s{1001, \"小明\"};\n    std::println(\"[{}] {}\", s.id, s.name);\n    return 0;\n}\n",
+      "#include <print>\n#include <string>\n\nstruct Student { int id; std::string name; };\n\ntemplate <>\nstruct std::formatter<Student> {\n    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }\n};\n\nint main() {\n    Student s{1001, \"小明\"};\n    std::println(\"{}\", s);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    std::println(\"{}\", 1);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "# include < format >\n# include < print >\n# include < string >\n\nstruct  Pupil { int  no ; std::string  label ; } ;\n\ntemplate  < >\nstruct  std::formatter < Pupil >\n{\n    constexpr auto parse ( std::format_parse_context &  cc ) { return cc.begin( ) ; }\n    auto  format ( const  Pupil &  one , std::format_context & cc ) const {\n        return std::format_to ( cc.out( ) ,  \"学生{}:{}\" , one.no , one.label ) ;\n    }\n};\n\nint  main ( )\n{\n    Pupil  p {7, \"阿明\"};\n    std::println(\"第二次：{} 又是 {}\", p, p);\n    std::println( \"学生 {}\" , p ) ;\n    return 0;\n}\n"
+    ]
+  }
+}

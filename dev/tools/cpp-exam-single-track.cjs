@@ -45,86 +45,9 @@ const MODE = {};
 JSON.parse(fs.readFileSync(path.join(__dirname, "cpp", "exam-mode.json"), "utf8"))
   .papers.forEach(p => { MODE[p.cid] = p.mode; });
 
-/* ---------- 载入与写出 ---------- */
-function loadPart(file) {
-  const ctx = { window: {}, console: { log: () => { }, error: () => { }, warn: () => { } } };
-  ctx.self = ctx.window; ctx.globalThis = ctx.window;
-  vm.createContext(ctx);
-  vm.runInContext(fs.readFileSync(file, "utf8"), ctx, { filename: path.basename(file), timeout: 20000 });
-  const key = Object.keys(ctx.window).find(k => /^MIAO_CPP(M)?_EXAM_P\d+$/.test(k));
-  if (!key) throw new Error(path.basename(file) + " 里没找到 MIAO_CPP*_EXAM_PNN");
-  return { key, papers: ctx.window[key].papers };
-}
-/* 头部注释（第一段 /* … *\/）原样保留，其余按固定排版重新序列化 */
-function headerOf(text) {
-  const m = text.match(/^[\s\S]*?\*\//);
-  return m ? m[0] + "\n" : "";
-}
-function emit(key, papers, header) {
-  const L = [];
-  L.push(header.trimEnd());
-  L.push("window." + key + " = {");
-  L.push("  papers: [");
-  papers.forEach(p => L.push(paperSrc(p).join("\n")));
-  L.push("  ]");
-  L.push("};");
-  return L.join("\n") + "\n";
-}
-const q = v => JSON.stringify(v);
-/* 对象键：不是标识符的（勾线题的配对键是整句话）必须引号包起来，裸写出来的产物跑不起来 */
-function keySrc(k) {
-  if (/^[A-Za-z_$][\w$]*$/.test(k) && RESERVED.indexOf(k) < 0) return k;
-  return JSON.stringify(k);
-}
-const RESERVED = ["if", "else", "for", "while", "new", "class", "function", "return", "in", "do", "var", "typeof", "default", "case", "switch", "delete", "void", "null", "true", "false", "this", "catch", "throw", "try", "const", "let", "enum", "export", "extends", "import", "super", "yield", "async", "await", "break", "continue", "debugger", "finally", "instanceof", "static", "with"];
-function objSrc(o, indent) {
-  const keys = Object.keys(o).filter(k => o[k] !== undefined);
-  const parts = keys.map(k => keySrc(k) + ": " + valSrc(o[k], indent));
-  return "{" + parts.join(", ") + "}";
-}
-function valSrc(v, indent) {
-  if (v === null || v === undefined) return "null";
-  if (typeof v === "number" || typeof v === "boolean") return String(v);
-  if (typeof v === "string") return q(v);
-  if (Array.isArray(v)) {
-    if (v.every(x => ["number", "boolean", "string"].indexOf(typeof x) >= 0)) return "[" + v.map(x => valSrc(x, indent)).join(", ") + "]";
-    const inner = v.map(x => " ".repeat(indent + 2) + objSrc(x, indent + 2)).join(",\n");
-    return "[\n" + inner + "]";
-  }
-  if (typeof v === "object") {
-    const keys = Object.keys(v).filter(k => v[k] !== undefined);
-    const oneline = "{" + keys.map(k => keySrc(k) + ": " + valSrc(v[k], indent)).join(", ") + "}";
-    return oneline;
-  }
-  return String(v);
-}
-/* 一场卷的源码：字段顺序固定，questions 一题一行（长数组自己换行），selftest 一行一组 */
-function paperSrc(p) {
-  const order = ["cid", "kind", "mode", "authored", "pass", "title", "task", "hint"];
-  const head = order.filter(k => p[k] !== undefined).map(k => k + ": " + valSrc(p[k], 4));
-  const L = [];
-  L.push("    {");
-  L.push("      " + head.join(", ") + ",");
-  L.push("      questions: [");
-  (p.questions || []).forEach((qq, i) => {
-    const qOrder = ["id", "type", "score", "coversTask", "stem", "code", "options", "answer", "answers",
-      "accept", "acceptRegex", "sample", "acceptLines", "steps", "left", "right", "matchAny", "why"];
-    const keys = qOrder.filter(k => qq[k] !== undefined).concat(Object.keys(qq).filter(k => qOrder.indexOf(k) < 0));
-    const body = keys.map(k => k + ": " + valSrc(qq[k], 8)).join(", ");
-    L.push("        { " + body + " }" + (i < p.questions.length - 1 ? "," : ""));
-  });
-  L.push("      ],");
-  L.push("      selftest: {");
-  const st = p.selftest || {};
-  ["refs", "wrongs", "loose"].forEach((k, i, arr) => {
-    if (!st[k]) return;
-    const rows = st[k].map(a => " ".repeat(10) + objSrc(a, 10)).join(",\n");
-    L.push("        " + k + ": [\n" + rows + "]" + (i < arr.length - 1 && st[arr[i + 1]] ? "," : ""));
-  });
-  L.push("      }");
-  L.push("    },");
-  return L;
-}
+/* ---------- 载入与写出：排版口径住在 cpp-exam-print.cjs，两个改造器共用一件 ---------- */
+const PRINT = require(path.join(__dirname, "cpp-exam-print.cjs"));
+const { loadPart, headerOf, emit, objSrc, valSrc, q } = PRINT;
 
 /* ---------- 分数补平：整数、每题 ≥5 分、和正好 100，且任务题合计 ≥50（D-58） ----------
    上一版按「全体比例」摊分：删掉一道盖任务的大题之后，剩下任务题摊到的分被非任务题稀释，

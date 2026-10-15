@@ -1,0 +1,67 @@
+{
+  "cid": "m153",
+  "note": "任务是合并前打印两端与两半内容：拆、两次递归、打印那句、两圈打印、落座那一步共 5 条，coversTask 只用底稿真实编号 1。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把拆这一半写出来：第一行判断这段只剩 0 或 1 个就直接 return，再一行问出对半的中点。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*>=\\s*\\w+\\s*\\)\\s*return\\s*;", "int\\s+\\w+\\s*=\\s*\\(\\s*\\w+\\s*\\+\\s*\\w+\\s*\\)\\s*/\\s*2\\s*;"],
+      "sample": "if (lo >= hi) return;\nint mid = (lo + hi) / 2;",
+      "why": "只剩一个天然有序；mid 是下标中点，怎么拆只看段长，跟数据长什么样无关。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "对左半、右半各叫一次自己：右半那一路的下标要从 mid + 1 起。",
+      "acceptRegex": ["\\w+\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\)", "\\w+\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\+\\s*1\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "merge_sort(v, lo, mid, tmp);\nmerge_sort(v, mid + 1, hi, tmp);",
+      "why": "两半各自排好之后才轮得到合并；额外那份 tmp 一路传下去，别在函数里现造。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 1 条：在合并之前先打一句，格式串里带上这段的两端（lo 和 hi 都当参数递进去）。",
+      "acceptRegex": ["std\\s*::\\s*print(?:ln)?\\s*\\(\\s*\"[^\"]*合并前[^\"]*\"\\s*,\\s*\\w+\\s*,\\s*\\w+"],
+      "sample": "std::print(\"段 {}..{} 合并前：\", lo, hi);",
+      "why": "打印插在两次递归之后、合并之前，所以轮到谁的时候谁的两半已经排好了 —— 这正是这一课要亲眼看的时刻。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "接着把两半的内容各用一圈 for 打出来：连着两句带 std::print 的循环，一圈走到 mid，一圈从 mid 之后走到 hi。",
+      "acceptRegex": ["for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*[^;]{1,20};\\s*\\w+\\s*<=\\s*\\w+\\s*;\\s*\\+\\+\\s*\\w+\\s*\\)\\s*std\\s*::\\s*print\\s*\\([^)]*\\[\\s*\\w+\\s*\\][\\s\\S]{0,200}?for\\s*\\(\\s*int\\s+\\w+\\s*=\\s*[^;]{1,20};\\s*\\w+\\s*<=\\s*\\w+\\s*;\\s*\\+\\+\\s*\\w+\\s*\\)\\s*std\\s*::\\s*print\\s*\\([^)]*\\["],
+      "sample": "for (int t = lo; t <= mid; ++t) std::print(\"{} \", v[t]);\nfor (int t = mid + 1; t <= hi; ++t) std::print(\"{} \", v[t]);",
+      "why": "六个数那一跑实测五行，从最短的段开始冒出来；最后一行左 2 5 8、右 1 3 9 就是本课的命门。",
+      "coversTask": 1,
+      "score": 25
+    },
+    {
+      "stem": "两半都盯住当前最小的那张，把小的那张先落座：比较要带等号，写进额外容器的那一格下标当场加一。",
+      "acceptRegex": ["\\w+\\s*\\[\\s*\\w+\\s*\\+\\s*\\+\\s*\\]\\s*=\\s*\\(\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*<=\\s*\\w+\\s*\\[\\s*\\w+\\s*\\]\\s*\\)\\s*\\?"],
+      "sample": "tmp[k++] = (v[i] <= v[j]) ? v[i++] : v[j++];",
+      "why": "平手时让左边先落座，同键元素的相对顺序就不会变 —— 那个等号决定的就是这个性质叫稳定。",
+      "coversTask": 1,
+      "score": 25
+    }
+  ],
+  "notes": [
+    "后面那两个收尾循环管的是：一半扫空之后另一半本来就有序，整段抄进额外容器，一次比较也不做。",
+    "实测删掉左半剩下的那个循环，六个数排成 1 2 0 3 0 0 —— 没抄的那些格子留着上一段的旧值。",
+    "合并全程一次都不交换格子，被写的是那份额外容器，最后再整段抄回原容器。",
+    "一千个数实测调用 1999 次、搬 19952 个格子、最深 11 层，已经排好、倒着排好、伪随机三种输入这三项一分没动，只有比较次数在变。",
+    "那份额外容器如果当局部变量在函数里现造，实测一千个数要新建 999 次，正好等于合并的次数。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nvoid merge_sort(std::vector<int>& v, int lo, int hi, std::vector<int>& tmp) {\n    if (lo >= hi) return;\n    int mid = (lo + hi) / 2;\n    merge_sort(v, lo, mid, tmp);\n    merge_sort(v, mid + 1, hi, tmp);\n    std::print(\"段 {}..{} 合并前：左 {}..{} = \", lo, hi, lo, mid);\n    for (int t = lo; t <= mid; ++t) std::print(\"{} \", v[t]);\n    std::print(\"  右 {}..{} = \", mid + 1, hi);\n    for (int t = mid + 1; t <= hi; ++t) std::print(\"{} \", v[t]);\n    std::println(\"\");\n    int i = lo, j = mid + 1, k = lo;\n    while (i <= mid && j <= hi)\n        tmp[k++] = (v[i] <= v[j]) ? v[i++] : v[j++];\n    while (i <= mid) tmp[k++] = v[i++];\n    while (j <= hi) tmp[k++] = v[j++];\n    for (int t = lo; t <= hi; ++t) v[t] = tmp[t];\n}\n\nint main() {\n    std::vector<int> v = {5, 2, 8, 1, 9, 3}, tmp(v.size());\n    merge_sort(v, 0, static_cast<int>(v.size()) - 1, tmp);\n    for (int x : v) std::print(\"{} \", x);\n    std::println(\"\");\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nvoid merge_sort(std::vector<int>& v, int lo, int hi, std::vector<int>& tmp) {\n    if (lo >= hi) return;\n    int mid = (lo + hi) / 2;\n    merge_sort(v, lo, mid, tmp);\n    merge_sort(v, mid + 1, hi, tmp);\n    int i = lo, j = mid + 1, k = lo;\n    while (i <= mid && j <= hi)\n        tmp[k++] = (v[i] <= v[j]) ? v[i++] : v[j++];\n    while (i <= mid) tmp[k++] = v[i++];\n    while (j <= hi) tmp[k++] = v[j++];\n    for (int t = lo; t <= hi; ++t) v[t] = tmp[t];\n}\n\nint main() {\n    std::vector<int> v = {5, 2, 8, 1, 9, 3}, tmp(v.size());\n    merge_sort(v, 0, static_cast<int>(v.size()) - 1, tmp);\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> v = {5, 2, 8, 1, 9, 3};\n    for (int a = 0; a < 6; ++a)\n        for (int b = 0; b < 5; ++b)\n            if (v[b] > v[b + 1]) std::println(\"换一次\");\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\n#  include < vector >\n\nvoid  ms ( std :: vector < int > &  a , int  lo , int  hi , std :: vector < int > &  buf )\n{\n  if ( lo >= hi ) return ;\n  int  middle  =  ( lo + hi ) / 2 ;\n  ms ( a , lo , middle , buf ) ;\n  ms ( a , middle + 1 , hi , buf ) ;\n  std :: println ( \" 合并前这一段是 {} 到 {}\" , lo , hi ) ;\n  std :: print ( \" 左半 = \" ) ;\n  for ( int  p  =  lo ;  p  <=  middle ;  ++ p )  std :: print ( \"{} \" , a [ p ] ) ;\n  std :: print ( \" 右半 = \" ) ;\n  for ( int  p  =  middle + 1 ;  p  <=  hi ;  ++ p )  std :: print ( \"{} \" , a [ p ] ) ;\n  int  x  =  lo ,  y  =  middle + 1 ,  z  =  lo ;\n  while ( x <= middle && y <= hi )\n      buf [ z ++ ]  =  ( a [ x ] <= a [ y ] )  ?  a [ x ++ ]  :  a [ y ++ ] ;\n  while ( x <= middle )  buf [ z ++ ]  =  a [ x ++ ] ;\n  while ( y <= hi )  buf [ z ++ ]  =  a [ y ++ ] ;\n  for ( int  p  =  lo ;  p  <=  hi ;  ++ p )  a [ p ]  =  buf [ p ] ;\n}\n\nint  main ( )\n{\n  std :: vector < int >  v  =  { 5 , 2 , 8 , 1 , 9 , 3 } ,  t ( v . size ( ) ) ;\n  ms ( v , 0 , static_cast < int > ( v . size ( ) ) - 1 , t ) ;\n}\n"
+    ]
+  }
+}

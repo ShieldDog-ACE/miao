@@ -1,0 +1,81 @@
+{
+  "cid": "c66",
+  "note": "传值 vs 传引用改单编辑器：任务 1 拆成「按值签名 + 函数里真给参数写值 + 调用后打印原件」，任务 2 拆成「两个参数都挂 & + 备用盒三步」；删 & 后 b 还是 10 这类预测按规矩进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "写一个只收复印件的函数：参数就写 int 后面跟名字，中间不许有 &。",
+      "acceptRegex": ["\\bvoid\\s+\\w+\\s*\\(\\s*int\\s+\\w+\\s*\\)"],
+      "sample": "void by_value(int x) {",
+      "why": "参数里没有 & 就是传值：函数里新建一只盒子，把实参的值抄进去。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "在这个函数体里给那个参数写一个新值（复印件上留字，比如 x = 999）。",
+      "acceptRegex": ["void\\s+\\w+\\s*\\(\\s*int\\s+(\\w+)\\s*\\)\\s*\\{[^}]*\\b\\1\\s*="],
+      "sample": "void by_value(int x) { x = 999; }",
+      "why": "这一句确实执行了，但写的是副本；出了花括号副本被扔掉，原件一点不动。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "在 main 里调用它，之后用一条 std::println 打印外面那只 int 变量：格式串里一个占位坑，逗号后面给那只变量。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"传值后   a = {}\", a);",
+      "why": "漏 & 的失败一声不吭，屏幕上一行都不报，只能靠调用前后各打一次同一只盒子来自查；光看函数里打印的值会被骗。",
+      "coversTask": 1,
+      "score": 15,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "写交换两个数那个函数的头部：两个参数都得能改到外面的原件，各挂一个 &。",
+      "acceptRegex": ["\\bvoid\\s+\\w+\\s*\\(\\s*int\\s*&\\s*\\w+\\s*,\\s*int\\s*&\\s*\\w+\\s*\\)"],
+      "sample": "void swap_two(int& a, int& b) {",
+      "why": "要改几只原件就挂几个 &；只给第一个带 &，两个数会变成同一个值，另一个数被弄丢。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "在这个交换函数的体里用一只备用盒把两个数倒过来：先 int 一个临时变量装走一个，再互相赋值，最后把临时的倒回去。",
+      "acceptRegex": ["\\bint\\s+\\w+\\s*=\\s*\\w+\\s*;\\s*\\w+\\s*=\\s*\\w+\\s*;\\s*\\w+\\s*=\\s*\\w+\\s*;"],
+      "sample": "int t = a;\na = b;\nb = t;",
+      "why": "两个盒子换东西要第三个帮忙：先借放一份，再互相接；直接 a = b 会先把 a 的值冲掉。",
+      "coversTask": 2,
+      "score": 20,
+      "acceptOn": "code"
+    },
+    {
+      "stem": "把这份程序写成能跑的形：搬进打印工具箱（#include <print>），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <print>\n\nint main() {",
+      "why": "缺 #include 就没人认识 std::println；没有 main，链接器找不到入口。",
+      "score": 15,
+      "acceptOn": "code"
+    }
+  ],
+  "notes": [
+    "把 by_ref 的 & 删掉写成 int x，跑完外面的 b 还是 10：999 写在复印件上，编译通过、运行正常，只是什么都没变。",
+    "一句话判断：要改就加 &；只读而且东西大就加 const &；小而只读直接传值。",
+    "const 引用里写操作是编译期就拦住的，报错大意是丢掉限定符、只读位置不能赋值，那种报错是好事。",
+    "写 int& r; 不给初值，编译直接报错：引用必须初始化。",
+    "传值一只大 vector 每次调用都要整份搬一遍；std::sort 那类标准库函数收 vector 时也照这条办。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n\nvoid by_value(int x) { x = 999; std::println(\"函数里拿到: {}\", x); }\n\nvoid swap_two(int& a, int& b) {\n    int t = a;\n    a = b;\n    b = t;\n}\n\nint main() {\n    int a = 10;\n    by_value(a);\n    std::println(\"传值后 a = {}\", a);\n\n    int x = 1, y = 7;\n    swap_two(x, y);\n    std::println(\"x = {} y = {}\", x, y);\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n\nvoid swap_two(int a, int b) {\n    int t = a;\n    a = b;\n    b = t;\n}\n\nint main() {\n    int x = 1, y = 7;\n    swap_two(x, y);\n    std::println(\"x = {} y = {}\", x, y);\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    int a = 10;\n    a = 999;\n    std::println(\"{}\", a);\n    return 0;\n}\n",
+      "#include <vector>\n\nint main() {\n    std::vector<int> v = {5, 2, 8, 1};\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < print >\nvoid  copy_only ( int  n )\n{\n    n = 42;\n    std::println( \"inside {}\" , n );\n}\n\nvoid  trade ( int &  p , int &  q )\n{\n    int  hold = p;\n    p = q;\n    q = hold;\n}\n\nint  main ( )\n{\n    int  a = 10;\n    copy_only(a);\n    std::println(\"a 变了吗 {}\", a);\n    int  x = 1 ,  y = 7;\n    trade(x, y);\n    std::println(\"x {} y {}\", x, y);\n    return 0;\n}\n"
+    ]
+  }
+}

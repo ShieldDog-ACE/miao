@@ -368,6 +368,49 @@ console.log("\n整卷一览（满分口径 100 / 及格线 " + FULL.pass + "）"
     (r.errors.length ? " · 报错：" + r.errors[0] : ""));
 });
 
+
+/* ---------- 单编辑器卷（mode:"ide"）：一块 buffer 进来了，逐条判定怎么算 ----------
+   这三条是这一轮形状change的核心承诺：题面不参与匹配、注释不算写过、骨架不算做完题。 */
+(function ideTests() {
+  const IDE = {
+    cid: "x01", kind: "paper", mode: "ide", pass: 60, title: "第 1 课", file: "main.cpp",
+    starter: "#include <print>\nint main() {\n\n}\n",
+    questions: [
+      { id: "q1", type: "code", score: 30, coversTask: 1, stem: "写一行 println",
+        acceptRegex: ["println\\s*\\(\\s*\"你好\""], sample: 'std::println("你好");', why: "句式" },
+      { id: "q2", type: "code", score: 30, coversTask: 1, stem: "把 print 头搬进来",
+        acceptRegex: ["#\\s*include\\s*<\\s*print\\s*>"], sample: "#include <print>", why: "搬运" },
+      { id: "q3", type: "code", score: 40, coversTask: 2, stem: "写出编译命令",
+        acceptRegex: ["g\\+\\+.*-o\\s*\\w+"], sample: "g++ -std=c++23 main.cpp -o main", why: "命令", acceptOn: "buffer" }
+    ],
+    selftest: {}
+  };
+  const full = "# 条件1：写一行 println\n//\n#include <print>\nint main(){ std::println(\"你好\"); }\n// g++ -std=c++23 main.cpp -o main\n";
+  ok("单编辑器：整份写全判 100 并通过", PAPER.gradeIde(IDE, full).score === 100 && PAPER.gradeIde(IDE, full).passed);
+  ok("单编辑器：把条件原文抄进注释一分不得",
+    PAPER.gradeIde(IDE, "// 条件1：println(\"你好\")\n// 条件3：g++ -std=c++23 main.cpp -o main\n").score === 0);
+  ok("单编辑器：题面那几行注释不参与匹配（只留题面 = 0 分）",
+    PAPER.gradeIde(IDE, "// 第 1 课\n// 条件1：写一行 println（30 分）\n//\n").score === 0);
+  ok("单编辑器：预置骨架单独交卷过不了线", PAPER.ideStarterFails(IDE).failed);
+  ok("单编辑器：整块题面被删掉后，整份文件都算代码",
+    PAPER.gradeIde(IDE, '#include <print>\nint main(){ std::println("你好"); }\n// g++ -std=c++23 main.cpp -o main').score === 100);
+  ok("单编辑器：shell 命令写在代码段里也算（acceptOn:buffer 吃读者那一段含注释）",
+    PAPER.gradeIde(IDE, '#include <print>\nint main(){ std::println("你好"); }\n').score === 60);
+  const strings = PAPER.stripComments('std::println("http://a; b"); // 尾巴\nint x = 1; /* 块 */\n');
+  ok("剥注释：字符串里的 // 与分号不许当注释",
+    /http:\/\/a; b/.test(strings) && !/尾巴/.test(strings) && !/块/.test(strings));
+  ok("剥注释：行结构一字不动（行数一样，报错跳行才不会错位）",
+    strings.split("\n").length === 'std::println("http://a; b"); // 尾巴\nint x = 1; /* 块 */\n'.split("\n").length);
+  ok("契约：混进选择型条件被判坏",
+    PAPER.validateIde(Object.assign({}, IDE, { questions: IDE.questions.concat([{ id: "q9", type: "choice", score: 0, stem: "x", answer: 0 }]) })).some(e => /不是 code 的条件/.test(e)));
+  ok("契约：条件少于 3 条被判坏",
+    PAPER.validateIde(Object.assign({}, IDE, { questions: IDE.questions.slice(0, 2) })).some(e => /3–6 条/.test(e)));
+  ok("契约：条件不给 sample 被判坏",
+    PAPER.validateIde(Object.assign({}, IDE, { questions: IDE.questions.map((q, i) => i === 0 ? Object.assign({}, q, { sample: "" }) : q) })).some(e => /没给 sample/.test(e)));
+  ok("契约：权重不平 100 被判坏",
+    PAPER.validateIde(Object.assign({}, IDE, { questions: IDE.questions.map(q => Object.assign({}, q, { score: 20 })) })).some(e => /正好 100/.test(e)));
+})();
+
 console.log("\n笔试引擎自测：" + PAPER.KINDS.length + " 种题型 · " + (pass + fail) + " 条用例 · PASS " + pass + " · FAIL " + fail);
 if (failes.length) {
   console.log("\n失败明细：");

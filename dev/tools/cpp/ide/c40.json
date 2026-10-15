@@ -1,0 +1,75 @@
+{
+  "cid": "c40",
+  "note": "初识 vector 改单编辑器：任务 1 拆成「请头文件 + vector<double> 列三个带小数点的分数 + 打印 size()」，任务 2 拆成「照源稿的 (5, 0) + 换成 (3, 9) + 遍历打出来看形状」，旧七道笔试题的结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把 vector 这只盒子请进来：文件顶上写一行 include vector 的头文件（打印那个头文件不算）。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*vector\\s*>"],
+      "sample": "#include <vector>",
+      "why": "盒子不住在打印那个头文件里；少了这一行编译报错，大意是命名空间 std 里没有叫 vector 的名字。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "造一只装小数的盒子：尖括号里定房型为 double，名字后面用花括号列出三门课的分数，三个值都带小数点。",
+      "acceptRegex": ["std::vector\\s*<\\s*double\\s*>\\s*\\w+\\s*=\\s*\\{[^}]*\\.[^}]*,[^}]*\\.[^}]*,[^}]*\\.[^}]*\\}"],
+      "sample": "std::vector<double> homework = {92.5, 88.0, 79.5};",
+      "why": "尖括号里写的是类型，不是值也不是个数；格子数跟着花括号里的内容自动定下来。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "用一条 std::println 问出这只盒子现在装了几个：格式串里留一个占位坑，逗号后面给它的 size()。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*\\)"],
+      "sample": "std::println(\"一共 {} 门课\", homework.size());",
+      "why": "size 是盒子自己的动作，点、名字、后面那对空圆括号一样不能少，写成 size 会被当成别的名字。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "把源稿那行圆括号造法照写出来：一只装 int 的盒子，括号里先写 5 再写 0。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*\\(\\s*5\\s*,\\s*0\\s*\\)"],
+      "sample": "std::vector<int> zeros(5, 0);",
+      "why": "圆括号那条的口诀是「先几格、后每格放什么」，所以这一行是 5 个 0。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "按任务把那两个数字换成 3 和 9，再造一只盒子：括号里先写 3 再写 9。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*\\(\\s*3\\s*,\\s*9\\s*\\)"],
+      "sample": "std::vector<int> nines(3, 9);",
+      "why": "个数改 3、内容改 9，得到的是 3 格每格 9；写成 (9, 3) 就变成 9 个 3，完全是另一只盒子。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "用两格的 range-for 把新造的这只盒子挨个端出来打一遍，亲眼看看它变成什么样。",
+      "acceptRegex": ["for\\s*\\(\\s*(?:int|auto|double)\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "std::print(?:ln)?\\s*\\(\\s*\"[^\"]*\\{\\}"],
+      "sample": "for (int one : nines) {\n    std::print(\"{} \", one);\n}",
+      "why": "盒子能直接遍历，每轮递上来一格的内容；打出来是 9 9 9，一共三格。",
+      "coversTask": 2,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "尖括号里写的是类型，不是值也不是个数：它规定这一整盒每格装什么，装几个由花括号里的内容决定。",
+    "圆括号那条的顺序是「先几格、后每格放什么」；把两个数字说反成 (0, 5) 会得到一只空盒子。",
+    "一格不装的空盒子是合法状态，size() 得 0。",
+    "房型必须整盒统一：往装 int 的盒子里塞小数会被编译期的 narrowing 拦下，编译器不会自己调和 int 和 double。",
+    "看到「std 里没有 vector 这个名字」先回去请头文件，别去改尖括号；size 后面那对圆括号也不能省略。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<double> homework = {92.5, 88.0, 79.5};\n    std::println(\"一共 {} 门课\", homework.size());\n\n    std::vector<int> zeros(5, 0);\n    std::vector<int> nines(3, 9);\n    for (int one : nines) {\n        std::print(\"{} \", one);\n    }\n    std::println(\"   ← 共 {} 格\", nines.size());\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<double> homework = {92.5, 88.0, 79.5};\n    std::println(\"一共 {} 门课\", homework.size());\n    return 0;\n}\n",
+      "#include <print>\n\nint main() {\n    std::vector<int> zeros(5, 0);\n    std::vector<int> nines(3, 9);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n#  include < vector >\n\nint main ( )\n{\n  std::vector<double>  fs = {92.5, 88.0, 79.5} ;\n  std::println( \"共 {} 门\" , fs.size ( ) ) ;\n\n  std::vector<int> old_box ( 5 , 0 ) ;\n  std::vector<int>  new_box ( 3 , 9 ) ;\n  for ( auto one : new_box ) { std::print ( \"{} \" , one ) ; }\n  return 0;\n}\n"
+    ]
+  }
+}

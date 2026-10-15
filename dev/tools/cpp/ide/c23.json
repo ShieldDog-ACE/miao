@@ -1,0 +1,75 @@
+{
+  "cid": "c23",
+  "note": "且或非这场的旧题在判「16 岁、有票时三行印什么」，编辑器判不了输出，就摊成看得见的四句：读年龄和 bool 有票、拼一句且、拼一句带取反的或、把整句套括号取反；任务 2 那句「把 && 改成 ||」摊成同一对操作数再拼一句或。短路和优先级只能进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：把键盘和打印两个工具箱都搬进来（两行 #include），再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*iostream\\s*>", "#\\s*include\\s*<\\s*print\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <iostream>\n#include <print>\n\nint main() {",
+      "why": "std::cin 和 std::print 住在 iostream 里，std::println 住在 print 里，缺一个就没人认识它们；没有 main，链接器找不到入口。",
+      "score": 15
+    },
+    {
+      "stem": "开一只 int 盒子装年龄（给上初值 0），再开一只 bool 盒子装有票（初值 false），然后用一条 std::cin 把两个都连着读进来。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*0\\s*;", "bool\\s+\\w+\\s*=\\s*false\\s*;", "std::cin\\s*>>\\s*\\w+\\s*>>\\s*\\w+"],
+      "sample": "int age = 0;\nbool has_ticket = false;\nstd::cin >> age >> has_ticket;",
+      "why": "bool 盒子也能用 cin 读：敲 1 变 true，敲 0 变 false；两个数用空格隔开一次读完，程序按个数收。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "拼一句「且」：用一条 std::println 打出「年龄够 18 且有票」，逗号后面左边是一次比较，右边是那只 bool 盒子。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*(>=|<=|>|<|==|!=)\\s*[\\w\\d]+\\s*&&\\s*\\w+"],
+      "sample": "std::println(\"年龄够 且 有票 = {}\", age >= 18 && has_ticket);",
+      "why": "&& 要两边都真才 true：16 岁时左边 age >= 18 已经是 false，右边连看都不看，整句就是 false。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "拼一句「或」带翻面的：用一条 std::println，式子里既有 ||，又有一个感叹号只翻一只盒子。",
+      "acceptRegex": ["std::println\\s*\\([^;]*\\|\\|[^;]*!", "std::println\\s*\\([^;]*![^;]*\\|\\|"],
+      "matchAny": true,
+      "sample": "std::println(\"是小孩 或 没票 = {}\", age < 18 || !has_ticket);",
+      "why": "感叹号翻的只是 has_ticket 这一小块；或是一边真就真，16 岁那条左边已经成立。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "把上一次那句「且」照原样改成「或」，用一条 std::println 再打一遍（同一对操作数，只把 && 换成 ||）。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*(>=|<=|>|<|==|!=)\\s*[\\w\\d]+\\s*\\|\\|\\s*\\w+"],
+      "sample": "std::println(\"年龄够 或 有票 = {}\", age >= 18 || has_ticket);",
+      "why": "同一句只换一个符号，结果从 false 翻成 true：16 岁不够 18，但有票这一边真；这就是且与或的分界。",
+      "coversTask": 2,
+      "score": 15
+    },
+    {
+      "stem": "把整句翻面：用一条 std::println 打「不是（年龄够且有票）」，感叹号后面要跟上括号。",
+      "acceptRegex": ["std::println\\s*\\([^;]*!\\s*\\(\\s*\\w+\\s*(>=|<=|>|<|==|!=)[^;]*&&[^;]*\\)"],
+      "sample": "std::println(\"两个条件都不成立 = {}\", !(age >= 18 && has_ticket));",
+      "why": "不加括号时感叹号只管紧跟着的那一小块；要翻整句就得把整句括起来，这是本课最容易写错的一行。",
+      "coversTask": 1,
+      "score": 15
+    }
+  ],
+  "notes": [
+    "这个脾气叫短路求值：&& 左边已经是 false，右边根本不被计算；|| 左边已经是 true，右边同样被跳过。",
+    "&& 的优先级比 || 高：a || b && a 先算 b && a 折成一个值，再和 a 或。",
+    "或的意思是至少一个成立，两边都真结果还是 true；且要两边都真才 true。",
+    "程序算 age >= 18 && has_ticket 的走法：先算左边，左边假就收工，左边真才轮得到右边。",
+    "a && !b 是 true：感叹号比 && 紧，先算 !b 再拼起来。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <iostream>\n#include <print>\n\nint main() {\n    int age = 0;\n    bool has_ticket = false;\n\n    std::print(\"输入年龄 和 是否有票(1/0): \");\n    std::cin >> age >> has_ticket;\n\n    std::println(\"年龄够 且 有票 = {}\", age >= 18 && has_ticket);\n    std::println(\"年龄够 或 有票 = {}\", age >= 18 || has_ticket);\n    std::println(\"是小孩 或 没票 = {}\", age < 18 || !has_ticket);\n    std::println(\"都不成立吗 = {}\", !(age >= 18 && has_ticket));\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <iostream>\n#include <print>\nint main() {\n    int age = 0;\n    std::cin >> age;\n    std::println(\"{}\", age >= 18);\n    return 0;\n}\n",
+      "#include <print>\nint main() {\n    bool a = true;\n    bool b = false;\n    std::println(\"{}\", a && b);\n    std::println(\"{}\", !a);\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include < iostream >\n#  include <print>\n\nint main ( )\n{\n  int  years = 0;\n  bool  ticket = false;\n  std::print ( \"年龄 有票吗 : \" );\n  std::cin >> years >> ticket;\n  std::println( \"且 {}\", years >= 18 && ticket );\n  std::println( \"改成一或 {}\", years >= 18 || ticket );\n  std::println( \"小孩或没票 {}\", ticket == false || ! ( years >= 18 ) );\n  std::println( \"反面 {}\", ! ( years >= 18 && ticket ) );\n}\n"
+    ]
+  }
+}

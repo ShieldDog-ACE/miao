@@ -1,0 +1,66 @@
+{
+  "cid": "c42",
+  "note": "尾部添加与删除改单编辑器：任务 1 拆成「空盒子 + 连三次 push_back + 打一眼 back()」，任务 2 那句「猜猜」按规矩收进 notes，代码条件改成正文教的护身符写法（size() 守卫 + pop_back + else），旧七道笔试题的结论进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "把这份程序写成能跑的形：请进 vector 的头文件，再开出 main 这个入口。",
+      "acceptRegex": ["#\\s*include\\s*<\\s*vector\\s*>", "\\bint\\s+main\\s*\\("],
+      "sample": "#include <vector>\n\nint main() {",
+      "why": "盒子不住在打印那个头文件里；没有 main 链接器也找不到入口。",
+      "score": 15
+    },
+    {
+      "stem": "声明一只一格都不装的空盒子：尖括号里写 int，名字后面什么都不填。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*;"],
+      "sample": "std::vector<int> fav;",
+      "why": "空盒子是合法状态，size() 得 0；它能加不能删，正是「来一条加一条」的起手式。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "往这只空盒子尾部连排进三个你喜欢的数字：三行 push_back，每行各带一个数。",
+      "acceptRegex": ["\\.\\s*push_back\\s*\\(\\s*-?\\d+\\s*\\)\\s*;[\\s\\S]*\\.\\s*push_back\\s*\\(\\s*-?\\d+\\s*\\)\\s*;[\\s\\S]*\\.\\s*push_back\\s*\\(\\s*-?\\d+\\s*\\)\\s*;"],
+      "sample": "fav.push_back(7);\nfav.push_back(42);\nfav.push_back(100);",
+      "why": "push_back 永远在尾巴加一格，格子数跟着加一；它不接受位置参数，也不动前面那些格，两句话改的都是盒子自己，不用拿变量接结果。",
+      "coversTask": 1,
+      "score": 30
+    },
+    {
+      "stem": "每动一下就重新看一眼：用一条 std::println 把尾上那一格打出来，值的位置给 back()。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\.\\s*back\\s*\\(\\s*\\)"],
+      "sample": "std::println(\"最后是 {}\", fav.back());",
+      "why": "加完之后 back() 就是刚进来的那个值 —— size() 和 back() 是跟着同步变的。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：请出去之前先看有没有人 —— 用 if 问 size() 是不是大于 0 才 pop_back，再用 else 打一句不能碰。",
+      "acceptRegex": ["if\\s*\\(\\s*[^)]*\\.\\s*size\\s*\\(\\s*\\)[^)]*>\\s*0", "\\.\\s*pop_back\\s*\\(\\s*\\)", "\\belse\\b"],
+      "sample": "if (box.size() > 0) {\n    box.pop_back();\n} else {\n    std::println(\"现在 0 格，pop_back 不能碰\");\n}",
+      "why": "0 格没有尾巴可请，对空盒子 pop_back 是越界级别的错、标准不作保证；正确做法是先用 size() 守卫，而不是指望它提醒你。",
+      "coversTask": 2,
+      "score": 25
+    }
+  ],
+  "notes": [
+    "push_back 永远在尾巴加一格：size() 多 1，back() 换成刚进来的那个值。",
+    "pop_back 请走的是最近一次 push_back 进来的那一格，它没有参数，只请尾巴那一个；想删掉第一个元素不是这一对动作管的活。",
+    "空盒子（0 格）没有尾巴，pop_back 和 back() 都无处可取，属于未定义行为，不该去试；它不会返回被删掉的那个值，也不会自动补一个 0 占位。",
+    "动手删之前先问一句 size() 是不是大于 0，这是本课唯一的护身符；空盒子能加不能删，所以「来一条加一条」才是安全方向。",
+    "push_back 60 紧接着 pop_back 会互相抵消：还是 3 格、back() 回到 78，前面那些格从头到尾没动过。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> fav;\n\n    fav.push_back(7);\n    fav.push_back(42);\n    fav.push_back(100);\n\n    std::println(\"最后是 {}\", fav.back());\n\n    std::vector<int> box;\n    if (box.size() > 0) {\n        box.pop_back();\n        std::println(\"请出去一个，剩 {} 格\", box.size());\n    } else {\n        std::println(\"现在 0 格，pop_back 不能碰\");\n    }\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> fav;\n    fav.push_back(7);\n    fav.push_back(42);\n    std::println(\"最后是 {}\", fav.back());\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> box;\n    if (box.size() > 0) {\n        box.pop_back();\n    } else {\n        std::println(\"现在 0 格，pop_back 不能碰\");\n    }\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <vector>\nint  main ( )\n{\n  std::vector< int >  my ;\n  my.push_back( 3 ) ;\n  my . push_back ( 9 ) ;\n  my.push_back(11);\n  std::println( \"尾巴 {}\" , my.back ( ) ) ;\n\n  if ( my.size() > 0 ) { my.pop_back ( ) ; }\n  else { std::println(\"空盒别碰\") ; }\n  return 0;\n}\n"
+    ]
+  }
+}

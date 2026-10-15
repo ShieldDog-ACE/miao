@@ -1,0 +1,75 @@
+{
+  "cid": "c43",
+  "note": "遍历求和改单编辑器：任务 1 拆成「五格的盒子 + 循环外清零账本 + range-for 累加 + 打总分 + 平均那一步带上 1.0」，任务 2 用第二本账本配 if 够 90 记一笔，旧六道笔试题的结论收进 notes。",
+  "starter": "",
+  "checks": [
+    {
+      "stem": "用花括号造一只装 int 的盒子，往里列你自己的五个分数。",
+      "acceptRegex": ["std::vector\\s*<\\s*int\\s*>\\s*\\w+\\s*=\\s*\\{[^}]*,[^}]*,[^}]*,[^}]*\\}"],
+      "sample": "std::vector<int> scores = {85, 92, 78, 96, 88};",
+      "why": "花括号那条是「列内容」，格子数跟着内容自动定下来；没有盒子就没得走。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "在花括号外面先备一本账本：一个 int，出生就清零。",
+      "acceptRegex": ["int\\s+\\w+\\s*=\\s*0\\s*;"],
+      "sample": "int total = 0;",
+      "why": "账本必须在循环外诞生并清零；写进循环的花括号里，每轮都会重新被抹成 0，走完只剩最后一个数 —— 而且编译和运行都不报错。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "用两格的 range-for 走完整只盒子，每轮把端到的那个值累加进账本。",
+      "acceptRegex": ["for\\s*\\(\\s*(?:auto|int|double)\\s+\\w+\\s*:\\s*\\w+\\s*\\)", "\\w+\\s*\\+=\\s*\\w+\\s*;"],
+      "sample": "for (auto s : scores) {\n    total += s;\n}",
+      "why": "range-for 挨个往外端，一轮一个；total += s 与 total = total + s 是一回事。",
+      "coversTask": 1,
+      "score": 20
+    },
+    {
+      "stem": "走完用账本：一条 std::println 把总分打出来，逗号后面给那个账本变量。",
+      "acceptRegex": ["std::println\\s*\\(\\s*\"[^\"]*\\{\\}[^\"]*\"\\s*,\\s*\\w+\\s*\\)"],
+      "sample": "std::println(\"总分 = {}\", total);",
+      "why": "总分、平均分都从这本账本来；打印放在循环外面才只打一次。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "算平均分那一步别让整数相除砍掉小数：把账本乘上 1.0 再除以盒子的 size()，用一条 std::println 打出来。",
+      "acceptRegex": ["1\\.0[\\s\\S]{0,40}?/", "\\w+\\s*\\.\\s*size\\s*\\(\\s*\\)", "std::println"],
+      "sample": "std::println(\"平均 = {:.2f}\", total * 1.0 / scores.size());",
+      "why": "total 和 size() 都是整数，439 / 5 在整数世界里是 87；乘 1.0 把一边升级成 double，除法才走小数那条路。",
+      "coversTask": 1,
+      "score": 15
+    },
+    {
+      "stem": "任务第 2 条：同一趟路再带一本账本数人数 —— 循环里用 if 问这一轮的分数是不是大于等于 90，够就在循环里记一笔。",
+      "acceptRegex": ["if\\s*\\(\\s*\\w+\\s*>=\\s*90\\s*\\)", "\\w+\\s*(?:\\+\\+|\\+=\\s*1)\\s*;"],
+      "sample": "int good = 0;\nfor (auto s : scores) {\n    if (s >= 90) {\n        good++;\n    }\n}",
+      "why": "「走一遍、顺便记一笔」：第二本账本也在循环外清零，循环里用 if 决定记不记，无条件加一把每个分数都数进去了。",
+      "coversTask": 2,
+      "score": 20
+    }
+  ],
+  "notes": [
+    "把 int total = 0; 写进循环的花括号里，总分只剩最后一个元素 88，编译和运行都不报错 —— 这是本课最大的坑。",
+    "range-for 每轮拿到的是新建的一份复印件，本轮那个值装在它里面；把它接到 vector 上就能走完全程，不用自己数格子。",
+    "同一趟路可以带好几本账本，总分、人数各记各的；total += s 与 total = total + s 是一回事。",
+    "两个整数相除会把小数部分砍掉：439 除以 5 是 87 而不是 87.8；乘 1.0 把一边升级成 double，除法才走小数那条路，{:.2f} 会把它补足两位显示成 87.80。",
+    "85 92 78 96 88 里够 90 的只有 92 和 96 两个，所以「有几个分数 ≥ 90」的答案是 2 个。"
+  ],
+  "selftest": {
+    "refs": [
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96, 88};\n\n    int total = 0;\n    for (auto s : scores) {\n        total += s;\n    }\n    std::println(\"总分 = {}\", total);\n    std::println(\"平均 = {:.2f}\", total * 1.0 / scores.size());\n\n    int good = 0;\n    for (auto s : scores) {\n        if (s >= 90) {\n            good++;\n        }\n    }\n    std::println(\"90 分以上的有 {} 个\", good);\n\n    return 0;\n}\n"
+    ],
+    "wrongs": [
+      "",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96, 88};\n\n    for (auto s : scores) {\n        std::print(\"{} \", s);\n    }\n    std::println(\"总分 = {}\", s);\n\n    return 0;\n}\n",
+      "#include <print>\n#include <vector>\n\nint main() {\n    std::vector<int> scores = {85, 92, 78, 96, 88};\n\n    for (auto s : scores) {\n        total += s;\n    }\n\n    return 0;\n}\n"
+    ],
+    "loose": [
+      "#  include <print>\n#  include < vector >\nint  main ( )\n{\n  std::vector< int > my = {60,95,100,72,88} ;\n  int sum =0 ;\n  for( auto v : my ) { sum += v ; }\n  std::println( \"总 {}\" , sum ) ;\n  std::println( \"平 {}\" , sum * 1.0 / my.size ( ) ) ;\n\n  int n = 0 ;\n  for ( auto v : my ) { if ( v >= 90 ) n += 1 ; }\n  std::println( \"够 90 的 {} 个\" , n ) ;\n  return 0;\n}\n"
+    ]
+  }
+}
