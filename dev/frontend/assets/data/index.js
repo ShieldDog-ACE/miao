@@ -4,7 +4,7 @@
  * 以及分层加载要的两张表 —— boot（点开这门课任何一章都必拉的骨架）与
  * chunks（每一章的正文落在哪个文件，由「后写的顶掉先写的」算出来的赢家）。
  * 正文一块都不在 —— 所以改任何一课的正文，都要重跑生成器，标题、章数与这张映射才会同步。
- * 生成时间：2026-10-25 14:17
+ * 生成时间：2026-10-25 15:00
  */
 window.MIAO_INDEX = {
  "tutorials": [
@@ -3158,30 +3158,33 @@ window.MIAO_INDEX = {
    "mount": "",
    "assemble": "",
    "title": "JavaScript 入门",
-   "intro": "本课程将带你从基础开始，逐步深入理解 JavaScript。你将学习变量、数据类型、函数、对象以及异步编程等核心概念，并通过一系列小例子来巩固你的理解。每节课结束后，你将能够编写并运行一个简单的 JavaScript 程序。",
+   "intro": "从历史到实践，一步步掌握 JavaScript 核心概念，适合零基础学习者。",
    "cat": "js",
    "diff": "入门",
    "tags": [
     "JavaScript",
-    "编程基础",
-    "函数",
-    "对象",
-    "异步编程"
+    "入门",
+    "编程",
+    "技术课"
    ],
    "author": "喵站官方",
    "cover": "/assets/img/covers/js.svg",
    "thumb": "",
    "hero": "",
    "updated": "2026-10-25",
-   "chaps": 2,
+   "chaps": 3,
    "chapters": [
     {
      "id": "j01",
-     "title": "第 1 课 · 变量和数据类型"
+     "title": "第 1 课 · JavaScript 的历史"
     },
     {
      "id": "j02",
-     "title": "第 2 课 · 控制流和循环"
+     "title": "第 2 课 · 安装 VS Code 和 Node.js"
+    },
+    {
+     "id": "j03",
+     "title": "第 3 课 · 第一个程序：console.log"
     }
    ],
    "examIds": [],
