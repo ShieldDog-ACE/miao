@@ -48,6 +48,13 @@ window.MIAO_SITE = {
       files: ["assets/data/enwords-data.js"],
       examFiles: ["assets/data/enword-exam-data.js"]
     },
+    /* Git 入门（开发工具那栏的第一门）：没拆片，整份就是 boot，chunks 为空；
+       这一版不排考（engine 留空、examFiles 空）—— 先让读者有正文可读，考卷后补。 */
+    {
+      id: "git", source: "MIAO_GIT", updated: "2026-10-21", engine: "",
+      files: ["assets/data/git-data.js"],
+      examFiles: []
+    },
     /* 微软四门 MIT 课共用 ms-data.js（骨架 61 KB / gzip 5.6 KB），正文是逐课一个文件，
        靠 ms-bodies.js 的装配函数合并：boot = 骨架 + 挂载层，那一课的正文点了那一课才拉。 */
     {
@@ -90,7 +97,15 @@ window.MIAO_SITE = {
       boot: ["assets/data/cppm-data.js"], assemble: "MIAO_CPPM_ASSEMBLE",
       files: ["assets/data/cppm/legacy.js", { glob: "assets/data/cppm/p*.js" }, "assets/data/cppm-data.js"],
       examFiles: [{ glob: "assets/data/cppm-exam/p*.js" }, "assets/data/cppm-exam-data.js"]
-    }
+    },
+    /* AUTO-COURSES:BEGIN（miao-MCP 自动日更维护；这段里不要手改） */
+    {
+      id: "js", source: "MIAO_JS", engine: "",
+      files: ["assets/data/js-data.js"],
+      examFiles: []
+    },
+    /* AUTO-COURSES:END */
+
   ],
 
   /* 考场界面脚本：按 engine 分四套，进考场才拉。

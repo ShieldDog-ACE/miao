@@ -4,7 +4,7 @@
  * 以及分层加载要的两张表 —— boot（点开这门课任何一章都必拉的骨架）与
  * chunks（每一章的正文落在哪个文件，由「后写的顶掉先写的」算出来的赢家）。
  * 正文一块都不在 —— 所以改任何一课的正文，都要重跑生成器，标题、章数与这张映射才会同步。
- * 生成时间：2026-10-14 15:19
+ * 生成时间：2026-10-25 14:17
  */
 window.MIAO_INDEX = {
  "tutorials": [
@@ -408,8 +408,8 @@ window.MIAO_INDEX = {
    "engine": "enword",
    "mount": "",
    "assemble": "",
-   "title": "英语入门：20 课 200 个基础单词",
-   "intro": "从 hello 到 have，20 个主题各 10 个真正入门要用的词。每个词都有读音、音标、词性、中文和一句常用短语，点一下就听；每课一场小考，最后一场 200 词的结课大考。",
+   "title": "英语入门：21 课 257 个基础单词",
+   "intro": "从 hello 到 code，21 个主题把真正入门要用的词一次排开。每个词都有读音、音标、词性、中文和一句常用短语，点一下就听；每课一场小考，最后一场 257 词的结课大考。",
    "cat": "英语",
    "diff": "入门",
    "tags": [
@@ -423,7 +423,7 @@ window.MIAO_INDEX = {
    "thumb": "",
    "hero": "",
    "updated": "2026-10-09",
-   "chaps": 21,
+   "chaps": 22,
    "chapters": [
     {
      "id": "ew-l01",
@@ -507,7 +507,11 @@ window.MIAO_INDEX = {
     },
     {
      "id": "ew-l21",
-     "title": "第 21 课 · 结课总复习与结课大考"
+     "title": "第 21 课 · 编程英语（C++ 与 Python）"
+    },
+    {
+     "id": "ew-l22",
+     "title": "第 22 课 · 结课总复习与结课大考"
     }
    ],
    "examIds": [
@@ -531,7 +535,8 @@ window.MIAO_INDEX = {
     "ew-l18",
     "ew-l19",
     "ew-l20",
-    "ew-l21"
+    "ew-l21",
+    "ew-l22"
    ],
    "keywords": [
     "hello",
@@ -544,6 +549,11 @@ window.MIAO_INDEX = {
     "OK",
     "welcome",
     "morning",
+    "everyone",
+    "ticket",
+    "late",
+    "know",
+    "China",
     "I",
     "you",
     "he",
@@ -554,6 +564,9 @@ window.MIAO_INDEX = {
     "my",
     "your",
     "friend",
+    "kind",
+    "ready",
+    "name",
     "family",
     "father",
     "mother",
@@ -564,6 +577,7 @@ window.MIAO_INDEX = {
     "grandpa",
     "grandma",
     "parents",
+    "little",
     "one",
     "two",
     "three",
@@ -574,6 +588,9 @@ window.MIAO_INDEX = {
     "eight",
     "nine",
     "ten",
+    "cup",
+    "time",
+    "yuan",
     "eleven",
     "twelve",
     "thirteen",
@@ -584,6 +601,9 @@ window.MIAO_INDEX = {
     "eighteen",
     "nineteen",
     "twenty",
+    "city",
+    "rule",
+    "question",
     "red",
     "orange",
     "yellow",
@@ -594,6 +614,8 @@ window.MIAO_INDEX = {
     "black",
     "brown",
     "pink",
+    "star",
+    "sky",
     "day",
     "week",
     "month",
@@ -604,6 +626,10 @@ window.MIAO_INDEX = {
     "yesterday",
     "tomorrow",
     "now",
+    "next",
+    "later",
+    "before",
+    "right",
     "what",
     "who",
     "where",
@@ -624,6 +650,8 @@ window.MIAO_INDEX = {
     "nice",
     "new",
     "old",
+    "way",
+    "boy",
     "happy",
     "sad",
     "tired",
@@ -634,6 +662,7 @@ window.MIAO_INDEX = {
     "sick",
     "angry",
     "well",
+    "story",
     "weather",
     "season",
     "spring",
@@ -644,6 +673,10 @@ window.MIAO_INDEX = {
     "snow",
     "wind",
     "cloud",
+    "leaf",
+    "cold",
+    "heavy",
+    "strong",
     "school",
     "classroom",
     "teacher",
@@ -654,6 +687,8 @@ window.MIAO_INDEX = {
     "blackboard",
     "desk",
     "chair",
+    "English",
+    "first",
     "book",
     "pen",
     "pencil",
@@ -664,6 +699,7 @@ window.MIAO_INDEX = {
     "map",
     "dictionary",
     "card",
+    "piece",
     "head",
     "face",
     "eye",
@@ -674,6 +710,9 @@ window.MIAO_INDEX = {
     "hand",
     "foot",
     "hair",
+    "wash",
+    "open",
+    "left",
     "rice",
     "bread",
     "meat",
@@ -684,6 +723,9 @@ window.MIAO_INDEX = {
     "tea",
     "coffee",
     "sugar",
+    "bowl",
+    "some",
+    "glass",
     "apple",
     "banana",
     "grape",
@@ -694,6 +736,8 @@ window.MIAO_INDEX = {
     "tomato",
     "carrot",
     "vegetable",
+    "bunch",
+    "sweet",
     "cat",
     "dog",
     "pig",
@@ -714,6 +758,8 @@ window.MIAO_INDEX = {
     "room",
     "door",
     "window",
+    "warm",
+    "near",
     "go",
     "come",
     "eat",
@@ -724,6 +770,9 @@ window.MIAO_INDEX = {
     "run",
     "play",
     "help",
+    "down",
+    "fast",
+    "game",
     "read",
     "write",
     "listen",
@@ -733,7 +782,20 @@ window.MIAO_INDEX = {
     "say",
     "want",
     "like",
-    "have"
+    "have",
+    "again",
+    "code",
+    "program",
+    "print",
+    "input",
+    "output",
+    "error",
+    "bug",
+    "file",
+    "import",
+    "include",
+    "fix",
+    "tool"
    ],
    "boot": [
     "assets/data/enwords-data.js"
@@ -742,6 +804,49 @@ window.MIAO_INDEX = {
    "examFiles": [
     "assets/data/enword-exam-data.js"
    ]
+  },
+  {
+   "id": "git",
+   "source": "MIAO_GIT",
+   "engine": "",
+   "mount": "",
+   "assemble": "",
+   "title": "Git 入门",
+   "intro": "从「版本库到底存了什么」讲到分支合并：三课讲清三个区、四种撤回、一张便利贴式的分支。每课都有能当场照敲的命令，坑单列在明面上。",
+   "cat": "git",
+   "diff": "入门",
+   "tags": [
+    "git",
+    "版本库",
+    "命令行"
+   ],
+   "author": "喵站官方",
+   "cover": "/assets/img/covers/git.svg",
+   "thumb": "",
+   "hero": "",
+   "updated": "2026-10-21",
+   "chaps": 3,
+   "chapters": [
+    {
+     "id": "g01",
+     "title": "第 1 课 · 三个区：Git 到底把东西存在哪"
+    },
+    {
+     "id": "g02",
+     "title": "第 2 课 · 撤回：先看清 diff，再决定动哪个区"
+    },
+    {
+     "id": "g03",
+     "title": "第 3 课 · 分支：一张写着「这条线停在哪」的便利贴"
+    }
+   ],
+   "examIds": [],
+   "keywords": [],
+   "boot": [
+    "assets/data/git-data.js"
+   ],
+   "chunks": {},
+   "examFiles": []
   },
   {
    "id": "genai",
@@ -2782,6 +2887,8 @@ window.MIAO_INDEX = {
     "m168",
     "m169",
     "m170",
+    "m171",
+    "m172",
     "m175",
     "m176",
     "m177",
@@ -2794,6 +2901,8 @@ window.MIAO_INDEX = {
     "m184",
     "m185",
     "m186",
+    "m191",
+    "m195",
     "m199"
    ],
    "keywords": [],
@@ -3041,6 +3150,47 @@ window.MIAO_INDEX = {
     "assets/data/cppm-exam/p36.js",
     "assets/data/cppm-exam-data.js"
    ]
+  },
+  {
+   "id": "js",
+   "source": "MIAO_JS",
+   "engine": "",
+   "mount": "",
+   "assemble": "",
+   "title": "JavaScript 入门",
+   "intro": "本课程将带你从基础开始，逐步深入理解 JavaScript。你将学习变量、数据类型、函数、对象以及异步编程等核心概念，并通过一系列小例子来巩固你的理解。每节课结束后，你将能够编写并运行一个简单的 JavaScript 程序。",
+   "cat": "js",
+   "diff": "入门",
+   "tags": [
+    "JavaScript",
+    "编程基础",
+    "函数",
+    "对象",
+    "异步编程"
+   ],
+   "author": "喵站官方",
+   "cover": "/assets/img/covers/js.svg",
+   "thumb": "",
+   "hero": "",
+   "updated": "2026-10-25",
+   "chaps": 2,
+   "chapters": [
+    {
+     "id": "j01",
+     "title": "第 1 课 · 变量和数据类型"
+    },
+    {
+     "id": "j02",
+     "title": "第 2 课 · 控制流和循环"
+    }
+   ],
+   "examIds": [],
+   "keywords": [],
+   "boot": [
+    "assets/data/js-data.js"
+   ],
+   "chunks": {},
+   "examFiles": []
   }
  ]
 };
