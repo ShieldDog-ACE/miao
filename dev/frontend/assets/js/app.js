@@ -268,12 +268,28 @@
 
 
 
+  /* 导航栏里「首页」右边那四个入口（视频 / 考试 / 幻灯片 / 公式化学习）的点击：
+     这一版只挂入口、不建页面 —— 点了给一句到位的提示，不留死链，也不假装有内容。
+     以后内容页做好，把它们在 index.html 里换成真路由即可，样式不用动。 */
+  function bindNavSoon() {
+    $all(".nav-links .nav-soon").forEach(function (a) {
+      a.onclick = function (e) {
+        e.preventDefault();
+        toast(a.dataset.soon + "：功能筹备中，上线后会第一时间放到这里喵~");
+      };
+    });
+  }
+
   function renderNavRight() {
     $("#navRight").innerHTML =
       '<div class="drop-wrap">' +
       '<button class="icon-btn" id="gearBtn" title="设置" aria-label="设置">' + GEAR_SVG + "</button>" +
       '<div class="dropdown hidden" id="gearMenu">' +
+      /* 设置里先分「通用设置」一组：公告挪进这里 —— 以前它跟主题/字号并列摆在最外面，
+         读者会以为公告是外观设置的一部分。 */
+      '<div class="dd-title">通用设置</div>' +
       '<a class="dd-item" id="annItem">公告</a>' +
+      '<div class="dd-sep"></div>' +
       '<div class="dd-title">外观主题</div>' +
       '<div class="seg" id="segInMenu">' +
       '<button data-t="light" title="苹果 / DeepSeek 那套中性灰阶 + 蓝">浅色</button>' +
@@ -772,10 +788,10 @@
 
   function hlCode(code, lang) {
     var l = String(lang || "").toLowerCase();
-    if (l === "c++" || l === "cpp") return hlCpp(String(code || ""));
+    if (l === "c++" || l === "cpp" || l === "c" || l === "java" || l === "csharp" || l === "cs" || l === "asm") return hlCpp(String(code || ""));
     if (l === "shell" || l === "sh" || l === "bash" || l === "powershell" || l === "ps1") return hlShell(String(code || ""));
     if (l === "python" || l === "py") return hlPy(String(code || ""));
-    if (l === "javascript" || l === "js") return hlJs(String(code || ""));
+    if (l === "javascript" || l === "js" || l === "typescript" || l === "ts") return hlJs(String(code || ""));
     if (l === "html" || l === "xml" || l === "vue") return hlHtml(String(code || ""));
     if (l === "css" || l === "scss" || l === "less") return hlCss(String(code || ""));
     if (l === "json") return hlJson(String(code || ""));
@@ -837,8 +853,8 @@
      字母与音标在 assets/data/en-data.js（英语发音入门那门课的正文包）里，200 词在 enwords-data.js 里。
      按需加载之后这两份都在「点开那门课」时才进 window，所以渲染时现取，不缓存副本。 */
   function enPack() { return window.MIAO_EN || { letters: [], phonemes: [], groups: [] }; }
-  function enPlayBtn(a, label) {
-    return '<button class="en-play" type="button" data-en-src="' + esc(a) + '" ' +
+  function enPlayBtn(a, label, say) {
+    return '<button class="en-play" type="button" data-en-src="' + esc(a || "") + '" data-say="' + esc(say || "") + '" ' +
       'aria-label="播放' + esc(label) + '读音"><span class="en-ico">▶</span><span class="en-tx">读音</span></button>';
   }
   function enCardHtml(x, kind) {
@@ -847,17 +863,27 @@
         '<div class="en-glyph">' + esc(x.l) + "</div>" +
         '<div class="en-meta"><div class="en-ipa">' + esc(x.ipa) + "</div>" +
         '<div class="en-cn">' + esc(x.cn) + "</div></div>" +
-        enPlayBtn(x.a, x.l) + "</div>";
+        enPlayBtn(x.a, x.l, x.l) + "</div>";
     }
     return '<div class="en-card en-card-ph" data-en-k="' + esc(x.ph) + '">' +
       '<div class="en-glyph en-ipa-lg">' + esc(x.ph) + "</div>" +
       '<div class="en-meta"><div class="en-cn">' + esc(x.cn) +
       (x.w ? ' <span class="en-w">' + esc(x.w) + "</span>" : "") + "</div>" +
       (x.tip ? '<div class="en-tip">' + esc(x.tip) + "</div>" : "") + "</div>" +
-      enPlayBtn(x.a, x.ph) + "</div>";
+      enPlayBtn(x.a, x.ph, x.w || "") + "</div>";
   }
   function enBlockHtml(b) {
     var kind = b.kind || "ph", out = "";
+    if (kind === "sent") {
+      var sents = b.items || [];
+      if (!sents.length) return '<div class="en-none">这一课的句子数据没跟着正文一起加载</div>';
+      return '<div class="en-sents">' + sents.map(function (x) {
+        return '<div class="en-sent">' +
+          '<div class="en-sent-top">' + enPlayBtn(x.sa, x.ph || x.w, x.phsay || x.ph || x.w) +
+          '<span class="en-sent-en">' + esc(x.ph) + "</span></div>" +
+          '<div class="en-sent-cn">' + esc(x.phcn || "") + "</div></div>";
+      }).join("") + "</div>";
+    }
     if (kind === "word") {
       var items = b.items || [];
       if (!items.length) return '<div class="en-none">这一课的单词数据没跟着正文一起加载</div>';
@@ -891,11 +917,12 @@
       '<div class="en-word-top">' +
       '<span class="en-word-glyph">' + esc(x.w) + "</span>" +
       (x.pos ? '<span class="en-word-pos">' + esc(x.pos) + "</span>" : "") +
-      '<span class="en-word-play">' + enPlayBtn(x.a, x.w) + "</span>" +
+      '<span class="en-word-play">' + enPlayBtn(x.a, x.w, x.say || x.w) + "</span>" +
       "</div>" +
       '<div class="en-ipa">' + esc(x.ipa) + "</div>" +
       '<div class="en-cn">' + esc(x.cn) + "</div>" +
       (x.ph ? '<div class="en-w">' + esc(x.ph) + "</div>" : "") +
+      (x.phcn ? '<div class="en-phcn">' + esc(x.phcn) + "</div>" : "") +
       "</div>";
   }
 
@@ -903,9 +930,25 @@
   var enCur = null;
   function enStop() {
     if (enCur) { enCur.pause(); enCur = null; }
+    try { if (root.speechSynthesis) root.speechSynthesis.cancel(); } catch (e) { /* 老浏览器没有就跳过 */ }
     $all(".en-play.playing").forEach(function (b) { b.classList.remove("playing"); });
   }
+  /* 站点里没有对应 mp3 时（比如音频还没生成）用浏览器自带的英语发音兜底 */
+  function enSpeak(say, btn) {
+    if (!say || !root.speechSynthesis || !root.SpeechSynthesisUtterance) {
+      if (btn) btn.classList.remove("playing");
+      return;
+    }
+    btn.classList.add("playing");
+    var u = new root.SpeechSynthesisUtterance(say);
+    u.lang = "en-US"; u.rate = 0.85;
+    u.onend = function () { btn.classList.remove("playing"); };
+    u.onerror = function () { btn.classList.remove("playing"); };
+    try { root.speechSynthesis.speak(u); } catch (e) { btn.classList.remove("playing"); }
+  }
   function enPlay(src, btn) {
+    var say = btn.getAttribute("data-say") || "";
+    if (!src) { enSpeak(say, btn); return; }
     if (enCur && enCur.dataset.src === src) { enStop(); return; }
     enStop();
     var a = new Audio(url(src));
@@ -913,7 +956,7 @@
     enCur = a;
     btn.classList.add("playing");
     a.onended = function () { btn.classList.remove("playing"); };
-    a.onerror = function () { btn.classList.remove("playing"); toast("音频加载失败：" + src); };
+    a.onerror = function () { btn.classList.remove("playing"); enSpeak(say, btn); };
     a.play().catch(function () {
       btn.classList.remove("playing");
       toast("浏览器拦截了自动播放，请再点一次");
@@ -1221,8 +1264,8 @@
     var examWhat = t.engine === "en"
       ? "25 道题：选择、听音选字母、听音写字母、字母配对，答不了随时从左上角退出。"
       : t.engine === "enword"
-        ? (c.id === "ew-l21" ? "20 道题，范围是全部 200 个词：选择、听音选词、默写、连线。"
-                             : "14 道题，只考本课这 10 个词：选择、听音选词、补全单词、中译英默写、连线。")
+        ? (c.id === "ew-l22" ? "20 道题，范围是前 21 课的全部词：选择、听音选词、默写、连线。"
+                             : "14 道题，只考本课的词：选择、听音选词、补全单词、中译英默写、连线。")
         : "题目是一小段代码任务，答不了随时从左上角退出。";
     var opsHtml = hasExam
       ? '<div class="art-ops">' +
@@ -1468,6 +1511,7 @@
     window.MIAO_NAV = function (h) { location.hash = h; };
     /* 考场界面（exam-ui.js）是进考场才注入的，onPassed 在路由里每次现挂 */
     renderNavRight();
+    bindNavSoon();
     applyTheme();
     var ns = $("#navSearch");
     ns.onkeydown = function (e) {

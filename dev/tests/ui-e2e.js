@@ -338,12 +338,12 @@ const reqLog = [];
     W.confirm = undefined;
   }
 
-  /* ---------- 5.5 英语入门（20 课 200 词）：单词卡与 21 场考卷 ---------- */
+  /* ---------- 5.5 英语入门（21 课 257 词）：单词卡与 22 场考卷 ---------- */
   {
     const before = reqLog.length;
     W.location.hash = "#/tutorial/enwords";
     await sleep(1600);
-    ok("英语入门详情页：21 章目录", $$(".chap-item").length === 21, "章 " + $$(".chap-item").length);
+    ok("英语入门详情页：22 章目录", $$(".chap-item").length === 22, "章 " + $$(".chap-item").length);
     ok("点开这门课才拉它的正文", reqLog.slice(before).some((u) => /enwords-data\.js$/.test(u)),
       reqLog.slice(before).join("，") || "没新增请求");
     const hero = $(".tut-hero .cover-img");
@@ -354,7 +354,7 @@ const reqLog = [];
     W.location.hash = "#/read/enwords/ew-l01";
     await sleep(1500);
     const cards = $$(".en-card-word");
-    ok("第 1 课摆出 10 张单词卡", cards.length === 10, cards.length + " 张");
+    ok("第 1 课摆出本课的单词卡", cards.length >= 10, cards.length + " 张");
     /* 注意：这套测试的 $ 助手是 (窗口, 选择器) 的语义，$(选择器, 元素) 会退回整篇文档去查 ——
        逐元素检查必须直接 c.querySelector，否则「每张卡都齐」会变成「文档里有一张齐的」。 */
     ok("每张卡齐：单词 + 词性 + 音标 + 中文 + 短语 + 播放键",
@@ -382,7 +382,27 @@ const reqLog = [];
           if (!h.ok) bad.push(u + "→" + h.status);
         } catch (e) { bad.push(u + "→" + e.message); }
       }
-      ok("这一课 10 条读音都取得到", urls.length === 10 && bad.length === 0, bad.slice(0, 3).join("，") || urls.length + " 条");
+      ok("这一课每条读音都取得到", urls.length === cards.length && bad.length === 0, bad.slice(0, 3).join("，") || urls.length + " 条");
+    }
+    {
+      const sents = $$(".en-sent");
+      ok("核心句子区块：本课每句一条", sents.length >= 10, sents.length + " 句");
+      ok("每句的播放键放的是整句音频（走 sents/，不是单词那条 words/）",
+        sents.length > 0 && sents.every((s) => /^\/assets\/audio\/sents\/[a-z0-9]+\.mp3$/.test(
+          s.querySelector(".en-play").getAttribute("data-en-src") || "")),
+        sents.length ? sents[0].querySelector(".en-play").getAttribute("data-en-src") : "");
+      ok("第一句的播放键念的就是屏幕上这句英文（hello, everyone）",
+        sents.length > 0 && sents[0].querySelector(".en-play").getAttribute("data-say") ===
+          sents[0].querySelector(".en-sent-en").textContent.trim(),
+        sents.length ? sents[0].querySelector(".en-play").getAttribute("data-say") : "");
+      const sbad = [];
+      for (const u of Array.from(new Set(sents.map((s) => s.querySelector(".en-play").getAttribute("data-en-src"))))) {
+        try {
+          const h = await fetch(BASE + u.replace(/^\//, ""), { method: "HEAD" });
+          if (!h.ok) sbad.push(u + "→" + h.status);
+        } catch (e) { sbad.push(u + "→" + e.message); }
+      }
+      ok("这一课每条整句音频都取得到", sbad.length === 0, sbad.slice(0, 3).join("，") || "");
     }
     ok("单词卡不预载音频（点了才拉，页面里没有 audio 元素）",
       $$(".en-card-word audio").length === 0 && $$("article audio").length === 0,
@@ -427,10 +447,10 @@ const reqLog = [];
         !((res.enwords || {})["ew-l01"] || {}).passed && !((prog.enwords || []).length),
         JSON.stringify(res.enwords || {}) + " ｜ " + JSON.stringify(prog.enwords || []));
     }
-    W.location.hash = "#/exam/enwords/ew-l21";
+    W.location.hash = "#/exam/enwords/ew-l22";
     await sleep(2200);
-    ok("结课大考 20 题、范围写明 200 个词",
-      $$(".en-card-q").length === 20 && /200 个词/.test(txt(".en-intro")),
+    ok("结课大考 20 题、范围写明 257 个词",
+      $$(".en-card-q").length === 20 && /257 个词/.test(txt(".en-intro")),
       $$(".en-card-q").length + " 题 ｜ " + txt(".en-intro").replace(/\s+/g, " ").slice(0, 34));
   }
 
@@ -461,6 +481,39 @@ const reqLog = [];
     click($("#tpClose", pop));
     await sleep(500);
     ok("关闭后弹层收起并清空", W.document.getElementById("teacherPop").className === "hidden");
+  }
+
+  /* ---------- 7.8 首页「首页」右边四个入口 + 设置里的通用设置 ---------- */
+  {
+    W.location.hash = "#/";
+    await sleep(900);
+    const navText = txt(".nav-links");
+    const opts = $$(".nav-links .nav-soon").map((a) => a.textContent.trim());
+    ok("导航栏「首页」右边四个入口：视频 / 考试 / 幻灯片 / 公式化学习",
+      opts.length === 4 && ["视频", "考试", "幻灯片", "公式化学习"].every((t) => opts.indexOf(t) >= 0) &&
+      navText.indexOf("首页") < navText.indexOf("视频"), navText);
+    ok("四个入口挂在「首页」旁边，不在搜索框那侧（#navRight 里只剩齿轮）",
+      $$("#navRight .nav-soon").length === 0 && !!$("#navRight #gearBtn"), txt("#navRight"));
+    const hash0 = W.location.hash;
+    click($$(".nav-links .nav-soon")[0]);
+    await sleep(350);
+    ok("只挂入口、不建页面：点入口只给提示，不跳路由",
+      W.location.hash === hash0 && /功能筹备中/.test(txt("#toast")), txt("#toast"));
+    click(W.document.getElementById("gearBtn"));
+    await sleep(350);
+    const menuText = txt("#gearMenu");
+    ok("设置里先有「通用设置」，公告挪进它下面（不再跟主题/字号并排）",
+      menuText.indexOf("通用设置") >= 0 &&
+      menuText.indexOf("通用设置") < menuText.indexOf("公告") &&
+      menuText.indexOf("公告") < menuText.indexOf("外观主题"), menuText);
+    click(W.document.getElementById("annItem"));
+    await sleep(900);
+    const mask = $(".mask");
+    ok("公告弹层里就是新公告（fuka 开发者 + 投稿邮箱）",
+      !!mask && /fuka开发者/.test(mask.textContent) && /m15681851831@163\.com/.test(mask.textContent),
+      mask ? mask.textContent.replace(/\s+/g, " ").slice(0, 80) : "没弹层");
+    click(W.document.getElementById("annClose"));
+    await sleep(300);
   }
 
   /* ---------- 7.9 分层加载的账：点开哪章拉哪章，空了才补齐 ---------- */

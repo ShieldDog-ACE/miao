@@ -39,6 +39,12 @@ echo
 echo "===== 类名覆盖闸门（JS 发出的每个 tk-/term-/tb-/en- 类，CSS 里都得有规则） ====="
 node "$HERE/../tools/class-coverage.js" || EC=1
 echo
+echo "===== 日更工具语法（本地模型三件套；只查语法，不连模型、不联网） ====="
+for f in dev/tools/daily/llm.mjs dev/tools/daily/probe.mjs dev/tools/daily/draft.mjs; do
+  node --check "$f" || EC=1
+done
+echo "语法 3/3 通过"
+echo
 echo "===== 正文高光自测（全部 t:code 块过高光必须无损，陌生 lang / 全灰也要红） ====="
 node "$HERE/hl-test.js" || EC=1
 echo
@@ -95,7 +101,7 @@ echo
 echo "===== 考卷自测（45 场 Python + 3 章英语） ====="
 node "$HERE/exam-test.js" || EC=1
 echo
-echo "===== 英语入门考卷自测（21 场 · 200 词） ====="
+echo "===== 英语入门考卷自测（22 场 · 257 词） ====="
 node "$HERE/enword-test.js" || EC=1
 echo
 [ "$EC" -eq 0 ] && echo "全部通过 ✔" || echo "存在失败 ✘"

@@ -1,11 +1,11 @@
-/* 喵站 · 英语入门考卷自测（21 场：20 场课末 + 1 场结课大考）
+/* 喵站 · 英语入门考卷自测（22 场：21 场课末 + 1 场结课大考）
  *
  * 这一套盯五件事，每件都真跑 buildPaper / gradeEN，不靠读代码打勾：
  *   1. 每场题数对得上 counts，分值合计正好 100（差一分都算考卷写坏了）；
  *   2. 空卷 0 分不通过，全对 100 分通过；
  *   3. 默写与补全「大小写、首尾空格、中间多空格」都放过，写错一个字母必须挂；
  *   4. 连线半对按比例给分，全对满分；
- *   5. 挖字母不许有第二个答案：把 200 个词逐个挖一遍，挖出来的形状在全表里只能命中自己。
+ *   5. 挖字母不许有第二个答案：把全部单词逐个挖一遍，挖出来的形状在全表里只能命中自己。
  * 跑法：node dev/tests/enword-test.js
  */
 const fs = require("fs");
@@ -43,8 +43,8 @@ SPEC.papers.forEach(p => {
   if (!inPool.length) bad.push(p.cid + " 的池子里一个词都没有");
   if (c.match * p.pairsPerGroup > inPool.length) bad.push(p.cid + " 要连 " + c.match * p.pairsPerGroup + " 对，池子只有 " + inPool.length + " 个词");
 });
-ok("21 场考卷的分值合计都等于 100，池子够出词", bad.length === 0, bad.join("；"));
-ok("场次 = 20 课末 + 1 结课", SPEC.papers.length === 21, "实到 " + SPEC.papers.length);
+ok("22 场考卷的分值合计都等于 100，池子够出词", bad.length === 0, bad.join("；"));
+ok("场次 = 21 课末 + 1 结课", SPEC.papers.length === 22, "实到 " + SPEC.papers.length);
 
 /* ---------- 2~4. 组卷、判分、宽松比对 ---------- */
 let built = [], gradeBad = [];
@@ -79,7 +79,7 @@ SPEC.papers.forEach(p => {
   const r4 = EN.gradeEN(qs, half, p.pass);
   if (r4.score >= 100 || r4.score < 60) gradeBad.push(p.cid + " 连线对一半判了 " + r4.score);
 });
-ok("21 场：题数、空卷 0 分、全对 100 分、宽松写法仍 100、错一个字母必须挂、连线按比例给分",
+ok("22 场：题数、空卷 0 分、全对 100 分、宽松写法仍 100、错一个字母必须挂、连线按比例给分",
   gradeBad.length === 0, gradeBad.slice(0, 4).join("；"));
 
 /* 每一场的题数都报一遍，别用「应该都对了」交差 */
@@ -109,7 +109,7 @@ PACK.words.forEach(w => {
     if (h.length !== 1 || h[0] !== word) maskBad.push(word + " → " + m.shown + " 命中 " + h.join("/"));
   } else maskShort++;
 });
-ok("200 个词逐个挖字母：长词形状唯一、短词至少露一个挖一个、单字母不挖", maskBad.length === 0,
+ok("全部单词逐个挖字母：长词形状唯一、短词至少露一个挖一个、单字母不挖", maskBad.length === 0,
   maskBad.slice(0, 6).join("；") + "（短词 " + maskShort + " 个走中文+音标）");
 
 /* ---------- 6. 选项里不许出现两个都能答的项 ---------- */
@@ -132,5 +132,5 @@ ok("抽 252 次卷：选项不重复、每题四个选项、题面不撞车", op
 
 const fails = results.filter(r => r.startsWith("FAIL"));
 results.forEach(r => console.log(r));
-console.log(`\n合计 ${results.length} 项，失败 ${fails.length} 项 · 21 场考卷 · ${PACK.words.length} 个词`);
+console.log(`\n合计 ${results.length} 项，失败 ${fails.length} 项 · 22 场考卷 · ${PACK.words.length} 个词`);
 process.exit(fails.length ? 1 : 0);

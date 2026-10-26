@@ -1,10 +1,10 @@
 /* 喵站 · 课末考试 · 英语卷（字母 / 音标 / 单词 三种池子，出题 + 判分 + 界面）
  *
- * 音频全部直接指向站内 mp3（26 字母 + 48 音标 + 200 单词），点一次播一次，可以反复听。
+ * 音频全部直接指向站内 mp3（26 字母 + 48 音标 + 257 单词 + 整句），点一次播一次，可以反复听。
  * 勾线题是真的画线：左栏点一下再点右栏，中间画一条线；再点配对项可以撤销。
  *
  * 池子从哪来：字母与音标走 /api/meta；单词卷（kind:"enword"）走 /api/words/enword，
- * 那一份是「按课分好组的 200 词」，一场课末卷只从本课那 10 个词里出，结课卷从 20 课混出。
+ * 那一份是「按课分好组的词表」，一场课末卷只从本课的词里出，结课卷从 21 课混出。
  */
 (function (root) {
   "use strict";
@@ -35,7 +35,7 @@
     return (words || []).map(function (x) {
       return {
         key: "W" + x.w.toLowerCase(), kind: "word", glyph: x.w, ipa: x.ipa, pos: x.pos,
-        cn: x.cn, ph: x.ph, audio: x.a, lesson: x.lesson,
+        cn: x.cn, ph: x.ph, phcn: x.phcn, audio: x.a, say: x.say || x.w, lesson: x.lesson,
         /* 连线题右边只放第一个义项，「爷爷；外公」这种取前面那个就够 */
         cnShort: String(x.cn || "").split(/[；;]/)[0]
       };
@@ -155,7 +155,7 @@
 
   /* ---------------- 单词卷 ----------------
    * 五种题：mc 看中文选英文 / pick 听音选词 / fill 按首字母补全 / spell 看中文默写 / match 英中连线。
-   * 课末卷的池子就是本课那 10 个词，结课卷的池子是 20 课合起来的 200 个词。 */
+   * 课末卷的池子就是本课那些词，结课卷的池子是 21 课合起来的全部词。 */
   /* 挖字母：优先挖「按形状在全表里只命中这一个词」的那一处，命中数一样的时候挑挖得少的。
      3 个字母以内的词做不到唯一（ye_ 后面必然是 yes），这种题面本来就同时给了中文和音标，
      靠音标定位，不靠形状 —— 所以这里只保证「至少露一个字母、至少挖一个字母」。 */
@@ -335,9 +335,25 @@
   /* ---------------- 界面 ---------------- */
   var curAudio = null;
   function stopAudio() { if (curAudio) { try { curAudio.pause(); } catch (e) { } curAudio = null; } }
-  function playBtn(src, label) {
-    if (!src) return "";
-    return '<button class="eq-play" type="button" data-audio="' + esc(src) + '" title="播放录音">' +
+  /* 没有站内 mp3 的词（编程英语课）用浏览器自带的英语发音兜底，按钮照常出现 */
+  function speakSay(text, btn) {
+    if (!text || !root.speechSynthesis || !root.SpeechSynthesisUtterance) {
+      if (btn) btn.classList.remove("playing");
+      return;
+    }
+    try { root.speechSynthesis.cancel(); } catch (e) { /* 有些浏览器没实现 cancel，忽略 */ }
+    var u = new root.SpeechSynthesisUtterance(text);
+    u.lang = "en-US"; u.rate = 0.85;
+    if (btn) {
+      btn.classList.add("playing");
+      u.onend = function () { btn.classList.remove("playing"); };
+      u.onerror = function () { btn.classList.remove("playing"); };
+    }
+    try { root.speechSynthesis.speak(u); } catch (e) { if (btn) btn.classList.remove("playing"); }
+  }
+  function playBtn(src, label, said) {
+    if (!src && !said) return "";
+    return '<button class="eq-play" type="button" data-audio="' + esc(src || "") + '" data-say="' + esc(said || "") + '" title="播放录音">' +
       '<span class="eq-ico">▶</span><span class="eq-tx">听</span></button>';
   }
 
@@ -348,7 +364,7 @@
       var pools;
       if (spec.kind === "enword") {
         pools = { words: wordPool(d.words || []) };
-        if (!pools.words.length) throw new Error("200 词的单词表没加载上，考卷出不了");
+        if (!pools.words.length) throw new Error("英语单词表没加载上，考卷出不了");
       } else {
         var en = d.en || { letters: [], phonemes: [] };
         pools = { letters: letterPool(en.letters || []), phonemes: phonemePool(en.phonemes || []) };
@@ -402,7 +418,7 @@
         '<ul class="en-review">' + r.items.map(function (it, i) {
           return '<li class="' + (it.ok ? "pass" : "fail") + '"><span class="ck-mark">' + (it.ok ? "✓" : "✗") + "</span>" +
             "<div><div>第 " + (i + 1) + " 题 · " + esc(typeNameCn(it.type)) + " " + it.pts + "/" + it.weight + " 分</div>" +
-            '<div class="ck-saw">' + esc(it.saw) + "　" + playBtn(qs[i].audio || qs[i].hintAudio, "") + "</div></div></li>";
+            '<div class="ck-saw">' + esc(it.saw) + "　" + playBtn(qs[i].audio || qs[i].hintAudio, "", qs[i].said) + "</div></div></li>";
         }).join("") + "</ul>" +
         '<div class="rs-ops">' +
         (r.passed
@@ -431,8 +447,11 @@
   }
 
   function cardHtml(q, i) {
+    /* 卡面上的播放键只给「听」题（听音选词 pick、听写 write）：其余四种题的 said 存的是答案词，
+       一点「听」就等于把答案念出来；它们的读音只在交卷后的复盘里放。 */
+    var listening = q.type === "pick" || q.type === "write";
     var head = '<div class="en-qhead"><span class="en-qno">' + (i + 1) + "</span><span class=\"en-qprompt\">" + esc(q.prompt) + "</span>" +
-      playBtn(q.audio, "") + '<span class="en-qw">' + (q.type === "match" ? "每对 " + q.weight + " 分" : q.weight + " 分") + "</span></div>";
+      (listening ? playBtn(q.audio, "", q.said) : "") + '<span class="en-qw">' + (q.type === "match" ? "每对 " + q.weight + " 分" : q.weight + " 分") + "</span></div>";
     if (q.type === "mc" || q.type === "pick") {
       return '<div class="en-card-q" data-q="' + i + '">' + head +
         '<div class="en-opts">' + q.options.map(function (o, oi) {
@@ -467,7 +486,8 @@
       b.onclick = function (ev) {
         ev.preventDefault();
         var src = b.getAttribute("data-audio");
-        if (!src) return;
+        var say = b.getAttribute("data-say");
+        if (!src) { speakSay(say, b); return; }
         if (curAudio && curAudio.dataset.src === src) { stopAudio(); return; }
         stopAudio();
         var a = new Audio(root.MIAO_URL ? root.MIAO_URL(src) : src);
@@ -475,7 +495,7 @@
         curAudio = a;
         b.classList.add("playing");
         a.onended = function () { b.classList.remove("playing"); };
-        a.onerror = function () { b.classList.remove("playing"); };
+        a.onerror = function () { b.classList.remove("playing"); speakSay(say, b); };
         try { a.play(); } catch (e) { }
       };
     });

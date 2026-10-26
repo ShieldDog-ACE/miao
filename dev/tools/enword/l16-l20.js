@@ -5,18 +5,20 @@ window.MIAO_ENW_SRC = window.MIAO_ENW_SRC || {};
 
 window.MIAO_ENW_SRC.l16 = {
   title: "第 16 课 · 水果与蔬菜",
-  goal: "这一课十个词大多是多音节，专门练嘴。学完你能报出十样果蔬的名字。",
+  goal: "这一课的词大多是多音节，专门练嘴。学完你能报出各样果蔬的名字。",
   words: [
-    { w: "apple", ipa: "/ˈæpl/", pos: "n.", cn: "苹果", ph: "an apple a day" },
-    { w: "banana", ipa: "/bəˈnɑːnə/", pos: "n.", cn: "香蕉", ph: "a yellow banana" },
-    { w: "grape", ipa: "/ɡreɪp/", pos: "n.", cn: "葡萄", ph: "a bunch of grapes" },
-    { w: "pear", ipa: "/peə/", pos: "n.", cn: "梨", ph: "a sweet pear" },
-    { w: "peach", ipa: "/piːtʃ/", pos: "n.", cn: "桃子", ph: "a big peach" },
-    { w: "watermelon", ipa: "/ˈwɔːtəmelən/", pos: "n.", cn: "西瓜", ph: "a cold watermelon" },
-    { w: "potato", ipa: "/pəˈteɪtəʊ/", pos: "n.", cn: "土豆", ph: "a small potato" },
-    { w: "tomato", ipa: "/təˈmɑːtəʊ/", pos: "n.", cn: "西红柿", ph: "one tomato" },
-    { w: "carrot", ipa: "/ˈkærət/", pos: "n.", cn: "胡萝卜", ph: "a long carrot" },
-    { w: "vegetable", ipa: "/ˈvedʒtəbl/", pos: "n.", cn: "蔬菜", ph: "green vegetables" }
+    { w: "apple", ipa: "/ˈæpl/", pos: "n.", cn: "苹果", ph: "an apple a day", phcn: "一天一个苹果（a day：一天）" },
+    { w: "banana", ipa: "/bəˈnɑːnə/", pos: "n.", cn: "香蕉", ph: "a yellow banana", phcn: "一根黄香蕉（yellow：黄色的）" },
+    { w: "grape", ipa: "/ɡreɪp/", pos: "n.", cn: "葡萄", ph: "a bunch of grapes", phcn: "一串葡萄" },
+    { w: "pear", ipa: "/peə/", pos: "n.", cn: "梨", ph: "a sweet pear", phcn: "一个甜梨" },
+    { w: "peach", ipa: "/piːtʃ/", pos: "n.", cn: "桃子", ph: "a big peach", phcn: "一个大桃子（big：大的）" },
+    { w: "watermelon", ipa: "/ˈwɔːtəmelən/", pos: "n.", cn: "西瓜", ph: "a cold watermelon", phcn: "一个冰西瓜（cold：凉的）" },
+    { w: "potato", ipa: "/pəˈteɪtəʊ/", pos: "n.", cn: "土豆", ph: "a small potato", phcn: "一个小土豆（small：小的）" },
+    { w: "tomato", ipa: "/təˈmɑːtəʊ/", pos: "n.", cn: "西红柿", ph: "one tomato", phcn: "一个西红柿" },
+    { w: "carrot", ipa: "/ˈkærət/", pos: "n.", cn: "胡萝卜", ph: "a long carrot", phcn: "一根长胡萝卜（long：长的）" },
+    { w: "vegetable", ipa: "/ˈvedʒtəbl/", pos: "n.", cn: "蔬菜", ph: "green vegetables", phcn: "绿色蔬菜（green：绿色的）" },
+    { w: "bunch", ipa: "/bʌntʃ/", pos: "n.", cn: "一串；一束", ph: "a bunch of bananas", phcn: "一串香蕉" },
+    { w: "sweet", ipa: "/swiːt/", pos: "adj.", cn: "甜的", ph: "a sweet apple", phcn: "一个甜苹果" }
   ],
   read: [
     "apple 重音在前，a 是张大嘴的 /æ/：A-pl，尾巴只剩一个 l 的音。",
@@ -26,17 +28,17 @@ window.MIAO_ENW_SRC.l16 = {
     "vegetable 三个音节，重音在第一个：VEJ-tə-bl，中间的 /dʒ/ 一步带过。"
   ],
   memo: [
-    "按音节数排开练：1 个（pear）→ 2 个（apple、grape、peach、carrot）→ 3 个（banana、potato、tomato、watermelon、vegetable），从短到长。",
+    "按音节数排开练：1 个（pear、bunch、sweet）→ 2 个（apple、grape、peach、carrot）→ 3 个（banana、potato、tomato、watermelon、vegetable），从短到长。",
     "an apple 用 an，apple 开头是元音；这是这课里最常顺口带出的一个 an。",
-    "watermelon 由两个认识的词拼成，先拆 water 和 melon 再合。"
+    "watermelon 由两个认识的词拼成，先拆 water 和 melon（瓜）再合。"
   ],
   trap: [
     "grape 一串要说 grapes，加 s。",
     "carrot 的 a 读 /æ/，第二个音节轻成 /ət/，别读成「卡罗特」。",
-    "pear 与 pear 同音的 there、where 都用 /eə/，先借熟音带生音。"
+    "pear 与 pear 同音的 there（那里）、where（哪里）都用 /eə/，先借熟音带生音。"
   ],
   task: [
-    "把十样按音节数从小到大排一遍，边排边读。",
+    "把这些词按音节数从小到大排一遍，边排边读。",
     "听音频跟读 potato、tomato 三遍，把重音落在中间那截。",
     "用 an apple、a carrot 各说一句你要哪个。"
   ],
@@ -45,38 +47,38 @@ window.MIAO_ENW_SRC.l16 = {
 
 window.MIAO_ENW_SRC.l17 = {
   title: "第 17 课 · 动物",
-  goal: "这一课十个词短好读，是练闭音节最好的材料。学完你能叫出十样动物的名字。",
+  goal: "这一课的词短好读，是练闭音节最好的材料。学完你能叫出各样动物的名字。",
   words: [
-    { w: "cat", ipa: "/kæt/", pos: "n.", cn: "猫", ph: "a black cat" },
-    { w: "dog", ipa: "/dɒɡ/", pos: "n.", cn: "狗", ph: "a big dog" },
-    { w: "pig", ipa: "/pɪɡ/", pos: "n.", cn: "猪", ph: "a pink pig" },
-    { w: "cow", ipa: "/kaʊ/", pos: "n.", cn: "奶牛", ph: "a white cow" },
-    { w: "horse", ipa: "/hɔːs/", pos: "n.", cn: "马", ph: "a tall horse" },
-    { w: "sheep", ipa: "/ʃiːp/", pos: "n.", cn: "绵羊", ph: "a small sheep" },
-    { w: "hen", ipa: "/hen/", pos: "n.", cn: "母鸡", ph: "the hen is brown." },
-    { w: "duck", ipa: "/dʌk/", pos: "n.", cn: "鸭子", ph: "a yellow duck" },
-    { w: "bird", ipa: "/bɜːd/", pos: "n.", cn: "鸟", ph: "a blue bird" },
-    { w: "fish", ipa: "/fɪʃ/", pos: "n.", cn: "鱼", ph: "a red fish" }
+    { w: "cat", ipa: "/kæt/", pos: "n.", cn: "猫", ph: "a black cat", phcn: "一只黑猫（black：黑色的）" },
+    { w: "dog", ipa: "/dɒɡ/", pos: "n.", cn: "狗", ph: "a big dog", phcn: "一只大狗（big：大的）" },
+    { w: "pig", ipa: "/pɪɡ/", pos: "n.", cn: "猪", ph: "a pink pig", phcn: "一只粉色的猪（pink：粉色的）" },
+    { w: "cow", ipa: "/kaʊ/", pos: "n.", cn: "奶牛", ph: "a white cow", phcn: "一头白奶牛（white：白色的）" },
+    { w: "horse", ipa: "/hɔːs/", pos: "n.", cn: "马", ph: "a tall horse", phcn: "一匹高马（tall：高的）" },
+    { w: "sheep", ipa: "/ʃiːp/", pos: "n.", cn: "绵羊", ph: "a small sheep", phcn: "一只小绵羊（small：小的）" },
+    { w: "hen", ipa: "/hen/", pos: "n.", cn: "母鸡", ph: "the hen is brown.", phcn: "这只母鸡是棕色的（brown：棕色的）" },
+    { w: "duck", ipa: "/dʌk/", pos: "n.", cn: "鸭子", ph: "a yellow duck", phcn: "一只黄鸭子（yellow：黄色的）" },
+    { w: "bird", ipa: "/bɜːd/", pos: "n.", cn: "鸟", ph: "a blue bird", phcn: "一只蓝色的鸟（blue：蓝色的）" },
+    { w: "fish", ipa: "/fɪʃ/", pos: "n.", cn: "鱼", ph: "a red fish", phcn: "一条红色的鱼（red：红色的）" }
   ],
   read: [
     "cat / dog / pig / cow 四个都是开口的短音，一个音读完就收，别加中文的「特、格、克」。",
     "horse 是长音 /ɔː/ 接 /s/，中间没有 r 的音（英式 r 在词尾不发音）。",
-    "sheep 是长音 /iː/，ship 是短音 /ɪ/，两个词只差嘴的松紧，先把 sheep 拖住。",
-    "bird 中间是长音 /ɜː/，舌头平放；和 birthday 那类词同一个音。",
+    "sheep 是长音 /iː/，ship（船）是短音 /ɪ/，两个词只差嘴的松紧，先把 sheep 拖住。",
+    "bird 中间是长音 /ɜː/，舌头平放；和 birthday（生日）那类词同一个音。",
     "fish 的 sh 是 /ʃ/，嘴唇收圆往前送。"
   ],
   memo: [
-    "按大小排：hen、duck、cat、pig、cow、horse，一排下去，顺便练 pig 与 big、cat 与 coat 的首音差别。",
-    "cow 与 how、now 同韵 /aʊ/；bird 与 word、her 同一个 /ɜː/。",
-    "把上一课的颜色词拿来配这十个动物：a black cat、a pink pig，两个词一起复习。"
+    "按大小排：hen、duck、cat、pig、cow、horse，一排下去，顺便练 pig 与 big（大的）、cat 与 coat（外套）的首音差别。",
+    "cow 与 how（怎么）、now（现在）同韵 /aʊ/；bird 与 word（单词）、her（她的）同一个 /ɜː/。",
+    "把这些动物各配一个上一课的颜色词：a black cat、a pink pig，两个词一起复习。"
   ],
   trap: [
-    "sheep 和 ship 不是一回事，说错就变成「一艘船」。这课先把长音钉牢。",
+    "sheep 和 ship（船）不是一回事，说错就变成「一艘船」。这课先把长音钉牢。",
     "duck 的 u 读 /ʌ/，短促干脆，别读成「大克」。",
     "dog 结尾的 g 要出声音，别只剩「多」。"
   ],
   task: [
-    "十个动物各配一个上一课的颜色，说出来。",
+    "这些动物各配一个上一课的颜色，说出来。",
     "听音频跟读 sheep、fish，把长音和 /ʃ/ 各注意一次。",
     "把四个最短的词（cat、dog、pig、cow）连读三遍，一遍比一遍快。"
   ],
@@ -85,18 +87,20 @@ window.MIAO_ENW_SRC.l17 = {
 
 window.MIAO_ENW_SRC.l18 = {
   title: "第 18 课 · 衣物与家里",
-  goal: "这一课十个词一半穿在身上，一半在家里。学完你能说穿什么、指哪间屋。",
+  goal: "这一课的词一半穿在身上，一半在家里。学完你能说穿什么、指哪间屋。",
   words: [
-    { w: "shirt", ipa: "/ʃɜːt/", pos: "n.", cn: "衬衫", ph: "a white shirt" },
-    { w: "pants", ipa: "/pænts/", pos: "n.", cn: "裤子", ph: "new pants" },
-    { w: "shoe", ipa: "/ʃuː/", pos: "n.", cn: "鞋", ph: "my new shoes" },
-    { w: "hat", ipa: "/hæt/", pos: "n.", cn: "帽子", ph: "a big hat" },
-    { w: "coat", ipa: "/kəʊt/", pos: "n.", cn: "外套", ph: "a warm coat" },
-    { w: "dress", ipa: "/dres/", pos: "n.", cn: "连衣裙", ph: "a red dress" },
-    { w: "home", ipa: "/həʊm/", pos: "n.", cn: "家", ph: "at home" },
-    { w: "room", ipa: "/ruːm/", pos: "n.", cn: "房间", ph: "my room" },
-    { w: "door", ipa: "/dɔː/", pos: "n.", cn: "门", ph: "open the door" },
-    { w: "window", ipa: "/ˈwɪndəʊ/", pos: "n.", cn: "窗户", ph: "near the window" }
+    { w: "shirt", ipa: "/ʃɜːt/", pos: "n.", cn: "衬衫", ph: "a white shirt", phcn: "一件白衬衫（white：白色的）" },
+    { w: "pants", ipa: "/pænts/", pos: "n.", cn: "裤子", ph: "new pants", phcn: "新裤子（new：新的）" },
+    { w: "shoe", ipa: "/ʃuː/", pos: "n.", cn: "鞋", ph: "my new shoes", phcn: "我的新鞋（new：新的）" },
+    { w: "hat", ipa: "/hæt/", pos: "n.", cn: "帽子", ph: "a big hat", phcn: "一顶大帽子（big：大的）" },
+    { w: "coat", ipa: "/kəʊt/", pos: "n.", cn: "外套", ph: "a warm coat", phcn: "一件暖和的外套" },
+    { w: "dress", ipa: "/dres/", pos: "n.", cn: "连衣裙", ph: "a red dress", phcn: "一条红连衣裙（red：红色的）" },
+    { w: "home", ipa: "/həʊm/", pos: "n.", cn: "家", ph: "at home", phcn: "在家（at：在）" },
+    { w: "room", ipa: "/ruːm/", pos: "n.", cn: "房间", ph: "my room", phcn: "我的房间" },
+    { w: "door", ipa: "/dɔː/", pos: "n.", cn: "门", ph: "open the door", phcn: "开门（open：打开）" },
+    { w: "window", ipa: "/ˈwɪndəʊ/", pos: "n.", cn: "窗户", ph: "near the window", phcn: "窗户旁边" },
+    { w: "warm", ipa: "/wɔːm/", pos: "adj.", cn: "暖和的", ph: "a warm room", phcn: "一个暖和的房间" },
+    { w: "near", ipa: "/nɪə/", pos: "prep.", cn: "在……旁边", ph: "near the door", phcn: "门旁边" }
   ],
   read: [
     "shirt 中间是长音 /ɜː/，舌头平放不碰上颚；别收成中文的「色」。",
@@ -113,42 +117,45 @@ window.MIAO_ENW_SRC.l18 = {
   trap: [
     "pants、shoes 天生带 s（两条腿、两只鞋），说一条裤子要加 a pair of（这轮先记形）。",
     "door 是长音 /dɔː/，后面不要拖出 r 的音。",
-    "home 与 some 长得不像但韵不同：home /əʊ/、some /ʌ/，别串。"
+    "home 与 some（一些）长得不像但韵不同：home /əʊ/、some /ʌ/，别串。"
   ],
   task: [
     "早上一边穿一边念这五个词的顺序，连念三天。",
     "在你房间里指四个位置：room、door、window，再加一张 desk（第十三课）。",
     "听音频判断读到的是 shoe 还是 shirt。"
   ],
-  one: "衣物词的好处是每天早上都有十次免费的练习机会。"
+  one: "衣物词的好处是每天早上穿一遍，就是一次免费的练习。"
 };
 
 window.MIAO_ENW_SRC.l19 = {
   title: "第 19 课 · 常用动词一（走跑坐站）",
-  goal: "这一课十个动词全是能用动作做出来的。学完你能下指令、也能说自己在做什么。",
+  goal: "这一课的动词全是能用动作做出来的。学完你能下指令、也能说自己在做什么。",
   words: [
-    { w: "go", ipa: "/ɡəʊ/", pos: "v.", cn: "去", ph: "go to school" },
-    { w: "come", ipa: "/kʌm/", pos: "v.", cn: "来", ph: "come here" },
-    { w: "eat", ipa: "/iːt/", pos: "v.", cn: "吃", ph: "eat an apple" },
-    { w: "drink", ipa: "/drɪŋk/", pos: "v.", cn: "喝", ph: "drink water" },
-    { w: "sit", ipa: "/sɪt/", pos: "v.", cn: "坐", ph: "sit down" },
-    { w: "stand", ipa: "/stænd/", pos: "v.", cn: "站", ph: "stand up" },
-    { w: "walk", ipa: "/wɔːk/", pos: "v.", cn: "走；步行", ph: "walk to school" },
-    { w: "run", ipa: "/rʌn/", pos: "v.", cn: "跑", ph: "run fast" },
-    { w: "play", ipa: "/pleɪ/", pos: "v.", cn: "玩；打球", ph: "play games" },
-    { w: "help", ipa: "/help/", pos: "v.", cn: "帮助", ph: "help me" }
+    { w: "go", ipa: "/ɡəʊ/", pos: "v.", cn: "去", ph: "go to school", phcn: "去上学（school：学校）" },
+    { w: "come", ipa: "/kʌm/", pos: "v.", cn: "来", ph: "come here", phcn: "过来（here：这里）" },
+    { w: "eat", ipa: "/iːt/", pos: "v.", cn: "吃", ph: "eat an apple", phcn: "吃一个苹果（apple：苹果）" },
+    { w: "drink", ipa: "/drɪŋk/", pos: "v.", cn: "喝", ph: "drink water", phcn: "喝水（water：水）" },
+    { w: "sit", ipa: "/sɪt/", pos: "v.", cn: "坐", ph: "sit down", phcn: "坐下" },
+    { w: "stand", ipa: "/stænd/", pos: "v.", cn: "站", ph: "stand up", phcn: "站起来（up：向上）" },
+    { w: "walk", ipa: "/wɔːk/", pos: "v.", cn: "走；步行", ph: "walk to school", phcn: "走路去上学（school：学校）" },
+    { w: "run", ipa: "/rʌn/", pos: "v.", cn: "跑", ph: "run fast", phcn: "跑得快" },
+    { w: "play", ipa: "/pleɪ/", pos: "v.", cn: "玩；打球", ph: "play games", phcn: "玩游戏" },
+    { w: "help", ipa: "/help/", pos: "v.", cn: "帮助", ph: "help me", phcn: "帮帮我（me：我）" },
+    { w: "down", ipa: "/daʊn/", pos: "adv.", cn: "向下", ph: "go down", phcn: "下去" },
+    { w: "fast", ipa: "/fɑːst/", pos: "adv.", cn: "快", ph: "walk fast", phcn: "走快一点" },
+    { w: "game", ipa: "/ɡeɪm/", pos: "n.", cn: "游戏；比赛", ph: "a game", phcn: "一个游戏" }
   ],
   read: [
     "go 是 /ɡəʊ/ 一个滑音，别读成「果」。",
-    "eat 是长音 /iːt/，it 短音 /ɪt/，两个词一起读最见功力。",
+    "eat 是长音 /iːt/，it（它）短音 /ɪt/，两个词一起读最见功力。",
     "drink 里的 /dr/ 要一气出来，像「卓」的起头但声带振动；尾巴 n+k 都要。",
     "stand 的 a 是张大嘴的 /æ/，尾巴 /nd/ 两个音连着收。",
     "walk 中间的 al 读长音 /ɔː/，l 不出单独的音，别读成「沃克」。"
   ],
   memo: [
-    "把十个动作分四对：go-come、sit-stand、walk-run、eat-drink，剩下的 play、help 挂在自己身上。",
+    "把这些动作分四对：go-come、sit-stand、walk-run、eat-drink，剩下的 play、help 挂在自己身上。",
     "sit down / stand up 是课堂口令，听到就动，两三天就不用想了。",
-    "help 与 hill、hello 共享 /h/，起头呵气就行。"
+    "help 与 hill（小山）、hello（你好）共享 /h/，起头呵气就行。"
   ],
   trap: [
     "run 的 u 是 /ʌ/，短促；中文「润」的音会把它拖长。",
@@ -156,7 +163,7 @@ window.MIAO_ENW_SRC.l19 = {
     "go to school、walk to school 里 to 都要读轻 /tə/，别字字重读。"
   ],
   task: [
-    "把十个动作各做一个，边做边说，做一遍说一遍。",
+    "把这些动作各做一个，边做边说，做一遍说一遍。",
     "让家里人念词你来做动作，做错的那个记下来重读。",
     "用 come here 和 help me 各说三次，注意短命令不用把每个字都读重。"
   ],
@@ -165,31 +172,32 @@ window.MIAO_ENW_SRC.l19 = {
 
 window.MIAO_ENW_SRC.l20 = {
   title: "第 20 课 · 常用动词二（读写听说）",
-  goal: "这一课十个动词管「学语言」本身。学完它们，前二十课的十个主题就都能开口问了。",
+  goal: "这一课的动词管「学语言」本身。学完它们，前二十课的主题就都能开口问了。",
   words: [
-    { w: "read", ipa: "/riːd/", pos: "v.", cn: "读", ph: "read a book" },
-    { w: "write", ipa: "/raɪt/", pos: "v.", cn: "写", ph: "write your name" },
-    { w: "listen", ipa: "/ˈlɪsn/", pos: "v.", cn: "听", ph: "listen to me" },
-    { w: "speak", ipa: "/spiːk/", pos: "v.", cn: "说（某种语言）", ph: "speak English" },
-    { w: "see", ipa: "/siː/", pos: "v.", cn: "看见", ph: "I see." },
-    { w: "look", ipa: "/lʊk/", pos: "v.", cn: "看", ph: "look here" },
-    { w: "say", ipa: "/seɪ/", pos: "v.", cn: "说（内容）", ph: "say it again" },
-    { w: "want", ipa: "/wɒnt/", pos: "v.", cn: "想要", ph: "I want tea." },
-    { w: "like", ipa: "/laɪk/", pos: "v.", cn: "喜欢", ph: "I like cats." },
-    { w: "have", ipa: "/hæv/", pos: "v.", cn: "有；吃", ph: "have a book" }
+    { w: "read", ipa: "/riːd/", pos: "v.", cn: "读", ph: "read a book", phcn: "读一本书（book：书）" },
+    { w: "write", ipa: "/raɪt/", pos: "v.", cn: "写", ph: "write your name", phcn: "写你的名字（name：名字）" },
+    { w: "listen", ipa: "/ˈlɪsn/", pos: "v.", cn: "听", ph: "listen to me", phcn: "听我说（me：我）" },
+    { w: "speak", ipa: "/spiːk/", pos: "v.", cn: "说（某种语言）", ph: "speak English", phcn: "说英语（English：英语）" },
+    { w: "see", ipa: "/siː/", pos: "v.", cn: "看见", ph: "I see.", phcn: "我看见了" },
+    { w: "look", ipa: "/lʊk/", pos: "v.", cn: "看", ph: "look here", phcn: "看这里（here：这里）" },
+    { w: "say", ipa: "/seɪ/", pos: "v.", cn: "说（内容）", ph: "say it again", phcn: "再说一遍" },
+    { w: "want", ipa: "/wɒnt/", pos: "v.", cn: "想要", ph: "I want tea.", phcn: "我想要茶（tea：茶）" },
+    { w: "like", ipa: "/laɪk/", pos: "v.", cn: "喜欢", ph: "I like cats.", phcn: "我喜欢猫（cat：猫）" },
+    { w: "have", ipa: "/hæv/", pos: "v.", cn: "有；吃", ph: "have a book", phcn: "有一本书（book：书）" },
+    { w: "again", ipa: "/əˈɡen/", pos: "adv.", cn: "再一次", ph: "read it again", phcn: "再读一遍" }
   ],
   read: [
     "read 是长音 /iːd/，尾巴 d 轻但要出；别读成「瑞的」。",
-    "write 的 w 不发音，从 /r/ 起头：/raɪt/，和 right 同音。",
+    "write 的 w 不发音，从 /r/ 起头：/raɪt/，和 right（右边；对的）同音。",
     "listen 的 t 不发音：/ˈlɪsn/，两个音节，重音在前。",
-    "speak 与 snake 的 ea 是同一个长音 /iː/，sp 连得紧。",
+    "speak 与 snake（蛇）的 ea 是同一个长音 /iː/，sp 连得紧。",
     "see 与 say 差别全在元音：/siː/ 拖长，/seɪ/ 一步滑。",
-    "have 的 a 是张大嘴的 /æ/，和 hat、cat 同一个音。"
+    "have 的 a 是张大嘴的 /æ/，和 hat（帽子）、cat（猫）同一个音。"
   ],
   memo: [
     "按「眼耳口手」分：see / look 用眼，listen 用耳，speak / say 用口，read / write 用手。",
     "want 与 what 只差首音，两个一起读最省劲。",
-    "like 与 hike、like 押韵的词一堆：/laɪk/，先把 /aɪ/ 拖够。"
+    "like 与 hike（徒步）押韵，先把 /aɪ/ 拖够。"
   ],
   trap: [
     "look、see 都能翻译「看」，look 是主动去看，see 是看见了；这轮先照读，后面单独一课讲它。",
@@ -197,9 +205,9 @@ window.MIAO_ENW_SRC.l20 = {
     "have 的 v 要咬唇振动，尾巴别丢。"
   ],
   task: [
-    "用这十个动词各说一句你现在能做的事。",
+    "用这些动词各说一句你现在能做的事。",
     "听音频，把不发音的字母挑出来（write 的 w、listen 的 t）。",
-    "把前二十课的十句目标话，各读一遍并连起来读一次。"
+    "把前二十课的目标话各读一遍，再连起来读一次。"
   ],
   one: "读写听说这四个动词一到手，剩下的词就只是往里填的问题了。"
 };

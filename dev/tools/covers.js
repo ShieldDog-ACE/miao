@@ -217,7 +217,7 @@ const MARKS = {
       lines("M297 111H333", { stroke: c.dim, width: 3 }) + tri(341, 111, 9, 0, c.dim) +
       tile(353, "/eɪ/", false) + "</g>";
   },
-  /* 英语入门 200 词：一条能听见的声波 —— 每词一条 mp3 是这门课的实体 */
+  /* 英语入门词表：一条能听见的声波 —— 每词一条 mp3 是这门课的实体 */
   enwords(c) {
     const hs = [14, 26, 40, 22, 50, 34, 56, 30, 44, 20, 32, 16];
     const x0 = CX - (hs.length * 14) / 2;
@@ -312,6 +312,19 @@ const MARKS = {
       markText(F.left, c.plate, 292, 138.5, "C", { size: 40, weight: 800, fill: c.tint, adv: 0.656 * 40 }) +
       markText(F.right, c.plate, 350, 135, "++", { size: 30, weight: 800, fill: c.tint, adv: 1.18 * 30 });
   },
+  /* Git：一条主线三个提交，中间分出去一条支线、再并回来 —— 分支就是一张会往前挪的便利贴。
+     只画指针与提交点，不放官方 logo：站点与 Git 项目没有授权关系，几何自己画。 */
+  git(c) {
+    const y = 118, up = 62, r = 12;
+    return circ(244, y, r, c.tint, { tag: "提交点 1" }) +
+      circ(320, y, r, c.tint, { tag: "提交点 2" }) +
+      circ(396, y, r, c.tint, { tag: "提交点 3" }) +
+      circ(320, up, r, c.plate, { stroke: c.tint, sw: 5, tag: "支线提交点" }) +
+      lines(`M256 ${y}H308`, { stroke: c.tint, width: 5, tag: "主线左段" }) +
+      lines(`M332 ${y}H384`, { stroke: c.tint, width: 5, tag: "主线右段" }) +
+      lines(`M320 ${y - r}V${up + r}`, { stroke: c.dim, width: 4, tag: "分叉线" }) +
+      lines(`M${320 + r} ${up}C352 ${up} 372 88 396 ${y - r}`, { stroke: c.dim, width: 4, tag: "并回线" });
+  },
 };
 
 /* ---------------- 在册课程表 ---------------- */
@@ -322,11 +335,12 @@ const SPECS = [
     credit: "标志 path 取自 python.org/static/community_logos/python-logo-generic.svg，© Python Software Foundation，CC-BY 3.0；仅用于指代 Python 这门语言本身，不代表官方出品或背书。",
   },
   { id: "english", title: "英语发音入门", sub: "26 个字母 · 48 个国际音标 · 每条都有真人读音", plate: "#f3effa", tint: "#7a4fb0", ink: "#231c33", dim: "#6a6280" },
-  { id: "enwords", title: "英语入门 200 词", sub: "20 课 × 10 词 · 词 · 音标 · 中文 · 音频", plate: "#eef7f2", tint: "#1c8050", ink: "#182a21", dim: "#5d7468" },
+  { id: "enwords", title: "英语入门 257 词", sub: "21 课 · 词 · 音标 · 中文 · 音频", plate: "#eef7f2", tint: "#1c8050", ink: "#182a21", dim: "#5d7468" },
   { id: "genai", title: "生成式 AI 入门", sub: "译自 Microsoft · MIT · 22 课", plate: "#f6f1fb", tint: "#6a4c93", ink: "#241d31", dim: "#6d6680" },
   { id: "ml", title: "机器学习入门", sub: "译自 Microsoft · MIT · 27 课", plate: "#eef4f7", tint: "#1b6f8c", ink: "#17262d", dim: "#5b7078" },
   { id: "webdev", title: "Web 开发入门", sub: "译自 Microsoft · MIT · 27 课", plate: "#eef5f1", tint: "#2f7d55", ink: "#18271f", dim: "#5d7568" },
   { id: "agents", title: "AI Agent 入门", sub: "译自 Microsoft · MIT · 19 课", plate: "#fdf2ec", tint: "#b8500f", ink: "#2b1d12", dim: "#7d6a5c" },
+  { id: "git", title: "Git 入门", sub: "三个区 · 四种撤回 · 分支合并", plate: "#fdf1ec", tint: "#c0392b", ink: "#2b1a14", dim: "#7a6357" },
   {
     id: "cpp", title: "C++ 入门", sub: "81 课 · 现代 C++ · 每课考过关才能往下走",
     plate: "#eef2f8", tint: "#00599c", ink: "#142639", dim: "#57677c",

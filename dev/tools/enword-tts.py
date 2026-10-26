@@ -1,15 +1,16 @@
 #!/usr/bin/env python
-"""喵站 · 英语入门 · 200 条单词音频生成
+"""喵站 · 英语入门音频生成（单词 + 整句）
 
-一条命令跑完：读词表 → IndexTTS-2.5 合成 → 裁静音/归一 → 编 MP3 落站点 → 写清单。
-幂等：目标 mp3 已存在就跳过（--force 才重做），中途断了再跑接着来。
+读词表 → IndexTTS-2.5 合成 → 裁静音/归一 → 存 MP3 → 写清单；已存在的 mp3 默认跳过。
 
-跑法（必须用音频工具链自带的 venv，站点的 node 环境跑不了 torch）：
-  node dev/tools/enword-words.js /tmp/miao-tts/enwords.json          # 先出声词表
-  <工具链>/.venv/bin/python dev/tools/enword-tts.py                  # 增量生成
-  <工具链>/.venv/bin/python dev/tools/enword-tts.py --force --only apple,water
+环境变量：
+  MIAO_TTS_APP       IndexTTS 工程目录（必填，内含 .venv 与 checkpoints）
+  MIAO_TTS_VOICE     音色 wav，默认 <APP>/examples/voice_09.wav
+  MIAO_ENWORDS_JSON  词表，默认 /tmp/miao-tts/enwords.json
 
-音色实测依据见 dev/任务书.md：voice_09 在 8 个英文词探针上 ASR 全对、平均 0.67 秒/词、零削波。
+跑法（用音频工具链的 venv）：
+  node dev/tools/enword-words.js /tmp/miao-tts/enwords.json
+  <工具链>/.venv/bin/python dev/tools/enword-tts.py [--mode sents] [--force] [--only apple,water]
 """
 import argparse
 import json
@@ -17,19 +18,22 @@ import os
 import sys
 import time
 
-# 工具链在哪台机器哪个盘各人不同，一律走环境变量，不把别人的绝对路径写进公开仓库
-# （上一轮 py-convert.py / py-gen.py 就是写死了路径，泄漏用户名与磁盘 UUID，见 SPEC §15.5）
 APP = os.environ.get("MIAO_TTS_APP")
 if not APP:
-    sys.stderr.write('缺环境变量 MIAO_TTS_APP：指向 IndexTTS 工程目录（里面有 .venv 与 checkpoints）\n'
-                     '  例：export MIAO_TTS_APP="$HOME/音频工作链/index-tts-code"\n')
-    sys.exit(1)
+    sys.exit("缺环境变量 MIAO_TTS_APP：指向 IndexTTS 工程目录（里面有 .venv 与 checkpoints）")
+
 VOICE = os.environ.get("MIAO_TTS_VOICE") or os.path.join(APP, "examples/voice_09.wav")
-DEV = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))     # …/dev
 WORDS_JSON = os.environ.get("MIAO_ENWORDS_JSON") or "/tmp/miao-tts/enwords.json"
-OUT_DIR = os.path.join(DEV, "frontend", "assets", "audio", "words")
-WORK_DIR = "/tmp/miao-tts/gen"
-MANIFEST = "/tmp/miao-tts/gen-manifest.json"
+DEV = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))    # …/dev
+WORK = "/tmp/miao-tts/gen"
+# kind → (落站点目录, 清单路径)
+KINDS = {
+    "words": (os.path.join(DEV, "frontend/assets/audio/words"), "/tmp/miao-tts/gen-manifest.json"),
+    "sents": (os.path.join(DEV, "frontend/assets/audio/sents"), "/tmp/miao-tts/gen-sent-manifest.json"),
+}
+# 与站内 preset「米雪儿/鸿纱由美」同一套参数（webui 默认值），只换音色
+GEN = dict(do_sample=True, top_p=0.8, top_k=30, temperature=0.8, length_penalty=0.0,
+           num_beams=3, repetition_penalty=10.0, max_mel_tokens=1500)
 
 sys.path.insert(0, APP)
 os.chdir(APP)
@@ -38,62 +42,106 @@ os.environ["HF_HUB_CACHE"] = os.path.join(APP, "checkpoints", "hf_cache")
 import numpy as np          # noqa: E402
 import soundfile as sf      # noqa: E402
 
-# 与站内 preset「米雪儿/鸿纱由美」同一套生成参数（webui 默认值），只把重音色换掉
-GEN = dict(do_sample=True, top_p=0.8, top_k=30, temperature=0.8, length_penalty=0.0,
-           num_beams=3, repetition_penalty=10.0, max_mel_tokens=1500)
-
 
 def clean(wav, sr, head_pad=0.10, tail_pad=0.20, rel=0.008):
-    """裁掉首尾静音、去直流、峰值归一到 -1.5 dBFS。
-
-    阈值按峰值的 0.8% 定（原来是 2%）：清辅音 /ʃ/ /t/ 起头本来就轻，
-    2% 会把 shirt 的 sh、tea 的 t 一起裁掉，听着就是「her」「ea」。
-    """
+    """裁首尾静音、去直流、峰值归一到 -1.5 dBFS。rel 是静音阈值占峰值的比例。"""
     a = np.asarray(wav, dtype="float32")
     if a.ndim > 1:
         a = a.mean(axis=1)
     a = a - float(np.mean(a))
-    if len(a) == 0:
+    if not len(a):
         return a
-    peak = float(np.max(np.abs(a))) or 1.0
-    thr = peak * 0.02
-    idx = np.where(np.abs(a) > thr)[0]
-    if len(idx) == 0:
+    # 阈值取峰值的 0.8%：清辅音 /ʃ/ /t/ 起头本来就轻，取 2% 会把 shirt 的 sh、tea 的 t 一起裁掉
+    idx = np.where(np.abs(a) > float(np.max(np.abs(a))) * rel)[0]
+    if not len(idx):
         return np.zeros(0, dtype="float32")
-    s = max(0, int(idx[0] - head_pad * sr))
-    e = min(len(a), int(idx[-1] + tail_pad * sr))
-    a = a[s:e]
-    a = a * (0.841 / float(np.max(np.abs(a))))
-    return a.astype("float32")
+    a = a[max(0, int(idx[0] - head_pad * sr)):int(idx[-1] + tail_pad * sr)]
+    return (a * (0.841 / float(np.max(np.abs(a))))).astype("float32")
+
+
+def read_json(path, default):
+    if not os.path.exists(path):
+        return default
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def build_plan(rows, out_dir, only, force):
+    """rows 每条给 {key,label,text}，返回带 dst/skip 的计划；--only 指定的强制重做。"""
+    plan = []
+    for r in rows:
+        dst = os.path.join(out_dir, r["key"] + ".mp3")
+        if only and r["key"] not in only:
+            continue
+        plan.append({**r, "dst": dst, "skip": os.path.exists(dst) and not (force or only)})
+    return plan
+
+
+def synth(tts, plan, kind, manifest_path, factor):
+    """按计划合成，逐条写清单，返回仍缺的条数。"""
+    todo = [p for p in plan if not p["skip"]]
+    print(f">> [{kind}] 共 {len(plan)} 条 · 跳过 {len(plan) - len(todo)} · 待生成 {len(todo)}", flush=True)
+    manifest = read_json(manifest_path, {})
+    t0 = time.time()
+    for n, p in enumerate(todo, 1):
+        raw = os.path.join(WORK, f"{kind}-{p['key']}.wav")
+        try:
+            tts.infer(spk_audio_prompt=VOICE, text=p["text"], output_path=raw, lang="EN",
+                      emo_alpha=1.0, verbose=False, max_text_tokens_per_segment=120,
+                      duration_factor=factor, **GEN)
+            a, sr = sf.read(raw, dtype="float32")
+            a = clean(a, sr)
+            if len(a) < int(0.12 * sr):
+                raise RuntimeError(f"裁完只剩 {len(a) / sr:.2f}s，怀疑是静音或截断")
+            sf.write(p["dst"], a, sr, format="MP3")
+            info = sf.info(p["dst"])
+            rec = {"word": p["label"], "text": p["text"], "audio_s": round(info.duration, 2),
+                   "sr": info.samplerate, "bytes": os.path.getsize(p["dst"]), "at": int(time.time())}
+            manifest[p["key"]] = rec
+            with open(manifest_path, "w", encoding="utf-8") as f:
+                json.dump(manifest, f, ensure_ascii=False, indent=1)
+            el = time.time() - t0
+            print(f">> [{kind}] [{n}/{len(todo)}] {p['label']:12} {rec['audio_s']}s {rec['bytes']}B "
+                  f"用时{el:.0f}s 预计剩 {el / n * (len(todo) - n):.0f}s", flush=True)
+        except Exception as e:
+            print(f"!! [{kind}] [{n}/{len(todo)}] {p['label']} 失败：{type(e).__name__}: {e}", flush=True)
+
+    left = [p["key"] for p in plan if not os.path.exists(p["dst"])]
+    print(f">> [{kind}] 收尾：缺 {len(left)} 条" + ("：" + " ".join(left[:20]) if left else ""), flush=True)
+    return len(left)
+
+
+def rows_for(kind, data):
+    if kind == "words":
+        return [{"key": w["w"].lower(), "label": w["w"], "text": w.get("say") or w["w"]}
+                for w in data["words"]]
+    return [{"key": s["key"], "label": s["key"], "text": s["text"]} for s in data.get("sents", [])]
 
 
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description="喵站英语入门音频生成")
+    ap.add_argument("--mode", choices=["words", "sents", "both"], default="both",
+                    help="生成哪类音频（默认两类都生成）")
     ap.add_argument("--force", action="store_true", help="已存在的 mp3 也重做")
-    ap.add_argument("--only", default="", help="只跑这几个词，逗号分隔")
+    ap.add_argument("--only", default="", help="只跑这几个词，逗号分隔（按词形小写匹配）")
     ap.add_argument("--factor", type=float, default=1.0,
-                    help="duration_factor：>1 读得更慢。短词（tea、cow）被 ASR 截断时用 1.25 重做一遍看看")
+                    help="duration_factor：>1 读得更慢。短词被 ASR 截断时用 1.25 重做一遍看看")
     ap.add_argument("--limit", type=int, default=0, help="最多跑几条（调试用）")
     args = ap.parse_args()
 
-    data = json.load(open(WORDS_JSON, encoding="utf-8"))
+    data = read_json(WORDS_JSON, None)
+    if data is None:
+        sys.exit(f"词表不存在：{WORDS_JSON}，先跑 node dev/tools/enword-words.js")
     only = {w.strip().lower() for w in args.only.split(",") if w.strip()}
-    os.makedirs(OUT_DIR, exist_ok=True)
-    os.makedirs(WORK_DIR, exist_ok=True)
+    os.makedirs(WORK, exist_ok=True)
 
-    plan = []
-    for w in data["words"]:
-        name = w["w"].lower()
-        dst = os.path.join(OUT_DIR, name + ".mp3")
-        if only and name not in only:
-            continue
-        plan.append({"w": w["w"], "name": name, "say": w.get("say") or w["w"],
-                     "dst": dst, "skip": os.path.exists(dst) and not (args.force or only)})
-    if args.limit:
-        plan = plan[:args.limit]
-
-    todo = [p for p in plan if not p["skip"]]
-    print(f">> 计划 {len(plan)} 条 · 已存在跳过 {len(plan) - len(todo)} · 待生成 {len(todo)}", flush=True)
+    modes = ["words", "sents"] if args.mode == "both" else [args.mode]
+    jobs = []
+    for kind in modes:
+        out_dir, manifest = KINDS[kind]
+        os.makedirs(out_dir, exist_ok=True)
+        plan = build_plan(rows_for(kind, data), out_dir, only, args.force)
+        jobs.append((kind, plan[:args.limit] if args.limit else plan, manifest))
 
     from indextts.infer_v2_5 import IndexTTS2
     t0 = time.time()
@@ -102,38 +150,15 @@ def main():
                     use_torch_compile=False, use_qwen_emo=False)
     print(f">> 模型加载 {time.time() - t0:.1f}s", flush=True)
 
-    manifest = {}
-    if os.path.exists(MANIFEST):
-        manifest = json.load(open(MANIFEST, encoding="utf-8"))
+    missing = 0
+    for kind, plan, manifest in jobs:
+        if plan:
+            missing += synth(tts, plan, kind, manifest, args.factor)
+        else:
+            print(f">> [{kind}] 没有要跑的条目", flush=True)
 
-    t_start = time.time()
-    for n, p in enumerate(todo, 1):
-        raw = os.path.join(WORK_DIR, p["name"] + ".wav")
-        try:
-            tts.infer(spk_audio_prompt=VOICE, text=p["say"], output_path=raw, lang="EN",
-                      emo_alpha=1.0, verbose=False, max_text_tokens_per_segment=120,
-                      duration_factor=args.factor, **GEN)
-            a, sr = sf.read(raw, dtype="float32")
-            a = clean(a, sr)
-            if len(a) < int(0.12 * sr):
-                raise RuntimeError("裁完只剩 %.2fs，怀疑是静音或截断" % (len(a) / sr))
-            sf.write(p["dst"], a, sr, format="MP3")
-            info = sf.info(p["dst"])
-            rec = {"word": p["w"], "audio_s": round(info.duration, 2), "sr": info.samplerate,
-                   "bytes": os.path.getsize(p["dst"]), "at": int(time.time())}
-            manifest[p["name"]] = rec
-            json.dump(manifest, open(MANIFEST, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-            el = time.time() - t_start
-            print(f">> [{n}/{len(todo)}] {p['w']:12} {rec['audio_s']}s {rec['bytes']}B "
-                  f"用时{el:.0f}s 预计剩 {el / n * (len(todo) - n):.0f}s", flush=True)
-        except Exception as e:
-            print(f"!! [{n}/{len(todo)}] {p['w']} 失败：{type(e).__name__}: {e}", flush=True)
-
-    left = [p["name"] for p in plan if not os.path.exists(p["dst"])]
-    print(f">> 收尾：站点 mp3 现有 {len(os.listdir(OUT_DIR))} 个文件，缺 {len(left)} 条"
-          + ("：" + " ".join(left[:20]) if left else ""))
-    print(f">> 清单在 {MANIFEST}")
-    return 1 if left else 0
+    print(f">> 清单在 {KINDS['words'][1]}（单词）与 {KINDS['sents'][1]}（整句）")
+    return 1 if missing else 0
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@
 
 正文、题库、音频都是静态文件；代码运行、判分、成绩、收藏、学习进度全在浏览器里。
 
-**首屏只拉 5 份脚本**：176 KB（gzip 57 KB）—— `theme-boot.js`、`site.js`、`index.js`、`data.js`、`app.js`。
+**首屏只拉 5 份脚本**：180 KB（gzip 59 KB）—— `theme-boot.js`、`site.js`、`index.js`、`data.js`、`app.js`。
 
 正文是**两层按需**（第十一轮起）：
 点进一门课，只注入那门课的**骨架 `boot`**（装配层 + 占位/骨架，3–63 KB）——详情页的章节目录靠 `index.js`
@@ -41,20 +41,21 @@ dev/
 │       │   ├── index.js      ← 【生成物】首屏目录：课程元信息 + 每章标题 + 排考情况 + boot/chunks（这一章的正文在哪个文件）
 │       │   ├── py-data.js + py/*.js         ← Python 48 章（p1…p9 新稿 + 可重入装配层；legacy 死稿已删）
 │       │   ├── en-data.js                   ← 26 字母 / 48 音标 / 发音入门三章
-│       │   ├── enwords-data.js              ← 【生成物】英语入门：200 词 + 21 章
+│       │   ├── enwords-data.js              ← 【生成物】英语入门：257 词 + 22 章
+│       │   ├── git-data.js                  ← 开发工具 · Git 入门 3 章（这一版不排考）
 │       │   ├── ms-data.js + ms/*.js + ms-bodies.js ← 微软 MIT 四门 95 课（逐课一个文件）
 │       │   ├── py-exam-data.js + exam-parts/*.js    ← Python 45 场考卷
 │       │   ├── en-exam-data.js              ← 字母音标卷 3 场的题量与分值
-│       │   └── enword-exam-data.js          ← 【生成物】英语入门 21 场考卷的规格
+│       │   └── enword-exam-data.js          ← 【生成物】英语入门 22 场考卷的规格
 │       ├── audio/letters|phonemes/          ← 74 个字母与音标 mp3
 │       ├── audio/words/                     ← 200 个单词读音 mp3（IndexTTS-2.5 生成，逐条 ASR 复核）
 │       └── img/covers/                      ← 每门课一张代码画的 16:9 SVG 封面
 ├── tests/
 │   ├── run.sh               ← 唯一的回归入口（下面六套全跑）
-│   ├── ui-e2e.js            ← jsdom 走读者路径：87 项，含「零 /api」与 5 条按需加载请求账
+│   ├── ui-e2e.js            ← jsdom 走读者路径：122 项，含「零 /api」与 12 条按需加载请求账
 │   ├── engine-test.js       ← 正文 python 段逐段与本机 CPython 比 stdout
 │   ├── exam-test.js         ← Python 45 场 + 字母音标 3 场：参考解/合法写法/宽松写法/错解
-│   ├── enword-test.js       ← 英语入门 21 场：分值、题数、空卷 0 分、错一个字母必须挂、挖空不许有第二个答案
+│   ├── enword-test.js       ← 英语入门 22 场：分值、题数、空卷 0 分、错一个字母必须挂、挖空不许有第二个答案
 │   ├── paper-test.js        ← 笔试引擎 7 种题型 105 用例
 │   ├── static-server.js     ← 零依赖静态服务器（能记每一笔请求，供断言用）
 │   └── oracle/              ← CPython 基准输出
@@ -78,8 +79,8 @@ dev/
 ```bash
 xdg-open dev/frontend/index.html          # 什么都不用起，双击就能看
 node dev/tests/static-server.js 8811      # 想走 HTTP 就起一台只会发文件的
-bash dev/tests/run.sh                     # 全量回归：UI 118 项 + 三条闸 + 笔试 105 + 对拍 205 + 考卷 45/3/21
-node dev/tests/enword-test.js             # 只查英语入门那 21 场
+bash dev/tests/run.sh                     # 全量回归：UI 122 项 + 三条闸 + 笔试 117 + 对拍 205 + 考卷 45/3/22
+node dev/tests/enword-test.js             # 只查英语入门那 22 场
 node dev/tools/gen-index.js               # 改了任何一课的标题 / 章数 / 词表之后必跑
 ```
 

@@ -41,9 +41,9 @@ const unesc = (s) => s.replace(/&amp;|&lt;|&gt;|&quot;|&#39;/g, (c) => ({ "&amp;
 const strip = (h) => unesc(h.replace(/<span class="[^"]*">/g, "").replace(/<\/span>/g, ""));
 
 /* 与 app.js hlCode 的分发表一致；text 是有意「只染提示符」的那一档 */
-const DISPATCH = new Set(["c++", "cpp", "shell", "sh", "bash", "powershell", "ps1", "python", "py",
-  "javascript", "js", "html", "xml", "vue", "css", "scss", "less", "json", "yaml", "yml",
-  "ini", "toml", "cfg", "text", "txt", "console"]);
+const DISPATCH = new Set(["c++", "cpp", "c", "java", "csharp", "cs", "asm", "shell", "sh", "bash",
+  "powershell", "ps1", "python", "py", "javascript", "js", "typescript", "ts", "html", "xml", "vue",
+  "css", "scss", "less", "json", "yaml", "yml", "ini", "toml", "cfg", "text", "txt", "console"]);
 const SPAN_LANGS = new Set(["python", "c++", "javascript", "html", "css", "shell"]);
 const seen = {}; // lang -> 是否产出过上色 span
 

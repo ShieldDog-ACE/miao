@@ -242,6 +242,9 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
   font-size: .95rem; color: var(--text-2); font-weight: 500;
 }
 .nav-links a:hover, .nav-links a.on { color: var(--accent); background: var(--accent-soft); }
+/* 窄屏先收起「首页」右边那几个新入口：导航栏地方不够时先保首页与搜索框，
+   别把搜索框挤成一条缝（≤720 时整组 .nav-links 会一起收起）。 */
+@media (max-width: 900px) { .nav-links .nav-soon { display: none; } }
 .nav-search { flex: 1; max-width: 360px; margin-left: auto; }
 .nav-search input {
   width: 100%; height: 36px; padding: 0 14px;
@@ -786,6 +789,23 @@ footer .container > * { font-size: .82rem; color: var(--text-2); }
   color: var(--text-3); margin-left: 6px;
 }
 .en-card-word .en-w { font-size: .8rem; margin-top: 2px; }
+/* 短语下一行的中文意思：整句直译，句里每个词的意思都能对上 */
+.en-card-word .en-phcn { margin-top: 1px; font-size: .8rem; color: var(--text-2); line-height: 1.5; }
+
+/* 核心句子（先背句子再记单词）：一句一张卡，英文一行、中文一行，播放键放行首。
+   竖排一列不搞双栏 —— 句子长短差得多，双栏会把长句挤成三行。 */
+.en-sents { display: flex; flex-direction: column; gap: 8px; }
+.en-sent {
+  border: 1px solid var(--border); border-radius: 10px; background: var(--panel);
+  padding: 10px 14px; min-width: 0;
+}
+.en-sent-top { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.en-sent-top .en-play { flex: 0 0 auto; }
+.en-sent-en {
+  font-family: var(--mono); font-weight: 700; font-size: 1.02rem;
+  color: var(--accent); min-width: 0; overflow-wrap: anywhere;
+}
+.en-sent-cn { margin-top: 3px; padding-left: 2px; font-size: .92rem; color: var(--text-2); line-height: 1.55; }
 
 @media (max-width: 640px) {
   .en-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -1165,8 +1185,9 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 .eq-play:hover, .eq-play.playing { border-color: var(--accent); color: var(--accent); }
 .eq-play.playing { background: var(--accent); color: var(--accent-contrast); }
 .eq-ico { font-size: .62rem; }
-/* 1fr 的下限是 min-content，长音标/长谐音会把格子撑破卡片 —— 一律 minmax(0,1fr) 让它能收缩 */
-.en-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+/* 选项一律一行一个：题目 / 选项一 / 选项二 / 选项三 / 选项四 从上往下排，
+   双栏网格会让考生扫读时漏项 —— 这里只留一列，长选项照样能收缩 */
+.en-opts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .en-opt {
   display: flex; align-items: center; gap: 8px; padding: 9px 11px; cursor: pointer; min-width: 0;
   border: 1px solid var(--border); border-radius: 9px; background: var(--bg-soft);
@@ -1285,7 +1306,6 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 .code-block pre code .rd-atr, .ide .rd-atr { color: var(--rd-atr); }
 
 @media (max-width: 720px) {
-  .en-opts { grid-template-columns: minmax(0, 1fr); }
   .en-cols { grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); gap: 0 6px; }
 }
 

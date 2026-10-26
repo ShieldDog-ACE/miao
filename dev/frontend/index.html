@@ -15,6 +15,12 @@
       <a class="logo" href="#/"><b>喵站</b><span>MIAO&nbsp;DEV</span></a>
       <nav class="nav-links">
         <a href="#/">首页</a>
+        <!-- 首页右边一排入口：这一版只挂入口、不建页面（点了只给提示），内容页后补。
+             用 <a> 而不是 <button>，样式跟「首页」完全同源；点击在 app.js 里拦下来。 -->
+        <a href="#/" class="nav-soon" data-soon="视频">视频</a>
+        <a href="#/" class="nav-soon" data-soon="考试">考试</a>
+        <a href="#/" class="nav-soon" data-soon="幻灯片">幻灯片</a>
+        <a href="#/" class="nav-soon" data-soon="公式化学习">公式化学习</a>
       </nav>
       <div class="nav-search">
         <input id="navSearch" type="search" placeholder="搜索教程 / 章节标题 / 作者，回车搜索" aria-label="搜索">

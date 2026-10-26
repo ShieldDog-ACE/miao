@@ -1,8 +1,8 @@
 /* 喵站 · 英语入门 · 数据与考卷生成器
  *
- * 读四份词表原稿 + 第 21 课 → 产出两份站点数据：
- *   frontend/assets/data/enwords-data.js       200 词表 + 21 章正文（window.MIAO_ENW）
- *   frontend/assets/data/enword-exam-data.js   21 场考卷的规格（window.MIAO_ENW_EXAM）
+ * 读五份词表原稿 + 结课复习课 → 产出两份站点数据：
+ *   frontend/assets/data/enwords-data.js       词表 + 22 章正文（window.MIAO_ENW）
+ *   frontend/assets/data/enword-exam-data.js   22 场考卷的规格（window.MIAO_ENW_EXAM）
  *
  * 先验后写：任何一项检查没过就不落盘（上一轮「骨架当交付」的教训，见 dev/任务书.md）。
  * 跑法：
@@ -17,6 +17,7 @@ const DEV = path.resolve(__dirname, "..");
 const SRC = path.join(DEV, "tools", "enword");
 const DATA = path.join(DEV, "frontend", "assets", "data");
 const AUDIO_DIR = path.join(DEV, "frontend", "assets", "audio", "words");
+const SENT_AUDIO_DIR = path.join(DEV, "frontend", "assets", "audio", "sents");
 const WRITE = process.argv.indexOf("--check") < 0;
 
 /* ---------- 1. 读原稿 ---------- */
@@ -61,12 +62,13 @@ const isVowel = p => typeof p === "string" && (p.indexOf("ː") >= 0 || VOWEL_CHA
 /* ---------- 3. 词表体检 ---------- */
 const lessons = [];
 const wordKeys = {};
-for (let no = 1; no <= 21; no++) {
+const noAudioWords = [];      /* 没有站内 mp3、改用浏览器发音兜底的词（编程英语课） */
+for (let no = 1; no <= 22; no++) {
   const id = "l" + String(no).padStart(2, "0");
   const L = SRC21[id];
   if (!L) { warn("缺第 " + id + " 课原稿"); continue; }
-  if (no <= 20) {
-    if (!L.words || L.words.length !== 10) warn(id + " 的 words 是 " + (L.words || []).length + " 条，必须 10 条");
+  if (no <= 21) {
+    if (!L.words || L.words.length < 10) warn(id + " 的 words 只有 " + (L.words || []).length + " 条，至少要 10 条");
     if (!L.read || L.read.length < 3) warn(id + " 的读音要点不足 3 条");
     if (!L.trap || L.trap.length < 3) warn(id + " 的常见坑不足 3 条");
     if (!L.task || L.task.length < 3) warn(id + " 的任务不足 3 条");
@@ -82,18 +84,24 @@ for (let no = 1; no <= 21; no++) {
       const bad = toks.filter(t => t && t.bad);
       if (bad.length) warn(k + " 的音标里有站内 48 音标之外的字符：" + bad.map(b => b.bad).join(" ") + "（" + w.ipa + "）");
       if (w.ipa && w.ipa.indexOf("ˈ") < 0 && toks.filter(isVowel).length > 1) warn(k + " 多音节却没有主重音号 ˈ：" + w.ipa);
+      /* 编程英语课没有站内 mp3（由原稿的 noAudio 标出），缺文件只软报一句，
+         其余课仍然硬报错：音频是这门课的命根子，掉了不许上线。 */
       const mp3 = path.join(AUDIO_DIR, k + ".mp3");
-      if (!fs.existsSync(mp3)) warn("缺音频：" + k + ".mp3（" + mp3 + "）");
-      else if (fs.statSync(mp3).size < 800) warn("音频小得可疑：" + k + ".mp3 " + fs.statSync(mp3).size + "B");
+      if (!fs.existsSync(mp3)) {
+        if (!L.noAudio) warn("缺音频：" + k + ".mp3（" + mp3 + "）");
+        else noAudioWords.push(k);
+      } else if (fs.statSync(mp3).size < 800) warn("音频小得可疑：" + k + ".mp3 " + fs.statSync(mp3).size + "B");
     }
   }
   lessons.push({ id, no, L });
 }
+/* 全课词数（第 22 课不教新词，只算前 21 课）——文案里的「N 个词」都由它算出来，别写死。 */
+const TOTAL_WORDS = lessons.filter(x => x.no <= 21).reduce((n, x) => n + (x.L.words || []).length, 0);
 
 /* 交叉引用只许往回指：正文里出现的「第 N 课」N 必须 ≤ 本课课号 */
 const proseOf = L => [L.goal, L.one, ...(L.read || []), ...(L.memo || []), ...(L.trap || []), ...(L.task || [])].join("\n");
 for (const { id, no, L } of lessons) {
-  if (no > 20) continue;
+  if (no > 21) continue;
   const refs = [...proseOf(L).matchAll(/第\s*(\d{1,2})\s*课/g)].map(m => Number(m[1]));
   for (const r of refs) if (r > no) warn(id + " 正文里出现了指向后面第 " + r + " 课的引用");
 }
@@ -121,7 +129,7 @@ const FUNCTION = new Set(("a an the is am are was were be been being of to in on
 const taughtUpTo = {};          /* 课号 → 到这一课为止教过的词（小写） */
 {
   const acc = new Set();
-  for (let no = 1; no <= 20; no++) {
+  for (let no = 1; no <= 21; no++) {
     (SRC21["l" + String(no).padStart(2, "0")].words || []).forEach(w => acc.add(w.w.toLowerCase()));
     taughtUpTo[no] = acc;
   }
@@ -136,7 +144,7 @@ function checkEarly(no, label, text, hard) {
   }
 }
 for (const { no, L } of lessons) {
-  if (no > 20) continue;
+  if (no > 21) continue;
   checkEarly(no, "本课目标", L.goal || "", true);
   (L.task || []).forEach(s => checkEarly(no, "任务", s, true));
   checkEarly(no, "本课一句话", L.one || "", true);
@@ -147,13 +155,24 @@ for (const { no, L } of lessons) {
 }
 earlyHard.forEach(m => warn("任务/目标里出现没教过的单词 → " + m));
 if (earlySoft.length) console.error("[软报] 讲解与短语里带出的后续词 " + earlySoft.length + " 处（不拦，整句照着念的样板）：\n  - " + earlySoft.join("\n  - "));
-if (lessons.length !== 21) warn("课时数 " + lessons.length + " ≠ 21");
+if (noAudioWords.length) console.error("[软报] " + noAudioWords.length + " 个词没有站内 mp3，播放时改用浏览器发音兜底：" + noAudioWords.join(" "));
+if (lessons.length !== 22) warn("课时数 " + lessons.length + " ≠ 22");
 
 /* ---------- 4. 章节装配 ---------- */
+/* 一条词卡。没有站内 mp3 的课（原稿 noAudio）把 a 留空，
+   播放键改走 data-say → 浏览器自带的英语发音；say 也是播放时要念的文本。
+   sa 是整句（ph）的真音频；phsay 是这句拿去做 TTS 时要念的文本（默认就是 ph，
+   像 print("hello") 这种含符号的代码句，用原稿的 phsay 提供一个能念的版本）。 */
 function wordItem(no, w) {
+  const L = SRC21["l" + String(no).padStart(2, "0")];
+  const key = w.w.toLowerCase();
   return {
-    w: w.w, ipa: w.ipa, pos: w.pos, cn: w.cn, ph: w.ph,
-    a: "/assets/audio/words/" + w.w.toLowerCase() + ".mp3", lesson: "ew-l" + String(no).padStart(2, "0")
+    w: w.w, ipa: w.ipa, pos: w.pos, cn: w.cn, ph: w.ph, phcn: w.phcn,
+    a: L && L.noAudio ? "" : "/assets/audio/words/" + key + ".mp3",
+    sa: "/assets/audio/sents/" + key + ".mp3",
+    say: w.say || w.w,
+    phsay: w.phsay || w.ph,
+    lesson: "ew-l" + String(no).padStart(2, "0")
   };
 }
 function stressRow(w) {
@@ -175,7 +194,7 @@ function stressRow(w) {
   return { word: w.w, phonemes: toks.filter(t => !t.bad), stressed: nucleus };
 }
 
-/** 每课一张机制图：十个词的音素数排成阶梯，重音落在哪一格用实心点标出来。
+/** 每课一张机制图：本课各词的音素数排成阶梯，重音落在哪一格用实心点标出来。
  *  字体字号一律挂在 <g> 上（原先每个 <text> 自带一长串 font-family，21 张图多占 60 KB）。 */
 const SANS = "'Noto Sans CJK SC','DejaVu Sans',sans-serif";
 function lessonSvg(L) {
@@ -196,7 +215,7 @@ function lessonSvg(L) {
   });
   g += "</g>";
   const head = `<g font-family="${SANS}" fill="#333">` +
-    `<text x="8" y="20" font-size="15" font-weight="bold">本课十个词的音素数（粉点 = 主重音所在的那个元音）</text>` +
+    `<text x="8" y="20" font-size="15" font-weight="bold">本课各词的音素数（粉点 = 主重音所在的那个元音）</text>` +
     `<text x="8" y="40" font-size="13" fill="#666">条子长短 = 音标里有几个音，不是有几个字母 —— 英语的拼写和读音不成比例</text></g>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 ${H}">` +
     `<rect width="640" height="${H}" fill="#FDF6EF"/>` + head + g + `</svg>`;
@@ -207,12 +226,15 @@ function lessonBlocks({ no, L }) {
   const b = [];
   b.push({ t: "tip", color: "blue", text: "本课目标：" + L.goal });
   b.push({ t: "h2", text: "单词卡 · 点一下听读音" });
-  /* 十个词的数据只存一份（在 pack.words 里），正文这块按课号引过去，渲染层当场取 */
+  /* 每课的词卡数据只存一份（在 pack.words 里），正文这块按课号引过去，渲染层当场取 */
   b.push({ t: "en", kind: "word", ref: cid });
+  b.push({ t: "h2", text: "核心句子 · 每句都用本课的词" });
+  /* 同一份词卡数据再排一次，这次只取 ph / phcn：一句英文配一句中文，先看句子再记词 */
+  b.push({ t: "en", kind: "sent", ref: cid });
   b.push({ t: "h2", text: "读音要点" });
   b.push({ t: "ul", items: L.read });
   b.push({ t: "h2", text: "这一课的机制图" });
-  b.push({ t: "svg", code: lessonSvg(L), caption: "十个词的音素数排出来的阶梯：一眼看出哪个词最长、主重音落在第几个音上" });
+  b.push({ t: "svg", code: lessonSvg(L), caption: "本课各词的音素数排出来的阶梯：一眼看出哪个词最长、主重音落在第几个音上" });
   b.push({ t: "h2", text: "怎么记" });
   b.push({ t: "ul", items: L.memo });
   b.push({ t: "h2", text: "常见坑" });
@@ -224,8 +246,11 @@ function lessonBlocks({ no, L }) {
 }
 
 function reviewBlocks() {
-  const L = SRC21.l21;
+  const L = SRC21.l22;
   const mapSvg = (() => {
+    /* 21 行排成 4 列，会占到第 6 行，高度按行数算，别写死 360 把最后一行切掉 */
+    const rows = Math.ceil(L.map.length / 4);
+    const H = 46 + rows * 58 + 8;
     let g = "";
     L.map.forEach((row, i) => {
       const col = i % 4, r = Math.floor(i / 4);
@@ -235,15 +260,15 @@ function reviewBlocks() {
       g += `<text x="${x + 8}" y="${y + 34}" font-size="12" fill="#333" font-family="'Noto Sans CJK SC',sans-serif">${row[1]}</text>`;
       g += `<text x="${x + 8}" y="${y + 46}" font-size="11" fill="#7a7a7a" font-family="'DejaVu Sans',sans-serif">${row[2]}</text>`;
     });
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">` +
-      `<rect width="640" height="360" fill="#FDF6EF"/>` +
-      `<text x="8" y="20" font-size="15" font-weight="bold" fill="#333" font-family="'Noto Sans CJK SC',sans-serif">200 个词 = 20 个主题 × 10 个词</text>` +
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 ${H}">` +
+      `<rect width="640" height="${H}" fill="#FDF6EF"/>` +
+      `<text x="8" y="20" font-size="15" font-weight="bold" fill="#333" font-family="'Noto Sans CJK SC',sans-serif">${TOTAL_WORDS} 个词 = 21 个主题</text>` +
       `<text x="8" y="38" font-size="13" fill="#666" font-family="'Noto Sans CJK SC',sans-serif">复习按主题走，不按字母表走：一格就是一幅画</text>` + g + `</svg>`;
   })();
   return [
     { t: "tip", color: "blue", text: "本课目标：" + L.goal },
-    { t: "h2", text: "这 200 个词是怎么排的" },
-    { t: "svg", code: mapSvg, caption: "二十个主题各占一格，格子里写着这一格抽到的三个代表词" },
+    { t: "h2", text: "这 " + TOTAL_WORDS + " 个词是怎么排的" },
+    { t: "svg", code: mapSvg, caption: "二十一个主题各占一格，格子里写着这一格抽到的三个代表词" },
     { t: "h2", text: "五步复习法" },
     { t: "ul", items: L.steps },
     { t: "h2", text: "结课前先自测这四项" },
@@ -258,11 +283,11 @@ function reviewBlocks() {
 
 /* ---------- 5. 装配章节（正文 + 机制图） ---------- */
 const chaptersPre = [];
-for (let no = 1; no <= 20; no++) {
+for (let no = 1; no <= 21; no++) {
   const L = SRC21["l" + String(no).padStart(2, "0")];
   chaptersPre.push({ id: "ew-l" + String(no).padStart(2, "0"), title: L.title, blocks: lessonBlocks({ no, L }) });
 }
-chaptersPre.push({ id: "ew-l21", title: SRC21.l21.title, blocks: reviewBlocks() });
+chaptersPre.push({ id: "ew-l22", title: SRC21.l22.title, blocks: reviewBlocks() });
 
 /* ---------- 6. 口径体检：块数 / 字数 ---------- */
 const bodyChars = blocks => blocks.filter(b => ["p", "h2", "tip", "ul"].includes(b.t))
@@ -293,26 +318,31 @@ if (sum100(LESSON_PAPER, 4) !== 100) warn("课末卷分值合计 = " + sum100(LE
 if (sum100(FINAL_PAPER, 5) !== 100) warn("结课卷分值合计 = " + sum100(FINAL_PAPER, 5) + "，必须 100");
 
 const examPapers = [];
-for (let no = 1; no <= 20; no++) {
+for (let no = 1; no <= 21; no++) {
   const L = SRC21["l" + String(no).padStart(2, "0")];
   const cid = "ew-l" + String(no).padStart(2, "0");
   examPapers.push(Object.assign({
     cid, kind: "enword", pool: [cid], pairsPerGroup: 4,
     title: "第 " + no + " 课考试 · " + L.title.replace(/^第 \d+ 课 · /, ""),
-    task: "范围就是本课这 10 个词：看中文选英文、听音选词、按首字母把单词补全、看中译默写英文，最后一组把英文和中文连起来。",
+    task: "范围就是本课的词：看中文选英文、听音选词、按首字母把单词补全、看中译默写英文，最后一组把英文和中文连起来。",
     hint: "补全和默写都写单词原形：大小写不管，多打空格不算错，写错一个字母才算错。"
   }, LESSON_PAPER));
 }
 examPapers.push(Object.assign({
-  cid: "ew-l21", kind: "enword", pool: examPapers.map(p => p.cid), pairsPerGroup: 5,
-  title: "结课考试 · 200 个词混合卷",
-  task: "范围是前 20 课的全部 200 个词，混着考：看中文选英文、听音选词、看中文默写英文，再加一组五对连线。",
+  cid: "ew-l22", kind: "enword", pool: examPapers.map(p => p.cid), pairsPerGroup: 5,
+  title: "结课考试 · " + TOTAL_WORDS + " 个词混合卷",
+  task: "范围是前 21 课的全部 " + TOTAL_WORDS + " 个词，混着考：看中文选英文、听音选词、看中文默写英文，再加一组五对连线。",
   hint: "错在哪一题，复盘里会写出正确拼写，点「听」能重听那个词。范围太大，错得多就回到对应那一课重做课末卷。"
 }, FINAL_PAPER));
 
 /* ---------- 8. 打包并落盘 ---------- */
 const allWords = [];
-for (const { no, L } of lessons) if (no <= 20) for (const w of L.words) allWords.push(wordItem(no, w));
+for (const { no, L } of lessons) if (no <= 21) for (const w of L.words) allWords.push(wordItem(no, w));
+
+/* 整句音频（assets/audio/sents/）是「点一句听整句」的命根子：缺了只会退回浏览器发音，
+   所以这里只软报个数，方便发现后补跑 enword-tts.py。 */
+const missSent = allWords.filter(x => !fs.existsSync(path.join(SENT_AUDIO_DIR, x.w.toLowerCase() + ".mp3")));
+if (missSent.length) console.error("[软报] " + missSent.length + " 条整句音频还没生成：assets/audio/sents/（跑 enword-tts.py 的句子模式补上）");
 
 if (errors.length) {
   console.error("!! 体检没过，未写任何文件：\n  - " + errors.join("\n  - "));
@@ -320,12 +350,12 @@ if (errors.length) {
 }
 
 const pack = {
-  /* 200 条词卡只存这一份：每条带 lesson（所属章 id），正文的单词卡块和考卷都按它取 */
+  /* 全部词卡只存这一份：每条带 lesson（所属章 id），正文的单词卡块和考卷都按它取 */
   words: allWords,
   tutorial: {
     id: "enwords",
-    title: "英语入门：20 课 200 个基础单词",
-    intro: "从 hello 到 have，20 个主题各 10 个真正入门要用的词。每个词都有读音、音标、词性、中文和一句常用短语，点一下就听；每课一场小考，最后一场 200 词的结课大考。",
+    title: "英语入门：21 课 " + TOTAL_WORDS + " 个基础单词",
+    intro: "从 hello 到 code，21 个主题把真正入门要用的词一次排开。每个词都有读音、音标、词性、中文和一句常用短语，点一下就听；每课一场小考，最后一场 " + TOTAL_WORDS + " 词的结课大考。",
     cat: "英语",
     diff: "入门",
     tags: ["英语", "单词", "零基础", "发音"],
@@ -337,11 +367,12 @@ const pack = {
 
 const qStr = s => JSON.stringify(s);
 function emitData() {
-  const head = `/* 喵站 · 英语入门（200 词）数据 · 由 dev/tools/enword-gen.js 生成，别手改
+  const head = `/* 喵站 · 英语入门（${TOTAL_WORDS} 词）数据 · 由 dev/tools/enword-gen.js 生成，别手改
  *
- * 词表与讲解的真身在 dev/tools/enword/l01-l05.js、l06-l10.js、l11-l15.js、l16-l20.js、l21.js；
- * 改内容改那五份，再跑 \`node dev/tools/enword-gen.js\` 重生成这一份。
- * 音频在 assets/audio/words/<单词小写>.mp3，由 dev/tools/enword-tts.py 生成（IndexTTS-2.5 · voice_09）。
+ * 词表与讲解的真身在 dev/tools/enword/l01-l05.js、l06-l10.js、l11-l15.js、l16-l20.js、l21.js、l22.js；
+ * 改内容改那六份，再跑 \`node dev/tools/enword-gen.js\` 重生成这一份。
+ * 单词音频在 assets/audio/words/<单词小写>.mp3，整句音频在 assets/audio/sents/<单词小写>.mp3，
+ * 都由 dev/tools/enword-tts.py 生成（IndexTTS-2.5 · voice_09）。
  * 考卷规格在 assets/data/enword-exam-data.js，出题与判分在 assets/js/exam-en.js。
  */\n`;
   const body = "window.MIAO_ENW = " + JSON.stringify(pack, null, 1) + ";\n";
@@ -350,7 +381,7 @@ function emitData() {
 function emitExam() {
   const head = `/* 喵站 · 英语入门考卷规格 · 由 dev/tools/enword-gen.js 生成，别手改
  *
- * 每课一场（池子就是本课 10 词），第 21 课是 200 词混合大考；分值合计都验过等于 100。
+ * 每课一场（池子就是本课的词），第 22 课是 ${TOTAL_WORDS} 词混合大考；分值合计都验过等于 100。
  * 题型：mc 选择 / pick 听音选词 / fill 补字母 / spell 中译英默写 / match 五对连线。
  * 出题与判分在 assets/js/exam-en.js（pool=words 那一支）。
  */\n`;
@@ -359,7 +390,7 @@ function emitExam() {
 }
 
 if (!WRITE) {
-  console.log("[体检通过] 21 章 · " + allWords.length + " 词 · " + examPapers.length + " 场考卷（--check 未写文件）");
+  console.log("[体检通过] 22 章 · " + allWords.length + " 词 · " + examPapers.length + " 场考卷（--check 未写文件）");
   console.log("  章数最多 " + Math.max(...chaptersPre.map(c => c.blocks.length)) + " 块，正文最多 " +
     Math.max(...chaptersPre.map(c => bodyChars(c.blocks))) + " 字");
   process.exit(0);
@@ -368,6 +399,6 @@ fs.writeFileSync(path.join(DATA, "enwords-data.js"), emitData());
 fs.writeFileSync(path.join(DATA, "enword-exam-data.js"), emitExam());
 console.log("[已写出] frontend/assets/data/enwords-data.js（" + (emitData().length / 1024).toFixed(0) + " KB）" +
   " 与 enword-exam-data.js（" + (emitExam().length / 1024).toFixed(0) + " KB）");
-console.log("  21 章 · " + allWords.length + " 词 · " + examPapers.length + " 场考卷");
+console.log("  22 章 · " + allWords.length + " 词 · " + examPapers.length + " 场考卷");
 console.log("  章数最多 " + Math.max(...chaptersPre.map(c => c.blocks.length)) + " 块，正文最多 " +
   Math.max(...chaptersPre.map(c => bodyChars(c.blocks))) + " 字");

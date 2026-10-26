@@ -318,12 +318,13 @@
   function ok(data) { return Promise.resolve(data); }
   function fail(msg) { return Promise.reject(new Error(msg)); }
 
-  /* 单词卡块只写了章号，这里把那一课的十个词填进去（词表全站在 pack.words 里只存一份） */
+  /* 单词卡块只写了章号，这里把那一课的词填进去（词表全站在 pack.words 里只存一份）；
+     核心句子块（kind:"sent"）用的是同一份词表的短语字段，同样按章号填。 */
   function fillWordBlocks(ch) {
     var pack = root.MIAO_ENW;
     if (!ch || !pack || !pack.words) return ch;
     (ch.blocks || []).forEach(function (b) {
-      if (b.t === "en" && b.kind === "word" && b.ref && !b.items) {
+      if (b.t === "en" && (b.kind === "word" || b.kind === "sent") && b.ref && !b.items) {
         b.items = pack.words.filter(function (w) { return w.lesson === b.ref; });
       }
     });
