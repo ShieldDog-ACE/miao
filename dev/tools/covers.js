@@ -327,6 +327,31 @@ const MARKS = {
   },
 };
 
+/* 补全分类课通用标志：一块居中牌 + 字母缩写 + 一行小注。
+   13 门新课没有官方 logo，也不该伪造；用课程自己的缩写当标志，几何自己画。 */
+function monoMark(label, sub) {
+  return c => rr(232, 50, 176, 128, 22, c.plate, { stroke: c.tint, sw: 3, tag: "标志牌" }) +
+    txt(CX, 118, label, { size: 46, weight: 800, fill: c.tint, anchor: "middle" }) +
+    txt(CX, 152, sub, { size: 14, fill: c.dim, anchor: "middle" });
+}
+const MONO_MARKS = {
+  java: ["Java", "JVM"],
+  ts: ["TS", "类型"],
+  c: ["C", "C11"],
+  csharp: ["C#", ".NET"],
+  asm: ["ASM", "x86-64"],
+  rust: ["Rust", "内存安全"],
+  go: ["Go", "goroutine"],
+  github: ["GH", "Pull Request"],
+  linux: ["Linux", "终端"],
+  ide: ["VS", "Code"],
+  math: ["MATH", "微积分"],
+  embedded: ["MCU", "GPIO"],
+  algorithms: ["ALGO", "复杂度"],
+  basics: ["BIT", "字节与地址"],
+};
+Object.keys(MONO_MARKS).forEach(id => { MARKS[id] = monoMark(MONO_MARKS[id][0], MONO_MARKS[id][1]); });
+
 /* ---------------- 在册课程表 ---------------- */
 const SPECS = [
   {
@@ -351,6 +376,20 @@ const SPECS = [
     plate: "#ecf0f7", tint: "#004482", ink: "#0f2032", dim: "#525f76",
     credit: "标志几何取自 ISO C++ 官方 logo（六边形立方体揭开顶面的线框版）；仅用于指代 C++ 这门语言本身，不代表官方出品或背书。",
   },
+  { id: "java", title: "Java 入门", sub: "12 课 · 从 Oak 到 JVM · 一课一个概念", plate: "#fdf3e7", tint: "#c76a15", ink: "#2b1d12", dim: "#7a6357" },
+  { id: "ts", title: "TypeScript 入门", sub: "12 课 · 给 JavaScript 加类型", plate: "#eef3fb", tint: "#2f6feb", ink: "#1a2233", dim: "#5c6a80" },
+  { id: "c", title: "C 入门", sub: "12 课 · 从 printf 到数组", plate: "#eef4f8", tint: "#1b6f8c", ink: "#17262d", dim: "#5b7078" },
+  { id: "csharp", title: "C# 入门", sub: "12 课 · .NET 与跨平台", plate: "#f3eefa", tint: "#6a4c93", ink: "#241d31", dim: "#6d6680" },
+  { id: "asm", title: "汇编入门", sub: "12 课 · x86-64 寄存器到函数", plate: "#f2f2f2", tint: "#4a5568", ink: "#1a202c", dim: "#5c6575" },
+  { id: "rust", title: "Rust 入门", sub: "12 课 · 不可变、mut 与 Vec", plate: "#fdf0e8", tint: "#b7410e", ink: "#2b1a14", dim: "#7a6357" },
+  { id: "go", title: "Go 入门", sub: "12 课 · 从 goroutine 讲到切片", plate: "#eef6f4", tint: "#2a8c78", ink: "#173d36", dim: "#4d6f67" },
+  { id: "github", title: "GitHub 入门", sub: "12 课 · 从 push 到 Actions", plate: "#eef1f6", tint: "#24292f", ink: "#161b22", dim: "#57606a" },
+  { id: "linux", title: "Linux 入门", sub: "12 课 · 终端、权限、进程、脚本", plate: "#fdf7e3", tint: "#8a6d1a", ink: "#2b2412", dim: "#6f674d" },
+  { id: "ide", title: "IDE 入门", sub: "12 课 · VS Code 从界面到调试", plate: "#eef2fb", tint: "#4f46e5", ink: "#17233d", dim: "#5a6880" },
+  { id: "math", title: "高等数学入门", sub: "12 课 · 极限、导数、积分", plate: "#f3f0fa", tint: "#5b4bb7", ink: "#221d33", dim: "#6a6280" },
+  { id: "embedded", title: "嵌入式入门", sub: "12 课 · 从点灯到 RTOS", plate: "#eef7ef", tint: "#2f7d55", ink: "#18271f", dim: "#5d7568" },
+  { id: "algorithms", title: "算法入门", sub: "12 课 · 查找、排序、树与图", plate: "#fdf2ec", tint: "#b8500f", ink: "#2b1d12", dim: "#7d6a5c" },
+  { id: "basics", title: "计算机基础入门", sub: "12 课 · 从比特到一次回车", plate: "#f2f5f8", tint: "#334155", ink: "#1a202c", dim: "#5a6577" },
 ];
 
 /* d 属性 → 包围盒。把控制点也算进去（只会把盒子放大、不会缩小），所以拿它当

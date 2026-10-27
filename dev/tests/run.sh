@@ -48,6 +48,9 @@ echo
 echo "===== 正文高光自测（全部 t:code 块过高光必须无损，陌生 lang / 全灰也要红） ====="
 node "$HERE/hl-test.js" || EC=1
 echo
+echo "===== 补全分类课程闸（13 门单文件课程：12 章 / 篇幅 / 禁词 / 图形 / 高亮 lang） ====="
+node "$HERE/../tools/course-audit.cjs" --all-new || EC=1
+echo
 echo "===== 代码编辑器控件自测（两把尺无损 / 四层对齐 / 成对闭合 / 缩进 / 补全） ====="
 node "$HERE/editor-test.js" || EC=1
 echo

@@ -24,8 +24,8 @@ window.MIAO_SITE = {
   /* 大类 → 小类（首页分类页按这个层级摆）。
      这些位置是他给之后留的内容位，不许按「现在有没有教程」当死件删。 */
   categories: {
-    "编程语言": ["python", "java", "C++","js", "ts", "c", "c#", "汇编"],
-    "开发工具": ["git", "github", "linux", "vs code", "trae"],
+    "编程语言": ["python", "java", "C++","js", "ts", "c", "c#", "汇编" ,"Rust" ,"Go"],
+    "开发工具": ["git", "github", "linux", "IDE"],
     "其他": ["计算机基础", "高等数学", "嵌入式", "算法", "Agent", "大模型", "英语"]
   },
 
@@ -97,6 +97,79 @@ window.MIAO_SITE = {
       boot: ["assets/data/cppm-data.js"], assemble: "MIAO_CPPM_ASSEMBLE",
       files: ["assets/data/cppm/legacy.js", { glob: "assets/data/cppm/p*.js" }, "assets/data/cppm-data.js"],
       examFiles: [{ glob: "assets/data/cppm-exam/p*.js" }, "assets/data/cppm-exam-data.js"]
+    },
+    /* 补全分类教程（2026-10-27）：一门课一份单文件，整份一次拉，不排考 */
+    {
+      id: "go", source: "MIAO_GO", updated: "2026-10-27", engine: "",
+      files: ["assets/data/go-data.js"],
+      examFiles: []
+    },
+    {
+      id: "c", source: "MIAO_C", updated: "2026-10-27", engine: "",
+      files: ["assets/data/c-data.js"],
+      examFiles: []
+    },
+    {
+      id: "ts", source: "MIAO_TS", updated: "2026-10-27", engine: "",
+      files: ["assets/data/ts-data.js"],
+      examFiles: []
+    },
+    {
+      id: "github", source: "MIAO_GITHUB", updated: "2026-10-27", engine: "",
+      files: ["assets/data/github-data.js"],
+      examFiles: []
+    },
+    {
+      id: "csharp", source: "MIAO_CSHARP", updated: "2026-10-27", engine: "",
+      files: ["assets/data/csharp-data.js"],
+      examFiles: []
+    },
+    {
+      id: "java", source: "MIAO_JAVA", updated: "2026-10-27", engine: "",
+      files: ["assets/data/java-data.js"],
+      examFiles: []
+    },
+    {
+      id: "ide", source: "MIAO_IDE", updated: "2026-10-27", engine: "",
+      files: ["assets/data/ide-data.js"],
+      examFiles: []
+    },
+    {
+      id: "rust", source: "MIAO_RUST", updated: "2026-10-27", engine: "",
+      files: ["assets/data/rust-data.js"],
+      examFiles: []
+    },
+    {
+      id: "linux", source: "MIAO_LINUX", updated: "2026-10-27", engine: "",
+      files: ["assets/data/linux-data.js"],
+      examFiles: []
+    },
+    {
+      id: "math", source: "MIAO_MATH", updated: "2026-10-27", engine: "",
+      files: ["assets/data/math-data.js"],
+      examFiles: []
+    },
+    {
+      id: "embedded", source: "MIAO_EMBEDDED", updated: "2026-10-27", engine: "",
+      files: ["assets/data/embedded-data.js"],
+      examFiles: []
+    },
+    {
+      id: "algorithms", source: "MIAO_ALGORITHMS", updated: "2026-10-27", engine: "",
+      files: ["assets/data/algorithms-data.js"],
+      examFiles: []
+    },
+    {
+      id: "asm", source: "MIAO_ASM", updated: "2026-10-27", engine: "",
+      files: ["assets/data/asm-data.js"],
+      examFiles: []
+    },
+    /* 计算机基础那一格原先只有 webdev（微软的 Web 开发课）借位顶着，读者点进去读不到比特与内存。
+       basics 补的是这门格子的本意：数据怎么表示、机器怎么算、存储为什么分层。同样不排考。 */
+    {
+      id: "basics", source: "MIAO_BASICS", updated: "2026-10-27", engine: "",
+      files: ["assets/data/basics-data.js"],
+      examFiles: []
     },
     /* AUTO-COURSES:BEGIN（miao-MCP 自动日更维护；这段里不要手改） */
     {

@@ -467,7 +467,8 @@
    "double dynamic_cast else enum explicit export extern false float for friend goto if inline int long mutable " +
    "namespace new noexcept not nullptr operator or private protected public register reinterpret_cast requires " +
    "return short signed sizeof static static_assert static_cast struct switch template this thread_local throw " +
-   "true try typedef typeid typename union unsigned using virtual void volatile wchar_t while xor").split(" ").forEach(function (w) { CPP_KW[w] = 1; });
+   "true try typedef typeid typename union unsigned using virtual void volatile wchar_t while xor " +
+   "fn let mut pub impl trait loop crate mod use match func package defer chan range nil").split(" ").forEach(function (w) { CPP_KW[w] = 1; });
   var CPP_TYPES = {};
   ("size_t ssize_t int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t string_view ostream istream").split(" ").forEach(function (w) { CPP_TYPES[w] = 1; });
   var SH_KW = {};
@@ -788,7 +789,7 @@
 
   function hlCode(code, lang) {
     var l = String(lang || "").toLowerCase();
-    if (l === "c++" || l === "cpp" || l === "c" || l === "java" || l === "csharp" || l === "cs" || l === "asm") return hlCpp(String(code || ""));
+    if (l === "c++" || l === "cpp" || l === "c" || l === "java" || l === "csharp" || l === "cs" || l === "asm" || l === "rust" || l === "go") return hlCpp(String(code || ""));
     if (l === "shell" || l === "sh" || l === "bash" || l === "powershell" || l === "ps1") return hlShell(String(code || ""));
     if (l === "python" || l === "py") return hlPy(String(code || ""));
     if (l === "javascript" || l === "js" || l === "typescript" || l === "ts") return hlJs(String(code || ""));
