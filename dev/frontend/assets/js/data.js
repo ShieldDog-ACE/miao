@@ -290,13 +290,39 @@
     return (PAPERS[id] || {})[cid] || null;
   }
 
+  /* ---------------- 视频：点导航「视频」才拉的那两份 ----------------
+     数据(videos.js) 在前、界面(video-ui.js) 在后（界面脚本要读数据），串着注一次；
+     拉成功之前读者看不见视频页，所以这里缓存住，第二次进 #/video 不再发请求。
+     素材（mp4 与封面）不在这一条里 —— 那是 <video>/<img> 按人有没有真点开自己拉的，
+     列表页的封面与播放页的视频各算各的账。 */
+  var VIDEOS = null;
+  function ensureVideos() {
+    if (VIDEOS) return Promise.resolve(VIDEOS);
+    var v = SITE.videos || {};
+    /* 拉失败的那份 loadJs 自己会从 LOADED 里退掉，所以再进一次视频页是真重试，不是对着坏缓存 */
+    return loadAll((v.data || []).concat(v.ui || [])).then(function () {
+      VIDEOS = root.MIAO_VIDEOS || null;
+      if (!VIDEOS) throw new Error("assets/data/videos.js 没把 MIAO_VIDEOS 挂上来");
+      return VIDEOS;
+    });
+  }
+
   /* ---------------- 本机存储 ---------------- */
   function read(k, dft) { try { var v = localStorage.getItem(k); return v === null ? dft : JSON.parse(v); } catch (e) { return dft; } }
   function write(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.warn("[数据层] 本机存储写不进去", k, e); } }
   var K_FAV = "miao_favs", K_RESULT = "miao_exam_results", K_PROGRESS = "miao_progress";
+  /* 本机存储键总表（新增键先进这里，别散在视图里）：
+       miao_favs          [教程 id]        教程收藏
+       miao_video_favs    [视频 id]        视频收藏（只有这一个动作，没有播放数那种取不到数的账）
+       miao_exam_results  {tid:{cid:…}}    考试成绩
+       miao_progress      {tid:[cid]}      学完哪些课
+       miao_theme / miao_fs               外观主题 / 正文字号（写在 app.js 的 store 里，前缀 miao_） */
+  var K_VFAV = "miao_video_favs";
 
   function favs() { return read(K_FAV, []); }
   function setFavs(a) { write(K_FAV, a); }
+  function videoFavs() { return read(K_VFAV, []); }
+  function setVideoFavs(a) { write(K_VFAV, a); }
   function results(tid, cid) {
     var all = read(K_RESULT, {});
     if (tid === undefined) return all;
@@ -468,6 +494,7 @@
        prefetchCourse = 这一章到位了、人没别的事，空了把同门其余分片补齐；
        ensureCourse 留作「整门课现在就全要」的兜底（详情页与考场都不用它）。 */
     ensureBoot: ensureBoot, ensureChapter: ensureChapter, ensureCourse: ensureCourse, ensureExam: ensureExam,
+    ensureVideos: ensureVideos, videoFavs: videoFavs, setVideoFavs: setVideoFavs,
     prefetchCourse: prefetchCourse, stopPrefetch: stopPrefetch, bodyReady: bodyReady,
     loadedScripts: function () { return Object.keys(LOADED); },
     _local: {

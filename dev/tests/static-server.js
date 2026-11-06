@@ -24,6 +24,10 @@ const TYPES = {
   ".jpg": "image/jpeg",
   ".mp3": "audio/mpeg",
   ".wav": "audio/wav",
+  /* 视频页的素材：<video> 只认 video/* 这种 MIME，落到 octet-stream 里 Chrome 直接不出画面。
+     拖进度条也要真支持 —— 见下面 handler 里那段 Range。 */
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
   ".ico": "image/x-icon",
   ".txt": "text/plain; charset=utf-8",
   ".md": "text/markdown; charset=utf-8"
@@ -48,13 +52,30 @@ function handler(req, res) {
       res.end("404 " + (req.url || ""));
       return;
     }
-    const body = fs.readFileSync(file);
-    res.writeHead(200, {
-      "Content-Type": TYPES[path.extname(file).toLowerCase()] || "application/octet-stream",
-      "Cache-Control": "no-store",
-      "X-Content-Type-Options": "nosniff"
-    });
-    res.end(body);
+    const type = TYPES[path.extname(file).toLowerCase()] || "application/octet-stream";
+    const size = fs.statSync(file).size;
+    const base = { "Content-Type": type, "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Accept-Ranges": "bytes" };
+
+    /* Range：视频与音频靠它拖进度条。整份读进内存再发（原来是 readFileSync）改成流式，
+       一是 6 MB 的 mp4 不必整块压在内存里，二是切片请求要按段回。 */
+    const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+    if (m && (m[1] !== "" || m[2] !== "")) {
+      let start, end;
+      if (m[1] === "") { start = Math.max(0, size - Number(m[2])); end = size - 1; }   // 尾巴 N 字节
+      else { start = Number(m[1]); end = m[2] === "" ? size - 1 : Math.min(Number(m[2]), size - 1); }
+      if (start > end || start >= size) {
+        res.writeHead(416, { "Content-Range": "bytes */" + size }).end();
+        return;
+      }
+      res.writeHead(206, Object.assign({}, base, {
+        "Content-Range": "bytes " + start + "-" + end + "/" + size,
+        "Content-Length": end - start + 1
+      }));
+      fs.createReadStream(file, { start: start, end: end }).pipe(res);
+      return;
+    }
+    res.writeHead(200, Object.assign({}, base, { "Content-Length": size }));
+    fs.createReadStream(file).pipe(res);
   } catch (e) {
     res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("500 " + e.message);

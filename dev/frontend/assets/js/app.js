@@ -12,6 +12,7 @@
   var TUTS = DATA.tutorials || [];
   var API = window.MIAO_API;
   function examUi() { return window.MIAO_EXAM_UI || null; }   /* 考场界面脚本是进考场才注入的，每次现取 */
+  function videoUi() { return window.MIAO_VIDEO_UI || null; }  /* 视频界面脚本（video-ui.js）点「视频」才注入，同样每次现取 */
 
   /* 分类：层级对象 { 大类: [小类] } → 拍平成小类列表（供 chips/下拉/默认值） */
   function catList() {
@@ -230,8 +231,11 @@
     setTimeout(function () { el.remove(); }, 2300);
   }
 
-  /* 直接前往登录页（带回跳地址） */
+  /* 视频界面（video-ui.js，点「视频」才注入）要弹提示就复用这一个 toast，
+     不另起一份实现，免得两套提示的样式与时长在各页面上对不齐。 */
+  window.MIAO_TOAST = toast;
 
+  /* 直接前往登录页（带回跳地址） */
 
   /* 登录引导弹层（游客受限动作） */
 
@@ -256,7 +260,6 @@
     document.documentElement.style.setProperty("--fs-base", state.fs + "px");
     $all("#segInMenu button").forEach(function (b) { b.classList.toggle("on", b.dataset.t === state.theme); });
     $all("#segFs button").forEach(function (b) { b.classList.toggle("on", Number(b.dataset.fs) === state.fs); });
-    $all(".theme-card").forEach(function (c) { c.classList.toggle("on", c.dataset.t === state.theme); });
   }
   function setTheme(t) { state.theme = t; save(); applyTheme(); }
   if (mq && mq.addEventListener) mq.addEventListener("change", function () {
@@ -268,7 +271,7 @@
 
 
 
-  /* 导航栏里「首页」右边那四个入口（视频 / 考试 / 幻灯片 / 公式化学习）的点击：
+  /* 导航栏里「首页」右边那四个入口（视频 / 考试 / 幻灯片 / 终生学习）的点击：
      这一版只挂入口、不建页面 —— 点了给一句到位的提示，不留死链，也不假装有内容。
      以后内容页做好，把它们在 index.html 里换成真路由即可，样式不用动。 */
   function bindNavSoon() {
@@ -285,10 +288,9 @@
       '<div class="drop-wrap">' +
       '<button class="icon-btn" id="gearBtn" title="设置" aria-label="设置">' + GEAR_SVG + "</button>" +
       '<div class="dropdown hidden" id="gearMenu">' +
-      /* 设置里先分「通用设置」一组：公告挪进这里 —— 以前它跟主题/字号并列摆在最外面，
-         读者会以为公告是外观设置的一部分。 */
-      '<div class="dd-title">通用设置</div>' +
-      '<a class="dd-item" id="annItem">公告</a>' +
+      /* 这一项原来是「公告」，现在换成「通用设置」：公告、赞助、开源仓库、加入我们、学习记录、建议
+         六栏都在那个面板里，齿轮这一排只留外观主题与字号两个快捷开关。 */
+      '<button class="dd-item" id="settingsItem" type="button">通用设置</button>' +
       '<div class="dd-sep"></div>' +
       '<div class="dd-title">外观主题</div>' +
       '<div class="seg" id="segInMenu">' +
@@ -320,68 +322,279 @@
         toast("正文字号：" + b.textContent);
       };
     });
-    var ann = $("#annItem");
-    if (ann) ann.onclick = function (e) {
+    var si = $("#settingsItem");
+    if (si) si.onclick = function (e) {
       e.stopPropagation();
       $all(".dropdown").forEach(function (d2) { d2.classList.add("hidden"); });
-      API.get("/api/announcements").then(function (d) {
-        var items = (d.items || []).map(function (a) {
-          return '<div class="set-card" style="margin:0 0 12px"><b>' + esc(a.title) + "</b>" +
-            (a.created_at ? '<div class="muted small">' + new Date(a.created_at).toLocaleString() + "</div>" : "") +
-            '<div style="margin-top:6px">' + esc(a.body) + "</div></div>";
-        }).join("") || '<div class="empty">暂无公告</div>';
-        var mask = document.createElement("div");
-        mask.className = "mask";
-        mask.innerHTML = '<div class="modal card" style="width:460px;text-align:left"><h3>站内公告</h3>' + items +
-          '<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn btn-primary btn-sm" id="annClose">知道了</button></div></div>';
-        document.body.appendChild(mask);
-        $("#annClose", mask).onclick = function () { mask.remove(); };
-        mask.onclick = function (ev) { if (ev.target === mask) mask.remove(); };
-      }).catch(function (e) { toast(e.message || "公告加载失败"); });
+      openSettings("notice");
     };
   }
-  /* 页脚「成为老师」：没有账号与后台了，投稿与纠错直接留一个邮箱 */
-  function openTeacher() {
+
+  /* ---------------- 通用设置 ----------------
+     齿轮里那一项点开的是这一个面板，六栏：公告 / 赞助 / 开源仓库 / 加入我们 / 学习记录 / 建议。
+     左边选一栏、右边出内容，默认落在公告。
+     「赞助」与「加入我们」原来挂在页脚，「公告」原来是齿轮里单独一项 —— 现在都收进这里，
+     页脚那两个按钮和齿轮那一项一起删掉，不留两处入口。 */
+  var SET_SECTIONS = [
+    { k: "notice", nm: "公告" },
+    { k: "sponsor", nm: "赞助" },
+    { k: "github", nm: "开源仓库" },
+    { k: "join", nm: "加入我们" },
+    { k: "record", nm: "学习记录" },
+    { k: "advice", nm: "建议" }
+  ];
+  var SET_POP = null, SET_KEY = "notice";
+
+  function contactMail() {
     var c = (API._local && API._local.site && API._local.site.contact) || {};
-    var mail = c.email || "m15781851831@163.com";
-    var pop = $("#teacherPop");
-    pop.className = "mask";
-    pop.innerHTML =
-      '<div class="modal card sponsor-pop" onclick="event.stopPropagation()">' +
-      "<h3>成为老师 · 投稿与纠错</h3>" +
-      '<p class="sub">喵站不用注册、也没有后台管理：想投稿教程、纠错或提建议，直接写信给我。</p>' +
-      '<div class="mail-line"><b id="teacherMail">' + esc(mail) + "</b>" +
-      '<button class="btn btn-ghost btn-sm copy-btn" type="button" data-code="' + esc(mail) + '">复制</button>' +
-      '<a class="btn btn-primary btn-sm" href="mailto:' + esc(mail) + '">发邮件</a></div>' +
-      '<p class="muted small">投稿最好带：这一课讲什么、能跑的示例、常见坑、课后任务</p>' +
-      '<button class="btn btn-ghost btn-sm" id="tpClose" type="button">关闭</button></div>';
-    $("#tpClose", pop).onclick = function () { pop.className = "hidden"; pop.innerHTML = ""; };
-    pop.onclick = function (e) { if (e.target === pop) { pop.className = "hidden"; pop.innerHTML = ""; } };
-    bindCopy();
+    return c.email || "m15781851831@163.com";
+  }
+  function siteField(k, dft) {
+    var s = (API._local && API._local.site) || {};
+    return s[k] || dft;
   }
 
-  /* 赞助弹层：二维码图只有在点击「赞助」时才加载（懒加载，平时不占请求） */
-  function openSponsor() {
-    var pop = $("#sponsorPop");
-    pop.className = "mask";
-    pop.innerHTML =
-      '<div class="modal card sponsor-pop" onclick="event.stopPropagation()">' +
-      "<h3>赞助喵站</h3>" +
-      '<p class="sub">所有内容永久免费。觉得有帮助的话，可以扫码请我喝杯奶茶喵～</p>' +
-      '<div class="sponsor-qr" id="sponsorQr"><img src="assets/img/donate-qr.png" alt="微信收款码"></div>' +
-      '<p class="muted small">微信扫码 · 金额随意 · 感谢每一杯奶茶</p>' +
-      '<button class="btn btn-ghost btn-sm" id="spClose">关闭</button></div>';
-    /* 懒加载：img 是在用户点击「赞助」后才被创建的，平时页面不包含这张图，零请求 */
-    $("#spClose", pop).onclick = function () { pop.className = "hidden"; pop.innerHTML = ""; };
-    pop.onclick = function (e) { if (e.target === pop) { pop.className = "hidden"; pop.innerHTML = ""; } };
+  /* 本机存储的键（总表在 data.js 注释里）：导出与导入只认这几个，别的一律不碰 */
+  var SNAPSHOT_KEYS = ["miao_theme", "miao_fs", "miao_progress", "miao_favs", "miao_exam_results", "miao_video_favs"];
+
+  function snapshot() {
+    var data = {};
+    SNAPSHOT_KEYS.forEach(function (k) {
+      var raw = null;
+      try { raw = localStorage.getItem(k); } catch (e) { raw = null; }
+      if (raw === null) return;
+      try { data[k] = JSON.parse(raw); } catch (e) { data[k] = raw; }
+    });
+    return { app: "喵站", kind: "miao-progress", version: 1, at: new Date().toISOString(), data: data };
   }
+  function snapshotText() { return JSON.stringify(snapshot(), null, 2); }
+
+  /* 读回来：先验结构，再只写认得的键；state 与主题跟着刷新，不然界面还对着旧数字 */
+  function loadSnapshot(obj, write) {
+    if (!obj || typeof obj !== "object" || obj.kind !== "miao-progress" || !obj.data || typeof obj.data !== "object") {
+      return { ok: false, why: "这份文件不是喵站导出的进度（认不出 kind = miao-progress）" };
+    }
+    var keys = Object.keys(obj.data).filter(function (k) { return SNAPSHOT_KEYS.indexOf(k) >= 0; });
+    if (!keys.length) return { ok: false, why: "文件里一个喵站的键都没有，可能是空文件" };
+    if (!write) return { ok: true, keys: keys };
+    keys.forEach(function (k) {
+      try { localStorage.setItem(k, JSON.stringify(obj.data[k])); } catch (e) { /* 配额满了就认了 */ }
+    });
+    state.theme = store.get("theme", "auto");
+    state.fs = store.get("fs", 15);
+    state.progress = store.get("progress", {});
+    state.favs = store.get("favs", []);
+    applyTheme();
+    return { ok: true, keys: keys };
+  }
+
+  /* 学习记录读的是本机存着的那份（store.get 直接落 localStorage），不是内存里的 state：
+     这一栏报的是「到底存下来了什么」，别的标签页或导入刚写进去的东西也要看得见。
+     标题拿目录里的现成名字。 */
+  function learnRows() {
+    var prog = store.get("progress", {}), rows = [];
+    Object.keys(prog || {}).forEach(function (tid) {
+      var n = (prog[tid] || []).length;
+      if (!n) return;
+      var t = tut(tid);
+      rows.push({ title: t ? t.title : tid, n: n, all: t && t.chapters ? t.chapters.length : 0 });
+    });
+    rows.sort(function (a, b) { return b.n - a.n; });
+    return rows;
+  }
+  function learnTotals() {
+    var rows = learnRows(), chaps = 0, passed = 0;
+    rows.forEach(function (r) { chaps += r.n; });
+    try {
+      var all = JSON.parse(localStorage.getItem("miao_exam_results") || "{}");
+      Object.keys(all).forEach(function (tid) {
+        Object.keys(all[tid] || {}).forEach(function (cid) { if (all[tid][cid] && all[tid][cid].passed) passed++; });
+      });
+    } catch (e) { passed = 0; }
+    return {
+      tuts: rows.length, chaps: chaps, favs: (store.get("favs", []) || []).length,
+      exams: passed, vfavs: (API.videoFavs ? API.videoFavs() : []).length, keys: SNAPSHOT_KEYS.length
+    };
+  }
+
+  /* 每一栏就三段：标题、要写的字、能点的动作。
+     他这一轮点掉的：公告不要再套一层卡片、复制地址那种按钮全删、每栏底下那些小字说明一律不要。 */
+  function setBodyHtml(k) {
+    if (k === "notice") {
+      var list = siteField("announcements", []);
+      return list.length ? list.map(function (a) {
+        /* 标题占一行，正文另起一行 —— 不要「喵站公告 你好这里是…」挤在同一行 */
+        return '<p class="set-p"><b class="set-note-t">' + esc(a.title) + "</b>" + esc(a.body) + "</p>";
+      }).join("") : '<p class="set-p">暂无公告。</p>';
+    }
+    if (k === "sponsor") {
+      /* 懒加载：这张收款码只有点开「赞助」这一栏才会被创建，平时零请求 */
+      return '<p class="set-p">所有内容永久免费、不用注册。觉得帮上你了，扫码请我喝杯奶茶喵～</p>' +
+        '<div class="sponsor-qr"><img src="' + url("assets/img/donate-qr.png") + '" alt="微信收款码"></div>';
+    }
+    if (k === "github") {
+      var g = siteField("github", {});
+      if (!g.url) return "<p class=\"set-p\">仓库地址还没登记，改 site.js 里的 github.url。</p>";
+      return '<p class="set-p">站点源码与全部教程都在这一个仓库里。</p>' +
+        '<div class="set-line"><a class="set-code" href="' + esc(g.url) + '" target="_blank" rel="noopener noreferrer">' +
+        esc(g.repo) + "</a></div>" +
+        '<div class="set-ops"><a class="btn btn-soft btn-sm" href="' + esc(g.url) + '/stargazers" target="_blank" rel="noopener noreferrer">给个星标</a></div>';
+    }
+    if (k === "join") {
+      var m = contactMail();
+      return '<p class="set-p">想投稿教程、纠错或者当老师，写信给我。</p>' +
+        '<div class="mail-line"><b>' + esc(m) + '</b>' +
+        '<a class="btn btn-primary btn-sm" href="mailto:' + esc(m) + '">发邮件</a></div>';
+    }
+    if (k === "record") {
+      var t = learnTotals(), rows = learnRows();
+      return "<p class=\"set-p\">学过 <b>" + t.chaps + "</b> 章（" + t.tuts + " 门课），收藏 <b>" +
+        t.favs + "</b> 门教程，考过 <b>" + t.exams + "</b> 场，收藏 <b>" + t.vfavs + "</b> 条视频。</p>" +
+        (rows.length ? '<ul class="set-list">' + rows.map(function (r) {
+          return "<li><span>" + esc(r.title) + "</span><b>" + r.n + (r.all ? " / " + r.all : "") + " 章</b></li>";
+        }).join("") + "</ul>"
+          : '<p class="set-p">还没有学过任何一课。点开任意一章读完，这里就会记上。</p>') +
+        '<div class="set-ops"><button class="btn btn-primary btn-sm" id="setExport" type="button">导出进度</button>' +
+        '<label class="btn btn-ghost btn-sm" for="setImport">导入进度</label>' +
+        '<input type="file" id="setImport" accept="application/json,.json"></div>' +
+        '<textarea class="input set-json hidden" id="setJson" rows="6" spellcheck="false" aria-label="进度 JSON"></textarea>';
+    }
+    var m2 = contactMail();
+    return '<p class="set-p">投稿请通过电子邮箱联系我们</p>' +
+      '<div class="set-mail"><a href="mailto:' + esc(m2) + '">' + esc(m2) + "</a></div>";
+  }
+
+  function setBodyBind(k, box) {
+    if (k !== "record") return;
+    var ex = $("#setExport", box);
+    if (ex) ex.onclick = function () {
+      var txt = snapshotText(), ta = $("#setJson", box);
+      var name = "miao-progress-" + new Date().toISOString().slice(0, 10) + ".json";
+      ta.classList.remove("hidden"); ta.value = txt;
+      var ok = false;
+      try {
+        var blob = new Blob([txt], { type: "application/json" });
+        var href = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = href; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(href); }, 4000);
+        ok = true;
+      } catch (e) { ok = false; }
+      toast(ok ? "已导出 " + name + "（下面这份文本也能直接复制）" : "这个环境里下载没被放行，用下面选中的文本手动存一份");
+    };
+    var im = $("#setImport", box);
+    if (im) im.onchange = function () {
+      var f = im.files && im.files[0];
+      if (!f) return;
+      var fr = new FileReader();
+      fr.onload = function () {
+        var obj = null;
+        try { obj = JSON.parse(String(fr.result)); }
+        catch (e) { toast("这份文件不是合法 JSON：" + e.message); return; }
+        var r = loadSnapshot(obj, true);
+        if (!r.ok) { toast(r.why); return; }
+        toast("已导入 " + r.keys.length + " 项：" + r.keys.join("、"));
+        renderSetBody("record");            /* 计数与清单按新数据重算，别让人对着旧数字 */
+      };
+      fr.onerror = function () { toast("文件没读出来"); };
+      fr.readAsText(f);
+      im.value = "";
+    };
+  }
+
+  function renderSetBody(k) {
+    var box = $("#setBody");
+    if (!box) return;
+    box.innerHTML = setBodyHtml(k);
+    setBodyBind(k, box);
+  }
+
+  function openSettings(key) {
+    SET_KEY = key || "notice";
+    closeSettings();
+    var mask = document.createElement("div");
+    mask.className = "mask";
+    mask.innerHTML =
+      '<div class="card set-pop">' +
+      '<div class="set-head"><h3>通用设置</h3>' +
+      '<button class="btn btn-ghost btn-sm" id="setClose" type="button">关闭</button></div>' +
+      '<div class="set-wrap">' +
+      '<div class="set-nav">' + SET_SECTIONS.map(function (s) {
+        return '<button class="set-nav-item' + (s.k === SET_KEY ? " on" : "") + '" type="button" data-k="' + s.k +
+          '">' + s.nm + "</button>";
+      }).join("") + "</div>" +
+      '<div class="set-body" id="setBody"></div>' +
+      "</div></div>";
+    document.body.appendChild(mask);
+    SET_POP = mask;
+    $("#setClose", mask).onclick = closeSettings;
+    mask.onclick = function (e) { if (e.target === mask) closeSettings(); };
+    $all(".set-nav-item", mask).forEach(function (b) {
+      b.onclick = function () {
+        SET_KEY = b.dataset.k;
+        $all(".set-nav-item", mask).forEach(function (x) { x.classList.toggle("on", x === b); });
+        renderSetBody(SET_KEY);
+      };
+    });
+    renderSetBody(SET_KEY);
+  }
+  function closeSettings() {
+    if (SET_POP) { SET_POP.remove(); SET_POP = null; }
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && SET_POP) closeSettings();
+  });
+  /* 路由一跳就把面板收掉：进度、收藏都在变，留着对着旧数字没意义 */
+  window.MIAO_CLOSE_SETTINGS = closeSettings;
+
+  /* ---------------- 页脚那两个独立弹层 ----------------
+     「加入我们」与「赞助」各开各的，不进通用设置面板。内容取自同一份登记：
+     邮箱在 site.js 的 contact，收款码是 assets/img/donate-qr.png（只有点开才创建 img，平时零请求）。 */
+  var FOOT_POP = null;
+  function footOpen(el, html) {
+    footClose();
+    el.className = "mask";
+    el.innerHTML = html;
+    FOOT_POP = el;
+    var x = $(".fp-close", el);
+    if (x) x.onclick = footClose;
+    el.onclick = function (e) { if (e.target === el) footClose(); };
+  }
+  function footClose() {
+    if (!FOOT_POP) return;
+    FOOT_POP.className = "hidden";
+    FOOT_POP.innerHTML = "";
+    FOOT_POP = null;
+  }
+  function openJoin() {
+    var el = $("#joinPop");
+    if (!el) return;
+    var m = contactMail();
+    footOpen(el,
+      '<div class="modal card">' +
+      "<h3>加入我们</h3>" +
+      "<p>喵站不用注册、也没有后台管理：想投稿教程、纠错或者当老师，写信给我。</p>" +
+      '<div class="mail-line"><b>' + esc(m) + "</b>" +
+      '<a class="btn btn-primary btn-sm" href="mailto:' + esc(m) + '">发邮件</a></div>' +
+      '<button class="btn btn-ghost btn-sm fp-close" type="button">关闭</button></div>');
+  }
+  function openSponsor() {
+    var el = $("#sponsorPop");
+    if (!el) return;
+    footOpen(el,
+      '<div class="modal card">' +
+      "<h3>赞助喵站</h3>" +
+      "<p>所有内容永久免费、不用注册。觉得帮上你了，扫码请我喝杯奶茶喵～</p>" +
+      '<div class="sponsor-qr"><img src="' + url("assets/img/donate-qr.png") + '" alt="微信收款码"></div>' +
+      '<button class="btn btn-ghost btn-sm fp-close" type="button">关闭</button></div>');
+  }
+  /* 换页时把页脚弹层也收掉，别留一块盖在新页面上 */
+  window.MIAO_CLOSE_FOOT = footClose;
 
   document.addEventListener("click", function (e) {
     $all(".dropdown").forEach(function (d) { d.classList.add("hidden"); });
-    var sp = e.target && e.target.closest ? e.target.closest("#sponsorBtn") : null;
-    if (sp) { e.preventDefault(); openSponsor(); return; }
-    var tb = e.target && e.target.closest ? e.target.closest("#teacherBtn") : null;
-    if (tb) { e.preventDefault(); openTeacher(); return; }
+    /* 页脚的「成为老师」「赞助」两个按钮已经删掉（那两栏搬进通用设置），这里不再代管它们的点击 */
     var eye = e.target && e.target.closest ? e.target.closest("[data-eye]") : null;
     if (eye) {
       e.preventDefault(); e.stopPropagation();
@@ -1106,10 +1319,11 @@
     });
     function chipLink(label, key, val) {
       var p = { cat: curCat, diff: curDiff, sort: sort };
-      p[key] = val;
+      /* 点一下定，再点同一个就取消：已经亮着的那颗把值清空再拼链接（「全部」本来就是空，不受影响） */
+      var on = (key === "cat" ? curCat : curDiff) === val;
+      p[key] = on ? "" : val;
       var qs = Object.keys(p).filter(function (k) { return p[k]; })
         .map(function (k) { return k + "=" + encodeURIComponent(p[k]); }).join("&");
-      var on = (key === "cat" ? curCat : curDiff) === val;
       return '<a class="chip' + (on ? " on" : "") + '" href="#/category' + (qs ? "?" + qs : "") + '">' + label + "</a>";
     }
     /* 分类按「大类 → 小类」分组展示；「全部」清空分类；右侧按钮可收起/展开 */
@@ -1122,6 +1336,8 @@
             subs.map(function (c) { return chipLink(c, "cat", c); }).join("") + "</div>";
         }).join("");
     var catOpen = store.get("catOpen", true);
+    /* 首页分类栏里不摆「视频」：视频页自己有一栏同款分类，两边共用 site.js 那张表就够，
+       在「全部」右边挂一颗跳别处的 chip 会让这排筛法看起来像混进了非分类项。 */
     var catChips = '<div class="cat-group">' +
       '<div class="cat-head">' + chipLink("全部", "cat", "") +
       '<span class="cat-toggle" id="catToggle" role="button" tabindex="0" aria-expanded="' + (catOpen ? "true" : "false") + '">' +
@@ -1438,6 +1654,8 @@
 
   async function router() {
     var r = parseHash(), s = r.seg;
+    closeSettings();          /* 换页就把通用设置收掉：里面那张学习记录是按当时那份数据画的 */
+    if (window.MIAO_CLOSE_FOOT) window.MIAO_CLOSE_FOOT();   /* 页脚那两个弹层同理，换页就收掉 */
     /* 读者一动（换页、进考场、回首页），正在跑的预取立刻让路 —— 补齐别的分片永远不是当前的事 */
     if (API.stopPrefetch) API.stopPrefetch();
     /* 考场是整屏界面：站点导航条与页脚让位（否则 sticky 的导航条会盖住标题栏的运行/交卷） */
@@ -1448,9 +1666,12 @@
     var wantId = s[1];
     var needFetch = (s[0] === "tutorial" || s[0] === "read" || s[0] === "exam") &&
       wantId && !API.bodyReady(wantId, s[2] || "");
-    if (needFetch) {
+    /* 视频那两份脚本（清单 + 界面）也在首屏之外，第一次进视频页同样先说一句 */
+    var needVideo = s[0] === "video" && !videoUi();
+    if (needFetch || needVideo) {
       app.innerHTML = '<div class="container"><div class="empty">' +
-        (s[0] === "tutorial" ? "正在取这本教程的目录…" : "正在取这一课的正文…") + "</div></div>";
+        (s[0] === "tutorial" ? "正在取这本教程的目录…"
+          : s[0] === "video" ? "正在取视频清单…" : "正在取这一课的正文…") + "</div></div>";
     }
     try {
       if (s[0] === "tutorial" && s[1]) {
@@ -1463,6 +1684,9 @@
         await BE.ensureTutorial(s[1]);                  // 考试要考哪一课，得先有章节目录
         await API.get("/api/exams/" + encodeURIComponent(s[1]) + "/" + encodeURIComponent(s[2]));
       }                                                       // 题包与考场界面（Python 还带沙箱）都在这一条里拉
+      else if (s[0] === "video") {
+        await API.ensureVideos();                       // 数据在前、界面在后；拉成功之前 MIAO_VIDEO_UI 不存在
+      }
     } catch (e) {
       toast((e && e.message) || "加载失败");
     }
@@ -1480,6 +1704,13 @@
       UI.onPassed = markExamPassed;
       UI.vExam(app, { id: s[1], cid: s[2] });
       return;                                      /* 考试是整屏界面，不再滚回页首 */
+    }
+    else if (s[0] === "video") {
+      var VUI = videoUi();                              /* 界面脚本此刻才在 window 上 */
+      if (!VUI) { v404(); return; }
+      VUI.mount(window.MIAO_VIDEOS);                    /* 摊平合集与序号：列表与右栏都读这份索引 */
+      if (s[1]) VUI.vWatch(app, decodeURIComponent(s[1]));
+      else VUI.vList(app, r.params);
     }
     else if (s[0] === "search") vSearch(r.params);
     else v404();
@@ -1514,6 +1745,12 @@
     renderNavRight();
     bindNavSoon();
     applyTheme();
+    /* 页脚两颗入口各开各的弹层（他这轮点明的：不要弹进通用设置）。
+       通用设置里那两栏照旧留着，是另一条路 —— 同一份登记，两种入口。 */
+    var jb = $("#joinBtn");
+    if (jb) jb.onclick = openJoin;
+    var sb = $("#sponsorBtn");
+    if (sb) sb.onclick = openSponsor;
     var ns = $("#navSearch");
     ns.onkeydown = function (e) {
       if (e.key === "Enter") location.hash = "#/search?q=" + encodeURIComponent(ns.value.trim());

@@ -15,12 +15,13 @@
       <a class="logo" href="#/"><b>喵站</b><span>MIAO&nbsp;DEV</span></a>
       <nav class="nav-links">
         <a href="#/">首页</a>
-        <!-- 首页右边一排入口：这一版只挂入口、不建页面（点了只给提示），内容页后补。
+        <!-- 视频已经建了页面（#/video 列表 + #/video/<id> 播放页），剩下三个还是只挂入口：
+             点了给一句到位的提示，不留死链，也不假装有内容。
              用 <a> 而不是 <button>，样式跟「首页」完全同源；点击在 app.js 里拦下来。 -->
-        <a href="#/" class="nav-soon" data-soon="视频">视频</a>
+        <a href="#/video" id="navVideo">视频</a>
         <a href="#/" class="nav-soon" data-soon="考试">考试</a>
         <a href="#/" class="nav-soon" data-soon="幻灯片">幻灯片</a>
-        <a href="#/" class="nav-soon" data-soon="公式化学习">公式化学习</a>
+        <a href="#/" class="nav-soon" data-soon="终生学习">终生学习</a>
       </nav>
       <div class="nav-search">
         <input id="navSearch" type="search" placeholder="搜索教程 / 章节标题 / 作者，回车搜索" aria-label="搜索">
@@ -35,12 +36,15 @@
   <footer>
     <div class="container">
       <span>© 2026 喵站 Miao · 开源教程站，内容永久免费</span>
-      <button class="foot-link" id="teacherBtn" type="button">成为老师</button>
+      <!-- 页脚这两颗一直在：「加入我们」（原「成为老师」）与「赞助」。
+           各开各的弹层，不弹进通用设置（那两栏在面板里也留着，是另一条路）。
+           用 button 不用 a：它开的是弹层，不是路由，不该有地址。 -->
+      <button class="foot-link" id="joinBtn" type="button">加入我们</button>
       <button class="foot-link" id="sponsorBtn" type="button">赞助</button>
     </div>
   </footer>
 
-  <div id="teacherPop" class="hidden"></div>
+  <div id="joinPop" class="hidden"></div>
   <div id="sponsorPop" class="hidden"></div>
 
   <div id="toast"></div>
@@ -51,6 +55,8 @@
        data.js   本地数据层 + 分层加载器
        app.js    视图与路由
        正文、题库、沙箱、音频一律不在这里：<script> 由 data.js 在「点开那一章」时注入。
+       视频那两份（videos.js 数据 + video-ui.js 界面）同理，点导航「视频」才注入；
+       mp4 与封面更不在这里 —— 那是 <video>/<img> 按人有没有真点开自己拉的。
        谁把 assets/data/*.js 往这里补一行，首屏就退回 4 MB —— 加课请改 site.js 再跑 gen-index.js。 -->
   <script src="assets/data/site.js"></script>
   <script src="assets/data/index.js"></script>

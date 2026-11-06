@@ -195,6 +195,13 @@ window.MIAO_SITE = {
       "assets/js/cpp-compile.js", "assets/js/cpp-sim.js", "assets/js/exam-paper-ui.js"]
   },
 
+  /* 视频：首屏一份都不拉，点导航「视频」才拉这两份 —— 数据在前、界面在后（界面脚本要读数据）。
+     mp4 与封面不在这里列：它们是 assets/video/ 下的静态文件，由 video-ui.js 现挂 <video>/<img>。 */
+  videos: {
+    data: ["assets/data/videos.js"],
+    ui: ["assets/js/video-ui.js"]
+  },
+
   announcements: [
     {
       id: 1,
@@ -204,5 +211,10 @@ window.MIAO_SITE = {
   ],
 
   /* 页脚那条「成为老师」点进去展示的联系方式 */
-  contact: { email: "m15781851831@163.com" }
+  contact: { email: "m15781851831@163.com" },
+
+  /* 开源仓库：通用设置里那一栏用。url 是给人点的网页地址（不带 .git），
+     repo 是「ShieldDog-ACE/miao」这种短名，界面上摆短名、点整行去网页。
+     这一串是 `git -C miao-docs remote -v` 里 origin 那条，改了远端记得同步这里。 */
+  github: { url: "https://github.com/ShieldDog-ACE/miao", repo: "ShieldDog-ACE/miao" }
 };

@@ -95,6 +95,21 @@ const reqLog = [];
       /\.crumb\s*\{[^}]*text-overflow: ellipsis/.test(CSS_TEXT));
     ok("「作者名可以点」这个死件已经删掉（点了没有作者页）",
       $$(".t-card .t-author").length === 0 && !/\.t-author\s*\{[^}]*cursor:\s*pointer/.test(CSS_TEXT));
+    /* 首页那张卡自己的形状与截断，是调了十几轮定下来的（封面 16:9 + 正文两行封顶、超出走省略号，
+       实测 1440 宽下封面 151 / 正文 132 ≈ 1:1）。上一轮做视频页时我把它钉成 3:4、简介放到三行，
+       被他抓出来了 —— 这条尺子就是防下一次「改视频改到首页」。 */
+    /* 首页那张卡的形状与截断是调了十几轮定下来的：封面 16:9、正文两行封顶、超出走省略号，
+       1440 宽下实测封面 151 / 正文 132 ≈ 1:1。上一轮做视频页时我把它钉成 3:4、简介放到三行，被他抓出来了
+       —— 下面这四条尺子就是防下一次「改视频改到首页」。 */
+    ok("首页卡不许被别摊带歪：.t-card 不钉 aspect-ratio",
+      !/\.t-card\s*\{[^}]*aspect-ratio/.test(CSS_TEXT));
+    ok("首页简介仍是两行封顶（超出直接省略号，不靠加高卡片塞字）",
+      /\.t-body \.intro\s*\{[^}]*-webkit-line-clamp:\s*2/.test(CSS_TEXT));
+    ok("首页封面仍是 16:9 那条（1440 宽下 151px，与正文 132px 差不多一比一）",
+      /\.t-card \.cover\.has-img\s*\{[^}]*aspect-ratio:\s*16 \/ 9/.test(CSS_TEXT));
+    ok("首页卡的类名与结构没换：还是 .t-card > .cover.has-img + .t-body",
+      !!$(".t-card .cover.has-img") && !!$(".t-card .t-body .intro") && !!$(".t-card .t-meta"),
+      $$(".t-card").length + " 张卡");
   }
   ok("没有登录 / 注册入口", !/href="#\/login"/.test(W.document.body.innerHTML) && !$("#avBtn"));
   ok("导航里不再有「成为老师」（挪到页脚了）", !/href="#\/apply"/.test($("header").innerHTML));
@@ -466,21 +481,49 @@ const reqLog = [];
   await sleep(900);
   ok("再点取消收藏", (JSON.parse(W.localStorage.getItem("miao_favs") || "[]")).indexOf("english") < 0);
 
-  /* ---------- 7. 页脚「成为老师」= 一个邮箱 ---------- */
+  /* ---------- 7. 页脚两颗入口：各开各的弹层，不进通用设置 ---------- */
   {
-    const btn = W.document.getElementById("teacherBtn");
-    ok("页脚有「成为老师」入口", !!btn && /成为老师/.test(btn.textContent));
-    click(btn);
-    await sleep(700);
-    const pop = W.document.getElementById("teacherPop");
-    ok("点开出现邮箱与两个动作（复制 / 发邮件）",
-      !!pop && /m15781851831@163\.com/.test(pop.textContent) && !!$(".copy-btn", pop) && !!$("a[href^='mailto:']", pop),
-      pop ? pop.textContent.replace(/\s+/g, " ").slice(0, 74) : "没弹层");
-    var cp = pop && pop.querySelector ? pop.querySelector(".copy-btn") : null;
-    ok("复制按钮带的就是那个邮箱", !!cp && cp.getAttribute("data-code") === "m15781851831@163.com", cp ? "有" : "没有复制按钮");
-    click($("#tpClose", pop));
-    await sleep(500);
-    ok("关闭后弹层收起并清空", W.document.getElementById("teacherPop").className === "hidden");
+    ok("页脚那两颗一直在：「加入我们」（原「成为老师」）与「赞助」，没有变成一颗「通用设置」",
+      !!W.document.getElementById("joinBtn") && !!W.document.getElementById("sponsorBtn") &&
+      txt("#joinBtn") === "加入我们" && txt("#sponsorBtn") === "赞助" &&
+      !W.document.getElementById("toSettings"),
+      $$("footer .foot-link").map((b) => b.textContent.trim()).join("，"));
+
+    click(W.document.getElementById("sponsorBtn"));
+    await sleep(600);
+    const sp = W.document.getElementById("sponsorPop");
+    ok("点页脚「赞助」：开的是它自己的弹层，不是通用设置面板",
+      !!sp && sp.className === "mask" && !!$(".sponsor-qr img", sp) && !$(".set-pop"),
+      sp ? sp.className + " ｜ " + ($(".sponsor-qr img", sp) || {}).getAttribute("src") : "没这个容器");
+    click($(".fp-close", sp));
+    await sleep(400);
+    ok("赞助弹层关闭后容器收干净（hidden + 清空，收款码跟着不再请求）",
+      W.document.getElementById("sponsorPop").className === "hidden" &&
+      W.document.getElementById("sponsorPop").innerHTML === "" && !$(".mask"),
+      JSON.stringify(W.document.getElementById("sponsorPop").className));
+
+    click(W.document.getElementById("joinBtn"));
+    await sleep(600);
+    const jp = W.document.getElementById("joinPop");
+    ok("点页脚「加入我们」：也是独立弹层，邮箱与「发邮件」都在",
+      !!jp && jp.className === "mask" && /m15781851831@163\.com/.test(jp.textContent) &&
+      !!$("a[href^='mailto:']", jp) && !$(".set-pop"),
+      jp ? jp.textContent.replace(/\s+/g, " ").slice(0, 54) : "没这个容器");
+    click($(".fp-close", jp));
+    await sleep(300);
+    ok("点弹层外的黑幕也能关（跟站内别的弹层一个手感）",
+      W.document.getElementById("joinPop").className === "hidden" && !$(".mask"),
+      JSON.stringify(W.document.getElementById("joinPop").className));
+
+    click(W.document.getElementById("gearBtn"));
+    await sleep(300);
+    click(W.document.getElementById("settingsItem"));
+    await sleep(600);
+    ok("通用设置里那两栏照旧留着：面板还是六栏，同一份登记、两种入口",
+      $$(".set-nav-item").map((b) => b.textContent.trim()).join("|") === "公告|赞助|开源仓库|加入我们|学习记录|建议",
+      $$(".set-nav-item").map((b) => b.textContent.trim()).join("，"));
+    click(W.document.getElementById("setClose"));
+    await sleep(300);
   }
 
   /* ---------- 7.8 首页「首页」右边四个入口 + 设置里的通用设置 ---------- */
@@ -489,9 +532,12 @@ const reqLog = [];
     await sleep(900);
     const navText = txt(".nav-links");
     const opts = $$(".nav-links .nav-soon").map((a) => a.textContent.trim());
-    ok("导航栏「首页」右边四个入口：视频 / 考试 / 幻灯片 / 公式化学习",
-      opts.length === 4 && ["视频", "考试", "幻灯片", "公式化学习"].every((t) => opts.indexOf(t) >= 0) &&
+    ok("导航栏「首页」右边：视频已是真页面，考试 / 幻灯片 / 终生学习还是占位入口",
+      !!$("#navVideo") && opts.length === 3 &&
+      ["考试", "幻灯片", "终生学习"].every((t) => opts.indexOf(t) >= 0) &&
       navText.indexOf("首页") < navText.indexOf("视频"), navText);
+    ok("视频入口不再挂在「筹备中」那批里（它是真路由 #/video）",
+      !opts.some((t) => /视频/.test(t)) && !!$('.nav-links a[href="#/video"]'), opts.join("，"));
     ok("四个入口挂在「首页」旁边，不在搜索框那侧（#navRight 里只剩齿轮）",
       $$("#navRight .nav-soon").length === 0 && !!$("#navRight #gearBtn"), txt("#navRight"));
     const hash0 = W.location.hash;
@@ -502,18 +548,19 @@ const reqLog = [];
     click(W.document.getElementById("gearBtn"));
     await sleep(350);
     const menuText = txt("#gearMenu");
-    ok("设置里先有「通用设置」，公告挪进它下面（不再跟主题/字号并排）",
-      menuText.indexOf("通用设置") >= 0 &&
-      menuText.indexOf("通用设置") < menuText.indexOf("公告") &&
-      menuText.indexOf("公告") < menuText.indexOf("外观主题"), menuText);
-    click(W.document.getElementById("annItem"));
-    await sleep(900);
-    const mask = $(".mask");
-    ok("公告弹层里就是新公告（fuka 开发者 + 投稿邮箱）",
-      !!mask && /fuka开发者/.test(mask.textContent) && /m15681851831@163\.com/.test(mask.textContent),
-      mask ? mask.textContent.replace(/\s+/g, " ").slice(0, 80) : "没弹层");
-    click(W.document.getElementById("annClose"));
-    await sleep(300);
+    ok("齿轮里那一项就是可点的「通用设置」，原来的「公告」被它替掉（主题与字号仍在这一排）",
+      !!W.document.getElementById("settingsItem") && !W.document.getElementById("annItem") &&
+      menuText.indexOf("通用设置") >= 0 && menuText.indexOf("通用设置") < menuText.indexOf("外观主题") &&
+      /正文字号/.test(menuText), menuText);
+    click(W.document.getElementById("settingsItem"));
+    await sleep(700);
+    ok("点开就是通用设置面板，默认落在公告，公告那条内容真在里面",
+      !!$(".set-pop") && /公告/.test(txt(".set-nav-item.on")) &&
+      /fuka开发者/.test(txt(".set-body")) && /m15681851831@163\.com/.test(txt(".set-body")),
+      txt(".set-body").replace(/\s+/g, " ").slice(0, 70));
+    click(W.document.getElementById("setClose"));
+    await sleep(400);
+    ok("关闭按钮真把面板收掉（不是藏起来一个空壳等下次）", !$(".set-pop"), $(".set-pop") ? "还在" : "没了");
   }
 
   /* ---------- 7.9 分层加载的账：点开哪章拉哪章，空了才补齐 ---------- */
@@ -581,6 +628,460 @@ const reqLog = [];
     ok("进考场不拉这门课的正文分片",
       !got.some((u) => /\/data\/cpp\/p\d+\.js$/.test(u)),
       got.filter((u) => /\/data\/cpp\//.test(u)).map(short).join("，") || "一片都没拉");
+  }
+
+  /* ---------- 7.10 视频：列表 / 播放页 / 那三个点（下载与收藏） ---------- */
+  {
+    /* 清单不靠界面自证：把 videos.js 当纯数据读进来看一遍，界面上摆的必须与它逐条对得上 */
+    const vsrcText = fs.readFileSync(path.join(DEV, "frontend/assets/data/videos.js"), "utf8");
+    const fakeWin = {};
+    new Function("window", vsrcText)(fakeWin);
+    const VREG = fakeWin.MIAO_VIDEOS;
+    const VCOL = (VREG.collections || [])[0] || { videos: [] };
+    const VLIST = VCOL.videos || [];
+    const CATS = W.MIAO_SITE.categories;
+    const FLAT = Object.keys(CATS).reduce((a, k) => a.concat(CATS[k] || []), []);
+
+    /* mp4 的时长从 mvhd 里读（这台机器没有 ffmpeg，站内也不许手填整数） */
+    function mp4Dur(f) {
+      const b = fs.readFileSync(f);
+      let out = null;
+      (function walk(off, end) {
+        for (let p = off; p + 8 <= end;) {
+          let size = b.readUInt32BE(p);
+          const type = b.toString("ascii", p + 4, p + 8);
+          if (size === 1) size = Number(b.readBigUInt64BE(p + 8));
+          if (size < 8) return;
+          if (type === "mvhd") {
+            const ver = b[p + 8];
+            const ts = b.readUInt32BE(ver === 0 ? p + 20 : p + 28);
+            const du = ver === 0 ? b.readUInt32BE(p + 24) : Number(b.readBigUInt64BE(p + 32));
+            out = du / ts; return;
+          }
+          if (/moov|trak|mdia|minf|stbl|edts/.test(type)) walk(p + 8, p + size);
+          p += size;
+        }
+      })(0, b.length);
+      return out;
+    }
+    /* PNG 的宽高就在 IHDR 里，封面口径（横版 3×4、约 1K 宽）就这么量，不靠肉眼 */
+    function pngWH(f) { const b = fs.readFileSync(f); return [b.readUInt32BE(16), b.readUInt32BE(20)]; }
+
+    ok("视频清单不是空的，合集与条目都带 id", VLIST.length >= 1 && VLIST.every((v) => v.id && v.src),
+      VCOL.title + " · " + VLIST.length + " 条");
+
+    const badCat = [];
+    (VCOL.cats || []).forEach((c) => { if (FLAT.indexOf(c) < 0) badCat.push("合集→" + c); });
+    VLIST.forEach((v) => (v.cats || []).forEach((c) => { if (FLAT.indexOf(c) < 0) badCat.push(v.id + "→" + c); }));
+    ok("分类不许自造：登记的 cats 全部落在首页那张 categories 表里（两边共享一套）",
+      (VCOL.cats || []).length >= 1 && badCat.length === 0, badCat.join("，") || (VCOL.cats || []).join("，"));
+
+    const missing = [], wrongCover = [], wrongDur = [], noWH = [];
+    VLIST.forEach((v) => {
+      const mp4 = path.join(DEV, "frontend", v.src.replace(/^\/+/, ""));
+      if (!fs.existsSync(mp4)) { missing.push(v.id + " 的 mp4 不在"); return; }
+      const d = mp4Dur(mp4);
+      if (d == null || Math.abs(d - v.dur) > 0.15) wrongDur.push(v.id + " 登记 " + v.dur + "，mvhd 是 " + (d == null ? "?" : d.toFixed(2)));
+      if (!v.w || !v.h) noWH.push(v.id);
+      if (v.cover) {
+        const png = path.join(DEV, "frontend", v.cover.replace(/^\/+/, ""));
+        if (!fs.existsSync(png)) { missing.push(v.id + " 的封面不在"); return; }
+        const [w, h] = pngWH(png);
+        if (w <= h || Math.abs(w / h - 4 / 3) > 0.02 || w < 1000) wrongCover.push(v.id + " " + w + "×" + h);
+      }
+    });
+    ok("每条视频的 mp4 都在站内可达（assets/video/ 软链接指向工程成品）", missing.length === 0, missing.join("，") || VLIST.length + " 条全在");
+    ok("封面口径：横版 3×4（宽 4 高 3）、宽 ≥1000，竖的一律算不合格", wrongCover.length === 0, wrongCover.join("，") || "全部合格");
+    ok("时长不是手填的：登记的秒数与 mp4 mvhd 实测差 0.15 s 以内", wrongDur.length === 0, wrongDur.join("，") || VLIST.map((v) => v.dur + "s").join("，"));
+    ok("每条都登记了素材真实 w/h —— 播放器那一格的比例由它算，不写死 16:9",
+      noWH.length === 0, noWH.join("，") || VLIST.map((v) => v.w + "×" + v.h).join("，"));
+
+    /* ① 进视频页之前，这两份脚本一次都没来过 */
+    ok("进「视频」之前，videos.js 与 video-ui.js 一次都没被请求",
+      !reqLog.some((u) => /videos\.js$/.test(u)) && !reqLog.some((u) => /video-ui\.js$/.test(u)),
+      reqLog.filter((u) => /videos\.js|video-ui\.js/.test(u)).slice(0, 2).join("，") || "干净");
+
+    const vmark = reqLog.length;
+    W.location.hash = "#/video";
+    await sleep(1100);
+    const vgot = reqLog.slice(vmark).filter((u) => u.endsWith(".js")).map((u) => u.split("/").pop());
+    ok("点「视频」才拉那两份，而且数据在前、界面在后", vgot.join(",") === "videos.js,video-ui.js", vgot.join(","));
+
+    /* ② 列表页 */
+    ok("列表页：卡片数 = 登记条数，每张都有封面、名字、简介、右下角那三个点",
+      $$(".v-card").length === VLIST.length &&
+      $$(".v-card").every((c) => c.querySelector(".v-cover-img") && c.querySelector(".v-name") &&
+        c.querySelector(".v-brief") && c.querySelector(".v-more")),
+      "卡片 " + $$(".v-card").length + " / 登记 " + VLIST.length);
+    ok("卡片上摆的名字与简介就是清单里那一份",
+      $$(".v-card .v-name").map((a) => a.textContent.trim()).join("|") === VLIST.map((v) => v.name).join("|"),
+      $$(".v-card .v-name").map((a) => a.textContent.trim()).join("，"));
+    ok("第二行是「题目 + 时长 + 三个点」（收藏过的多一个「已收藏」），发布时间不摆在这",
+      $$(".v-card .v-foot > *").every((n) => ["v-name", "v-sub", "v-faved-tag", "v-more"].indexOf(n.className) >= 0) &&
+      $$(".v-card .v-foot .v-name").length === VLIST.length &&
+      $$(".v-card .v-foot .v-more").length === VLIST.length &&
+      !/\d{4}-\d{2}-\d{2}/.test(txt(".v-card .v-foot")),
+      $$(".v-card .v-foot > *").map((n) => n.className).join("，"));
+    ok("简介与题目互换了：简介在第一行（大、主文本色），题目在第二行（小、次级色）",
+      $(".v-body").children[0].className === "v-brief" &&
+      /\.v-brief\s*\{[^}]*font-size:\s*\.98rem[^}]*color:\s*var\(--text\)/.test(CSS_TEXT) &&
+      /\.v-name\s*\{[^}]*font-size:\s*\.84rem[^}]*color:\s*var\(--text-2\)/.test(CSS_TEXT),
+      $$(".v-body").map((b) => b.children[0].className).join("，"));
+    ok("列表页用视频自己的标题与网格，只有分类那一栏照首页抄",
+      txt(".v-page-title") === "视频" && !!$(".v-grid") && !!$(".filter-bar .cat-group .cat-head .chip") &&
+      !$(".page-title") && !$("#app .grid"),
+      $$(".video-page > *").map((n) => n.className || n.tagName).join("，"));
+    ok("分类那一栏就是首页那张表：大类当行标题、小类当 chip，逐字对得上",
+      $$(".cat-row .cat-big").map((e) => e.textContent.trim()).join("|") === Object.keys(CATS).join("|") &&
+      $$(".cat-row").length === Object.keys(CATS).length,
+      $$(".cat-row .cat-big").map((e) => e.textContent.trim()).join("，"));
+    ok("卡片照信息流那版排：封面在上（横版 3×4），名字与简介在封面下面，不拿东西盖住画面",
+      /\.v-cover\s*\{[^}]*aspect-ratio:\s*4 \/ 3/.test(CSS_TEXT) &&
+      /\.v-body\s*\{[^}]*flex:\s*1/.test(CSS_TEXT) &&
+      !/\.v-body\s*\{[^}]*position:\s*absolute/.test(CSS_TEXT) &&
+      !/\.v-card\s*\{[^}]*aspect-ratio/.test(CSS_TEXT),
+      $$(".v-card").map((c) => c.className).join(" ｜ "));
+    ok("画面上一个覆盖层都没有：时长角标删了，时长改摆在第二行，只剩 mm:ss",
+      !/\.v-dur\s*\{/.test(CSS_TEXT) && $$(".v-card .v-dur").length === 0 &&
+      /^\d\d:\d\d$/.test(txt(".v-card .v-sub")), txt(".v-card .v-sub"));
+    ok("只留一条成片：列表里就这一张，而且它就是那张大屏（3 列 × 2 行）",
+      VLIST.length === 1 && $$(".v-card").length === 1 &&
+      $$(".v-card")[0].classList.contains("v-big") &&
+      /\.v-big\s*\{[^}]*grid-column:\s*span 3[^}]*grid-row:\s*span 2/.test(CSS_TEXT) &&
+      /@media \(max-width: 720px\)[^}]*\.v-big\s*\{\s*grid-column:\s*span 1/.test(CSS_TEXT),
+      $$(".v-card").map((c) => c.className).join(" ｜ ") + " ｜ 登记 " + VLIST.length + " 条");
+    ok("片头那条真删干净了：清单里没有、站内也没有留给它的软链接",
+      !VLIST.some((v) => /head/.test(v.id)) &&
+      !fs.existsSync(path.join(DEV, "frontend/assets/video/devlog-01-head.mp4")) &&
+      !fs.existsSync(path.join(DEV, "frontend/assets/video/covers/devlog-01-head.png")),
+      VLIST.map((v) => v.id).join("，"));
+    ok("「灰色的圆角方框」真删了：卡片不挂 .card，规则里没有面板底 / 描边 / 阴影 / 外圆角",
+      $$(".v-card").every((c) => !c.classList.contains("card")) &&
+      !/\.v-card\s*\{[^}]*(background|border:|box-shadow)/.test(CSS_TEXT) &&
+      /\.v-cover\s*\{[^}]*border-radius:/.test(CSS_TEXT),
+      $$(".v-card").map((c) => c.className).join(" ｜ "));
+    ok("筛法全是链接不是按钮：能后退、能右键新开",
+      $$(".cat-head .chip").every((a) => a.tagName === "A" && /^#\/video/.test(a.getAttribute("href"))) &&
+      $$(".cat-row .chip").every((a) => /^#\/video(\?cat=|$)/.test(a.getAttribute("href"))),
+      $$(".cat-head .chip").map((a) => a.textContent.trim() + "→" + a.getAttribute("href")).join("，"));
+
+    {
+      const t = txt("#app");
+      const banned = ["关注", "投币", "弹幕", "广告", "评论", "播放量", "点赞"].filter((w) => t.includes(w));
+      ok("列表页没有关注 / 投币 / 弹幕 / 广告 / 评论 / 播放量 / 点赞这些位子", banned.length === 0, banned.join("，") || "一个都没有");
+    }
+
+    /* ③ 那三个点：只有两项 */
+    click($$(".v-card .v-more")[0]);
+    await sleep(200);
+    const mItems = $$(".v-menu-item").map((x) => x.textContent.trim());
+    ok("三个点打开就是两项：收藏、下载至本地（没有第三项）",
+      mItems.length === 2 && mItems[1] === "下载至本地" && /收藏/.test(mItems[0]), mItems.join(" ｜ "));
+    click($$(".v-menu-item")[0]);
+    await sleep(200);
+    ok("点收藏：本机 localStorage 落了这条 id，菜单当场收掉",
+      (JSON.parse(W.localStorage.getItem("miao_video_favs") || "[]")).indexOf(VLIST[0].id) >= 0 && $$(".v-menu").length === 0,
+      W.localStorage.getItem("miao_video_favs"));
+    ok("收藏过的卡片自己带上标记", $$(".v-card.faved").length === 1, "带标记 " + $$(".v-card.faved").length + " 张");
+    ok("这一排与首页一模一样：只有「全部」与「收起分类」，收藏不是筛法、不摆在这一排",
+      $$(".cat-head .chip").length === 1 && txt(".cat-head .chip") === "全部 " + VLIST.length &&
+      !!$("#vCatToggle") && !/收藏/.test(txt(".cat-head")), txt(".cat-head").replace(/\s+/g, " "));
+    click($$(".v-card .v-more")[0]);
+    await sleep(150);
+    ok("再开三个点，第一项变成「已收藏 · 取消收藏」（这一项点了真能取消）",
+      /已收藏/.test($$(".v-menu-item")[0].textContent), $$(".v-menu-item")[0].textContent);
+    click($$(".v-menu-item")[0]);            // 先取消，收藏的账留到后面那一步再验
+    await sleep(150);
+    ok("取消收藏：本机存储里就没这条了",
+      (JSON.parse(W.localStorage.getItem("miao_video_favs") || "[]")).indexOf(VLIST[0].id) < 0,
+      W.localStorage.getItem("miao_video_favs"));
+
+    /* ④ 播放页：标题与简介在屏上面（字大），介绍与分类在屏下面 */
+    click($$(".v-card .v-name")[0]);
+    await sleep(1100);
+    const v0 = VLIST[0];
+    ok("点卡片进播放页，路由是 #/video/<id>", W.location.hash === "#/video/" + v0.id, W.location.hash);
+    ok("播放器指向站内那份素材（不是外链、也不是编的占位）",
+      !!$("#vPlayer") && /\/assets\/video\//.test($("#vPlayer").getAttribute("src")), $("#vPlayer") && $("#vPlayer").getAttribute("src"));
+    ok("播放器不拿封面当 poster：poster 是 3×4，塞进 16:9 的屏两边会多出两条黑边",
+      !$("#vPlayer").getAttribute("poster"), $("#vPlayer").getAttribute("poster") || "没有 poster，对");
+    ok("那一格的比例由登记的 w/h 现算，不是 CSS 里写死的",
+      new RegExp("aspect-ratio:" + v0.w + "/" + v0.h).test($("#vPlayer").getAttribute("style") || "") &&
+      !/\.v-player video\s*\{[^}]*aspect-ratio/.test(CSS_TEXT),
+      $("#vPlayer").getAttribute("style"));
+    ok("左上角的喵站水印在播放器里面，且不吃点击", !!$(".v-player .v-mark") && /喵站/.test(txt(".v-mark")), txt(".v-mark").replace(/\s+/g, " "));
+    ok("标题就是清单里那条名字，元信息带时长 mm:ss",
+      txt(".v-title-row h1") === v0.name && /\d\d:\d\d/.test(txt(".v-meta")),
+      txt(".v-title-row h1") + " ｜ " + txt(".v-meta").replace(/\s+/g, " "));
+    ok("读的顺序 = 标题 → 元信息 → 简介 → 播放器 → 介绍与分类",
+      $$(".v-main > *").map((n) => n.className).join("|") === "v-title-row|v-meta|v-desc|v-player|v-after",
+      $$(".v-main > *").map((n) => n.className).join(" ｜ "));
+    ok("简介就这一条自己的，摆在屏上面，字比下面那两段大",
+      $$(".v-desc p").length === 1 && $(".v-desc p").textContent.trim() === v0.brief &&
+      /\.v-desc p\s*\{[^}]*font-size:\s*1\.05rem/.test(CSS_TEXT) &&
+      /\.v-after p\s*\{[^}]*font-size:\s*\.93rem/.test(CSS_TEXT),
+      $(".v-desc p") ? $(".v-desc p").textContent.trim().slice(0, 20) + "…" : "没有简介");
+    ok("介绍与相关分类都在播放器下面",
+      $$(".v-after p").length >= 1 && $$(".v-after .v-tag").length >= 1 &&
+      $(".v-main").innerHTML.indexOf("v-after") > $(".v-main").innerHTML.indexOf("v-player"),
+      "下面 " + $$(".v-after p").length + " 段 + " + $$(".v-after .v-tag").length + " 个分类");
+    ok("下面那排分类链接按 cat= 筛，词全部来自共享那张表",
+      $$(".v-after .v-tag").every((a) => /#\/video\?cat=/.test(a.getAttribute("href")) &&
+        FLAT.indexOf(a.textContent.trim()) >= 0),
+      $$(".v-after .v-tag").map((a) => a.textContent.trim()).join("，"));
+    ok("这几段不起小标题、不画分隔线（他说不要那种标注）",
+      $$(".v-main h2").length === 0 && !/v-sec/.test($(".v-main").innerHTML) && !/\.v-sec\s*\{/.test(CSS_TEXT),
+      "h2 " + $$(".v-main h2").length + " 个，.v-sec " + ($(".v-main").innerHTML.match(/v-sec/g) || []).length + " 处");
+    ok("右栏只剩合集：标题、第几条 / 共几条、每条一行",
+      !!$(".v-col-box") && txt(".v-col-count") === "1 / " + VLIST.length && $$(".v-ep").length === VLIST.length,
+      txt(".v-col-count") + " ｜ 行 " + $$(".v-ep").length);
+    ok("正在播的那一行有高亮与播放标记，别的行没有",
+      $$(".v-ep.on").length === 1 && !!$(".v-ep.on .v-play-bar"), "高亮 " + $$(".v-ep.on").length + " 行");
+    {
+      const t = txt("#app");
+      const banned = ["关注", "投币", "弹幕", "广告", "评论", "播放量", "订阅合集"].filter((w) => t.includes(w));
+      ok("播放页同样没有那些位子（UP 主卡、订阅按钮、弹幕框都不在）", banned.length === 0, banned.join("，") || "一个都没有");
+    }
+
+    /* ⑤ 下载至本地：http 下走 <a download>，不许留下打不开的菜单 */
+    click($(".v-title-more"));
+    await sleep(150);
+    click($$(".v-menu-item").find((x) => /下载/.test(x.textContent)));
+    await sleep(200);
+    ok("下载至本地：菜单收掉、给出到位的提示，不是点了没反应",
+      $$(".v-menu").length === 0 && /正在下载/.test(txt("#toast")), txt("#toast"));
+
+    /* ⑥ 合集切集 */
+    if (VLIST.length > 1) {
+      click($$(".v-ep a")[1]);
+      await sleep(1100);
+      ok("合集里点第二条：路由与播放器都跟着换过去",
+        W.location.hash === "#/video/" + VLIST[1].id && /devlog-01-head\.mp4/.test($("#vPlayer").getAttribute("src")),
+        W.location.hash);
+      ok("右栏的「第几条 / 共几条」跟着变", txt(".v-col-count") === "2 / " + VLIST.length, txt(".v-col-count"));
+      click($$(".v-ep a")[0]);
+      await sleep(1000);
+    }
+
+    /* ⑦ 分类筛选：点一下定，再点同一个取消（与首页同一个手感） */
+    W.location.hash = "#/video";
+    await sleep(1000);
+    const allCards = $$(".v-card").length;
+    const C0 = (VCOL.cats || [])[0];
+    click($$(".cat-row .chip").find((a) => a.textContent.trim() === C0));
+    await sleep(1000);
+    ok("点一下分类就定上：链接带 cat=、那颗 chip 亮起来、卡片只剩带这个分类的条",
+      W.location.hash === "#/video?cat=" + encodeURIComponent(C0) &&
+      $$(".cat-row .chip.on").length === 1 && txt(".cat-row .chip.on") === C0 &&
+      $$(".v-card").length === allCards,
+      "「" + C0 + "」筛出 " + $$(".v-card").length + " / " + allCards + " 条 ｜ " + W.location.hash);
+    click($$(".cat-row .chip.on")[0]);
+    await sleep(900);
+    ok("再点同一个分类就是取消，回到全部",
+      W.location.hash === "#/video" && $$(".cat-row .chip.on").length === 0 && $$(".v-card").length === allCards,
+      W.location.hash);
+    const emptyCat = FLAT.find((c) => (VCOL.cats || []).indexOf(c) < 0);
+    click($$(".cat-row .chip").find((a) => a.textContent.trim() === emptyCat));
+    await sleep(900);
+    ok("点一个还没成片的分类：给到位的空状态，不摆假卡",
+      $$(".v-card").length === 0 && /这个分类下还没有登记成片/.test(txt("#app")),
+      "「" + emptyCat + "」→ " + txt(".empty").slice(0, 24));
+
+    /* ⑧ 收起分类：与首页共用同一个开关（miao_catOpen），一处收起两处都收起 */
+    W.location.hash = "#/video";
+    await sleep(900);
+    click($("#vCatToggle"));
+    await sleep(700);
+    ok("点「收起分类」：分类那几行真收起来，按钮自己改成「展开分类」，开关写进本机",
+      $("#vCatBody").classList.contains("hidden") && txt("#vCatToggle") === "展开分类" &&
+      W.localStorage.getItem("miao_catOpen") === "false",
+      txt("#vCatToggle") + " ｜ " + W.localStorage.getItem("miao_catOpen"));
+    W.location.hash = "#/";
+    await sleep(900);
+    ok("首页那一栏跟着是收起状态（两边读的是同一个开关）",
+      !!$("#catBody") && $("#catBody").classList.contains("hidden") && txt("#catToggle") === "展开分类",
+      txt("#catToggle"));
+    click(W.document.getElementById("catToggle"));
+    await sleep(700);
+    W.location.hash = "#/video";
+    await sleep(900);
+    ok("在首页展开，回视频页就是展开的",
+      !$("#vCatBody").classList.contains("hidden") && txt("#vCatToggle") === "收起分类", txt("#vCatToggle"));
+    W.localStorage.setItem("miao_catOpen", "true");
+    W.localStorage.setItem("miao_video_favs", "[]");
+  }
+
+  /* ---------- 7.11 首页：分类栏不加「视频」那颗，小类点两下能取消 ---------- */
+  {
+    W.location.hash = "#/";
+    await sleep(1000);
+    ok("首页分类栏「全部」右边没有多出一颗「视频」（视频页自己有同一栏，共享那张表）",
+      !$$(".cat-head .chip").some((a) => /#\/video/.test(a.getAttribute("href") || "")) && !$("#catVideoChip"),
+      $$(".cat-head .chip").map((a) => a.textContent.trim()).join("，"));
+    const py = $$(".cat-body .chip").find((a) => a.textContent.trim() === "python");
+    click(py);
+    await sleep(900);
+    ok("首页小类点一下定上：链接带 cat=，那颗自己亮起来",
+      /cat=python/.test(W.location.hash) && txt(".cat-body .chip.on") === "python", W.location.hash);
+    click($$(".cat-body .chip.on")[0]);
+    await sleep(900);
+    ok("再点同一个就取消，回到全部（与视频页同一个手感）",
+      /^#\/category(\?sort=hot)?$/.test(W.location.hash) && !/cat=/.test(W.location.hash) &&
+      $$(".cat-body .chip.on").length === 0 && $$(".t-card").length >= 2,
+      W.location.hash + " ｜ 课程 " + $$(".t-card").length + " 门");
+  }
+
+  /* ---------- 7.12 通用设置：六栏都真、进度导得出去也还得回来 ---------- */
+  {
+    /* 先给这台浏览器造一份已知的账，面板里的数字必须与它逐条对得上（不是界面自己编的） */
+    W.localStorage.setItem("miao_progress", JSON.stringify({ python: ["l01", "l02", "l03"], git: ["git-l01"] }));
+    W.localStorage.setItem("miao_favs", JSON.stringify(["python"]));
+    W.localStorage.setItem("miao_exam_results", JSON.stringify({ python: { l01: { passed: true, best: 88 }, l02: { passed: false, best: 40 } } }));
+    W.localStorage.setItem("miao_video_favs", JSON.stringify(["devlog-01"]));
+    W.localStorage.setItem("miao_theme", JSON.stringify("light"));
+    W.localStorage.setItem("miao_fs", JSON.stringify(15));
+
+    click(W.document.getElementById("gearBtn"));
+    await sleep(300);
+    click(W.document.getElementById("settingsItem"));
+    await sleep(700);
+    ok("面板六栏齐：公告 / 赞助 / 开源仓库 / 加入我们 / 学习记录 / 建议",
+      $$(".set-nav-item").map((b) => b.textContent.trim()).join("|") === "公告|赞助|开源仓库|加入我们|学习记录|建议",
+      $$(".set-nav-item").map((b) => b.textContent.trim()).join("，"));
+    ok("左栏只写栏目名：底下那些小字说明全删了",
+      $$(".set-nav-item span").length === 0 && $$(".set-nav-item b").length === 0,
+      $$(".set-nav-item").map((b) => b.innerHTML).join(" ｜ ").slice(0, 60));
+    ok("面板里没有任何小字描述（.muted small 一栏都不摆）",
+      $$(".set-pop .muted.small").length === 0,
+      $$(".set-pop .muted").map((e) => e.textContent.trim().slice(0, 18)).join(" ｜ ") || "一处都没有");
+
+    async function goSec(k) {
+      const b = $$(".set-nav-item").find((x) => x.textContent.trim() === k);
+      click(b);
+      await sleep(500);
+      return $("#setBody");
+    }
+
+    await goSec("公告");
+    ok("公告标题自己一行、正文往下拉一行（不跟「喵站公告」挤在同一行）",
+      !!$(".set-note-t") && $(".set-note-t").textContent.trim() === "喵站公告" &&
+      /\.set-note-t\s*\{[^}]*display:\s*block/.test(CSS_TEXT),
+      $(".set-note-t") ? $(".set-note-t").textContent.trim() : "没这个类");
+    ok("公告不再套卡片，内容直接写成一段话",
+      $$(".set-note").length === 0 && $$(".set-body p").length >= 1 &&
+      /喵站公告/.test(txt(".set-body")) && /fuka开发者/.test(txt(".set-body")) &&
+      /m15681851831@163\.com/.test(txt(".set-body")), txt(".set-body").replace(/\s+/g, " ").slice(0, 64));
+
+    await goSec("赞助");
+    ok("赞助这一栏就是原来页脚那个收款码，而且只有点开这一栏才创建 img",
+      !!$(".sponsor-qr img") && /donate-qr\.png/.test($(".sponsor-qr img").getAttribute("src")),
+      $(".sponsor-qr img") ? $(".sponsor-qr img").getAttribute("src") : "没图");
+
+    await goSec("开源仓库");
+    const gh = $(".set-line a");
+    ok("开源仓库这一栏给的是真仓库地址（新窗口打开，带 noopener），短名与 site.js 一致",
+      !!gh && gh.getAttribute("href") === W.MIAO_SITE.github.url &&
+      gh.getAttribute("target") === "_blank" && /noopener/.test(gh.getAttribute("rel") || "") &&
+      gh.textContent.trim() === W.MIAO_SITE.github.repo,
+      gh ? gh.getAttribute("href") : "没有链接");
+    const star = $$(".set-ops a").find((a) => /星标/.test(a.textContent));
+    ok("「给个星标」不是句装饰：它指向仓库的 stargazers 页",
+      !!star && /\/stargazers$/.test(star.getAttribute("href")), star ? star.getAttribute("href") : "没这颗");
+    ok("复制地址那种按钮全删了（整个面板一个 copy-btn 都没有）",
+      $$(".set-pop .copy-btn").length === 0, $$(".set-pop .copy-btn").length + " 个");
+
+    await goSec("加入我们");
+    ok("加入我们 = 原页脚「成为老师」那一栏：邮箱 + 一封邮件，没有多余的按钮",
+      /m15781851831@163\.com/.test(txt(".mail-line")) &&
+      $(".mail-line a").getAttribute("href") === "mailto:m15781851831@163.com" &&
+      $$(".mail-line button").length === 0, txt(".mail-line").replace(/\s+/g, " "));
+
+    await goSec("建议");
+    ok("建议这一栏中间就一个邮箱，配那句「投稿请通过电子邮箱联系我们」",
+      /投稿请通过电子邮箱联系我们/.test(txt(".set-body")) && !!$(".set-mail a") &&
+      $(".set-mail a").textContent.trim() === "m15781851831@163.com" &&
+      $(".set-mail a").getAttribute("href") === "mailto:m15781851831@163.com",
+      txt(".set-mail"));
+    ok("输入框、发送、复制那些都删干净了（站内没有留言板，也不假装能收建议）",
+      !$("#setAdvice") && !$("#setAdviceSend") && !$("#setAdviceCopy") &&
+      !/提交成功|已收到你的建议/.test(txt(".set-body")), "只剩邮箱");
+
+    await goSec("学习记录");
+    ok("学习记录读的是本机存着的那份，不是内存里的 state：章数、门数、收藏、考过几场、视频收藏几条",
+      /学过 4 章（2 门课）/.test(txt(".set-body")) && /收藏 1 门教程/.test(txt(".set-body")) &&
+      /考过 1 场/.test(txt(".set-body")) && /收藏 1 条视频/.test(txt(".set-body")),
+      txt(".set-p").replace(/\s+/g, " ").slice(0, 70));
+    ok("下面那串清单是真按课程列的（两门，按学完的章数排），不是写死的句子",
+      $$(".set-list li").length === 2 && /Python/.test($$(".set-list li")[0].textContent) &&
+      /3 \/ 48 章/.test($$(".set-list li")[0].textContent),
+      $$(".set-list li").map((li) => li.textContent.replace(/\s+/g, " ")).join(" ｜ "));
+
+    click(W.document.getElementById("setExport"));
+    await sleep(400);
+    const ta = $("#setJson");
+    let snap = null;
+    try { snap = JSON.parse(ta.value); } catch (e) { snap = null; }
+    ok("导出：文本框里是一份合法 JSON，六个键全在（主题 / 字号 / 进度 / 收藏 / 成绩 / 视频收藏）",
+      !!snap && snap.kind === "miao-progress" && !ta.classList.contains("hidden") &&
+      Object.keys(snap.data).length === 6,
+      snap ? Object.keys(snap.data).join("，") : "JSON 解析不了");
+
+    /* 导入：换一份进度进去，localStorage、内存里的 state、面板上那行数字都要跟着变 */
+    const next = {
+      app: "喵站", kind: "miao-progress", version: 1, at: "2026-11-06T00:00:00.000Z",
+      data: {
+        miao_progress: { python: ["l01", "l02", "l03", "l04", "l05"], enwords: ["ew-l01"] },
+        miao_favs: ["python", "git"], miao_exam_results: {}, miao_video_favs: [],
+        miao_theme: "pink", miao_fs: 17
+      }
+    };
+    const inp = $("#setImport");
+    const file = new W.File([JSON.stringify(next)], "miao-progress-test.json", { type: "application/json" });
+    Object.defineProperty(inp, "files", { value: [file], configurable: true });
+    inp.dispatchEvent(new W.Event("change", { bubbles: true }));
+    await sleep(1000);
+    const after = JSON.parse(W.localStorage.getItem("miao_progress") || "{}");
+    ok("导入：文件里的进度真写回本机（python 5 章 + enwords 1 章）",
+      (after.python || []).length === 5 && (after.enwords || []).length === 1, JSON.stringify(after));
+    ok("导入后面板当场重算，不是还对着旧数字",
+      /学过 6 章（2 门课）/.test(txt(".set-body")) && /收藏 2 门教程/.test(txt(".set-body")) &&
+      /考过 0 场/.test(txt(".set-body")), txt(".set-p").replace(/\s+/g, " ").slice(0, 70));
+    ok("导入也带主题与字号：整站跟着换过去（state 是真读回来了）",
+      W.document.documentElement.getAttribute("data-theme") === "pink" &&
+      W.document.documentElement.style.getPropertyValue("--fs-base") === "17px",
+      W.document.documentElement.getAttribute("data-theme") + " / " +
+      W.document.documentElement.style.getPropertyValue("--fs-base"));
+
+    const bad = new W.File([JSON.stringify({ kind: "别的软件", data: { miao_progress: { python: [] } } })],
+      "bad.json", { type: "application/json" });
+    Object.defineProperty(inp, "files", { value: [bad], configurable: true });
+    inp.dispatchEvent(new W.Event("change", { bubbles: true }));
+    await sleep(800);
+    ok("导入不是自己家的文件：说清为什么不行，一个键都不写",
+      /认不出 kind/.test(txt("#toast")) &&
+      (JSON.parse(W.localStorage.getItem("miao_progress") || "{}").python || []).length === 5,
+      txt("#toast"));
+
+    {
+      const dead = $$(".set-pop a").filter((a) => {
+        const h = a.getAttribute("href") || "";
+        return h === "" || h === "#" || h === "#/";
+      });
+      ok("面板里没有死链：每个 a 都指向真地方（仓库 / stargazers / mailto）",
+        dead.length === 0, dead.map((a) => a.textContent.trim()).join("，") ||
+        $$(".set-pop a").length + " 个链接全部有去处");
+    }
+
+    W.location.hash = "#/category";
+    await sleep(800);
+    ok("换页时面板自己收掉：里面的数字是按当时那份数据画的，留着就是旧账",
+      !$(".set-pop"), $(".set-pop") ? "还在" : "收掉了");
+    W.localStorage.setItem("miao_progress", "{}");
+    W.localStorage.setItem("miao_favs", "[]");
+    W.localStorage.setItem("miao_exam_results", "{}");
+    W.localStorage.setItem("miao_video_favs", "[]");
+    W.localStorage.setItem("miao_theme", '"auto"');
+    W.localStorage.setItem("miao_fs", "15");
   }
 
   /* ---------- 8. 反向断言 ---------- */

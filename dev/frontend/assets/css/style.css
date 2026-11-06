@@ -75,6 +75,9 @@
   --shadow-l: 0 18px 50px rgba(15, 20, 40, .28);
   --ok-on: #ffffff;
   --dot-idle: #c3c7d0;
+  /* 视频：播放器那圈黑边（letterbox）。三套都给近黑 —— 视频本身是暗的，
+     跟着页面底色走会让 16:9 之外的上下两条变成浅色横条，很割裂。 */
+  --video-bg: #14161a;
 }
 
 :root[data-theme="dark"] {
@@ -130,6 +133,7 @@
   --shadow-l: 0 18px 50px rgba(0, 0, 0, .6);
   --ok-on: #082415;
   --dot-idle: #55565c;
+  --video-bg: #101013;   /* 深色：跟 --bg 同族再压暗一档，播放器四周不反光 */
 }
 
 :root[data-theme="pink"] {
@@ -190,6 +194,7 @@
   --shadow-l: 0 18px 50px rgba(70, 20, 45, .28);
   --ok-on: #ffffff;
   --dot-idle: #d8c2cb;
+  --video-bg: #2a1520;   /* 粉色：深梅子底，跟这套的粉不冲突 */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -518,17 +523,53 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; }
 .empty { text-align: center; padding: 46px 0; color: var(--text-3); font-size: .9rem; }
 
-/* ---------- 设置页 ---------- */
-.set-card { padding: 24px 26px; margin-bottom: 18px; }
-.set-card h3 { font-size: 1.02rem; margin-bottom: 4px; }
-.set-card .desc { font-size: .85rem; color: var(--text-2); margin-bottom: 16px; }
-.theme-card {
-  border: 2px solid var(--border); border-radius: var(--radius-m); padding: 12px;
-  cursor: pointer; background: var(--panel); transition: border-color .18s;
+/* ---------- 通用设置（齿轮里那一项点开的面板：公告 / 赞助 / 开源仓库 / 加入我们 / 学习记录 / 建议） ----------
+   左边选一栏、右边出内容。原来散在页脚与齿轮菜单里的入口都收进这里，规则也只剩这一套。 */
+.set-pop {
+  width: min(760px, 94vw); max-height: 86vh; padding: 0; text-align: left; overflow: hidden;
+  display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius-l); box-shadow: var(--shadow-l);
 }
-.theme-card.on { border-color: var(--accent); }
-.theme-card .nm { font-size: .9rem; font-weight: 600; }
-.theme-card .ds { font-size: .78rem; color: var(--text-2); }
+.set-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.set-head h3 { flex: 1; font-size: 1.05rem; }
+.set-wrap { display: grid; grid-template-columns: 196px minmax(0, 1fr); min-height: 0; }
+.set-nav {
+  display: flex; flex-direction: column; gap: 2px; padding: 12px; overflow: auto;
+  background: var(--bg-soft); border-right: 1px solid var(--border);
+}
+/* 左栏只写栏目名，底下那些小字说明全删了（他这一轮点的） */
+.set-nav-item {
+  display: block; text-align: left; padding: 10px 12px;
+  border: none; border-radius: var(--radius-s); background: none;
+  font-size: .92rem; font-weight: 600; color: var(--text-2); cursor: pointer;
+}
+.set-nav-item:hover, .set-nav-item.on { background: var(--accent-soft); }
+.set-nav-item.on { color: var(--accent); }
+.set-body { padding: 18px 20px 22px; overflow: auto; max-height: calc(86vh - 58px); }
+.set-p { font-size: .9rem; line-height: 1.75; color: var(--text-2); margin-bottom: 12px; }
+.set-p b { color: var(--text); font-variant-numeric: tabular-nums; }
+/* 公告的标题自己占一行，正文往下拉一行 —— 不要「喵站公告 你好这里是…」挤在同一行 */
+.set-note-t { display: block; margin-bottom: 4px; }
+.set-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.set-code { font-family: var(--mono); font-size: .9rem; color: var(--link); user-select: all; }
+.set-code:hover { text-decoration: underline; text-underline-offset: 2px; }
+/* 建议那一栏就一个居中的邮箱，别的都不摆 */
+.set-mail { text-align: center; margin: 26px 0 8px; }
+.set-mail a { font-size: 1.15rem; color: var(--link); letter-spacing: .3px; user-select: all; }
+.set-mail a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.set-ops { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 10px; }
+.set-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 0 0 14px; }
+.set-list li { display: flex; align-items: baseline; gap: 10px; font-size: .88rem; }
+.set-list li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.set-list li b { flex: 0 0 auto; font-size: .8rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.set-json { font-family: var(--mono); font-size: .76rem; line-height: 1.5; resize: vertical; }
+#setImport { display: none; }        /* 文件选择器藏在「导入进度」那颗 label 后面，界面少一个丑控件 */
+@media (max-width: 720px) {
+  .set-wrap { grid-template-columns: minmax(0, 1fr); }
+  .set-nav { flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  .set-nav-item { flex: 0 0 auto; }
+}
 
 /* ---------- 搜索页 ---------- */
 /* 这三条原来是 app.js 里的内联 style，收回来 */
@@ -664,7 +705,6 @@ footer .container > * { font-size: .82rem; color: var(--text-2); }
 .foot-link { color: var(--text-2); background: none; border: 0; padding: 0; font-size: .82rem; cursor: pointer; text-decoration: none; }
 .foot-link:hover { text-decoration: underline; }
 .sponsor-pop { text-align: center; }
-.sponsor-pop .sub { margin: -6px 0 14px; }
 /* 页脚「成为老师」弹层里那行邮箱 */
 .mail-line { display: flex; align-items: center; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 14px 0 10px; }
 .mail-line b { font-size: 1.05rem; letter-spacing: .3px; user-select: all; }
@@ -1336,3 +1376,151 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 /* 卡片标题：两行封顶，且不放过最后一个孤字 */
 .t-body h3 { text-wrap: balance; }
 .article h1, .tut-hero h1 { text-wrap: balance; }
+
+/* ============================================================
+   视频（#/video 列表与 #/video/<id> 播放页；界面脚本 assets/js/video-ui.js）
+   列表页的骨架与筛法直接沿用首页那几件（.page-title / .filter-bar / .cat-group / .grid），
+   这里只补视频自己那几张卡；播放页才是这一节自己排的版。
+   只摆他点名的那几样：左上那块最大的屏（水印在屏内左上）、标题与元信息、
+   简介与介绍、相关分类、右栏合集、每条右下角那三个点（下载至本地 / 收藏）。
+   广告位、弹幕框、UP 主卡与关注、点赞投币收藏计数、评论区都不在这里 ——
+   站内没有账号也没有后台，那些位置取不到数，摆上去就是假数据。
+   ============================================================ */
+.video-page { padding-top: 26px; padding-bottom: 62px; }
+/* 列表页自己的标题与网格：读法跟首页一样（标题 → 筛法 → 网格），类与规则是视频自己的，
+   只有分类那一栏（.filter-bar / .cat-group / .cat-row / .chip）是照首页抄的同一套 */
+.v-page-title { margin: 0 0 4px; font-size: 1.5rem; }
+/* 255px 起：1440 宽下正好 4 列，大卡占 3 列时右边还能站一张普通卡；给到 275 就只剩 3 列，大卡会吃掉整行 */
+.v-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 18px; }
+
+/* 视频卡：封面在上（横版 3×4，完整露出），题目在封面下面，简介再在题目下面 —— 照他给的那两张参考图。
+   卡本身不再挂 .card 那块面板底 + 描边 + 圆角（他叫它「灰色的圆角方框」），文字直接落在页面底色上；
+   圆角只给封面那一张图。 */
+.v-card { display: flex; flex-direction: column; min-width: 0; }
+.v-cover {
+  display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius-m);
+  /* 封面牌底：没登记 cover 的那条走视频首帧，首帧还没到就先垫这块 */
+  background: linear-gradient(140deg, var(--cover-a), var(--cover-b));
+}
+.v-cover-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease; }
+.v-card:hover .v-cover-img { transform: scale(1.03); }
+.v-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 10px 2px 0; }
+/* 简介占了原来题目那档：大、主文本色，两行封顶，超出省略号 */
+.v-brief {
+  flex: 1; min-width: 0; font-size: .98rem; font-weight: 600; line-height: 1.5; color: var(--text);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+/* 题目占了原来简介那档：小、次级色，一行封顶 */
+.v-name {
+  flex: 1; min-width: 0; font-size: .84rem; color: var(--text-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.v-name:hover { color: var(--accent); }
+/* 第二行：题目 + 时长（发布时间不摆在这），三个点提到这一行的右端 */
+.v-foot { display: flex; align-items: center; gap: 8px; }
+.v-sub { flex: 0 0 auto; font-size: .76rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.v-faved-tag {
+  flex: 0 0 auto; padding: 1px 7px; border: 1px solid var(--star-line);
+  border-radius: 999px; font-size: .72rem; background: var(--star-bg); color: var(--star-ink);
+}
+.v-card:not(.faved) .v-faved-tag { display: none; }
+/* 大格回到上一版：横向 3 列、纵向跨 2 行，比例仍是 4:3，只是更大 */
+.v-big { grid-column: span 3; grid-row: span 2; }
+.v-big .v-brief { font-size: 1.05rem; }
+.v-big .v-body { padding: 14px 2px 0; }
+@media (max-width: 1080px) {
+  .v-big { grid-column: span 2; }
+}
+@media (max-width: 720px) {
+  .v-big { grid-column: span 1; grid-row: span 1; }
+}
+
+/* 那三个点：卡片右下角、合集每一行右端、播放页标题行右端共用这一个按钮样式 */
+.v-more {
+  flex: 0 0 auto; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 8px; background: none; color: var(--text-3); cursor: pointer;
+}
+.v-more svg { width: 15px; height: 15px; fill: currentColor; }
+.v-more:hover, .v-more.on { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-soft); }
+.v-ep.faved .v-more { color: var(--star); }
+
+.v-menu {
+  position: absolute; z-index: 210; min-width: 158px; padding: 5px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius-m); box-shadow: var(--shadow); animation: pop .14s ease;
+}
+.v-menu-item {
+  display: block; width: 100%; text-align: left; padding: 8px 10px; border: none;
+  border-radius: var(--radius-s); background: none; color: var(--text); font-size: .88rem; cursor: pointer;
+}
+.v-menu-item:hover { background: var(--accent-soft); color: var(--accent); }
+
+/* file:// 下浏览器不能把本地文件另存为，「下载至本地」就把真实路径摊开来给人复制 */
+.v-path-pop { width: 460px; max-width: 92vw; text-align: left; }
+.v-path {
+  display: block; margin: 4px 0 14px; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius-s); background: var(--code-bg); color: var(--text-2);
+  font-family: var(--mono); font-size: .78rem; line-height: 1.6; word-break: break-all;
+}
+.v-path-ops { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* 播放页：左边大屏，右边合集；窄屏收成一栏 */
+.v-layout { display: grid; grid-template-columns: minmax(0, 1fr) 322px; gap: 22px; align-items: start; }
+.v-main { min-width: 0; }
+.v-player { position: relative; background: var(--video-bg); border-radius: var(--radius-m); overflow: hidden; }
+/* 播放器不写死比例：格子比例由 video 元素上那条 inline aspect-ratio 按素材 w/h 算，
+   16:9 的片子就 16:9，将来 4:3 的片子就 4:3，两边都不裁不拉 */
+.v-player video { display: block; width: 100%; height: auto; background: var(--video-bg); }
+/* 水印压在画面上，遇到浅色帧（片头那种米白底）白字就糊了，所以垫一块半透明底 */
+.v-mark {
+  position: absolute; left: 14px; top: 12px; display: flex; align-items: center; gap: 7px;
+  padding: 3px 10px 3px 6px; border-radius: 999px; background: var(--eye-bg);
+  color: var(--eye-ink); opacity: .92; pointer-events: none;
+  text-shadow: 0 1px 2px var(--mask-bg), 0 0 8px var(--mask-bg);
+}
+.v-mark svg { flex: 0 0 auto; }
+.v-mark b { font-size: .95rem; letter-spacing: .02em; }
+.v-mark span { font-size: .66rem; letter-spacing: .14em; opacity: .78; }
+/* 标题、元信息、简介与介绍、相关分类：全在屏的头上。
+   不起小标题、不画分隔线 —— 那两张参考图里这一段就是连着读的。 */
+.v-title-row { display: flex; align-items: flex-start; gap: 10px; }
+.v-title-row h1 { flex: 1; min-width: 0; font-size: 1.6rem; line-height: 1.3; text-wrap: balance; }
+.v-title-more { margin-top: 6px; }
+.v-meta { display: flex; align-items: center; flex-wrap: wrap; margin: 8px 0 16px; font-size: .85rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.v-meta .m-sep { flex: 0 0 auto; margin: 0 6px; opacity: .5; }
+/* 简介在屏的头上，字给到正文以上 */
+.v-desc { margin: 0 0 22px; }
+.v-desc p { font-size: 1.05rem; line-height: 1.9; color: var(--text); }
+/* 介绍与分类在屏的下面，压回次级色，跟简介拉开一档 */
+.v-after { margin-top: 20px; }
+.v-after p { font-size: .93rem; line-height: 1.85; color: var(--text-2); }
+.v-after p + p { margin-top: 8px; }
+.v-tags { display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 12px; }
+.v-tag { padding: 2px 11px; border-radius: 999px; background: var(--bg-mute); color: var(--text-2); font-size: .78rem; }
+.v-tag:hover { background: var(--accent-soft); color: var(--accent); }
+
+.v-side { position: sticky; top: 82px; min-width: 0; }
+.v-col-box { padding: 14px 14px 8px; }
+.v-col-head { display: flex; align-items: baseline; gap: 10px; }
+.v-col-head b { flex: 1; min-width: 0; font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v-col-count { flex: 0 0 auto; font-size: .78rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.v-eps { list-style: none; display: flex; flex-direction: column; margin-top: 10px; }
+.v-ep { display: flex; align-items: center; gap: 6px; }
+.v-ep > a {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px;
+  padding: 8px 6px 8px 8px; border-radius: var(--radius-s); color: var(--text); font-size: .86rem;
+}
+.v-ep > a:hover { background: var(--accent-soft); color: var(--accent); }
+.v-ep.on > a { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.v-ep-no { flex: 0 0 18px; text-align: center; font-size: .76rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.v-ep.on .v-ep-no { color: var(--accent); }
+.v-ep-nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v-ep-du { flex: 0 0 auto; font-size: .76rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.v-ep.on .v-ep-du { color: var(--accent); }
+/* 「正在播」那一行的标记：纯 CSS 三角，不引图片也不占请求 */
+.v-play-bar { display: inline-block; width: 9px; height: 11px; vertical-align: middle; background: currentColor; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+
+@media (max-width: 1080px) {
+  .v-layout { grid-template-columns: minmax(0, 1fr); }
+  .v-side { position: static; }
+}
