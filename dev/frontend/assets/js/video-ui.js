@@ -255,7 +255,8 @@
     function href2(c2) {
       return "#/video" + (c2 ? "?cat=" + encodeURIComponent(c2) : "");
     }
-    var head = '<a class="chip on" href="' + href2(cat) + '">全部 ' + ORDER.length + "</a>" +
+    /* 「全部」右边不显示数量 —— 首页那颗也只写「全部」，这一排两样才对得上（2026-11-06 他让删的） */
+    var head = '<a class="chip on" href="' + href2(cat) + '">全部</a>' +
       '<span class="cat-toggle" id="vCatToggle" role="button" tabindex="0" aria-expanded="' + (catOpen ? "true" : "false") + '">' +
       (catOpen ? "收起分类" : "展开分类") + "</span>";
 

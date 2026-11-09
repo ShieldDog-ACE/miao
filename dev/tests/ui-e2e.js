@@ -784,7 +784,7 @@ const reqLog = [];
       W.localStorage.getItem("miao_video_favs"));
     ok("收藏过的卡片自己带上标记", $$(".v-card.faved").length === 1, "带标记 " + $$(".v-card.faved").length + " 张");
     ok("这一排与首页一模一样：只有「全部」与「收起分类」，收藏不是筛法、不摆在这一排",
-      $$(".cat-head .chip").length === 1 && txt(".cat-head .chip") === "全部 " + VLIST.length &&
+      $$(".cat-head .chip").length === 1 && txt(".cat-head .chip") === "全部" &&
       !!$("#vCatToggle") && !/收藏/.test(txt(".cat-head")), txt(".cat-head").replace(/\s+/g, " "));
     click($$(".v-card .v-more")[0]);
     await sleep(150);
