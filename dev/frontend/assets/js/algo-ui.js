@@ -492,7 +492,8 @@
   function cppStarter(problem) {
     var fn = CPP_STARTERS[problem.id] || "int main() {\n\n    return 0;\n}\n";
     if (fn.indexOf("int main") < 0) fn += "\nint main() {\n    return 0;\n}\n";
-    return "#include <bits/stdc++.h>\nusing namespace std;\n\n" + fn;
+    /* 不用 GCC 专有的 bits/stdc++.h：Windows 的 MSVC 也要能直接编 */
+    return "#include <iostream>\n#include <vector>\n#include <string>\n#include <algorithm>\n#include <map>\nusing namespace std;\n\n" + fn;
   }
 
   function vProblem(app, id) {
