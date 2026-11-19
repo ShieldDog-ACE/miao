@@ -22,12 +22,16 @@ const path = require("path");
 const CSS = path.resolve(__dirname, "..", "frontend", "assets", "css", "style.css");
 const VERBOSE = process.argv.includes("--verbose");
 
-/* 主题块：选择器原文 → 主题名。粉色是这一轮新加的，之前只有 light/dark。 */
-const THEMES = ["light", "dark", "pink"];
+/* 主题块：选择器原文 → 主题名。
+   miao 是原版三套（浅 / 深 / 粉）；mac 是这一轮新加的苹果风，两套亮度各一份，
+   只在 <html data-style="mac"> 时生效。mac 的色板也要过同一把尺。 */
+const THEMES = ["light", "dark", "pink", "macLight", "macDark"];
 const BLOCK = {
   light: ":root",
   dark: ':root[data-theme="dark"]',
   pink: ':root[data-theme="pink"]',
+  macLight: ':root[data-style="mac"][data-theme="light"]',
+  macDark: ':root[data-style="mac"][data-theme="dark"]',
 };
 
 /* 浅色块里的颜色令牌，允许深色/粉色不覆盖的白名单 —— 每条都要写理由，
@@ -157,11 +161,21 @@ const problems = [];
 const warn = (area, msg) => problems.push({ area, msg });
 
 /* 深色与粉色块是**叠加**在 :root 上的（CSS 自定义属性照层叠走，没覆盖的沿用浅色值），
-   所以解析 var() 时要用「浅色 ∪ 本主题」这张合成表，不是只看本主题块。
+   所以解析 var() 时要用「实际会命中的那几块」合成，不是只看本主题块。
+   mac 是叠在 miao 同一档亮度上的风格层：macLight 继承 light，macDark 继承 light+dark。
    另外在普通规则里就地声明的自定义属性（如 .ide{--ide-fs:15px}）不属于主题令牌，
    单独收集起来豁免。 */
+const INHERIT_FROM = {
+  light: ["light"],
+  dark: ["light", "dark"],
+  pink: ["light", "pink"],
+  macLight: ["light", "macLight"],
+  macDark: ["light", "dark", "macDark"],
+};
 const effective = {};
-for (const t of THEMES) effective[t] = Object.assign({}, tokens.light, tokens[t]);
+for (const t of THEMES) {
+  effective[t] = Object.assign({}, ...INHERIT_FROM[t].map((k) => tokens[k]));
+}
 const localProps = new Set();
 for (const b of blocks) {
   if (Object.values(BLOCK).includes(b.sel)) continue;
@@ -170,11 +184,13 @@ for (const b of blocks) {
   while ((lm = lre.exec(b.body))) localProps.add(lm[1]);
 }
 
-/* 1) 三套主题块都得存在，且颜色令牌数量对得上 */
+/* 1) 三套 miao 主题块都得存在，且颜色令牌对得上。
+   mac 的两块是风格覆盖：漏掉的令牌会落到同亮度的 miao 块上（macDark 落 dark），
+   本来就是这个设计，不按「必须覆盖浅色」要求它。 */
 const lightColors = Object.keys(tokens.light).filter(k => isColor(tokens.light[k]));
 for (const t of THEMES) {
   if (!Object.keys(tokens[t]).length) { warn("令牌完备性", `主题块 ${BLOCK[t]} 一个令牌都没有（CSS 里缺这一套）`); continue; }
-  if (t === "light") continue;
+  if (t === "light" || t === "macLight" || t === "macDark") continue;
   const missing = lightColors.filter(k => !(k in tokens[t]) && !(k in INHERIT_OK));
   if (missing.length)
     warn("令牌完备性", `${t} 没覆盖浅色的 ${missing.length} 个颜色令牌：${missing.join(", ")} —— 这些位置在该主题下会贴一块浅底`);

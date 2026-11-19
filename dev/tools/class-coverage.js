@@ -22,7 +22,7 @@ const DEV = path.resolve(__dirname, "..");
 const FRONT = path.join(DEV, "frontend");
 const CSS_FILE = process.env.MIAO_CSS                            /* 自测用：换一份 CSS 喂给这把尺，验证它真的会红 */
   || path.join(FRONT, "assets", "css", "style.css");
-const PREFIX = /^(tk|term|tb|hl|en|pp|sd|rs|ck|gt|st|tl|pt|po|uv|cg|rt|cr|nb|ms|ew|rd)-/;
+const PREFIX = /^(tk|term|tb|hl|en|pp|sd|rs|ck|gt|st|tl|pt|po|uv|cg|rt|cr|nb|ms|ew|rd|algo)-/;
 const QUIET = process.argv.includes("--quiet");
 
 const css = fs.readFileSync(CSS_FILE, "utf8");

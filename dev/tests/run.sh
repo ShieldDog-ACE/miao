@@ -8,6 +8,7 @@
 #   4c) 编辑器控件   —— 两把尺无损 round-trip、四层对齐、成对闭合/缩进/补全（code-editor.js）
 #   5) 沙箱对拍     —— 教程正文 433 段代码逐段与本机 CPython 比 stdout（需要 python3）
 #   6) 考卷自测     —— 45 场 Python 考试 + 3 章英语卷的参考解/合法写法/宽松写法/错解
+#   7) 算法题库自测 —— 13 题 / 78 条用例：参考解全过、骨架过不了、深度比较与错误分支
 # 跑法：bash dev/tests/run.sh
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -30,14 +31,17 @@ echo "（本次 UI E2E 用端口 ${MIAO_TEST_PORT}）"
 echo "===== 静态站 UI E2E ====="
 node "$HERE/ui-e2e.js" || EC=1
 echo
-echo "===== 三套配色闸门（令牌完备性 / 字底对比度 / :root 外硬编码色） ====="
+echo "===== 主题闸门（miao 三套 + mac 浅/深 · 令牌完备性 / 字底对比度 / :root 外硬编码色） ====="
 node "$HERE/../tools/theme-check.js" || EC=1
 echo
 echo "===== 封面闸门（标志居中 / 安全区 / 对比度 —— 产物只由 covers.js 拥有） ====="
 node "$HERE/../tools/covers.js" --check || EC=1
 echo
-echo "===== 类名覆盖闸门（JS 发出的每个 tk-/term-/tb-/en- 类，CSS 里都得有规则） ====="
+echo "===== 类名覆盖闸门（JS 发出的每个 tk-/term-/tb-/en-/algo- 类，CSS 里都得有规则） ====="
 node "$HERE/../tools/class-coverage.js" || EC=1
+echo
+echo "===== 算法题库自测（13 题 / 78 条用例，参考解全过 / 骨架过不了 / 错误分支） ====="
+node "$HERE/algo-test.js" || EC=1
 echo
 echo "===== 日更工具语法（本地模型三件套；只查语法，不连模型、不联网） ====="
 for f in dev/tools/daily/llm.mjs dev/tools/daily/probe.mjs dev/tools/daily/draft.mjs; do

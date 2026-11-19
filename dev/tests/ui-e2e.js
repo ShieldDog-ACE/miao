@@ -110,6 +110,77 @@ const reqLog = [];
     ok("首页卡的类名与结构没换：还是 .t-card > .cover.has-img + .t-body",
       !!$(".t-card .cover.has-img") && !!$(".t-card .t-body .intro") && !!$(".t-card .t-meta"),
       $$(".t-card").length + " 张卡");
+    ok("默认风格是 miao（原版），不是一上来就覆盖成苹果风",
+      W.document.documentElement.getAttribute("data-style") === "miao",
+      W.document.documentElement.getAttribute("data-style"));
+    ok("教程栅格每行四个（窄屏再收）",
+      /\.grid\s*\{[^}]*grid-template-columns:\s*repeat\(4,/.test(CSS_TEXT),
+      txt(".grid") ? "见 CSS" : "见 CSS");
+    {
+      const homeTitle = $(".page-title"), homeBar = $(".filter-bar"), homeList = $("#tutList");
+      const catChip = $$(".cat-row .chip").filter((a) => a.textContent.trim() !== "全部")[0];
+      const catName = catChip.textContent.trim();
+      click(catChip);
+      await sleep(500);
+      ok("首页换分类：只换 #tutList 里的教程卡，标题和筛选栏节点不动",
+        $(".page-title") === homeTitle && $(".filter-bar") === homeBar && $("#tutList") === homeList &&
+        /cat=/.test(W.location.hash) && $("#tutList").innerHTML.length > 0,
+        catName + " ｜ " + W.location.hash);
+      click($(".cat-head .chip"));
+      await sleep(400);
+      ok("首页不再摆「按热度 / 按最新」排序 UI",
+        !$("#sortSel") && !/按热度|按最新/.test(txt(".filter-bar")), txt(".filter-bar"));
+    }
+    ok("mac 的筛选只留文字：chip 没有胶囊底 / 边框",
+      /\[data-style="mac"\] \.chip\s*\{[^}]*background:\s*transparent/.test(CSS_TEXT) &&
+      !/\[data-style="mac"\] \.chip\s*\{[^}]*border-radius:\s*var\(--radius-pill\)/.test(CSS_TEXT),
+      "见 CSS");
+    ok("mac 首页 / 视频 / 考试共用同一套页面标题",
+      /\[data-style="mac"\] \.page-title,\s*\[data-style="mac"\] \.v-page-title\s*\{[^}]*font-size:\s*1\.6rem/.test(CSS_TEXT),
+      "见 CSS");
+    ok("mac 深色有星空层 + 两段闪烁动画；换页有淡入",
+      !!$(".mac-stars") && /\[data-style="mac"\]\[data-theme="dark"\] \.mac-stars/.test(CSS_TEXT) &&
+      /@keyframes macTwinkle/.test(CSS_TEXT) && /@keyframes macPageIn/.test(CSS_TEXT) &&
+      /\[data-style="mac"\] \.rv\s*\{/.test(CSS_TEXT),
+      "见 CSS");
+    {
+      const rvCss = CSS_TEXT.slice(CSS_TEXT.indexOf("@keyframes macReveal"), CSS_TEXT.indexOf("@keyframes macPageIn"));
+      const pageCss = CSS_TEXT.slice(CSS_TEXT.indexOf("@keyframes macPageIn"), CSS_TEXT.indexOf("/* ---------- 导航"));
+      ok("显现动画：淡入拉长到 .9s，上浮只在前 28% 收完；两者同时开始，不再先全亮再弹起",
+        /animation:\s*macReveal\s+\.9s/.test(CSS_TEXT) &&
+        /0%\s*\{[^}]*opacity:\s*0/.test(rvCss) && /28%\s*\{[^}]*translateY\(0\)/.test(rvCss) &&
+        /100%\s*\{[^}]*opacity:\s*1/.test(rvCss) && !/50%/.test(rvCss),
+        "rv 关键帧");
+      ok("换页也是淡入与上浮同时开始：上浮 35% 收完，淡入走完 .7s",
+        /0%\s*\{[^}]*opacity:\s*0/.test(pageCss) && /35%\s*\{[^}]*translateY\(0\)/.test(pageCss) &&
+        /100%\s*\{[^}]*opacity:\s*1/.test(pageCss) && !/30%/.test(pageCss),
+        "page 关键帧");
+    }
+    ok("精致风格：进入题目、收起 / 全屏都有过渡动画，不是瞬变",
+      /@keyframes algoPanelIn/.test(CSS_TEXT) &&
+      /\[data-style="mac"\] \.algo-problem\s*\{[^}]*transition:\s*grid-template-columns/.test(CSS_TEXT) &&
+      /\[data-style="mac"\] \.algo-desc\.collapsed \.algo-desc-scroll/.test(CSS_TEXT) &&
+      /\[data-style="mac"\] \.algo-workspace\.code-collapsed \.algo-editor/.test(CSS_TEXT) &&
+      /\[data-style="mac"\] \.algo-console\.collapsed \.algo-console-body/.test(CSS_TEXT),
+      "见 CSS");
+  }
+  /* ---------- 1b. Markdown 渲染层（只做层，不迁旧 .js 正文） ---------- */
+  {
+    const md = "## 小节标题\n\n正文 **重点**、[链接](https://example.com) 和 `x = 1`。\n\n- 第一条\n- 第二条\n\n```py\nprint('md')\n```\n\n:::tip green\n提示文字\n:::\n\n<svg viewBox='0 0 10 10'><rect width='10' height='10'/></svg>";
+    const bs = W.MIAO_MD.blocks(md);
+    ok("Markdown 层能解析标题 / 段落 / 列表 / 代码 / 提示 / SVG",
+      bs.map((b) => b.t).join("|") === "h2|p|ul|code|tip|svg" &&
+      /重点/.test(bs[1].text) && /print\('md'\)/.test(bs[3].code) &&
+      bs[4].color === "green" && /<rect/.test(bs[5].code),
+      bs.map((b) => b.t).join("|"));
+    const ih = W.MIAO_MD.inline("**重点** [链接](https://example.com) `x = 1`");
+    ok("Markdown 行内：**重点** / [链接] / `代码` 都渲染成原来的行内样式",
+      /class="em"/.test(ih) && /class="art-link"/.test(ih) && /class="md-code"/.test(ih), ih);
+    const withMd = W.MIAO_MD.chapter({ md: "## 新标题\n\n新正文", blocks: [{ t: "p", text: "旧正文" }] });
+    const noMd = W.MIAO_MD.chapter({ blocks: [{ t: "p", text: "旧正文" }] });
+    ok("章节有 md 时优先用 Markdown，没有 md 时继续用旧 .js blocks",
+      withMd[0].t === "h2" && /新正文/.test(withMd[1].text) && !/旧正文/.test(JSON.stringify(withMd)) &&
+      noMd[0].text === "旧正文", withMd.map((b) => b.t).join("|"));
   }
   ok("没有登录 / 注册入口", !/href="#\/login"/.test(W.document.body.innerHTML) && !$("#avBtn"));
   ok("导航里不再有「成为老师」（挪到页脚了）", !/href="#\/apply"/.test($("header").innerHTML));
@@ -140,26 +211,74 @@ const reqLog = [];
   ok("教程页顶的元信息行带作者全名（卡片省掉的那一项在这里补回来）",
     /喵站官方|Microsoft/.test(txt(".tut-hero .t-meta")), txt(".tut-hero .t-meta").slice(0, 46));
   ok("详情页信息卡不再用内联 style 摆样式", !/style="[^"]*border-top:1px solid var\(--border\)/.test($(".side-card").outerHTML));
-  ok("侧栏报出本机考试进度（45 课里过了几课）", /课末考试/.test(txt(".side-card")), txt(".side-card").slice(0, 70));
+  ok("文档类教程不再挂课末考试入口（侧栏也不报考试进度）",
+    !/课末考试|进入考试|再考一次/.test(txt(".side-card")) && !/课末考试/.test(txt(".tut-cols")),
+    txt(".side-card").slice(0, 70));
 
   /* ---------- 3. 阅读页 ---------- */
   W.location.hash = "#/read/python/l01";
   await sleep(1300);
   ok("正文直接渲染，不登录也能读", $$(".article").length > 0 && txt(".article").length > 50, "正文 " + txt(".article").length + " 字");
-  ok("排了考卷的课只有「进入考试」", !!$(".exam-entry") && !$("#doneBtn"));
+  ok("mac 阅读页正文加宽：文章卡 1040，两侧栏收窄，正文不再挤成窄条",
+    /\[data-style="mac"\] \.article\s*\{[^}]*max-width:\s*1040px/.test(CSS_TEXT) &&
+    /\[data-style="mac"\] \.read-grid\s*\{[^}]*grid-template-columns:\s*230px minmax\(0, 1fr\) 190px/.test(CSS_TEXT),
+    "见 CSS");
+  ok("原来排了考卷的课也只剩「完成！」按钮，没有考试入口", !!$("#doneBtn") && !$(".exam-entry"));
   W.location.hash = "#/read/python/s01";
   await sleep(1200);
-  ok("第 0 课不考试：仍是「完成！」按钮", !!$("#doneBtn") && !$(".exam-entry"));
+  ok("第 0 课同样是「完成！」按钮，没有考试入口", !!$("#doneBtn") && !$(".exam-entry"));
+  const doneArticle = $(".article");
   click($("#doneBtn"));
   await sleep(900);
   ok("点完成写进本机进度（localStorage）",
     (JSON.parse(W.localStorage.getItem("miao_progress") || "{}").python || []).indexOf("s01") >= 0,
     W.localStorage.getItem("miao_progress"));
+  ok("点完成只改按钮和左侧圆点，不重渲染正文（同一 .article 节点还在，不闪屏）",
+    $(".article") === doneArticle && $("#doneBtn").classList.contains("btn-soft") &&
+    $(".rt-item.on").classList.contains("done"), $("#doneBtn").className);
+
+  /* 非精致：左目录切章直接换页，不出交叉虚化 */
+  {
+    const oldStyle = W.document.documentElement.getAttribute("data-style");
+    W.document.documentElement.setAttribute("data-style", "miao");
+    const miaoOther = $$(".rt-item").filter((a) => !a.classList.contains("on"))[0];
+    click(miaoOther);
+    await sleep(120);
+    ok("非精致风格切文档：不盖交叉虚化快照，直接换页",
+      !$(".route-xfade") && !W.document.body.classList.contains("route-xfade-on"),
+      !!$(".route-xfade") + " / " + W.document.body.className);
+    await sleep(900);
+
+    /* 精致：左目录切章交叉虚化 */
+    W.document.documentElement.setAttribute("data-style", "mac");
+    const other = $$(".rt-item").filter((a) => !a.classList.contains("on"))[0];
+    const oldTitle = txt(".article h1");
+    click(other);
+    ok("精致风格左目录切章当场盖出交叉虚化快照，并挂上 route-xfade-on",
+      !!$(".route-xfade") && W.document.body.classList.contains("route-xfade-on") &&
+      $(".route-xfade .article") !== null,
+      !!$(".route-xfade") + " / " + W.document.body.className);
+    await sleep(1000);
+    ok("交叉虚化结束后：快照收掉、新章已换、这一屏不再补上浮",
+      !$(".route-xfade") && !W.document.body.classList.contains("route-xfade-on") &&
+      $("#app").classList.contains("xfade-static") &&
+      txt(".article h1") !== oldTitle && /^#\/read\/python\//.test(W.location.hash),
+      oldTitle + " → " + txt(".article h1"));
+    W.document.documentElement.setAttribute("data-style", oldStyle || "miao");
+    const curChapter = $(".rt-item.on");
+    const curArticle = $(".article");
+    click(curChapter);
+    await sleep(200);
+    ok("点左目录里当前这一章：不重画、不闪、不出快照",
+      $(".article") === curArticle && !$(".route-xfade") && W.location.hash.indexOf("#/read/python/") === 0,
+      W.location.hash);
+  }
 
   /* ---------- 4. Python 考试：IDE / 跑 / 判分 / 完成标记 ---------- */
   W.location.hash = "#/read/python/l01";
   await sleep(1200);
-  click($(".exam-entry"));
+  /* 文档入口已摘掉；考试路由仍保留，直接进考场做回归 */
+  W.location.hash = "#/exam/python/l01";
   await sleep(1700);
   ok("考试页是整屏 IDE：标题栏 / 编辑区 / 底部面板 / 终端 / 状态栏都在",
     !!$(".ide-titlebar") && !!$("#ideEditor") && !!$("#idePanel") && !!$("#term") && !!$(".ide-status"));
@@ -261,7 +380,8 @@ const reqLog = [];
     W.localStorage.getItem("miao_exam_results"));
   click($("#ideExit"));
   await sleep(1100);
-  ok("回课文看到「已考过」", /已考过/.test(txt(".art-ops")) && !$("#doneBtn"), txt(".art-ops").slice(0, 40));
+  ok("回课文看到「已完成」，仍然没有考试入口",
+    /已完成/.test(txt("#doneBtn")) && !$(".exam-entry"), txt(".art-ops").slice(0, 40));
   ok("退出考场后 body 的 exam-mode 摘掉，导航条与页脚回来", !W.document.body.classList.contains("exam-mode"),
     W.document.body.className || "(无类名)");
   W.location.hash = "#/exam/python/l01";
@@ -281,7 +401,7 @@ const reqLog = [];
   /* ---------- 5. 英语卷 ---------- */
   W.location.hash = "#/read/english/en-c01";
   await sleep(1200);
-  ok("英语章也挂考试，提示按卷型换了话", !!$(".exam-entry") && /听音|听力/.test(txt(".exam-note")), txt(".exam-note").slice(0, 46));
+  ok("英语章也走文档「完成！」按钮，不再挂考试入口", !!$("#doneBtn") && !$(".exam-entry"), txt(".art-ops").slice(0, 46));
   W.location.hash = "#/exam/english/en-c01";
   await sleep(1800);
   ok("英语卷：一场 25 题", $$(".en-card-q").length === 25, $$(".en-card-q").length + " 题");
@@ -422,7 +542,7 @@ const reqLog = [];
     ok("单词卡不预载音频（点了才拉，页面里没有 audio 元素）",
       $$(".en-card-word audio").length === 0 && $$("article audio").length === 0,
       "audio 元素 " + $$("article audio").length + " 个");
-    ok("这一课排了考：只有「进入考试」，没有「完成！」", !!$(".exam-entry") && !$("#doneBtn"), txt(".art-ops").slice(0, 36));
+    ok("这一课排过考也只显示「完成！」，没有考试入口", !!$("#doneBtn") && !$(".exam-entry"), txt(".art-ops").slice(0, 36));
   }
   {
     const before = reqLog.length;
@@ -519,8 +639,8 @@ const reqLog = [];
     await sleep(300);
     click(W.document.getElementById("settingsItem"));
     await sleep(600);
-    ok("通用设置里那两栏照旧留着：面板还是六栏，同一份登记、两种入口",
-      $$(".set-nav-item").map((b) => b.textContent.trim()).join("|") === "公告|赞助|开源仓库|加入我们|学习记录|建议",
+    ok("通用设置里那两栏照旧留着：面板七栏，外观主题排第一，同一份登记、两种入口",
+      $$(".set-nav-item").map((b) => b.textContent.trim()).join("|") === "外观主题|公告|赞助|开源仓库|加入我们|学习记录|建议",
       $$(".set-nav-item").map((b) => b.textContent.trim()).join("，"));
     click(W.document.getElementById("setClose"));
     await sleep(300);
@@ -532,12 +652,13 @@ const reqLog = [];
     await sleep(900);
     const navText = txt(".nav-links");
     const opts = $$(".nav-links .nav-soon").map((a) => a.textContent.trim());
-    ok("导航栏「首页」右边：视频已是真页面，考试 / 幻灯片 / 终生学习还是占位入口",
-      !!$("#navVideo") && opts.length === 3 &&
-      ["考试", "幻灯片", "终生学习"].every((t) => opts.indexOf(t) >= 0) &&
+    ok("导航栏「首页」右边：视频与考试已是真页面，幻灯片 / 终生学习还是占位入口",
+      !!$("#navVideo") && !!(W.document.getElementById("navExam")) &&
+      !!$('.nav-links a[href="#/exams"]') && opts.length === 2 &&
+      ["幻灯片", "终生学习"].every((t) => opts.indexOf(t) >= 0) &&
       navText.indexOf("首页") < navText.indexOf("视频"), navText);
-    ok("视频入口不再挂在「筹备中」那批里（它是真路由 #/video）",
-      !opts.some((t) => /视频/.test(t)) && !!$('.nav-links a[href="#/video"]'), opts.join("，"));
+    ok("考试不再是「筹备中」那批（它有自己的 #/exams 路由）",
+      !opts.some((t) => /考试/.test(t)) && !!$('.nav-links a[href="#/exams"]'), opts.join("，"));
     ok("四个入口挂在「首页」旁边，不在搜索框那侧（#navRight 里只剩齿轮）",
       $$("#navRight .nav-soon").length === 0 && !!$("#navRight #gearBtn"), txt("#navRight"));
     const hash0 = W.location.hash;
@@ -548,10 +669,10 @@ const reqLog = [];
     click(W.document.getElementById("gearBtn"));
     await sleep(350);
     const menuText = txt("#gearMenu");
-    ok("齿轮里那一项就是可点的「通用设置」，原来的「公告」被它替掉（主题与字号仍在这一排）",
+    ok("齿轮里那一项就是可点的「通用设置」，原来的「公告」被它替掉（主题与整体字号仍在这一排）",
       !!W.document.getElementById("settingsItem") && !W.document.getElementById("annItem") &&
       menuText.indexOf("通用设置") >= 0 && menuText.indexOf("通用设置") < menuText.indexOf("外观主题") &&
-      /正文字号/.test(menuText), menuText);
+      /整体字号/.test(menuText), menuText);
     click(W.document.getElementById("settingsItem"));
     await sleep(700);
     ok("点开就是通用设置面板，默认落在公告，公告那条内容真在里面",
@@ -735,6 +856,21 @@ const reqLog = [];
       $$(".cat-row .cat-big").map((e) => e.textContent.trim()).join("|") === Object.keys(CATS).join("|") &&
       $$(".cat-row").length === Object.keys(CATS).length,
       $$(".cat-row .cat-big").map((e) => e.textContent.trim()).join("，"));
+    {
+      const vTitle = $(".v-page-title"), vBar = $(".filter-bar"), vList = $("#vList");
+      const chip = $$(".cat-row .chip")[0];
+      if (chip) {
+        const cname = chip.textContent.trim();
+        click(chip);
+        await sleep(500);
+        ok("视频换分类：只换 #vList 里的卡片，标题与分类栏节点不动",
+          $(".v-page-title") === vTitle && $(".filter-bar") === vBar && $("#vList") === vList &&
+          /cat=/.test(W.location.hash) && $$(".cat-row .chip.on").some((a) => a.textContent.trim() === cname),
+          cname + " ｜ " + W.location.hash);
+        click($(".cat-head .chip"));
+        await sleep(400);
+      }
+    }
     ok("卡片照信息流那版排：封面在上（横版 3×4），名字与简介在封面下面，不拿东西盖住画面",
       /\.v-cover\s*\{[^}]*aspect-ratio:\s*4 \/ 3/.test(CSS_TEXT) &&
       /\.v-body\s*\{[^}]*flex:\s*1/.test(CSS_TEXT) &&
@@ -797,10 +933,15 @@ const reqLog = [];
       W.localStorage.getItem("miao_video_favs"));
 
     /* ④ 播放页：标题与简介在屏上面（字大），介绍与分类在屏下面 */
+    const videoStyle = W.document.documentElement.getAttribute("data-style");
+    W.document.documentElement.setAttribute("data-style", "mac");
     click($$(".v-card .v-name")[0]);
+    const videoListXfade = !!$(".route-xfade");
     await sleep(1100);
     const v0 = VLIST[0];
-    ok("点卡片进播放页，路由是 #/video/<id>", W.location.hash === "#/video/" + v0.id, W.location.hash);
+    ok("精致风格点卡片进播放页：交叉虚化切换，路由是 #/video/<id>",
+      videoListXfade && W.location.hash === "#/video/" + v0.id, W.location.hash);
+    W.document.documentElement.setAttribute("data-style", videoStyle || "miao");
     ok("播放器指向站内那份素材（不是外链、也不是编的占位）",
       !!$("#vPlayer") && /\/assets\/video\//.test($("#vPlayer").getAttribute("src")), $("#vPlayer") && $("#vPlayer").getAttribute("src"));
     ok("播放器不拿封面当 poster：poster 是 3×4，塞进 16:9 的屏两边会多出两条黑边",
@@ -853,11 +994,16 @@ const reqLog = [];
 
     /* ⑥ 合集切集 */
     if (VLIST.length > 1) {
+      const epStyle = W.document.documentElement.getAttribute("data-style");
+      W.document.documentElement.setAttribute("data-style", "mac");
       click($$(".v-ep a")[1]);
+      const videoXfade = !!$(".route-xfade");
       await sleep(1100);
-      ok("合集里点第二条：路由与播放器都跟着换过去",
-        W.location.hash === "#/video/" + VLIST[1].id && /devlog-01-head\.mp4/.test($("#vPlayer").getAttribute("src")),
+      ok("合集里点第二条：交叉虚化切换，路由与播放器都跟着换过去",
+        videoXfade && W.location.hash === "#/video/" + VLIST[1].id &&
+        /devlog-01-head\.mp4/.test($("#vPlayer").getAttribute("src")),
         W.location.hash);
+      W.document.documentElement.setAttribute("data-style", epStyle || "miao");
       ok("右栏的「第几条 / 共几条」跟着变", txt(".v-col-count") === "2 / " + VLIST.length, txt(".v-col-count"));
       click($$(".v-ep a")[0]);
       await sleep(1000);
@@ -926,12 +1072,12 @@ const reqLog = [];
     click($$(".cat-body .chip.on")[0]);
     await sleep(900);
     ok("再点同一个就取消，回到全部（与视频页同一个手感）",
-      /^#\/category(\?sort=hot)?$/.test(W.location.hash) && !/cat=/.test(W.location.hash) &&
+      /^#\/category$/.test(W.location.hash) && !/cat=/.test(W.location.hash) &&
       $$(".cat-body .chip.on").length === 0 && $$(".t-card").length >= 2,
       W.location.hash + " ｜ 课程 " + $$(".t-card").length + " 门");
   }
 
-  /* ---------- 7.12 通用设置：六栏都真、进度导得出去也还得回来 ---------- */
+  /* ---------- 7.12 通用设置：七栏都真、进度导得出去也还得回来 ---------- */
   {
     /* 先给这台浏览器造一份已知的账，面板里的数字必须与它逐条对得上（不是界面自己编的） */
     W.localStorage.setItem("miao_progress", JSON.stringify({ python: ["l01", "l02", "l03"], git: ["git-l01"] }));
@@ -939,14 +1085,15 @@ const reqLog = [];
     W.localStorage.setItem("miao_exam_results", JSON.stringify({ python: { l01: { passed: true, best: 88 }, l02: { passed: false, best: 40 } } }));
     W.localStorage.setItem("miao_video_favs", JSON.stringify(["devlog-01"]));
     W.localStorage.setItem("miao_theme", JSON.stringify("light"));
-    W.localStorage.setItem("miao_fs", JSON.stringify(15));
+    W.localStorage.setItem("miao_style", JSON.stringify("miao"));
+    W.localStorage.setItem("miao_fs", JSON.stringify(18));
 
     click(W.document.getElementById("gearBtn"));
     await sleep(300);
     click(W.document.getElementById("settingsItem"));
     await sleep(700);
-    ok("面板六栏齐：公告 / 赞助 / 开源仓库 / 加入我们 / 学习记录 / 建议",
-      $$(".set-nav-item").map((b) => b.textContent.trim()).join("|") === "公告|赞助|开源仓库|加入我们|学习记录|建议",
+    ok("面板七栏齐：外观主题 / 公告 / 赞助 / 开源仓库 / 加入我们 / 学习记录 / 建议",
+      $$(".set-nav-item").map((b) => b.textContent.trim()).join("|") === "外观主题|公告|赞助|开源仓库|加入我们|学习记录|建议",
       $$(".set-nav-item").map((b) => b.textContent.trim()).join("，"));
     ok("左栏只写栏目名：底下那些小字说明全删了",
       $$(".set-nav-item span").length === 0 && $$(".set-nav-item b").length === 0,
@@ -961,6 +1108,43 @@ const reqLog = [];
       await sleep(500);
       return $("#setBody");
     }
+
+    /* 外观主题：miao / mac 两套完整风格；齿轮只留浅 / 深 / 跟随；字号是数字滑杆 */
+    await goSec("外观主题");
+    ok("外观主题栏：朴素 / 精致两张卡 + 14–28 的字号滑杆，初始 18px",
+      $$(".skin-opt").length === 2 &&
+      $$(".skin-opt").map((b) => b.querySelector("b").textContent.trim()).join("|") === "朴素|精致" &&
+      !!$("#setFsRange") && $("#setFsRange").min === "14" && $("#setFsRange").max === "28" &&
+      Number($("#setFsRange").value) === 18 && txt("#setFsNow") === "18px",
+      $$(".skin-opt").map((b) => b.textContent.trim().replace(/\s+/g, " ")).join(" ｜ "));
+    ok("齿轮的外观主题只剩浅色 / 深色 / 跟随三档，粉色不在这排",
+      $$("#segInMenu button").length === 3 &&
+      $$("#segInMenu button").map((b) => b.textContent.trim()).join("|") === "浅色|深色|跟随",
+      $$("#segInMenu button").map((b) => b.textContent.trim()).join("，"));
+    click($$(".skin-opt").find((b) => b.dataset.skin === "mac"));
+    await sleep(400);
+    ok("点 mac：data-style 真切到 mac，卡片点亮，本机存 miao_style=mac",
+      W.document.documentElement.getAttribute("data-style") === "mac" &&
+      $$(".skin-opt.on").length === 1 && $$(".skin-opt.on")[0].dataset.skin === "mac" &&
+      JSON.parse(W.localStorage.getItem("miao_style") || '""') === "mac",
+      W.document.documentElement.getAttribute("data-style") + " ｜ " + W.localStorage.getItem("miao_style"));
+    click($$(".skin-opt").find((b) => b.dataset.skin === "miao"));
+    await sleep(400);
+    ok("点回 miao：data-style 回到 miao，卡片换边，主题没被顺手改掉",
+      W.document.documentElement.getAttribute("data-style") === "miao" &&
+      $$(".skin-opt.on").length === 1 && $$(".skin-opt.on")[0].dataset.skin === "miao" &&
+      JSON.parse(W.localStorage.getItem("miao_style") || '""') === "miao" &&
+      W.document.documentElement.getAttribute("data-theme") === "light",
+      W.document.documentElement.getAttribute("data-style") + " ｜ " + W.localStorage.getItem("miao_style"));
+    const fsr = $("#setFsRange");
+    fsr.value = "22";
+    fsr.dispatchEvent(new W.Event("input", { bubbles: true }));
+    await sleep(400);
+    ok("字号滑杆拖到 22px：整站立即生效，本机存住，齿轮滑杆与两处数值同步",
+      W.document.documentElement.style.getPropertyValue("--fs-base") === "22px" &&
+      W.localStorage.getItem("miao_fs") === "22" &&
+      $("#gearFsRange").value === "22" && txt("#gearFsNow") === "22px" && txt("#setFsNow") === "22px",
+      W.document.documentElement.style.getPropertyValue("--fs-base") + " ｜ " + W.localStorage.getItem("miao_fs"));
 
     await goSec("公告");
     ok("公告标题自己一行、正文往下拉一行（不跟「喵站公告」挤在同一行）",
@@ -1021,9 +1205,9 @@ const reqLog = [];
     const ta = $("#setJson");
     let snap = null;
     try { snap = JSON.parse(ta.value); } catch (e) { snap = null; }
-    ok("导出：文本框里是一份合法 JSON，六个键全在（主题 / 字号 / 进度 / 收藏 / 成绩 / 视频收藏）",
+    ok("导出：文本框里是一份合法 JSON，七个键全在（主题 / 风格 / 字号 / 进度 / 收藏 / 成绩 / 视频收藏）",
       !!snap && snap.kind === "miao-progress" && !ta.classList.contains("hidden") &&
-      Object.keys(snap.data).length === 6,
+      Object.keys(snap.data).length === 7,
       snap ? Object.keys(snap.data).join("，") : "JSON 解析不了");
 
     /* 导入：换一份进度进去，localStorage、内存里的 state、面板上那行数字都要跟着变 */
@@ -1032,7 +1216,7 @@ const reqLog = [];
       data: {
         miao_progress: { python: ["l01", "l02", "l03", "l04", "l05"], enwords: ["ew-l01"] },
         miao_favs: ["python", "git"], miao_exam_results: {}, miao_video_favs: [],
-        miao_theme: "pink", miao_fs: 17
+        miao_theme: "pink", miao_style: "mac", miao_fs: 17
       }
     };
     const inp = $("#setImport");
@@ -1046,10 +1230,12 @@ const reqLog = [];
     ok("导入后面板当场重算，不是还对着旧数字",
       /学过 6 章（2 门课）/.test(txt(".set-body")) && /收藏 2 门教程/.test(txt(".set-body")) &&
       /考过 0 场/.test(txt(".set-body")), txt(".set-p").replace(/\s+/g, " ").slice(0, 70));
-    ok("导入也带主题与字号：整站跟着换过去（state 是真读回来了）",
+    ok("导入也带主题、风格与字号：整站跟着换过去（state 是真读回来了）",
       W.document.documentElement.getAttribute("data-theme") === "pink" &&
+      W.document.documentElement.getAttribute("data-style") === "mac" &&
       W.document.documentElement.style.getPropertyValue("--fs-base") === "17px",
       W.document.documentElement.getAttribute("data-theme") + " / " +
+      W.document.documentElement.getAttribute("data-style") + " / " +
       W.document.documentElement.style.getPropertyValue("--fs-base"));
 
     const bad = new W.File([JSON.stringify({ kind: "别的软件", data: { miao_progress: { python: [] } } })],
@@ -1072,7 +1258,7 @@ const reqLog = [];
         $$(".set-pop a").length + " 个链接全部有去处");
     }
 
-    W.location.hash = "#/category";
+    W.location.hash = "#/";
     await sleep(800);
     ok("换页时面板自己收掉：里面的数字是按当时那份数据画的，留着就是旧账",
       !$(".set-pop"), $(".set-pop") ? "还在" : "收掉了");
@@ -1081,13 +1267,462 @@ const reqLog = [];
     W.localStorage.setItem("miao_exam_results", "{}");
     W.localStorage.setItem("miao_video_favs", "[]");
     W.localStorage.setItem("miao_theme", '"auto"');
-    W.localStorage.setItem("miao_fs", "15");
+    W.localStorage.setItem("miao_style", '"miao"');
+    W.localStorage.setItem("miao_fs", "18");
+  }
+
+  /* ---------- 7.13 导航「考试」：首页同款筛选 + 一行一题 ---------- */
+  {
+    W.location.hash = "#/exams";
+    await sleep(1500);
+    ok("考试页走的是自己的 #/exams，不碰课末考试的 #/exam/<课>/<章>",
+      !!$(".algo-line") && W.location.hash === "#/exams", W.location.hash);
+    ok("导航里的「考试」在考试页亮起来（离开时会灭，不会全站都亮）",
+      $("#navExam").classList.contains("on") && !$("#navVideo").classList.contains("on"),
+      txt("#navExam"));
+    ok("左上角「考试」用考试页统一标题（1.6rem，28px 顶距）",
+      txt(".page-title") === "考试" &&
+      /\.algo-page \.page-title\s*\{[^}]*font-size:\s*1\.6rem/.test(CSS_TEXT) &&
+      /\.algo-page \.page-title\s*\{[^}]*margin:\s*28px 0 6px/.test(CSS_TEXT), txt(".page-title"));
+    ok("分类栏复用首页：题型是哈希表 / 数组 / 栈这种，不再摆编程语言",
+      !!$(".filter-bar .cat-group .cat-head .chip") && !!$(".cat-row .cat-big") &&
+      txt(".cat-big") === "题型" &&
+      $$(".cat-row .chip").map((a) => a.textContent.trim()).join("|") === "数组|哈希表|数学|栈|双指针|二分查找|动态规划|滑动窗口|排序",
+      $$(".cat-row .chip").map((a) => a.textContent.trim()).join("|"));
+    ok("难度栏也复用首页，名字改成全部难度 / 简单 / 中等 / 困难",
+      $$(".filter-bar").length === 2 &&
+      Array.from($$(".filter-bar")[1].querySelectorAll(".chip")).map((a) => a.textContent.trim()).join("|") === "全部难度|简单|中等|困难",
+      Array.from($$(".filter-bar")[1].querySelectorAll(".chip")).map((a) => a.textContent.trim()).join("|"));
+    {
+      const eTitle = $(".page-title"), eBar = $(".filter-bar"), eList = $("#algoList");
+      const chip = $$(".cat-row .chip")[0];
+      click(chip);
+      await sleep(500);
+      ok("考试换题型：只换 #algoList 里的题目行，标题与筛选栏节点不动",
+        $(".page-title") === eTitle && $(".filter-bar") === eBar && $("#algoList") === eList &&
+        /cat=/.test(W.location.hash) && $$(".algo-line").length === 2,
+        W.location.hash);
+      click($(".cat-head .chip"));
+      await sleep(400);
+    }
+    ok("列表没有表头、没有简介、没有统计卡；13 道题一行一道",
+      !$(".algo-table") && !$("thead") && !$(".algo-head") && !$(".algo-lead") &&
+      !$(".algo-kpis") && !$(".algo-summary") && $$(".algo-line").length === 13,
+      $$(".algo-line").length + " 行");
+    ok("考试列表（miao / mac）：奇数行灰色微圆角方块、偶数行纯文字、没有分隔线",
+      /\.algo-lines\s*\{[^}]*border-top:\s*0/.test(CSS_TEXT) &&
+      /\.algo-line\s*\{[^}]*border-bottom:\s*0[^}]*border-radius:\s*10px[^}]*background:\s*transparent/.test(CSS_TEXT) &&
+      /\.algo-line:nth-child\(odd\)\s*\{[^}]*background:\s*var\(--bg-mute\)/.test(CSS_TEXT) &&
+      /\.algo-line:hover\s*\{[^}]*background:\s*transparent/.test(CSS_TEXT), "见 CSS");
+    ok("考试页标题与筛选两种风格都走苹果模式",
+      /\.algo-page \.page-title\s*\{[^}]*font-size:\s*1\.6rem/.test(CSS_TEXT) &&
+      /\.algo-page \.chip\s*\{[^}]*background:\s*transparent/.test(CSS_TEXT), "见 CSS");
+    ok("第一行：题目在最左，难度 / 结果往左靠，最右一颗收藏星，语言不再显示",
+      txt(".algo-line-title") === "1. 两数之和" &&
+      Array.from($$(".algo-line")[0].querySelectorAll(".algo-line-meta > span")).map((x) => x.textContent.trim()).join("|") === "简单|未过" &&
+      !!$$(".algo-line")[0].querySelector(".algo-line-meta .algo-fav"),
+      txt(".algo-line-title") + " ｜ " + Array.from($$(".algo-line")[0].querySelectorAll(".algo-line-meta > span")).map((x) => x.textContent.trim()).join("|"));
+    ok("题目占满左边、右侧一簇贴右（title flex:1；meta flex:0 0 auto）",
+      /\.algo-line-title\s*\{[^}]*flex:\s*1 1 auto/.test(CSS_TEXT) &&
+      /\.algo-line-meta\s*\{[^}]*flex:\s*0 0 auto/.test(CSS_TEXT), "");
+    ok("颜色：简单绿 / 中等黄 / 困难红；未过灰 / 通过绿",
+      /\.algo-line-meta \.lv\.easy\s*\{[^}]*color:\s*var\(--ok-ink\)/.test(CSS_TEXT) &&
+      /\.algo-line-meta \.lv\.medium\s*\{[^}]*color:\s*var\(--warn-ink\)/.test(CSS_TEXT) &&
+      /\.algo-line-meta \.lv\.hard\s*\{[^}]*color:\s*var\(--danger-ink\)/.test(CSS_TEXT) &&
+      /\.algo-line-meta \.state\.no\s*\{[^}]*color:\s*var\(--text-3\)/.test(CSS_TEXT) &&
+      /\.algo-line-meta \.state\.pass\s*\{[^}]*color:\s*var\(--green\)/.test(CSS_TEXT), "");
+    ok("没有排名 / 击败百分比 / 通过率这些力扣社交件",
+      !/排名|击败|通过率|排行榜/.test(txt("#app")), txt("#app").slice(0, 60));
+    ok("首屏那 5 份壳没有因为题库变多（题库脚本是进 #/exams 才拉的）",
+      shellJs.length === 5 && reqLog.some((u) => /\/js\/algo-ui\.js$/.test(u)) &&
+      reqLog.some((u) => /\/data\/algo-exam-data\.js$/.test(u)), shellJs.join("，"));
+    ok("列表页只要题面 + 列表界面，判分器留到做题页才拉",
+      !reqLog.some((u) => /\/js\/algo-judge\.js$/.test(u)), "已经拉了判分器");
+
+    click(Array.from($$(".filter-bar")[1].querySelectorAll(".chip")).find((a) => a.textContent.trim() === "困难"));
+    await sleep(700);
+    ok("点难度「困难」：只剩 2 道，地址带上 diff",
+      $$(".algo-line").length === 2 && /diff=/.test(W.location.hash),
+      $$(".algo-line").length + " 行 ｜ " + W.location.hash);
+    click($$(".filter-bar")[1].querySelectorAll(".chip")[0]);    // 全部难度
+    await sleep(700);
+    ok("点「全部难度」回到 13 道", $$(".algo-line").length === 13, $$(".algo-line").length + " 行");
+
+    click($$(".cat-row .chip").find((a) => a.textContent.trim() === "哈希表"));
+    await sleep(700);
+    ok("点题型「哈希表」：只剩两数之和，地址带上 cat",
+      $$(".algo-line").length === 1 && /cat=.+/.test(W.location.hash),
+      $$(".algo-line").length + " 行 ｜ " + W.location.hash);
+    click($$(".cat-row .chip").find((a) => a.textContent.trim() === "数组"));
+    await sleep(700);
+    ok("点题型「数组」：合并两个有序数组 + 移动零两题",
+      $$(".algo-line").length === 2 &&
+      $$(".algo-line-title").map((a) => a.textContent.trim()).join("|").indexOf("合并两个有序数组") >= 0,
+      $$(".algo-line").length + " 行");
+    click($$(".cat-head .chip")[0]);                             // 全部
+    await sleep(700);
+    ok("点「全部」回到 13 道", $$(".algo-line").length === 13, $$(".algo-line").length + " 行");
+
+    const examStyle = W.document.documentElement.getAttribute("data-style");
+    W.document.documentElement.setAttribute("data-style", "mac");
+    click($(".algo-line-title"));
+    const examXfade = !!$(".route-xfade");
+    await sleep(900);
+    ok("精致风格点题进做题页：交叉虚化切换，左题面右编辑器，地址是 #/exams/two-sum",
+      examXfade && !!$(".algo-problem") && !!$("#algoTa") && W.location.hash === "#/exams/two-sum", W.location.hash);
+    W.document.documentElement.setAttribute("data-style", examStyle || "miao");
+    ok("进做题页才把判分器拉进来（列表页不背这 200 KB）",
+      reqLog.some((u) => /\/js\/algo-judge\.js$/.test(u)),
+      reqLog.filter((u) => /algo-judge/.test(u)).join("，"));
+    ok("做题页标题只留题号、题目名、难度，没有面包屑与分类标签",
+      /1\. 两数之和/.test(txt(".algo-title-row")) && /简单/.test(txt(".algo-title-row")) &&
+      !$(".algo-crumb") && !$(".algo-meta") && !$(".algo-tag"),
+      txt(".algo-title-row"));
+    /* 左题面右代码栏：两栏是 .algo-problem 的直接子节点，顺序就是 desc → workspace */
+    {
+      const cols = Array.from($(".algo-problem").children).map((el) => el.className);
+      ok("左题面 / 右代码中间有可拖的分隔条：.algo-desc → .algo-vsplit → .algo-workspace",
+        cols.length === 3 && cols[0] === "algo-desc" && cols[1] === "algo-vsplit" && cols[2] === "algo-workspace",
+        cols.join(" ｜ "));
+    }
+    ok("代码栏顶栏是 .algo-workspace 的第一个子元素（顶栏 → 编辑器 → 状态条 → 底部面板）",
+      !!$(".algo-workspace") && $(".algo-workspace").firstElementChild === $(".algo-code-head"),
+      $(".algo-workspace") && $(".algo-workspace").firstElementChild
+        ? $(".algo-workspace").firstElementChild.className : "无");
+    ok("运行 / 提交合在同一组，重置 / 全屏 / 折叠都在代码头条的 .algo-ops 里",
+      !!$(".algo-code-head .algo-ops #algoRun") &&
+      !!$(".algo-code-head .algo-ops #algoSubmit") &&
+      !!$(".algo-code-head .algo-ops #algoReset") &&
+      !!$(".algo-code-head .algo-ops #algoActionMore") &&
+      !!$(".algo-code-head .algo-ops #algoGear") &&
+      $("#algoGear").nextElementSibling === $("#algoReset") &&
+      !!$(".algo-code-head .algo-ops #algoFull") &&
+      !!$(".algo-code-head .algo-ops #algoCodeToggle") &&
+      $("#algoFull").nextElementSibling === $("#algoCodeToggle"),
+      $$(".algo-ops > button").map((b) => b.id).join("，"));
+    ok("测试面板的全屏也在收起左边（.algo-console-tools 里先全屏后折叠）",
+      !!$("#algoConsoleFull") && $("#algoConsoleFull").nextElementSibling === $("#algoConsoleToggle") &&
+      !!$("#algoConsoleFull").closest(".algo-console-tools"),
+      $$(".algo-console-tools > button").map((b) => b.id).join("，"));
+    ok("两条分隔条都在：左右拖题面 / 代码，上下拖代码 / 测试面板",
+      !!$("#algoVSplit") && !!$("#algoHSplit") &&
+      /--algo-desc-w/.test(CSS_TEXT) && /--algo-console-h/.test(CSS_TEXT),
+      "见 DOM / CSS");
+    {
+      click($("#algoFull"));
+      await sleep(150);
+      const codeFull = $("#algoProblem").classList.contains("code-full");
+      click($("#algoFull"));
+      await sleep(150);
+      click($("#algoConsoleFull"));
+      await sleep(150);
+      const consoleFull = $(".algo-workspace").classList.contains("console-full");
+      click($("#algoConsoleFull"));
+      await sleep(150);
+      ok("全屏按钮能收起 / 展开代码区和测试面板",
+        codeFull && consoleFull && !$("#algoProblem").classList.contains("code-full") &&
+        !$(".algo-workspace").classList.contains("console-full"),
+        codeFull + "/" + consoleFull);
+    }
+    {
+      const problemEl = $("#algoProblem"), wsEl = $(".algo-workspace");
+      const oldProblemRect = problemEl.getBoundingClientRect;
+      const oldWsRect = wsEl.getBoundingClientRect;
+      problemEl.getBoundingClientRect = () => ({ left: 0, width: 1000, right: 1000, top: 0, bottom: 800, height: 800 });
+      wsEl.getBoundingClientRect = () => ({ left: 0, width: 1000, right: 1000, top: 0, bottom: 800, height: 800 });
+      $("#algoVSplit").dispatchEvent(new W.MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+      W.document.dispatchEvent(new W.MouseEvent("pointermove", { bubbles: true, clientX: 600 }));
+      W.document.dispatchEvent(new W.MouseEvent("pointerup", { bubbles: true }));
+      $("#algoHSplit").dispatchEvent(new W.MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+      W.document.dispatchEvent(new W.MouseEvent("pointermove", { bubbles: true, clientY: 500 }));
+      W.document.dispatchEvent(new W.MouseEvent("pointerup", { bubbles: true }));
+      problemEl.getBoundingClientRect = oldProblemRect;
+      wsEl.getBoundingClientRect = oldWsRect;
+      ok("两条分隔条真能拖动：左右 60%、上下 300px",
+        problemEl.style.getPropertyValue("--algo-desc-w") === "60%" &&
+        wsEl.style.getPropertyValue("--algo-console-h") === "300px" &&
+        !W.document.body.classList.contains("algo-resizing-x") &&
+        !W.document.body.classList.contains("algo-resizing-y"),
+        problemEl.style.getPropertyValue("--algo-desc-w") + " / " + wsEl.style.getPropertyValue("--algo-console-h"));
+    }
+    ok(".algo-ops 靠 margin-left:auto 贴到右上角（CSS 源码证据）",
+      /\.algo-ops\s*\{[^}]*margin-left:\s*auto/.test(CSS_TEXT));
+    ok("代码栏标题「代码」、默认语言 C++，起始代码没有「在这里写代码」注释",
+      txt(".algo-code-title") === "代码" && /^C\+\+/.test(txt(".algo-lang")) &&
+      /#include/.test($("#algoTa").value) && !/在这里写代码/.test($("#algoTa").value),
+      txt(".algo-lang") + " ｜ " + $("#algoTa").value.split("\n")[0]);
+    {
+      click($("#algoRun"));
+      await sleep(250);
+      const guide = $(".algo-cpp-guide");
+      const osTabs = $$(".cpp-os-tab").map((b) => b.textContent.trim()).join("|");
+      const linuxCmd = txt("#cppSteps");
+      click($$(".cpp-os-tab").find((b) => b.dataset.os === "win"));
+      await sleep(100);
+      const winCmd = txt("#cppSteps");
+      click($$(".cpp-os-tab").find((b) => b.dataset.os === "mac"));
+      await sleep(100);
+      const macCmd = txt("#cppSteps");
+      ok("C++ 默认不假装浏览器判题：运行打开本地环境指南，Linux / Windows / macOS 三套命令 + 下载 main.cpp",
+        !!guide && osTabs === "Linux|Windows|macOS" && /g\+\+/.test(linuxCmd) &&
+        /MSYS2|main\.exe/.test(winCmd) && /xcode-select|clang\+\+/.test(macCmd) &&
+        !!$("#cppDownload"), linuxCmd.slice(0, 40));
+      $("#cppGuideClose").click();
+      await sleep(100);
+    }
+    {
+      click($("#algoLangBtn"));
+      await sleep(200);
+      const opts = $$(".algo-lang-option").map((b) => b.textContent.trim()).join("|");
+      const menuOpen = !$("#algoLangMenu").classList.contains("hidden");
+      const langPortal = $("#algoLangMenu").parentNode === W.document.body &&
+        $("#algoLangMenu").style.zIndex === "1200" &&
+        /\.algo-lang-portal\s*\{[^}]*background-color:\s*var\(--panel\)/.test(CSS_TEXT);
+      click($$(".algo-lang-option").find((b) => b.dataset.lang === "py3"));
+      await sleep(300);
+      ok("语言菜单可点：C++ / Python 3 两项，切到 Python 3 后换成 Python 初始代码、注释已去掉",
+        menuOpen && langPortal && opts === "C++|Python 3" &&
+        /Python 3/.test(txt(".algo-lang")) && /def two_sum/.test($("#algoTa").value) &&
+        !/在这里写代码/.test($("#algoTa").value) && !!$("#algoTa"), opts);
+      ok("选完语言后菜单收回代码栏，不留在 body 上",
+        $("#algoLangMenu").parentNode !== W.document.body,
+        $("#algoLangMenu").parentNode === W.document.body ? "还在 body" : "已收回");
+    }
+    ok("示例输入 / 输出带代码高光（数字被高光尺包成 .rd-num）",
+      $$(".algo-example-text code .rd-num").length >= 2,
+      $$(".algo-example-text code .rd-num").length + " 个高光数字");
+    ok("演示和提示都只放文字，不再有卡片 / 提示头",
+      !!$(".algo-example-text") && !!$(".algo-hint-text") && !$(".algo-example") &&
+      !$(".algo-hint") && !$(".algo-hint-head") && !/公开/.test(txt("#algoProblem")) &&
+      /返回的下标请按从小到大/.test(txt(".algo-hint-text")) &&
+      !/2 <= nums.length/.test(txt(".algo-statement")),
+      txt(".algo-hint-text").replace(/\s+/g, " ").slice(0, 48));
+    {
+      click($("#algoDescToggle"));
+      await sleep(200);
+      const descCollapsed = $(".algo-desc").classList.contains("collapsed");
+      click($("#algoDescToggle"));
+      await sleep(200);
+      click($("#algoCodeToggle"));
+      await sleep(200);
+      const codeCollapsed = $(".algo-workspace").classList.contains("code-collapsed");
+      click($("#algoCodeToggle"));
+      await sleep(200);
+      click($("#algoConsoleToggle"));
+      await sleep(200);
+      const consoleCollapsed = $(".algo-console").classList.contains("collapsed");
+      click($("#algoConsoleToggle"));
+      await sleep(200);
+      ok("题面 / 代码 / 测试面板都能折叠再展开",
+        descCollapsed && codeCollapsed && consoleCollapsed &&
+        !$(".algo-desc").classList.contains("collapsed") &&
+        !$(".algo-workspace").classList.contains("code-collapsed") &&
+        !$(".algo-console").classList.contains("collapsed"),
+        [descCollapsed, codeCollapsed, consoleCollapsed].join("/"));
+    }
+    {
+      click($("#algoGear"));
+      await sleep(200);
+      ok("代码设置和通用设置同一张卡：只有代码字号 + CLion / Trae / VS Code 三种高光",
+        !!$(".algo-code-set") && txt(".algo-code-set .set-head h3") === "代码设置" &&
+        !!$("#codeFsRange") && $$(".code-theme-opt").length === 3 &&
+        $$(".code-theme-opt b").map((b) => b.textContent.trim()).join("|") === "CLion|Trae|VS Code" &&
+        !$(".algo-code-set .set-nav"),
+        $$(".code-theme-opt b").map((b) => b.textContent.trim()).join("|"));
+      const editor = $("#algoEditor");
+      const range = $("#codeFsRange");
+      range.value = "18";
+      range.dispatchEvent(new W.Event("input", { bubbles: true }));
+      await sleep(150);
+      ok("字号滑到 18px：编辑器 --ide-fs 跟着走，存进本机",
+        editor.style.getPropertyValue("--ide-fs") === "18px" &&
+        W.localStorage.getItem("miao_code_fs") === "18",
+        editor.style.getPropertyValue("--ide-fs") + " / " + W.localStorage.getItem("miao_code_fs"));
+      const trae = $$(".code-theme-opt").find((b) => b.dataset.codeTheme === "trae");
+      click(trae);
+      await sleep(150);
+      ok("切 Trae：编辑器高光变量与本机设置一起换，CLion / VS Code 仍可选",
+        editor.style.getPropertyValue("--ide-key") === "#B38CFF" &&
+        JSON.parse(W.localStorage.getItem("miao_code_theme")) === "trae" &&
+        trae.classList.contains("on") && $$(".code-theme-opt").length === 3,
+        editor.style.getPropertyValue("--ide-key"));
+      click($$(".code-theme-opt").find((b) => b.dataset.codeTheme === "vscode"));
+      await sleep(100);
+      $("#codeSetClose").click();
+      await sleep(100);
+      ok("代码设置关掉后浮层收掉", !$(".algo-code-set"));
+    }
+    ok("运行 / 提交合成一组：主按钮 + 下拉箭头，提交收在同一个下拉里",
+      !!$("#algoAction") && !!$("#algoActionMore") && !!$("#algoActionMenu #algoSubmit") &&
+      !!$("#algoAction .algo-run"),
+      $$(".algo-action *").map((n) => n.id || n.className).join(" ｜ "));
+    click($("#algoActionMore"));
+    await sleep(150);
+    const actionOpen = !$("#algoActionMenu").classList.contains("hidden");
+    click($("#algoActionMore"));
+    await sleep(150);
+    ok("下拉箭头能展开 / 收起「运行 · 提交」菜单",
+      actionOpen && $("#algoActionMenu").classList.contains("hidden"), String(actionOpen));
+    ok("左栏只有一个真页签「题目描述」，不做假的「题解 / 提交记录」",
+      $$(".algo-desc-tabs .algo-dtab").length === 1 && txt(".algo-dtab") === "题目描述" &&
+      !/题解|提交记录/.test(txt("#app")), txt(".algo-dtab"));
+    ok("底部两个页签「测试用例」「测试结果」，进入时「测试用例」是 on（result 未选）",
+      txt("#algoTabCases") === "测试用例" && txt("#algoTabResult") === "测试结果" &&
+      $("#algoTabCases").classList.contains("on") && !$("#algoTabResult").classList.contains("on") &&
+      $("#algoTabCases").getAttribute("aria-selected") === "true" &&
+      $("#algoTabResult").getAttribute("aria-selected") === "false");
+    {
+      const tabs = $$("#algoCasesPane .algo-case-tab");
+      const inputs = $$("#algoCasesPane .algo-case-input");
+      ok("测试用例照力扣：Case 标签 + 参数输入，不再有「公开」标签和每例一张卡",
+        tabs.map((b) => b.textContent.trim()).join("|") === "Case 1|Case 2" &&
+        inputs.length === 2 && txt("#algoCasesPane .algo-case-name") === "nums =" &&
+        inputs[0].value === "[2, 7, 11, 15]" && inputs[1].value === "9" &&
+        !$("#algoCasesPane .algo-tc") && !/公开/.test(txt("#algoCasesPane")),
+        tabs.map((b) => b.textContent.trim()).join("|") + " ｜ " + inputs.map((x) => x.value).join(" / "));
+      click(tabs[1]);
+      await sleep(150);
+      ok("点 Case 2：同一个输入区换成第二条样例，Case 2 高亮",
+        $("#algoCasesPane .algo-case-tab.on").textContent.trim() === "Case 2" &&
+        $$("#algoCasesPane .algo-case-input")[0].value === "[3, 2, 4]" &&
+        $$("#algoCasesPane .algo-case-input")[1].value === "6",
+        $$("#algoCasesPane .algo-case-input").map((x) => x.value).join(" / "));
+      click($("#algoCaseAdd"));
+      await sleep(150);
+      ok("点 + 增加自定义 Case 3，输入框为空",
+        $$("#algoCasesPane .algo-case-tab").length === 3 &&
+        $("#algoCasesPane .algo-case-tab.on").textContent.trim() === "Case 3" &&
+        $$("#algoCasesPane .algo-case-input").every((x) => x.value === ""),
+        $$("#algoCasesPane .algo-case-tab").map((b) => b.textContent.trim()).join("|"));
+      click($$("#algoCasesPane .algo-case-tab")[0]);
+      await sleep(150);
+    }
+    ok("按钮文案：运行 / 提交（标题、title、状态里都不再叫「模拟运行」）",
+      txt("#algoRun") === "运行" && txt("#algoSubmit") === "提交" &&
+      !/模拟运行/.test(txt("#app")) &&
+      !$$("[title]").some((el) => /模拟运行/.test(el.getAttribute("title") || "")),
+      txt("#algoRun") + " / " + txt("#algoSubmit"));
+    ok("做题页收起页脚但保留导航条（照力扣的布局）",
+      W.document.body.classList.contains("algo-mode") && !!$("header.nav"));
+    ok("测试结果初始为空，没有「运行或提交后…」的占位说明",
+      txt("#algoResult") === "", JSON.stringify(txt("#algoResult")));
+
+    click($("#algoRun"));
+    await sleep(600);
+    ok("骨架直接运行：只跑两条样例，不写成绩，也不显示「未过」",
+      /执行用时/.test(txt("#algoResult")) && /Case 1/.test(txt("#algoResult")) &&
+      /Case 2/.test(txt("#algoResult")) && !/未过|不通过/.test(txt("#algoResult")) &&
+      !W.localStorage.getItem("miao_algo_results") &&
+      !/未过|不通过/.test(txt("#algoStatus")),
+      txt("#algoResult").replace(/\s+/g, " ").slice(0, 60));
+    ok("点「运行」自动切到「测试结果」页签：on 与 aria-selected 一起翻过去",
+      $("#algoTabResult").classList.contains("on") && !$("#algoTabCases").classList.contains("on") &&
+      $("#algoTabResult").getAttribute("aria-selected") === "true" &&
+      $("#algoTabCases").getAttribute("aria-selected") === "false" &&
+      $("#algoResultPane").classList.contains("on") && !$("#algoCasesPane").classList.contains("on"));
+    ok("运行结果照力扣：执行用时 + Case 标签 + 输入 / 输出 / 预期结果，没有未过和内存",
+      /执行用时/.test(txt("#algoResult")) && /Case 1/.test(txt("#algoResult")) &&
+      /输入/.test(txt("#algoResult")) && /输出/.test(txt("#algoResult")) &&
+      /预期结果/.test(txt("#algoResult")) && !/未过|不通过|消耗内存|贡献测试用例/.test(txt("#algoResult")),
+      txt("#algoResult").replace(/\s+/g, " ").slice(0, 90));
+
+    click($("#algoTabCases"));
+    await sleep(200);
+    ok("点「测试用例」只切 pane：结果 DOM 还留在里面（不重跑、不丢）",
+      $("#algoTabCases").classList.contains("on") && !$("#algoResultPane").classList.contains("on") &&
+      /Case 1/.test(txt("#algoResult")));
+    click($("#algoTabResult"));
+    await sleep(200);
+    ok("再点「测试结果」：结果 pane 又显示出来",
+      $("#algoTabResult").classList.contains("on") && $("#algoResultPane").classList.contains("on"));
+
+    const two = W.MIAO_ALGO.problems.filter((p) => p.id === "two-sum")[0];
+    type($("#algoTa"), two.reference, W);
+    await sleep(250);
+    ok("代码块底下「草稿已存本机 + 行列」那一条 UI 已整条删掉",
+      !$("#algoPos") && !$(".algo-editor-foot") && !/草稿已存本机/.test(txt("#app")), "已删");
+    ok("代码草稿自动留在本机（按题一个键）",
+      /two_sum/.test(W.localStorage.getItem("miao_algo_draft_two-sum") || ""),
+      (W.localStorage.getItem("miao_algo_draft_two-sum") || "").slice(0, 30));
+    click($("#algoRun"));
+    await sleep(600);
+    ok("参考解运行：显示通过、执行用时和 Case 标签，不再有内存栏",
+      /通过/.test(txt("#algoResult")) && /执行用时/.test(txt("#algoResult")) &&
+      /Case 1/.test(txt("#algoResult")) && /Case 2/.test(txt("#algoResult")) &&
+      /✓/.test(txt("#algoResult")) && !/2 \/ 2|消耗内存|KB|MB/.test(txt("#algoResult")),
+      txt("#algoResult").replace(/\s+/g, " ").slice(0, 100));
+
+    type($("#algoTa"), "def two_sum(nums, target)\n    return", W);
+    await sleep(200);
+    click($("#algoRun"));
+    await sleep(700);
+    ok("编译不通过：测试结果只留报错，不显示通过 / 用例 / 输入输出 / 预期结果",
+      !!$("#algoResult .algo-err") && !$("#algoResult .algo-res-head") &&
+      !$("#algoResult .algo-res-tabs") && !$("#algoResult .algo-res-group") &&
+      !/通过|Case 1|输入|预期结果/.test(txt("#algoResult")),
+      txt("#algoResult").replace(/\s+/g, " ").slice(0, 80));
+    type($("#algoTa"), two.reference, W);
+    await sleep(250);
+    click($("#algoSubmit"));
+    await sleep(900);
+    const submitText = txt("#algoResult");
+    ok("提交跑全部用例：通过 + Case 1…Case 6 + 执行用时",
+      /通过/.test(submitText) && /执行用时/.test(submitText) &&
+      /Case 1/.test(submitText) && /Case 6/.test(submitText),
+      submitText.replace(/\s+/g, " ").slice(0, 100));
+    ok("提交通过后标题旁打「已通过」，成绩写进 miao_algo_results",
+      !$("#algoPassedTag").hidden && txt("#algoPassedTag") === "已通过" &&
+      /two-sum/.test(W.localStorage.getItem("miao_algo_results") || ""),
+      W.localStorage.getItem("miao_algo_results"));
+    ok("结果里没有排行榜 / 击败百分比 / 内存估算，只留用例和真实用时",
+      !/击败 \d|击败了|排行榜|消耗内存/.test(submitText) &&
+      /执行用时/.test(submitText), submitText.slice(0, 80));
+
+    click($("#algoReset"));
+    await sleep(200);
+    ok("重置先弹确认层：标题问「重置代码？」并给取消 / 重置",
+      !!$(".algo-confirm") && /重置代码/.test(txt(".algo-confirm")) &&
+      !!$("#algoResetNo") && !!$("#algoResetYes"),
+      txt(".algo-confirm").replace(/\s+/g, " ").slice(0, 50));
+    click($("#algoResetNo"));
+    await sleep(200);
+    ok("取消重置：代码原样保留，确认层收掉",
+      !$(".algo-confirm") && /two_sum/.test($("#algoTa").value));
+    click($("#algoReset"));
+    await sleep(200);
+    click($("#algoResetYes"));
+    await sleep(250);
+    ok("确认重置：回初始代码，且不再在左侧显示「已恢复初始代码」",
+      /pass/.test($("#algoTa").value) && !/已恢复初始代码/.test(txt("#app")));
+
+    W.location.hash = "#/exams";
+    await sleep(900);
+    ok("回列表：第一行状态从「未过」变成绿色的「通过」",
+      $$(".algo-line")[0] && txt(".algo-line-meta .state") === "通过",
+      Array.from($$(".algo-line")[0].querySelectorAll(".algo-line-meta > span")).map((x) => x.textContent.trim()).join("|"));
+    const favBtn = $(".algo-line .algo-fav");
+    click(favBtn);
+    await sleep(80);
+    ok("收藏星：点亮、写进本机、当场弹一下",
+      favBtn.classList.contains("on") && favBtn.classList.contains("pop") &&
+      (W.localStorage.getItem("miao_algo_favs") || "").indexOf("two-sum") >= 0 &&
+      /@keyframes algoFavPop/.test(CSS_TEXT),
+      favBtn.className + " ｜ " + W.localStorage.getItem("miao_algo_favs"));
+    await sleep(450);
+    click(favBtn);
+    await sleep(80);
+    ok("取消收藏：灭掉、从本机移除，同样弹一下",
+      !favBtn.classList.contains("on") && favBtn.classList.contains("pop") &&
+      (W.localStorage.getItem("miao_algo_favs") || "").indexOf("two-sum") < 0,
+      favBtn.className + " ｜ " + W.localStorage.getItem("miao_algo_favs"));
+    ok("列表页把页脚收起的 class 去掉，页脚回来", !W.document.body.classList.contains("algo-mode"));
   }
 
   /* ---------- 8. 反向断言 ---------- */
   W.location.hash = "#/login";
   await sleep(900);
   ok("旧账号路由已经不存在：#/login 落到 404", /404/.test(txt("#app")), txt("#app").slice(0, 30));
+  ok("离开考试页后导航高亮自己灭掉", !$("#navExam").classList.contains("on"));
   ok("全程零次 /api 请求（真的没有后端了）", apiCalls.length === 0, apiCalls.slice(0, 3).join("，"));
   /* ---------- 按需加载的账 ---------- */
   ok("首屏只拉壳与目录：5 份 js，一份正文都没有",

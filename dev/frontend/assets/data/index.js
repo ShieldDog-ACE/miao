@@ -4,7 +4,7 @@
  * 以及分层加载要的两张表 —— boot（点开这门课任何一章都必拉的骨架）与
  * chunks（每一章的正文落在哪个文件，由「后写的顶掉先写的」算出来的赢家）。
  * 正文一块都不在 —— 所以改任何一课的正文，都要重跑生成器，标题、章数与这张映射才会同步。
- * 生成时间：2026-10-26 23:53
+ * 生成时间：2026-11-12 04:42
  */
 window.MIAO_INDEX = {
  "tutorials": [
@@ -4269,6 +4269,673 @@ window.MIAO_INDEX = {
     "assets/data/basics-data.js"
    ],
    "chunks": {},
+   "examFiles": []
+  },
+  {
+   "id": "pyds",
+   "source": "MIAO_PYDS",
+   "engine": "",
+   "mount": "",
+   "assemble": "MIAO_PYDS_ASSEMBLE",
+   "title": "Python 掌握",
+   "intro": "在 Python 入门之后，把数据结构与算法自己写一遍：动态数组、链表、栈、队列、哈希表、树、堆、图；每课都有复杂度账本和能跑的例子，最后做一个小项目。",
+   "cat": "python",
+   "diff": "掌握",
+   "tags": [
+    "Python",
+    "数据结构",
+    "算法",
+    "掌握"
+   ],
+   "author": "喵站官方",
+   "cover": "/assets/img/covers/pyds.svg",
+   "thumb": "",
+   "hero": "",
+   "updated": "2026-11-11",
+   "chaps": 24,
+   "chapters": [
+    {
+     "id": "p01",
+     "title": "第 1 课 · 为什么自己写一遍：容器是程序的手脚"
+    },
+    {
+     "id": "p02",
+     "title": "第 2 课 · 复杂度：数一数代码跑了几步"
+    },
+    {
+     "id": "p03",
+     "title": "第 3 课 · 动态数组（一）：一块连续的内存"
+    },
+    {
+     "id": "p04",
+     "title": "第 4 课 · 动态数组（二）：扩容时怎么搬家"
+    },
+    {
+     "id": "p05",
+     "title": "第 5 课 · 链表（一）：节点串成一条链"
+    },
+    {
+     "id": "p06",
+     "title": "第 6 课 · 链表（二）：插入，删除，反转"
+    },
+    {
+     "id": "p07",
+     "title": "第 7 课 · 链表（三）：快慢指针与环"
+    },
+    {
+     "id": "p08",
+     "title": "第 8 课 · 栈：后进先出的盘子"
+    },
+    {
+     "id": "p09",
+     "title": "第 9 课 · 队列：先进先出的队伍"
+    },
+    {
+     "id": "p10",
+     "title": "第 10 课 · 双端队列：两头都能进出"
+    },
+    {
+     "id": "p11",
+     "title": "第 11 课 · 单调队列：窗口里的最大值"
+    },
+    {
+     "id": "p12",
+     "title": "第 12 课 · 哈希表（一）：把键变成下标"
+    },
+    {
+     "id": "p13",
+     "title": "第 13 课 · 哈希表（二）：冲突了怎么办"
+    },
+    {
+     "id": "p14",
+     "title": "第 14 课 · 集合：只留独一份"
+    },
+    {
+     "id": "p15",
+     "title": "第 15 课 · 字典：按键找值"
+    },
+    {
+     "id": "p16",
+     "title": "第 16 课 · 二叉树：一层一层往下分"
+    },
+    {
+     "id": "p17",
+     "title": "第 17 课 · 二叉搜索树：左小右大"
+    },
+    {
+     "id": "p18",
+     "title": "第 18 课 · 平衡树：让树别长歪"
+    },
+    {
+     "id": "p19",
+     "title": "第 19 课 · 堆：每次拿走最大的"
+    },
+    {
+     "id": "p20",
+     "title": "第 20 课 · 优先队列：堆的日常用法"
+    },
+    {
+     "id": "p21",
+     "title": "第 21 课 · 图：用邻接表存关系"
+    },
+    {
+     "id": "p22",
+     "title": "第 22 课 · 图的遍历：DFS 与 BFS"
+    },
+    {
+     "id": "p23",
+     "title": "第 23 课 · 并查集：找头儿"
+    },
+    {
+     "id": "p24",
+     "title": "第 24 课 · 排序擂台与小项目：自己写的容器上阵"
+    }
+   ],
+   "examIds": [],
+   "keywords": [],
+   "boot": [
+    "assets/data/pyds-data.js"
+   ],
+   "chunks": {
+    "assets/data/pyds/p1.js": [
+     "p01",
+     "p02",
+     "p03",
+     "p04",
+     "p05",
+     "p06",
+     "p07",
+     "p08",
+     "p09",
+     "p10",
+     "p11",
+     "p12"
+    ],
+    "assets/data/pyds/p2.js": [
+     "p13",
+     "p14",
+     "p15",
+     "p16",
+     "p17",
+     "p18",
+     "p19",
+     "p20",
+     "p21",
+     "p22",
+     "p23",
+     "p24"
+    ]
+   },
+   "examFiles": []
+  },
+  {
+   "id": "cptr",
+   "source": "MIAO_CPTR",
+   "engine": "",
+   "mount": "",
+   "assemble": "MIAO_CPTR_ASSEMBLE",
+   "title": "C 掌握",
+   "intro": "在 C 入门之后，把指针、内存、结构体、文件和 Makefile 讲透；每课都有能编译的代码和一张内存图。",
+   "cat": "c",
+   "diff": "掌握",
+   "tags": [
+    "C",
+    "指针",
+    "内存",
+    "掌握"
+   ],
+   "author": "喵站官方",
+   "cover": "/assets/img/covers/cptr.svg",
+   "thumb": "",
+   "hero": "",
+   "updated": "2026-11-11",
+   "chaps": 24,
+   "chapters": [
+    {
+     "id": "q01",
+     "title": "第 1 课 · 指针是什么：地址，类型，解引用"
+    },
+    {
+     "id": "q02",
+     "title": "第 2 课 · 指针指向数组：数组名就是地址"
+    },
+    {
+     "id": "q03",
+     "title": "第 3 课 · 指针运算：加一到底加多少"
+    },
+    {
+     "id": "q04",
+     "title": "第 4 课 · 指针进函数：传值，传地址，返回指针"
+    },
+    {
+     "id": "q05",
+     "title": "第 5 课 · 字符串与字符指针：零结尾的约定"
+    },
+    {
+     "id": "q06",
+     "title": "第 6 课 · 二级指针与指针数组"
+    },
+    {
+     "id": "q07",
+     "title": "第 7 课 · 函数指针：把函数当参数"
+    },
+    {
+     "id": "q08",
+     "title": "第 8 课 · 动态内存（一）：malloc 与 free"
+    },
+    {
+     "id": "q09",
+     "title": "第 9 课 · 动态内存（二）：calloc 与 realloc"
+    },
+    {
+     "id": "q10",
+     "title": "第 10 课 · 动态内存（三）：四种常见错误"
+    },
+    {
+     "id": "q11",
+     "title": "第 11 课 · 结构体（一）：先定义，再装数据"
+    },
+    {
+     "id": "q12",
+     "title": "第 12 课 · 结构体（二）：结构体指针与自引用"
+    },
+    {
+     "id": "q13",
+     "title": "第 13 课 · 链表（一）：单链表"
+    },
+    {
+     "id": "q14",
+     "title": "第 14 课 · 链表（二）：插入，删除，反转"
+    },
+    {
+     "id": "q15",
+     "title": "第 15 课 · 链表（三）：双向链表"
+    },
+    {
+     "id": "q16",
+     "title": "第 16 课 · 文件（一）：打开文件，读完再关"
+    },
+    {
+     "id": "q17",
+     "title": "第 17 课 · 文件（二）：文本与二进制"
+    },
+    {
+     "id": "q18",
+     "title": "第 18 课 · 位运算：掩码与移位"
+    },
+    {
+     "id": "q19",
+     "title": "第 19 课 · 多文件工程：头文件，static，extern"
+    },
+    {
+     "id": "q20",
+     "title": "第 20 课 · Makefile：从一条 gcc 到一条 make"
+    },
+    {
+     "id": "q21",
+     "title": "第 21 课 · 调试（一）：编译警告与 gdb"
+    },
+    {
+     "id": "q22",
+     "title": "第 22 课 · 调试（二）：AddressSanitizer 与 Valgrind"
+    },
+    {
+     "id": "q23",
+     "title": "第 23 课 · 小项目（一）：通讯录的增删改查"
+    },
+    {
+     "id": "q24",
+     "title": "第 24 课 · 小项目（二）：通讯录存进文件与结课"
+    }
+   ],
+   "examIds": [],
+   "keywords": [],
+   "boot": [
+    "assets/data/cptr-data.js"
+   ],
+   "chunks": {
+    "assets/data/cptr/q1.js": [
+     "q01",
+     "q02",
+     "q03"
+    ],
+    "assets/data/cptr/q2.js": [
+     "q13",
+     "q14",
+     "q15",
+     "q16",
+     "q17",
+     "q18",
+     "q19",
+     "q20",
+     "q21",
+     "q22",
+     "q23",
+     "q24"
+    ],
+    "assets/data/cptr/q3.js": [
+     "q04",
+     "q05",
+     "q06",
+     "q07",
+     "q08",
+     "q09",
+     "q10",
+     "q11",
+     "q12"
+    ]
+   },
+   "examFiles": []
+  },
+  {
+   "id": "sql",
+   "source": "MIAO_SQL",
+   "engine": "",
+   "mount": "",
+   "assemble": "MIAO_SQL_ASSEMBLE",
+   "title": "数据库与 SQL 入门",
+   "intro": "从一条 SELECT 走到一个能用的博客库：表、查询、连接、聚合、索引、事务都在 SQLite 上真跑，最后用 Python 读写它。",
+   "cat": "计算机基础",
+   "diff": "入门",
+   "tags": [
+    "数据库",
+    "SQL",
+    "SQLite",
+    "后端"
+   ],
+   "author": "喵站官方",
+   "cover": "/assets/img/covers/sql.svg",
+   "thumb": "",
+   "hero": "",
+   "updated": "2026-11-11",
+   "chaps": 24,
+   "chapters": [
+    {
+     "id": "d01",
+     "title": "第 1 课 · 数据为什么要进数据库：文件，表格，关系"
+    },
+    {
+     "id": "d02",
+     "title": "第 2 课 · 装一个 SQLite：一条命令就能开始"
+    },
+    {
+     "id": "d03",
+     "title": "第 3 课 · 一张表：行，列，类型"
+    },
+    {
+     "id": "d04",
+     "title": "第 4 课 · SELECT：把想要的行挑出来"
+    },
+    {
+     "id": "d05",
+     "title": "第 5 课 · WHERE：条件怎么写"
+    },
+    {
+     "id": "d06",
+     "title": "第 6 课 · ORDER BY 与 LIMIT：排序，分页"
+    },
+    {
+     "id": "d07",
+     "title": "第 7 课 · 聚合：COUNT，SUM，AVG"
+    },
+    {
+     "id": "d08",
+     "title": "第 8 课 · GROUP BY：分组数一数"
+    },
+    {
+     "id": "d09",
+     "title": "第 9 课 · JOIN（一）：内连接"
+    },
+    {
+     "id": "d10",
+     "title": "第 10 课 · JOIN（二）：左连接"
+    },
+    {
+     "id": "d11",
+     "title": "第 11 课 · JOIN（三）：多表连接"
+    },
+    {
+     "id": "d12",
+     "title": "第 12 课 · 子查询：查询里面套查询"
+    },
+    {
+     "id": "d13",
+     "title": "第 13 课 · CTE：给查询起个名字"
+    },
+    {
+     "id": "d14",
+     "title": "第 14 课 · 插入数据：INSERT"
+    },
+    {
+     "id": "d15",
+     "title": "第 15 课 · 更新数据：UPDATE"
+    },
+    {
+     "id": "d16",
+     "title": "第 16 课 · 删除数据：DELETE"
+    },
+    {
+     "id": "d17",
+     "title": "第 17 课 · 建表与约束：主键，外键，唯一，非空"
+    },
+    {
+     "id": "d18",
+     "title": "第 18 课 · 索引：为什么查得快"
+    },
+    {
+     "id": "d19",
+     "title": "第 19 课 · 事务：要么全成，要么全不成"
+    },
+    {
+     "id": "d20",
+     "title": "第 20 课 · 视图：把常用查询存起来"
+    },
+    {
+     "id": "d21",
+     "title": "第 21 课 · 触发器：让数据库自己动手"
+    },
+    {
+     "id": "d22",
+     "title": "第 22 课 · 范式与设计：别把一张表塞满"
+    },
+    {
+     "id": "d23",
+     "title": "第 23 课 · SQL 注入与安全：参数化查询"
+    },
+    {
+     "id": "d24",
+     "title": "第 24 课 · 小项目：设计一个博客库并用 Python 读写"
+    }
+   ],
+   "examIds": [],
+   "keywords": [],
+   "boot": [
+    "assets/data/sql-data.js"
+   ],
+   "chunks": {
+    "assets/data/sql/d1.js": [
+     "d01",
+     "d02",
+     "d03",
+     "d04",
+     "d05",
+     "d06",
+     "d07",
+     "d08",
+     "d09",
+     "d10",
+     "d11",
+     "d12"
+    ],
+    "assets/data/sql/d2.js": [
+     "d13",
+     "d14",
+     "d15",
+     "d16",
+     "d17",
+     "d18",
+     "d19",
+     "d20",
+     "d21",
+     "d22",
+     "d23",
+     "d24"
+    ]
+   },
+   "examFiles": []
+  },
+  {
+   "id": "pythonx",
+   "source": "MIAO_PYTHONX",
+   "engine": "",
+   "mount": "",
+   "assemble": "MIAO_PYTHONX_ASSEMBLE",
+   "title": "Python 精通",
+   "intro": "接 Python 掌握，把脚本写成能上线的工程：类型、测试、异步、FastAPI、数据库，再走到 RAG 与 Agent；最后一课把大模型应用、数据、后端几条就业路线拆开讲。",
+   "cat": "python",
+   "diff": "精通",
+   "tags": [
+    "Python",
+    "精通",
+    "工程化",
+    "大模型"
+   ],
+   "author": "喵站官方",
+   "cover": "/assets/img/covers/pythonx.svg",
+   "thumb": "",
+   "hero": "",
+   "updated": "2026-11-11",
+   "chaps": 12,
+   "chapters": [
+    {
+     "id": "px01",
+     "title": "第 1 课 · 从脚本到包：项目结构"
+    },
+    {
+     "id": "px02",
+     "title": "第 2 课 · 依赖：pyproject"
+    },
+    {
+     "id": "px03",
+     "title": "第 3 课 · 测试：pytest"
+    },
+    {
+     "id": "px04",
+     "title": "第 4 课 · 异步：asyncio 事件循环"
+    },
+    {
+     "id": "px05",
+     "title": "第 5 课 · 并发：线程池"
+    },
+    {
+     "id": "px06",
+     "title": "第 6 课 · 性能：cProfile 找热点"
+    },
+    {
+     "id": "px07",
+     "title": "第 7 课 · Web 服务：FastAPI 路由"
+    },
+    {
+     "id": "px08",
+     "title": "第 8 课 · 数据层：SQLAlchemy 事务"
+    },
+    {
+     "id": "px09",
+     "title": "第 9 课 · 大模型调用：结构化输出"
+    },
+    {
+     "id": "px10",
+     "title": "第 10 课 · RAG：向量检索"
+    },
+    {
+     "id": "px11",
+     "title": "第 11 课 · Agent：工具调用"
+    },
+    {
+     "id": "px12",
+     "title": "第 12 课 · 就业方向与后续发展"
+    }
+   ],
+   "examIds": [],
+   "keywords": [],
+   "boot": [
+    "assets/data/pythonx-data.js"
+   ],
+   "chunks": {
+    "assets/data/pythonx/p1.js": [
+     "px01",
+     "px02",
+     "px03",
+     "px04",
+     "px05",
+     "px06"
+    ],
+    "assets/data/pythonx/p2.js": [
+     "px07",
+     "px08",
+     "px09",
+     "px10",
+     "px11",
+     "px12"
+    ]
+   },
+   "examFiles": []
+  },
+  {
+   "id": "tsx",
+   "source": "MIAO_TSX",
+   "engine": "",
+   "mount": "",
+   "assemble": "MIAO_TSX_ASSEMBLE",
+   "title": "TypeScript 精通",
+   "intro": "接 TypeScript 掌握，深入类型工程、框架类型、Node 全栈与 Agent 工具调用；最后一课讲 AI Agent、前端架构、全栈几条就业路线。",
+   "cat": "ts",
+   "diff": "精通",
+   "tags": [
+    "TypeScript",
+    "精通",
+    "Agent",
+    "类型工程"
+   ],
+   "author": "喵站官方",
+   "cover": "/assets/img/covers/tsx.svg",
+   "thumb": "",
+   "hero": "",
+   "updated": "2026-11-11",
+   "chaps": 12,
+   "chapters": [
+    {
+     "id": "tsx01",
+     "title": "第 1 课 · 结构类型：形状对就行"
+    },
+    {
+     "id": "tsx02",
+     "title": "第 2 课 · 泛型约束：给类型加条件"
+    },
+    {
+     "id": "tsx03",
+     "title": "第 3 课 · 条件类型：类型层面的 if"
+    },
+    {
+     "id": "tsx04",
+     "title": "第 4 课 · 映射类型：批量改造形状"
+    },
+    {
+     "id": "tsx05",
+     "title": "第 5 课 · 类型体操：从类型到类型"
+    },
+    {
+     "id": "tsx06",
+     "title": "第 6 课 · 框架类型：组件 props"
+    },
+    {
+     "id": "tsx07",
+     "title": "第 7 课 · 全栈契约：接口校验"
+    },
+    {
+     "id": "tsx08",
+     "title": "第 8 课 · Agent：工具的函数签名"
+    },
+    {
+     "id": "tsx09",
+     "title": "第 9 课 · Agent：工作流状态"
+    },
+    {
+     "id": "tsx10",
+     "title": "第 10 课 · MCP：把工具接进模型"
+    },
+    {
+     "id": "tsx11",
+     "title": "第 11 课 · 评测：让 Agent 可测"
+    },
+    {
+     "id": "tsx12",
+     "title": "第 12 课 · 就业方向与后续发展"
+    }
+   ],
+   "examIds": [],
+   "keywords": [],
+   "boot": [
+    "assets/data/tsx-data.js"
+   ],
+   "chunks": {
+    "assets/data/tsx/p1.js": [
+     "tsx01",
+     "tsx02",
+     "tsx03",
+     "tsx04",
+     "tsx05",
+     "tsx06"
+    ],
+    "assets/data/tsx/p2.js": [
+     "tsx07",
+     "tsx08",
+     "tsx09",
+     "tsx10",
+     "tsx11",
+     "tsx12"
+    ]
+   },
    "examFiles": []
   },
   {

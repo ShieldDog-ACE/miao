@@ -4,18 +4,23 @@
      深色 —— VS Code Dark+ + Trae：#1e1e1e 家族灰阶，一个蓝
      粉色 —— V1.2 那套（妃色/粉雾/木槿/蔷薇/玄青），本轮只把读不出来的地方修掉
    三套的令牌清单必须一模一样长：浅色块里定义过的每一个颜色，深色和粉色都要给值。
+   miao 是上面这套原版；mac 是 2026-11-18 新加的苹果风（data-style="mac"），
+   只覆盖颜色 / 字体 / 圆角 / 组件外观，不删除或改写 miao 的任何一条规则。
    这条由 dev/tools/theme-check.js 逐条查，漏一个就是红灯（历史上就是这么漏出
    提示框 1.60:1、主按钮 2.44:1 那几处的）。
    ============================================ */
 
 :root {
-  --fs-base: 15px;
+  --fs-base: 18px;
   --font: "Inter", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, sans-serif;
   --mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
   --radius-s: 8px;
   --radius-m: 12px;
   --radius-l: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --nav-h: 60px;
 
   /* ── 浅色：白 · 冷灰 · 一个蓝 ─────────────────────────────── */
   --bg: #ffffff;
@@ -39,6 +44,8 @@
   --shadow: 0 6px 24px rgba(23, 32, 64, .10);
   --shadow-s: 0 2px 10px rgba(23, 32, 64, .07);
   --nav-bg: rgba(255, 255, 255, .86);
+  --nav-border: rgba(0, 0, 0, .08);
+  --glass: rgba(255, 255, 255, .86);
   --green: #12864f;
 
   /* 语义色：正文 tip 块自选的那四档 + 错误 + 收藏星 */
@@ -78,6 +85,15 @@
   /* 视频：播放器那圈黑边（letterbox）。三套都给近黑 —— 视频本身是暗的，
      跟着页面底色走会让 16:9 之外的上下两条变成浅色横条，很割裂。 */
   --video-bg: #14161a;
+  --star-dot: rgba(0, 0, 0, 0);
+  --star-glow: rgba(0, 0, 0, 0);
+
+  --brand-miao-soft: #eef1ff;
+  --brand-miao: #3d5cf0;
+  --brand-miao-ink: #2c46b8;
+  --brand-mac-bg: #f5f5f7;
+  --brand-mac-ink: #1d1d1f;
+  --brand-blue: #0071e3;
 }
 
 :root[data-theme="dark"] {
@@ -103,6 +119,8 @@
   --shadow: 0 8px 30px rgba(0, 0, 0, .55);
   --shadow-s: 0 2px 10px rgba(0, 0, 0, .4);
   --nav-bg: rgba(30, 30, 32, .82);
+  --nav-border: rgba(255, 255, 255, .12);
+  --glass: rgba(30, 30, 32, .82);
   --green: #3ecf8e;
 
   --ok-bg: rgba(62, 207, 142, .13); --ok-ink: #7fdcac; --ok-line: rgba(62, 207, 142, .34);
@@ -134,6 +152,15 @@
   --ok-on: #082415;
   --dot-idle: #55565c;
   --video-bg: #101013;   /* 深色：跟 --bg 同族再压暗一档，播放器四周不反光 */
+  --star-dot: rgba(255, 255, 255, .60);
+  --star-glow: rgba(120, 170, 255, .12);
+
+  --brand-miao-soft: #eef1ff;
+  --brand-miao: #3d5cf0;
+  --brand-miao-ink: #2c46b8;
+  --brand-mac-bg: #f5f5f7;
+  --brand-mac-ink: #1d1d1f;
+  --brand-blue: #0071e3;
 }
 
 :root[data-theme="pink"] {
@@ -164,6 +191,8 @@
   --shadow: 0 6px 28px rgba(232, 91, 140, .08);
   --shadow-s: 0 2px 10px rgba(232, 91, 140, .06);
   --nav-bg: rgba(255, 255, 255, .82);
+  --nav-border: rgba(190, 90, 130, .16);
+  --glass: rgba(255, 255, 255, .82);
   --green: #1c8050;
 
   --ok-bg: #eaf7f0; --ok-ink: #1e7a4f; --ok-line: #bfe6d2;
@@ -195,6 +224,201 @@
   --ok-on: #ffffff;
   --dot-idle: #d8c2cb;
   --video-bg: #2a1520;   /* 粉色：深梅子底，跟这套的粉不冲突 */
+  --star-dot: rgba(0, 0, 0, 0);
+  --star-glow: rgba(0, 0, 0, 0);
+
+  --brand-miao-soft: #eef1ff;
+  --brand-miao: #3d5cf0;
+  --brand-miao-ink: #2c46b8;
+  --brand-mac-bg: #f5f5f7;
+  --brand-mac-ink: #1d1d1f;
+  --brand-blue: #0071e3;
+}
+
+
+/* ============================================================
+   mac 风格（新加，不覆盖 miao）：Apple Design 令牌
+   ============================================================ */
+:root[data-style="mac"] {
+  /* 苹果风只换字体与圆角，不动包豪斯/原版的骨架；颜色在下面两套里给 */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --mono: "SFMono-Regular", "JetBrains Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+  --radius-s: 10px;
+  --radius-m: 14px;
+  --radius-l: 20px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+  --nav-h: 64px;
+}
+
+:root[data-style="mac"][data-theme="light"] {
+  --bg: #f5f5f7;
+  --bg-soft: #f5f5f7;
+  --bg-mute: #ececef;
+  --panel: #ffffff;
+  --border: #e8e8ed;
+  --border-strong: #d2d2d7;
+  --text: #1d1d1f;
+  --text-2: #6e6e73;
+  --text-3: #86868b;
+  --accent: #0071e3;
+  --accent-2: #5aa9f0;
+  --accent-soft: #e8f2fd;
+  --accent-ink: #0066cc;
+  --accent-contrast: #ffffff;
+  --accent-hover: #0066cc;
+  --link: #0066cc;
+  --code-bg: #f5f5f7;
+  --code-head: #ececef;
+  --shadow: 0 4px 24px rgba(0, 0, 0, .06);
+  --shadow-s: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .04);
+  --nav-bg: rgba(255, 255, 255, .72);
+  --nav-border: rgba(0, 0, 0, .08);
+  --glass: rgba(255, 255, 255, .72);
+  --green: #1d8a4e;
+  --brand-miao-soft: #eef1ff;
+  --brand-miao: #3d5cf0;
+  --brand-miao-ink: #2c46b8;
+  --brand-mac-bg: #f5f5f7;
+  --brand-mac-ink: #1d1d1f;
+  --brand-blue: #0071e3;
+  --ok-bg: #e9f6ee;
+  --ok-ink: #17734a;
+  --ok-line: #bfe2cf;
+  --info-bg: #eaf1fd;
+  --info-ink: #1f5497;
+  --info-line: #c5daf3;
+  --warn-bg: #fdf4e3;
+  --warn-ink: #8a5a10;
+  --warn-line: #f0dcb4;
+  --warn: #8a5a10;
+  --neutral-bg: #f2f3f5;
+  --neutral-ink: #5f646e;
+  --neutral-line: #dcdfe4;
+  --danger: #c22f36;
+  --danger-bg: #fdeeee;
+  --danger-ink: #a3232a;
+  --danger-line: #f2c7c9;
+  --star: #e08c00;
+  --star-bg: rgba(224, 140, 0, .12);
+  --star-ink: #8a5a10;
+  --star-line: #e8c58a;
+  --tip-bg: var(--accent-soft);
+  --tip-text: var(--accent-ink);
+  --tip-line: var(--border);
+  --cover-ink: #1d1d1f;
+  --cover-a: #e8e8ed;
+  --cover-b: #f5f5f7;
+  --figure-paper: #ffffff;
+  --figure-line: #e8e8ed;
+  --figure-cap: #6e6e73;
+  --rd-kw: #a626a4;
+  --rd-str: #a31515;
+  --rd-com: #5a744c;
+  --rd-num: #0b7a53;
+  --rd-pre: #7a5bc4;
+  --rd-fn: #795e26;
+  --rd-cls: #1b7482;
+  --rd-tag: #800000;
+  --rd-atr: #0451a5;
+  --qr-paper: #ffffff;
+  --eye-bg: rgba(20, 24, 40, .46);
+  --eye-ink: #ffffff;
+  --knob: #ffffff;
+  --mask-bg: rgba(0, 0, 0, .32);
+  --sel-bg: var(--accent-soft);
+  --eye-line: rgba(255, 255, 255, .38);
+  --shadow-l: 0 24px 64px rgba(0, 0, 0, .16);
+  --ok-on: #ffffff;
+  --dot-idle: #d2d2d7;
+  --video-bg: #000000;
+  --star-dot: rgba(0, 0, 0, 0);
+  --star-glow: rgba(0, 0, 0, 0);
+}
+
+:root[data-style="mac"][data-theme="dark"] {
+  --bg: #141417;
+  --bg-soft: #232327;
+  --bg-mute: #2a2a2f;
+  --panel: #1d1d21;
+  --border: #323238;
+  --border-strong: #46464c;
+  --text: #f5f5f7;
+  --text-2: #a1a1a6;
+  --text-3: #8e8e93;
+  --accent: #0a84ff;
+  --accent-2: #5ab0ff;
+  --accent-soft: rgba(10, 132, 255, .18);
+  --accent-ink: #64b5ff;
+  --accent-contrast: #000000;
+  --accent-hover: #2997ff;
+  --link: #2997ff;
+  --code-bg: #1d1d21;
+  --code-head: #2a2a2f;
+  --shadow: 0 4px 24px rgba(0, 0, 0, .42);
+  --shadow-s: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .30);
+  --nav-bg: rgba(20, 20, 23, .72);
+  --nav-border: rgba(255, 255, 255, .10);
+  --glass: rgba(29, 29, 33, .72);
+  --green: #30d158;
+  --brand-miao-soft: #eef1ff;
+  --brand-miao: #3d5cf0;
+  --brand-miao-ink: #2c46b8;
+  --brand-mac-bg: #f5f5f7;
+  --brand-mac-ink: #1d1d1f;
+  --brand-blue: #0071e3;
+  --ok-bg: rgba(48, 209, 88, .15);
+  --ok-ink: #6ee7a0;
+  --ok-line: rgba(48, 209, 88, .34);
+  --info-bg: rgba(10, 132, 255, .15);
+  --info-ink: #8ec5ff;
+  --info-line: rgba(10, 132, 255, .34);
+  --warn-bg: rgba(255, 214, 10, .14);
+  --warn-ink: #ffd60a;
+  --warn-line: rgba(255, 214, 10, .34);
+  --warn: #ffd60a;
+  --neutral-bg: rgba(255, 255, 255, .06);
+  --neutral-ink: #a1a1a6;
+  --neutral-line: #38383a;
+  --danger: #ff6961;
+  --danger-bg: rgba(255, 105, 97, .14);
+  --danger-ink: #ff8a84;
+  --danger-line: rgba(255, 105, 97, .36);
+  --star: #ffd60a;
+  --star-bg: rgba(255, 214, 10, .14);
+  --star-ink: #ffd60a;
+  --star-line: rgba(255, 214, 10, .40);
+  --tip-bg: var(--accent-soft);
+  --tip-text: var(--accent-ink);
+  --tip-line: var(--border);
+  --cover-ink: #f5f5f7;
+  --cover-a: #2a2a2f;
+  --cover-b: #1d1d21;
+  --figure-paper: #1d1d21;
+  --figure-line: #323238;
+  --figure-cap: #a1a1a6;
+  --rd-kw: #c586c0;
+  --rd-str: #ce9178;
+  --rd-com: #6a9955;
+  --rd-num: #b5cea8;
+  --rd-pre: #9cdcfe;
+  --rd-fn: #dcdcaa;
+  --rd-cls: #4ec9b0;
+  --rd-tag: #569cd6;
+  --rd-atr: #9cdcfe;
+  --qr-paper: #ffffff;
+  --eye-bg: rgba(0, 0, 0, .62);
+  --eye-ink: #f5f5f7;
+  --knob: #f5f5f7;
+  --mask-bg: rgba(0, 0, 0, .55);
+  --sel-bg: rgba(10, 132, 255, .28);
+  --eye-line: rgba(255, 255, 255, .30);
+  --shadow-l: 0 24px 64px rgba(0, 0, 0, .60);
+  --ok-on: #000000;
+  --dot-idle: #46464c;
+  --video-bg: #08080a;
+  --star-dot: rgba(255, 255, 255, .78);
+  --star-glow: rgba(120, 170, 255, .16);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -464,6 +688,12 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
   text-underline-offset: .18em;
   text-decoration-color: var(--accent);
 }
+/* Markdown 行内代码 */
+.article .md-code, .tip-box .md-code {
+  padding: 1px 5px; border-radius: 4px;
+  background: var(--code-bg); color: var(--text);
+  font-family: var(--mono); font-size: .9em;
+}
 .tip-box {
   margin: 16px 0; padding: 13px 16px; border-radius: var(--radius-m);
   background: var(--tip-bg); color: var(--tip-text); font-size: .92rem;
@@ -723,6 +953,10 @@ footer .container > * { font-size: .82rem; color: var(--text-2); }
   min-width: 62px; font-size: .78rem; font-weight: 400; color: var(--text-3);
   padding-right: 6px;
 }
+/* 分类与难度标签跟右上角「整体字号」走，再小 1px。
+   只作用于这两类筛选标签与考试列表的分类/难度文字，不动标签、难度徽章、正文。 */
+.chip-cat, .chip-diff, .cat-big { font-size: calc(1rem - 1px); }
+.algo-line-meta .cat, .algo-line-meta .lv { font-size: calc(1rem - 1px); }
 
 /* 分类收起/展开 */
 .cat-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -1523,4 +1757,1221 @@ body.exam-mode header.nav, body.exam-mode footer { display: none; }
 @media (max-width: 1080px) {
   .v-layout { grid-template-columns: minmax(0, 1fr); }
   .v-side { position: static; }
+}
+
+/* ============================================================
+   考试 · 算法题库（#/exams）
+   列表复用首页的分类栏（.filter-bar / .cat-group / .cat-row / .chip），
+   每行只有：题目在左，分类 / 难度 / 结果在右侧挤在一起；没有表头。
+   ============================================================ */
+.algo-lines { margin-bottom: 48px; border-top: 1px solid var(--border); }
+.algo-line {
+  display: flex; align-items: center; gap: 18px;
+  padding: 9px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.algo-line:hover { background: var(--bg-soft); }
+.algo-line-title { flex: 1 1 auto; min-width: 0; color: var(--text); font-weight: 500; }
+.algo-line-title:hover { color: var(--accent); }
+.algo-line-meta {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 14px;
+  font-size: .84rem; white-space: nowrap;
+}
+.algo-line-meta .cat { color: var(--text-2); }
+.algo-line-meta .lv { font-weight: 500; }
+.algo-line-meta .lv.easy { color: var(--ok-ink); }
+.algo-line-meta .lv.medium { color: var(--warn-ink); }
+.algo-line-meta .lv.hard { color: var(--danger-ink); }
+.algo-line-meta .state { font-weight: 500; }
+.algo-line-meta .state.pass { color: var(--green); }
+.algo-line-meta .state.no { color: var(--text-3); }
+.algo-no { color: var(--text-3); font-weight: 400; font-variant-numeric: tabular-nums; }
+.algo-empty { padding: 42px 20px; text-align: center; color: var(--text-2); }
+.algo-empty .btn { margin-top: 12px; }
+
+/* ---- 做题页：左题面 / 右代码栏（照力扣 3105 那种两栏；运行 / 提交收在右栏代码头条的右上角） ---- */
+body.algo-mode footer { display: none; }
+.algo-problem {
+  --algo-desc-w: 46%;
+  display: grid; grid-template-columns: var(--algo-desc-w, 46%) 14px minmax(0, 1fr);
+  column-gap: 0; height: calc(100vh - 61px); max-width: none; margin: 0; padding: 0;
+  background: var(--bg);
+}
+.algo-vsplit {
+  position: relative; z-index: 5; align-self: stretch;
+  cursor: col-resize; touch-action: none;
+}
+.algo-vsplit::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
+  width: 1px; transform: translateX(-50%); background: var(--border);
+}
+.algo-vsplit:hover::before, .algo-vsplit:active::before {
+  width: 2px; background: var(--accent);
+}
+.algo-problem.code-full { grid-template-columns: minmax(0, 1fr); }
+.algo-problem.code-full .algo-desc,
+.algo-problem.code-full .algo-vsplit { display: none; }
+.algo-problem.code-full .algo-workspace { grid-column: 1 / -1; }
+.algo-desc {
+  min-width: 0; min-height: 0; display: flex; flex-direction: column;
+  overflow: hidden; border-right: 0; background: var(--panel);
+}
+.algo-desc-tabs {
+  flex: 0 0 auto; display: flex; align-items: stretch; height: 44px;
+  padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--panel);
+}
+.algo-dtab {
+  display: inline-flex; align-items: center; padding: 0 2px; margin-bottom: -1px;
+  border-bottom: 2px solid var(--accent);
+  font-size: .92rem; font-weight: 700; color: var(--text);
+}
+.algo-desc-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 22px 28px 40px; }
+.algo-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.algo-title { font-size: 1.36rem; line-height: 1.35; letter-spacing: .2px; font-weight: 700; }
+.algo-diff { font-size: .78rem; font-weight: 600; }
+.algo-diff.easy { color: var(--ok-ink); }
+.algo-diff.medium { color: var(--warn-ink); }
+.algo-diff.hard { color: var(--danger-ink); }
+.algo-passed-tag {
+  padding: 1px 9px; border-radius: 999px; font-size: .72rem; font-weight: 700;
+  color: var(--ok-ink); background: var(--ok-bg); border: 1px solid var(--ok-line);
+}
+.algo-statement { margin-top: 16px; font-size: .94rem; line-height: 1.9; }
+.algo-statement p { margin: 10px 0; }
+.algo-statement h3 { margin: 20px 0 8px; font-size: .98rem; }
+.algo-example-text { margin: 12px 0; line-height: 1.9; }
+.algo-example-text .algo-example-head { font-weight: 700; }
+.algo-example-text .algo-example-lbl { color: var(--text-2); }
+.algo-example-text code {
+  color: var(--text); font-family: var(--mono); font-size: .88em;
+  white-space: pre-wrap; word-break: break-word;
+}
+.algo-hint-text { margin: 14px 0; color: var(--text-2); line-height: 1.9; }
+.algo-hint-text p { margin: 8px 0; }
+.algo-hint-text ul { margin: 6px 0 6px 22px; }
+.algo-cons { margin-top: 22px; }
+.algo-cons ul { margin: 6px 0 0; padding-left: 22px; }
+.algo-cons li { margin: 3px 0; color: var(--text-2); font-size: .84rem; line-height: 1.75; }
+
+.algo-workspace {
+  --algo-console-h: clamp(180px, 30vh, 280px);
+  min-width: 0; min-height: 0; display: flex; flex-direction: column;
+  overflow: hidden; background: var(--panel);
+}
+/* 代码栏顶栏：左「代码」+ 语言文字选择，右 重置 / 运行·提交一组 —— 力扣那种把动作收在代码区右上角 */
+.algo-code-head {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 0 12px 0 16px;
+  border-bottom: 1px solid var(--border); background: var(--panel);
+}
+.algo-code-title {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .9rem; font-weight: 700; color: var(--text); white-space: nowrap;
+}
+.algo-code-title svg { color: var(--text-2); }
+.algo-ops { margin-left: auto; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.algo-status {
+  min-width: 0; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-3); font-size: .76rem;
+}
+.algo-status.busy { color: var(--accent); }
+.algo-reset {
+  border: 1px solid transparent; background: transparent; color: var(--text-3);
+  border-radius: 7px; padding: 5px 9px; font-size: .8rem; cursor: pointer;
+}
+.algo-reset:hover { color: var(--text); background: var(--bg-soft); }
+.algo-run {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--accent); background: var(--panel); color: var(--accent-ink);
+  border-radius: 7px; padding: 5px 14px; font-size: .82rem; font-weight: 600; cursor: pointer;
+}
+.algo-run::before {
+  content: ""; display: inline-block; width: 0; height: 0; margin-right: 7px;
+  border-left: 5px solid currentColor;
+  border-top: 3.5px solid transparent; border-bottom: 3.5px solid transparent;
+}
+.algo-run:hover { background: var(--accent-soft); }
+.algo-run:disabled, .algo-reset:disabled { opacity: .55; cursor: default; }
+.algo-run:disabled:hover { background: var(--panel); }
+
+.algo-editor {
+  flex: 1 1 auto; min-height: 160px; display: flex; flex-direction: column;
+  /* 和课末考试同一件编辑器：四层排版令牌必须齐，差一点行号就飘 */
+  --ide-fs: 14px; --ide-lh: 1.65; --ide-lhpx: 23.1px; --ide-pad-v: 10px; --ide-pad-h: 12px;
+  background: var(--ide-bg);
+}
+
+/* 底部面板：照力扣的「测试用例 / 测试结果」两个页签 */
+.algo-console {
+  flex: 0 0 var(--algo-console-h, clamp(180px, 30vh, 280px));
+  min-height: 0; display: flex; flex-direction: column;
+  border-top: 0; background: var(--panel);
+}
+.algo-hsplit {
+  flex: 0 0 8px; position: relative; cursor: row-resize;
+  touch-action: none; background: var(--panel);
+}
+.algo-hsplit::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%;
+  height: 1px; transform: translateY(-50%); background: var(--border);
+}
+.algo-hsplit:hover::before, .algo-hsplit:active::before {
+  height: 2px; background: var(--accent);
+}
+.algo-workspace.console-full .algo-editor,
+.algo-workspace.console-full .algo-hsplit { display: none; }
+.algo-workspace.console-full .algo-console { flex: 1 1 auto; }
+
+/* 精致风格：进入题目、收起 / 全屏都做动画，不要瞬变 */
+[data-style="mac"] .algo-desc,
+[data-style="mac"] .algo-workspace { animation: algoPanelIn .45s ease; }
+[data-style="mac"] .algo-desc { transition: opacity .25s ease, transform .3s ease; }
+[data-style="mac"] .algo-vsplit { transition: opacity .25s ease, width .3s ease; }
+@keyframes algoPanelIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+[data-style="mac"] .algo-desc-scroll {
+  max-height: calc(100vh - var(--nav-h));
+  transition: max-height .3s ease, opacity .25s ease, padding .3s ease;
+}
+[data-style="mac"] .algo-desc.collapsed .algo-desc-scroll {
+  display: block; max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; overflow: hidden;
+}
+[data-style="mac"] .algo-editor {
+  max-height: calc(100vh - var(--nav-h));
+  transition: flex-basis .3s ease, flex-grow .3s ease, max-height .3s ease, opacity .25s ease, min-height .3s ease;
+}
+[data-style="mac"] .algo-workspace.code-collapsed .algo-editor {
+  display: flex; flex: 0 0 0; min-height: 0; max-height: 0; opacity: 0; overflow: hidden; pointer-events: none;
+}
+[data-style="mac"] .algo-console-body {
+  max-height: calc(100vh - var(--nav-h));
+  transition: max-height .3s ease, opacity .25s ease;
+}
+[data-style="mac"] .algo-console.collapsed .algo-console-body {
+  display: block; max-height: 0; opacity: 0; overflow: hidden;
+}
+[data-style="mac"] .algo-hsplit { transition: flex-basis .3s ease, height .3s ease, opacity .25s ease; }
+[data-style="mac"] .algo-problem {
+  transition: grid-template-columns .32s ease;
+}
+[data-style="mac"] .algo-problem.code-full {
+  grid-template-columns: 0 0 minmax(0, 1fr);
+}
+[data-style="mac"] .algo-problem.code-full .algo-desc {
+  display: flex; opacity: 0; transform: translateX(-14px); overflow: hidden; pointer-events: none;
+}
+[data-style="mac"] .algo-problem.code-full .algo-vsplit {
+  display: block; width: 0; opacity: 0; pointer-events: none;
+}
+[data-style="mac"] .algo-workspace.console-full .algo-editor {
+  display: flex; flex: 0 0 0; min-height: 0; max-height: 0; opacity: 0; overflow: hidden; pointer-events: none;
+}
+[data-style="mac"] .algo-workspace.console-full .algo-hsplit {
+  display: block; flex: 0 0 0; height: 0; opacity: 0; pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-style="mac"] .algo-desc,
+  [data-style="mac"] .algo-workspace { animation: none; }
+  [data-style="mac"] .algo-desc,
+  [data-style="mac"] .algo-vsplit,
+  [data-style="mac"] .algo-desc-scroll,
+  [data-style="mac"] .algo-editor,
+  [data-style="mac"] .algo-console-body,
+  [data-style="mac"] .algo-hsplit,
+  [data-style="mac"] .algo-problem { transition: none; }
+}
+body.algo-resizing-x, body.algo-resizing-x * { cursor: col-resize !important; user-select: none !important; }
+body.algo-resizing-y, body.algo-resizing-y * { cursor: row-resize !important; user-select: none !important; }
+.algo-console-tabs {
+  flex: 0 0 auto; display: flex; align-items: stretch; gap: 18px;
+  height: 36px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--panel);
+}
+.algo-ctab {
+  position: relative; border: 0; background: transparent; padding: 0 2px;
+  font-size: .82rem; font-weight: 600; color: var(--text-3); cursor: pointer;
+}
+.algo-ctab:hover { color: var(--text); }
+.algo-ctab.on { color: var(--text); }
+.algo-ctab.on::before {
+  content: "✓"; margin-right: 5px; color: var(--ok-ink); font-weight: 700;
+}
+.algo-console-tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+.algo-ctab.on::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent);
+}
+.algo-console-hint {
+  margin-left: auto; align-self: center; color: var(--text-3); font-size: .72rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.algo-console-body { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.algo-pane { display: none; height: 100%; overflow-y: auto; padding: 14px 16px; }
+.algo-pane.on { display: block; }
+.algo-result { min-height: 100%; font-size: .83rem; }
+
+/* 「测试用例」页签：照力扣 —— Case 标签 + 参数输入，不做每例一张卡 */
+.algo-cases { min-height: 100%; }
+.algo-case-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; margin-bottom: 12px; }
+.algo-case-tab {
+  padding: 5px 10px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--text-2);
+  font-size: .78rem; font-weight: 500; cursor: pointer;
+}
+.algo-case-tab:hover { color: var(--text); background: var(--bg-soft); }
+.algo-case-tab.on { color: var(--text); background: var(--bg-mute); font-weight: 600; }
+.algo-case-add {
+  width: 26px; height: 26px; margin-left: 2px; padding: 0;
+  border: 0; border-radius: 6px; background: transparent;
+  color: var(--text-3); font-size: 1.05rem; line-height: 1; cursor: pointer;
+}
+.algo-case-add:hover { color: var(--text); background: var(--bg-soft); }
+.algo-case-editor { display: flex; flex-direction: column; gap: 12px; }
+.algo-case-field { display: block; }
+.algo-case-name {
+  display: block; margin-bottom: 6px;
+  color: var(--text-2); font-family: var(--mono); font-size: .76rem;
+}
+.algo-case-input {
+  display: block; width: 100%; min-height: 38px; padding: 9px 12px;
+  border: 1px solid transparent; border-radius: 7px;
+  background: var(--bg-soft); color: var(--text);
+  font-family: var(--mono); font-size: .8rem; line-height: 1.5;
+  resize: vertical; outline: none;
+}
+.algo-case-input:focus { border-color: var(--accent); background: var(--panel); }
+.algo-case-empty { padding: 8px 0; color: var(--text-3); font-size: .78rem; }
+
+/* 「测试结果」页签：照力扣 —— 通过 / 执行用时，Case 标签，输入 / 输出 / 预期结果 */
+.algo-res-body { min-height: 0; }
+.algo-res-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.algo-res-head b { color: var(--ok-ink); font-size: 1.02rem; }
+.algo-res-head span { color: var(--text-2); font-size: .8rem; }
+.algo-res-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 12px 0 4px; }
+.algo-res-tab {
+  padding: 4px 8px; border: 0; border-radius: 6px; background: transparent;
+  color: var(--text-2); font-size: .78rem; cursor: pointer;
+}
+.algo-res-tab:hover { color: var(--text); background: var(--bg-soft); }
+.algo-res-tab.on { color: var(--text); background: var(--bg-mute); font-weight: 600; }
+.algo-res-tab .mk { margin-right: 4px; color: var(--ok-ink); }
+.algo-res-label { margin: 12px 0 6px; color: var(--text-2); font-size: .76rem; }
+.algo-res-group {
+  padding: 10px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-soft); display: flex; flex-direction: column; gap: 8px;
+}
+.algo-res-field { padding: 8px 10px; border-radius: 6px; background: var(--panel); }
+.algo-res-name { color: var(--text-2); font-family: var(--mono); font-size: .76rem; }
+.algo-res-val {
+  margin-top: 3px; color: var(--text); font-family: var(--mono); font-size: .8rem;
+  line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+}
+.algo-res-box {
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-soft); color: var(--text);
+  font-family: var(--mono); font-size: .8rem; line-height: 1.55;
+  white-space: pre-wrap; word-break: break-word;
+}
+.algo-err {
+  margin: 4px 0; padding: 8px 10px;
+  border: 1px solid var(--danger-line); border-radius: 8px;
+  background: var(--danger-bg); color: var(--danger-ink);
+  font-family: var(--mono); font-size: .76rem; line-height: 1.65; white-space: pre-wrap;
+}
+.algo-note { margin-top: 8px; color: var(--text-3); font-size: .71rem; line-height: 1.7; }
+.algo-note code { font-family: var(--mono); }
+
+/* 收藏星：列表最右，收藏 / 取消都有一次弹一下 */
+.algo-fav {
+  border: 0; background: none; margin-left: 4px; padding: 2px 4px;
+  color: var(--text-3); font-size: 1rem; line-height: 1; cursor: pointer;
+  border-radius: 50%;
+  transition: color .2s, transform .2s;
+}
+.algo-fav:hover { color: var(--star); transform: scale(1.12); }
+.algo-fav.on { color: var(--star); }
+.algo-fav.pop { animation: algoFavPop .38s cubic-bezier(.2, .8, .2, 1); }
+@keyframes algoFavPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5); }
+  70% { transform: scale(.92); }
+  100% { transform: scale(1); }
+}
+
+/* 折叠按钮：题面 / 代码 / 测试面板共用 */
+.algo-collapse {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--text-3); cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.algo-collapse:hover { background: var(--bg-soft); color: var(--text); }
+.algo-full { color: var(--text-2); }
+.algo-chev { display: inline-block; font-size: .72rem; line-height: 1; transition: transform .25s; }
+.algo-collapse[aria-expanded="false"] .algo-chev { transform: rotate(-90deg); }
+.algo-desc-tabs .algo-collapse { margin-left: auto; align-self: center; }
+.algo-desc.collapsed .algo-desc-scroll { display: none; }
+.algo-workspace.code-collapsed .algo-editor { display: none; }
+.algo-console.collapsed { flex: 0 0 auto; }
+.algo-console.collapsed .algo-console-body { display: none; }
+
+/* 提示：演示下面的解释全部收进这里，可折叠 */
+/* 示例输入 / 输出带代码高光 */
+.algo-example-text code .rd-kw { color: var(--rd-kw); }
+.algo-example-text code .rd-str { color: var(--rd-str); }
+.algo-example-text code .rd-com { color: var(--rd-com); }
+.algo-example-text code .rd-num { color: var(--rd-num); }
+.algo-example-text code .rd-pre { color: var(--rd-pre); }
+.algo-example-text code .rd-fn { color: var(--rd-fn); }
+.algo-example-text code .rd-cls { color: var(--rd-cls); }
+.algo-example-text code .rd-tag { color: var(--rd-tag); }
+.algo-example-text code .rd-atr { color: var(--rd-atr); }
+
+/* 语言：只有文字，没有胶囊；点开是下拉文字 */
+.algo-lang-wrap { position: relative; flex: 0 0 auto; }
+.algo-lang {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 2px; border: 0; background: transparent;
+  color: var(--text-2); font-size: .82rem; font-weight: 600; cursor: pointer;
+}
+.algo-lang:hover { color: var(--text); }
+.algo-lang-menu {
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 40;
+  min-width: 168px; padding: 6px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--panel);
+  box-shadow: var(--shadow);
+}
+.algo-lang-option {
+  display: block; width: 100%; padding: 7px 10px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--text-2); font-size: .82rem; text-align: left; cursor: pointer;
+}
+.algo-lang-option:hover, .algo-lang-option.on { background: var(--accent-soft); color: var(--accent-ink); }
+.algo-lang-portal {
+  position: fixed !important; z-index: 1200 !important;
+  background-color: var(--panel) !important; opacity: 1 !important;
+  pointer-events: auto; isolation: isolate; box-shadow: var(--shadow-l);
+}
+.algo-gear {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--text-3); cursor: pointer;
+}
+.algo-gear:hover { color: var(--text); background: var(--bg-soft); }
+
+/* 运行 / 提交合成一组：主按钮 + 下拉箭头 */
+.algo-action {
+  position: relative; display: inline-flex; align-items: stretch;
+  border: 1px solid var(--accent); border-radius: var(--radius-pill);
+  background: var(--panel);
+}
+.algo-action .algo-run {
+  border: 0; background: transparent;
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+}
+.algo-caret {
+  padding: 0 9px; border: 0; border-left: 1px solid var(--border);
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  background: transparent; color: var(--accent-ink); font-size: .7rem; cursor: pointer;
+}
+.algo-caret:hover { background: var(--accent-soft); }
+.algo-action-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
+  min-width: 118px; padding: 6px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--panel);
+  box-shadow: var(--shadow);
+}
+.algo-action-menu button {
+  display: block; width: 100%; padding: 7px 12px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--text-2); font-size: .82rem; text-align: left; cursor: pointer;
+}
+.algo-action-menu button:hover { background: var(--accent-soft); color: var(--accent-ink); }
+.algo-caret:disabled { opacity: .55; cursor: default; }
+
+/* 重置确认 */
+.algo-confirm { width: min(360px, 90vw); padding: 26px; text-align: left; }
+.algo-confirm h3 { margin-bottom: 8px; font-size: 1.05rem; }
+.algo-confirm p { margin-bottom: 18px; color: var(--text-2); font-size: .88rem; line-height: 1.7; }
+.algo-confirm-ops { display: flex; justify-content: flex-end; gap: 10px; }
+.algo-confirm .btn { border-radius: var(--radius-pill); }
+/* 代码设置：和通用设置同一张 set-pop 卡，但只有字号与三种高光 */
+.algo-code-set { width: min(560px, 94vw); }
+.set-label { margin: 20px 0 8px; color: var(--text-2); font-size: .82rem; font-weight: 600; }
+.code-theme-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.code-theme-opt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-s);
+  background: var(--panel); color: var(--text); text-align: left; cursor: pointer;
+}
+.code-theme-opt:hover { border-color: var(--border-strong); }
+.code-theme-opt.on { border-color: var(--accent); background: var(--accent-soft); }
+.code-theme-opt b { font-size: .84rem; }
+.code-theme-dots { display: flex; gap: 4px; }
+.code-theme-dots i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+.algo-cpp-guide { width: min(620px, 94vw); }
+.cpp-os-tabs { display: flex; gap: 4px; margin: 12px 0 14px; }
+.cpp-os-tab {
+  padding: 5px 12px; border: 0; border-radius: 6px; background: transparent;
+  color: var(--text-2); font-size: .8rem; cursor: pointer;
+}
+.cpp-os-tab:hover { color: var(--text); background: var(--bg-soft); }
+.cpp-os-tab.on { color: var(--text); background: var(--bg-mute); font-weight: 600; }
+.cpp-step { margin: 12px 0; }
+.cpp-step b { display: block; margin-bottom: 5px; font-size: .82rem; color: var(--text); }
+.cpp-step pre {
+  margin: 0; padding: 9px 12px; overflow: auto;
+  border: 1px solid var(--border); border-radius: 7px; background: var(--bg-soft);
+  color: var(--text); font-family: var(--mono); font-size: .78rem; line-height: 1.6;
+}
+.cpp-note { margin: 4px 0 6px; color: var(--text-2); font-size: .76rem; line-height: 1.6; }
+.cpp-guide-ops { margin-top: 16px; display: flex; justify-content: flex-end; }
+
+@media (max-width: 1080px) {
+  .algo-problem { grid-template-columns: minmax(0, 1fr); height: auto; row-gap: 16px; }
+  .algo-vsplit { display: none; }
+  .algo-desc { max-height: none; border-right: 0; border-bottom: 1px solid var(--border); }
+  .algo-desc-scroll { overflow-y: visible; }
+  .algo-workspace { min-height: 660px; }
+}
+@media (max-width: 720px) {
+  .algo-line { gap: 10px; padding: 9px 0; }
+  .algo-line-title { font-size: .9rem; }
+  .algo-line-meta { gap: 8px; font-size: .8rem; }
+  .algo-desc-scroll { padding: 16px 16px 28px; }
+  .algo-code-head { flex-wrap: wrap; padding: 7px 10px; gap: 8px; }
+  .algo-status { max-width: 120px; }
+  .algo-console-hint { display: none; }
+  .algo-workspace { min-height: 620px; }
+}
+
+/* ---------- 首页教程栅格：每行四个（窄屏再收） ---------- */
+.grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 820px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+
+/* ---------- 通用设置 · 外观主题（miao / mac 两种风格共用的控件） ---------- */
+.set-group { margin-bottom: 28px; }
+.set-group:last-child { margin-bottom: 0; }
+.set-label {
+  margin-bottom: 10px;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  color: var(--text-2);
+}
+.skin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.skin-opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--panel);
+  transition: border-color .3s cubic-bezier(.25, .1, .25, 1),
+              box-shadow .3s cubic-bezier(.25, .1, .25, 1),
+              transform .3s cubic-bezier(.25, .1, .25, 1);
+}
+.skin-opt:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.skin-opt.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.skin-swatch {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--bg-soft);
+}
+.skin-swatch i {
+  display: block;
+  width: 18px; height: 18px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg);
+}
+.skin-swatch.miao i:nth-child(1) { background: var(--brand-miao-soft); border-color: transparent; }
+.skin-swatch.miao i:nth-child(2) { background: var(--brand-miao); border-color: transparent; }
+.skin-swatch.miao i:nth-child(3) { background: var(--brand-miao-ink); border-color: transparent; }
+.skin-swatch.mac i:nth-child(1) { background: var(--brand-mac-bg); border-color: transparent; }
+.skin-swatch.mac i:nth-child(2) { background: var(--brand-blue); border-color: transparent; }
+.skin-swatch.mac i:nth-child(3) { background: var(--brand-mac-ink); border-color: transparent; }
+.skin-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.skin-copy b { font-size: .98rem; font-weight: 600; color: var(--text); }
+.skin-copy span { font-size: .78rem; line-height: 1.45; color: var(--text-2); }
+.fs-row { display: flex; align-items: center; gap: 14px; max-width: 440px; }
+.fs-range { flex: 1; height: 28px; accent-color: var(--accent); cursor: pointer; }
+.fs-row b {
+  flex: 0 0 auto;
+  min-width: 48px;
+  text-align: right;
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) { .skin-grid { grid-template-columns: 1fr; } }
+
+/* ============================================================
+   mac 风格视觉层（2026-11-18）
+   只在 <html data-style="mac"> 时生效：miao 原版的规则一行不动。
+   颜色一律走 :root 令牌，不在这一层直接写颜色。
+   ============================================================ */
+/* ============================================================
+   Apple Design 视觉层（2026-11-18）
+   只做覆盖、不动原有结构规则：令牌换成了苹果风，这里补上
+   排版、留白、毛玻璃、大圆角、柔和阴影、动效与微交互。
+   颜色一律走 :root 令牌，不在这一层直接写颜色。
+   ============================================================ */
+
+/* ---------- 基础排版：SF Pro 字栈 · 大标题 · 紧凑行高 ---------- */
+[data-style="mac"] body {
+  font-family: var(--font);
+  line-height: 1.65;
+  letter-spacing: -.006em;
+}
+
+[data-style="mac"] h1, [data-style="mac"] h2, [data-style="mac"] h3, [data-style="mac"] h4, [data-style="mac"] h5 {
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.022em;
+}
+
+[data-style="mac"] .container { max-width: 1200px; padding: 0 32px; }
+
+/* 换页：新视图淡入 + 轻微上移；考场的整屏 IDE 只淡入，不做位移 */
+[data-style="mac"] #app > * { animation: macPageIn .7s ease both; }
+[data-style="mac"] #app > .ide { animation: macFadeIn .4s ease both; }
+@keyframes macFadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* 同一板块内切换（文档左目录 / 视频合集 / 题库列表）不上浮，改成交叉虚化：
+   旧页快照盖在上面，新页画好后快照淡出。 */
+.route-xfade {
+  position: fixed; left: 0; right: 0; top: var(--nav-h); bottom: 0;
+  z-index: 90; overflow: hidden; pointer-events: none;
+  background: var(--bg); opacity: 1;
+  transition: opacity .3s ease;
+}
+.route-xfade.out { opacity: 0; }
+.route-xfade-inner { width: 100%; will-change: transform; }
+/* 快照里的卡片必须静止：.rv.in 自带浮现动画，克隆进 DOM 会再演一遍 */
+.route-xfade .rv { animation: none !important; opacity: 1 !important; transform: none !important; }
+/* 快照里不要重演 sticky；目录树原有滚动位置由脚本补 */
+.route-xfade-inner .read-tree,
+.route-xfade-inner .read-side,
+.route-xfade-inner .v-side,
+.route-xfade-inner .set-wrap { position: static !important; top: auto !important; }
+body.route-xfade-on #app > * { animation: none !important; }
+body.route-xfade-on .rv { opacity: 1 !important; transform: none !important; animation: none !important; }
+/* 这一屏已经用交叉虚化进来了，路由下一次换页前都别再补一次上浮 */
+[data-style="mac"] #app.xfade-static > * { animation: none !important; }
+.rv.no-anim { animation: none !important; opacity: 1 !important; transform: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .route-xfade { transition: none; }
+}
+
+
+/* 首页 / 视频 / 考试共用同一套页面标题，别让「视频」比「首页」大一号 */
+[data-style="mac"] .page-title,
+[data-style="mac"] .v-page-title {
+  margin: 28px 0 6px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.2;
+}
+
+
+/* ---------- 滚动显现：卡片 / 视频 / 考试行进视口才浮出来 ---------- */
+[data-style="mac"] .rv {
+  opacity: 0;
+  transform: translateY(26px) scale(.985);
+}
+[data-style="mac"] .rv.in {
+  opacity: 1;
+  transform: none;
+  /* 不填 fill：动画结束后把 transform 交还给 .t-card:hover 的过渡。
+     淡入拉长到 .9s，上浮仍只占前 28%（约 .25s），两者同时开始。 */
+  animation: macReveal .9s ease;
+}
+[data-style="mac"].rv-off .rv { opacity: 1; transform: none; }
+@keyframes macReveal {
+  /* 淡入与上浮同时开始：上浮前 28% 就收完，透明→不透明一直走到 100% */
+  0% { opacity: 0; transform: translateY(26px) scale(.985); }
+  28% { transform: translateY(0) scale(1); }
+  100% { opacity: 1; transform: none; }
+}
+/* 换页同样是淡入与上移同时开始：上移前 35% 收完，淡入走完 0.7s */
+@keyframes macPageIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  35% { transform: translateY(0); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* ---------- 导航：20px 毛玻璃 · 细发丝底边 ---------- */
+[data-style="mac"] .nav {
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--nav-border);
+  transition: background .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .nav-inner { max-width: 1200px; height: 64px; padding: 0 32px; gap: 26px; }
+
+[data-style="mac"] .logo { font-size: 1.14rem; font-weight: 600; letter-spacing: -.02em; gap: 8px; }
+
+[data-style="mac"] .logo span { font-weight: 500; letter-spacing: .12em; }
+
+[data-style="mac"] .nav-links { gap: 2px; }
+
+[data-style="mac"] .nav-links a {
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  font-size: .94rem;
+  font-weight: 500;
+  transition: color .3s cubic-bezier(.25, .1, .25, 1),
+              background .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .nav-links a:hover, [data-style="mac"] .nav-links a.on { background: transparent; color: var(--text); }
+
+[data-style="mac"] .nav-links a.on { background: transparent; color: var(--accent); font-weight: 600; }
+
+[data-style="mac"] .nav-search { max-width: 380px; }
+
+[data-style="mac"] .nav-search input {
+  height: 40px;
+  padding: 0 18px;
+  font-size: .9rem;
+  border: 1px solid transparent;
+  background: var(--bg-mute);
+  transition: background .3s cubic-bezier(.25, .1, .25, 1),
+              border-color .3s cubic-bezier(.25, .1, .25, 1),
+              box-shadow .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .nav-search input:focus {
+  background: var(--panel);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+[data-style="mac"] .icon-btn {
+  width: 40px; height: 40px;
+  border: 1px solid transparent;
+  background: var(--bg-soft);
+  color: var(--text-2);
+  transition: background .3s cubic-bezier(.25, .1, .25, 1),
+              color .3s cubic-bezier(.25, .1, .25, 1),
+              transform .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .icon-btn:hover {
+  background: var(--bg-mute);
+  border-color: transparent;
+  color: var(--text);
+  transform: none;
+}
+
+
+/* ---------- 下拉菜单：半透明 + 背景模糊 + 大阴影 ---------- */
+[data-style="mac"] .dropdown {
+  min-width: 248px;
+  padding: 12px;
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-l);
+}
+
+[data-style="mac"] .dropdown .dd-title {
+  padding: 6px 10px 8px;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  color: var(--text-2);
+}
+
+[data-style="mac"] .dropdown .dd-item { padding: 9px 12px; border-radius: var(--radius-s); font-size: .92rem; }
+
+[data-style="mac"] .dd-sep { margin: 8px 6px; background: var(--border); }
+
+[data-style="mac"] .seg {
+  margin: 2px 4px 8px;
+  padding: 3px;
+  border: 0;
+  background: var(--bg-mute);
+  border-radius: var(--radius-pill);
+}
+
+[data-style="mac"] .seg button {
+  padding: 6px 0;
+  border-radius: var(--radius-pill);
+  font-size: .8rem;
+  color: var(--text-2);
+  transition: background .3s cubic-bezier(.25, .1, .25, 1),
+              color .3s cubic-bezier(.25, .1, .25, 1),
+              box-shadow .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .seg button:hover { color: var(--text); }
+
+[data-style="mac"] .seg button.on {
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: var(--shadow-s);
+}
+
+
+/* ---------- 按钮：胶囊形 · 平滑过渡 · 悬停轻抬 / 按下轻缩 ---------- */
+[data-style="mac"] .btn {
+  padding: 11px 24px;
+  border-radius: var(--radius-pill);
+  font-size: .95rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  transition: background .3s cubic-bezier(.25, .1, .25, 1),
+              color .3s cubic-bezier(.25, .1, .25, 1),
+              border-color .3s cubic-bezier(.25, .1, .25, 1),
+              transform .3s cubic-bezier(.25, .1, .25, 1),
+              box-shadow .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .btn:hover { transform: translateY(-1px) scale(1.02); }
+
+[data-style="mac"] .btn:active { transform: scale(.97); }
+
+[data-style="mac"] .btn-primary { background: var(--accent); color: var(--accent-contrast); }
+
+[data-style="mac"] .btn-primary:hover { background: var(--accent-hover); box-shadow: var(--shadow-s); }
+
+[data-style="mac"] .btn-soft { background: var(--accent-soft); color: var(--accent-ink); }
+
+[data-style="mac"] .btn-soft:hover { background: var(--accent); color: var(--accent-contrast); }
+
+[data-style="mac"] .btn-ghost { background: transparent; border-color: var(--border-strong); color: var(--text); }
+
+[data-style="mac"] .btn-ghost:hover { background: var(--bg-soft); border-color: var(--border-strong); color: var(--text); }
+
+[data-style="mac"] .btn-sm { padding: 7px 16px; font-size: .82rem; border-radius: var(--radius-pill); }
+
+[data-style="mac"] .input, [data-style="mac"] select.input, [data-style="mac"] textarea.input {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--panel);
+  transition: border-color .3s cubic-bezier(.25, .1, .25, 1),
+              box-shadow .3s cubic-bezier(.25, .1, .25, 1),
+              background .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+
+/* ---------- 筛选：只留文字，不做胶囊底 / 边框 / 底色 ---------- */
+[data-style="mac"] .chip {
+  padding: 2px 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-2);
+  font-size: calc(1rem - 1px);
+  transition: color .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .chip:hover { background: transparent; color: var(--text); transform: none; }
+
+[data-style="mac"] .chip.on { background: transparent; color: var(--text); font-weight: 600; }
+
+[data-style="mac"] .filter-bar { gap: 18px; margin: 28px 0 20px; }
+
+[data-style="mac"] .cat-row { gap: 16px; }
+
+[data-style="mac"] .cat-head .chip, [data-style="mac"] .cat-body .chip { margin: 0; }
+
+[data-style="mac"] .cat-toggle { font-size: .8rem; }
+
+
+/* ---------- 卡片：大圆角 · 极淡弥散阴影 · 悬停轻浮 ---------- */
+[data-style="mac"] .card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-s);
+}
+
+[data-style="mac"] .t-card {
+  transition: transform .35s cubic-bezier(.25, .1, .25, 1),
+              box-shadow .35s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .t-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+
+[data-style="mac"] .t-body { padding: 22px 24px 24px; gap: 10px; }
+
+[data-style="mac"] .t-body h3 { font-size: 1.14rem; font-weight: 600; }
+
+[data-style="mac"] .t-body .intro { font-size: .9rem; line-height: 1.6; }
+
+[data-style="mac"] .t-meta { margin-top: 2px; }
+
+
+/* ---------- 视频详情标题 ---------- */
+[data-style="mac"] .v-title-row h1 { font-size: clamp(1.6rem, 2.8vw, 2.1rem); letter-spacing: -.025em; line-height: 1.2; }
+
+
+/* ---------- 教程详情 ---------- */
+[data-style="mac"] .crumb { margin: 32px 0 18px; }
+
+[data-style="mac"] .tut-hero { padding: 40px; gap: 36px; }
+
+[data-style="mac"] .tut-hero h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); letter-spacing: -.03em; }
+
+[data-style="mac"] .tut-hero .intro { font-size: 1rem; line-height: 1.7; }
+
+[data-style="mac"] .tut-cols { gap: 28px; margin-top: 28px; }
+
+[data-style="mac"] .chap-list { padding: 14px; }
+
+[data-style="mac"] .chap-item { padding: 14px 16px; border-radius: var(--radius-m); }
+
+[data-style="mac"] .side-card { padding: 26px; }
+
+[data-style="mac"] .side-card h3 { font-size: 1.02rem; margin-bottom: 16px; }
+
+
+/* ---------- 阅读页：正文装进一张大圆角白卡，但别把正文挤窄 ---------- */
+[data-style="mac"] .read-grid {
+  grid-template-columns: 230px minmax(0, 1fr) 190px;
+  gap: 26px;
+  padding: 28px 0 80px;
+}
+
+[data-style="mac"] .read-tree, [data-style="mac"] .read-side { top: 88px; }
+
+[data-style="mac"] .article {
+  max-width: 1040px;
+  padding: 40px clamp(28px, 3.5vw, 48px);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-s);
+}
+
+[data-style="mac"] .article h1 {
+  font-size: clamp(2.1rem, 3.6vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -.035em;
+  margin-bottom: 10px;
+}
+
+[data-style="mac"] .article .art-meta { margin-bottom: 34px; font-size: .85rem; }
+
+[data-style="mac"] .article h2 {
+  margin: 48px 0 16px;
+  padding-left: 0;
+  border-left: 0;
+  font-size: 1.55rem;
+  line-height: 1.25;
+  letter-spacing: -.025em;
+}
+
+[data-style="mac"] .article h3 { margin: 32px 0 12px; font-size: 1.2rem; }
+
+[data-style="mac"] .article p { margin: 18px 0; font-size: 1.0625rem; line-height: 1.85; }
+
+[data-style="mac"] .article ul, [data-style="mac"] .article ol { margin: 18px 0 18px 24px; }
+
+[data-style="mac"] .article li { margin: 8px 0; }
+
+[data-style="mac"] .tip-box { padding: 18px 20px; border: 0; border-radius: var(--radius-m); }
+
+[data-style="mac"] .code-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-s);
+}
+
+[data-style="mac"] .code-head { padding: 10px 18px; }
+
+[data-style="mac"] .code-block pre { padding: 20px; }
+
+[data-style="mac"] .art-img img { border: 0; border-radius: var(--radius-m); box-shadow: var(--shadow-s); }
+
+[data-style="mac"] .art-audio { border: 0; border-radius: var(--radius-m); }
+
+[data-style="mac"] .pn-item { border-radius: var(--radius-m); }
+
+
+/* ---------- 通用设置面板与新的「外观主题」栏 ---------- */
+[data-style="mac"] .set-pop {
+  width: min(860px, 94vw);
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-l);
+}
+
+[data-style="mac"] .set-head { padding: 20px 26px; }
+
+[data-style="mac"] .set-head h3 { font-size: 1.15rem; letter-spacing: -.02em; }
+
+[data-style="mac"] .set-wrap { grid-template-columns: 210px minmax(0, 1fr); }
+
+[data-style="mac"] .set-nav { gap: 4px; padding: 14px; background: var(--bg-soft); }
+
+[data-style="mac"] .set-nav-item {
+  padding: 11px 14px;
+  border-radius: var(--radius-m);
+  font-weight: 500;
+  transition: background .3s cubic-bezier(.25, .1, .25, 1),
+              color .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+[data-style="mac"] .set-nav-item:hover, [data-style="mac"] .set-nav-item.on { background: var(--accent-soft); }
+
+[data-style="mac"] .set-nav-item.on { color: var(--accent-ink); }
+
+[data-style="mac"] .set-body { padding: 26px 30px 30px; }
+
+[data-style="mac"] .set-p { font-size: .92rem; line-height: 1.72; }
+
+/* ---------- 算法做题页 / 弹层：跟新的 64px 导航与毛玻璃对齐 ---------- */
+/* 考试页标题 / 筛选：miao 也走苹果模式，只留文字 */
+.algo-page .page-title {
+  margin: 28px 0 6px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.2;
+}
+.algo-page .chip {
+  padding: 2px 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-2);
+  font-size: calc(1rem - 1px);
+  transition: color .3s cubic-bezier(.25, .1, .25, 1);
+}
+.algo-page .chip:hover { background: transparent; color: var(--text); transform: none; }
+.algo-page .chip.on { background: transparent; color: var(--text); font-weight: 600; }
+.algo-page .filter-bar { gap: 18px; margin: 28px 0 20px; }
+.algo-page .cat-row { gap: 16px; }
+.algo-page .cat-head .chip, .algo-page .cat-body .chip { margin: 0; }
+.algo-page .cat-toggle { font-size: .8rem; }
+
+/* 考试列表：奇数行灰色微圆角方块、无边框；偶数行只有文字，不画线 */
+.algo-lines {
+  border-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.algo-line {
+  padding: 10px 16px;
+  border-bottom: 0;
+  border-radius: 10px;
+  background: transparent;
+}
+.algo-line:nth-child(odd) { background: var(--bg-mute); }
+.algo-line:hover { background: transparent; }
+.algo-line:nth-child(odd):hover { background: var(--bg-soft); }
+
+/* 算法做题页：两张圆角卡，顶栏与代码头条走毛玻璃；miao / mac 共用 */
+.algo-problem {
+  height: calc(100vh - var(--nav-h));
+  gap: 0;
+  padding: 16px;
+  background: var(--bg);
+}
+.algo-desc,
+.algo-workspace {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-s);
+  overflow: hidden;
+}
+.algo-desc { border-right: 1px solid var(--border); }
+.algo-desc-tabs,
+.algo-code-head {
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.algo-title { font-size: 1.6rem; letter-spacing: -.02em; }
+.algo-run,
+.algo-reset {
+  border-radius: var(--radius-pill);
+  transition: background .3s cubic-bezier(.25, .1, .25, 1),
+              border-color .3s cubic-bezier(.25, .1, .25, 1),
+              transform .3s cubic-bezier(.25, .1, .25, 1);
+}
+.algo-run:hover { transform: translateY(-1px); }
+
+/* 课末考场：整块 IDE 收进一张大圆角窗，标题栏毛玻璃，动作按钮胶囊化；
+   miao / mac 共用，编辑器内部的 VS Code 配色与行号排版不动。 */
+.ide {
+  inset: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-l);
+  overflow: hidden;
+}
+.ide-titlebar {
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.ide-btn,
+.ide-exit,
+.ide-zoom {
+  border-radius: var(--radius-pill);
+  transition: background .3s cubic-bezier(.25, .1, .25, 1),
+              color .3s cubic-bezier(.25, .1, .25, 1),
+              border-color .3s cubic-bezier(.25, .1, .25, 1),
+              transform .3s cubic-bezier(.25, .1, .25, 1);
+}
+.ide-btn-go { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+.ide-btn-go:hover { background: var(--accent-hover); border-color: var(--accent-hover); filter: none; }
+.pp-area,
+.pp-code,
+.pp-order,
+.pp-pick,
+.pp-seq,
+.pp-tip { border-radius: var(--radius-m); }
+
+[data-style="mac"] .mask {
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
+}
+
+
+/* ---------- 页脚 / Toast / 其他表面 ---------- */
+[data-style="mac"] footer { margin-top: 64px; padding: 40px 0 48px; }
+
+[data-style="mac"] footer .container { gap: 12px 28px; }
+
+[data-style="mac"] footer .container > * { font-size: .82rem; color: var(--text-3); }
+
+[data-style="mac"] .toast-item {
+  padding: 11px 24px;
+  border-radius: var(--radius-pill);
+  background: var(--text);
+  color: var(--bg);
+  box-shadow: var(--shadow);
+}
+
+[data-style="mac"] .progress i { background: var(--accent); }
+
+[data-style="mac"] .empty { padding: 64px 0; }
+
+
+/* ---------- mac 深色：星空背景（固定在最底层，内容与导航都在它上面） ---------- */
+.mac-stars { display: none; }
+[data-style="mac"][data-theme="dark"] .mac-stars {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 45% at 50% -10%, var(--star-glow), transparent 70%),
+    radial-gradient(42% 30% at 88% 64%, var(--star-glow), transparent 74%),
+    radial-gradient(34% 28% at 10% 82%, var(--star-glow), transparent 76%);
+}
+[data-style="mac"][data-theme="dark"] .mac-stars::before,
+[data-style="mac"][data-theme="dark"] .mac-stars::after {
+  content: "";
+  position: absolute;
+  inset: -24%;
+  background-repeat: repeat;
+  background-image:
+    radial-gradient(1.2px 1.2px at 18px 24px, var(--star-dot), transparent 62%),
+    radial-gradient(1px 1px at 74px 118px, var(--star-dot), transparent 62%),
+    radial-gradient(1.4px 1.4px at 156px 62px, var(--star-dot), transparent 62%),
+    radial-gradient(1px 1px at 214px 168px, var(--star-dot), transparent 62%),
+    radial-gradient(1.6px 1.6px at 102px 210px, var(--star-dot), transparent 62%);
+  background-size: 260px 260px, 320px 320px, 380px 380px, 440px 440px, 520px 520px;
+  animation: macTwinkle 6.5s ease-in-out infinite alternate;
+  opacity: .72;
+}
+[data-style="mac"][data-theme="dark"] .mac-stars::after {
+  background-image:
+    radial-gradient(1px 1px at 42px 76px, var(--star-dot), transparent 62%),
+    radial-gradient(1.5px 1.5px at 188px 34px, var(--star-dot), transparent 62%),
+    radial-gradient(1px 1px at 126px 154px, var(--star-dot), transparent 62%),
+    radial-gradient(1.2px 1.2px at 246px 220px, var(--star-dot), transparent 62%);
+  background-size: 300px 300px, 360px 360px, 420px 420px, 480px 480px;
+  animation-duration: 9s;
+  animation-delay: -3s;
+  opacity: .46;
+}
+[data-style="mac"][data-theme="dark"] #app,
+[data-style="mac"][data-theme="dark"] footer { position: relative; z-index: 1; }
+@keyframes macTwinkle {
+  from { opacity: .32; }
+  to { opacity: .92; }
+}
+
+/* ---------- 响应式：卡片 / 设置面板 / 阅读页 ---------- */
+@media (max-width: 1280px) {
+  [data-style="mac"] .read-grid { grid-template-columns: 210px minmax(0, 1fr) 176px; gap: 22px; }
+  [data-style="mac"] .article { padding: 34px clamp(24px, 3vw, 40px); }
+}
+@media (max-width: 1080px) {
+  .algo-problem { height: auto; gap: 12px; padding: 12px; }
+  [data-style="mac"] .read-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  [data-style="mac"] .article { max-width: 1000px; }
+}
+@media (max-width: 900px) {
+
+  [data-style="mac"] .nav-inner { gap: 14px; }
+
+  [data-style="mac"] .nav-search { max-width: 260px; }
+
+
+}
+
+@media (max-width: 720px) {
+
+  [data-style="mac"] .container { padding: 0 20px; }
+
+  [data-style="mac"] .nav-inner { height: 60px; padding: 0 20px; }
+
+  [data-style="mac"] .page-title, [data-style="mac"] .v-page-title { margin-top: 34px; }
+
+  [data-style="mac"] .tut-hero { padding: 26px; gap: 22px; }
+
+  [data-style="mac"] .read-grid { padding: 20px 0 56px; }
+
+  [data-style="mac"] .article { padding: 28px 22px; border-radius: var(--radius-l); }
+
+  [data-style="mac"] .set-body { padding: 20px; }
+
+  [data-style="mac"] .set-head { padding: 16px 20px; }
+
+  [data-style="mac"] .set-wrap { grid-template-columns: minmax(0, 1fr); }
+
+  [data-style="mac"] .set-nav { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+
+  [data-style="mac"] .set-nav-item { flex: 0 0 auto; }
+
+  .ide { inset: 6px; border-radius: var(--radius-m); }
+
+}
+
+
+/* ---------- 减少动效：系统开了「减少动态效果」就一律收掉 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-style="mac"] .rv { opacity: 1; transform: none; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

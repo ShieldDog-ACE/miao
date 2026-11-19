@@ -307,6 +307,39 @@
     });
   }
 
+  /* ---------------- 算法题库：导航「考试」点开才拉 ----------------
+     与课末考试是两套东西：这里不拉任何课程的 boot / 题包 / 正文。
+     列表页（#/exams）只需要「题面数据 + 列表界面」；做题页（#/exams/<id>）才拉
+     沙箱四份 + 编辑器 + 判分器。这样看 13 行题目不会先背 200 KB 解释器。
+     第一次进 #/exams 或 #/exams/<id> 都走这一条；拉成功以后就缓存住。 */
+  var ALGO = null, ALGO_ENGINE = false;
+  function ensureAlgoBank(withEngine) {
+    var cfg = SITE.algoBank || {};
+    var p;
+    if (ALGO) p = Promise.resolve(ALGO);
+    else {
+      p = loadAll(cfg.data || []).then(function () {
+        if (!root.MIAO_ALGO) throw new Error("算法题库数据没挂上：assets/data/algo-exam-data.js");
+        return loadAll(cfg.ui || []);
+      }).then(function () {
+        if (!root.MIAO_ALGO_UI) throw new Error("算法题库界面没挂上：assets/js/algo-ui.js");
+        ALGO = root.MIAO_ALGO;
+        return ALGO;
+      });
+    }
+    if (!withEngine) return p;
+    return p.then(function () {
+      if (ALGO_ENGINE) return ALGO;
+      return loadAll(cfg.engine || []).then(function () {
+        if (!root.MIAO_ALGO_JUDGE || !root.MIAO_EDITOR) {
+          throw new Error("算法题库判分器没装配起来：site.js 的 algoBank 顺序必须是 py-* → code-editor → algo-judge");
+        }
+        ALGO_ENGINE = true;
+        return ALGO;
+      });
+    });
+  }
+
   /* ---------------- 本机存储 ---------------- */
   function read(k, dft) { try { var v = localStorage.getItem(k); return v === null ? dft : JSON.parse(v); } catch (e) { return dft; } }
   function write(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.warn("[数据层] 本机存储写不进去", k, e); } }
@@ -314,9 +347,15 @@
   /* 本机存储键总表（新增键先进这里，别散在视图里）：
        miao_favs          [教程 id]        教程收藏
        miao_video_favs    [视频 id]        视频收藏（只有这一个动作，没有播放数那种取不到数的账）
-       miao_exam_results  {tid:{cid:…}}    考试成绩
+       miao_exam_results  {tid:{cid:…}}    课末考试成绩
+       miao_algo_results  {题 id:{…}}      算法题库「已通过」记录（algo-ui.js 写）
+       miao_algo_favs     [题 id]          算法题收藏（algo-ui.js 写）
+       miao_algo_lang     字符串           代码语言 cpp / py3（algo-ui.js 写）
+       miao_code_fs       数字             算法代码字号（algo-ui.js 写）
+       miao_code_theme    字符串           代码高光 CLion / Trae / VS Code（algo-ui.js 写）
+       miao_algo_draft_*  字符串           算法题草稿（一题一个键，algo-ui.js 写）
        miao_progress      {tid:[cid]}      学完哪些课
-       miao_theme / miao_fs               外观主题 / 正文字号（写在 app.js 的 store 里，前缀 miao_） */
+       miao_theme / miao_style / miao_fs   明暗 / 风格 / 字号（写在 app.js 的 store 里，前缀 miao_） */
   var K_VFAV = "miao_video_favs";
 
   function favs() { return read(K_FAV, []); }
@@ -494,7 +533,8 @@
        prefetchCourse = 这一章到位了、人没别的事，空了把同门其余分片补齐；
        ensureCourse 留作「整门课现在就全要」的兜底（详情页与考场都不用它）。 */
     ensureBoot: ensureBoot, ensureChapter: ensureChapter, ensureCourse: ensureCourse, ensureExam: ensureExam,
-    ensureVideos: ensureVideos, videoFavs: videoFavs, setVideoFavs: setVideoFavs,
+    ensureVideos: ensureVideos, ensureAlgoBank: ensureAlgoBank,
+    videoFavs: videoFavs, setVideoFavs: setVideoFavs,
     prefetchCourse: prefetchCourse, stopPrefetch: stopPrefetch, bodyReady: bodyReady,
     loadedScripts: function () { return Object.keys(LOADED); },
     _local: {

@@ -222,7 +222,7 @@
     var href = "#/video/" + encodeURIComponent(v.id);
     /* 不再挂 .card：那块面板底 + 描边 + 圆角就是他说的「灰色的圆角方框」。
        封面自己带圆角，文字直接落在页面底色上，跟那两张参考图一样。 */
-    return '<article class="v-card' + (big ? " v-big" : "") + (isFav(v.id) ? " faved" : "") + '" data-fav="' + esc(v.id) + '">' +
+    return '<article class="v-card rv' + (big ? " v-big" : "") + (isFav(v.id) ? " faved" : "") + '" data-fav="' + esc(v.id) + '">' +
       '<a class="v-cover" href="' + href + '">' + coverHtml(v) + "</a>" +
       /* 简介与题目互换了位置，字号与颜色也跟着换过去：
          第一行是简介（大、主文本色），第二行是题目 + 时长（小、次级色），三个点提到这一行的右端。
@@ -242,21 +242,25 @@
      （.cat-row 用大类当行标题、小类当 chip）。分类表共享 site.js 那一张，点一下定、再点取消。
      收藏不在这排 —— 它是每条右下角那三个点里的动作，不是一种筛法。
      页面标题、网格与卡片是视频自己的一套类，不跟首页共用。 */
+  function videoListFor(cat) {
+    return ORDER.filter(function (v) {
+      return !cat || v.cats.indexOf(cat) >= 0;
+    });
+  }
+
   function vList(el, params) {
     params = params || {};
     var cat = params.cat || "";
     LAST.view = "list"; LAST.el = el; LAST.params = params;
     var catOpen = true;
     try { catOpen = JSON.parse(localStorage.getItem("miao_catOpen") || "true") !== false; } catch (e) { catOpen = true; }
-    var list = ORDER.filter(function (v) {
-      return !cat || v.cats.indexOf(cat) >= 0;
-    });
+    var list = videoListFor(cat);
     /* 筛法全走链接：能前进后退、能右键新开；点亮着的那个分类就是取消它 */
     function href2(c2) {
       return "#/video" + (c2 ? "?cat=" + encodeURIComponent(c2) : "");
     }
     /* 「全部」右边不显示数量 —— 首页那颗也只写「全部」，这一排两样才对得上（2026-11-06 他让删的） */
-    var head = '<a class="chip on" href="' + href2(cat) + '">全部</a>' +
+    var head = '<a class="chip chip-cat' + (cat ? "" : " on") + '" href="' + href2("") + '">全部</a>' +
       '<span class="cat-toggle" id="vCatToggle" role="button" tabindex="0" aria-expanded="' + (catOpen ? "true" : "false") + '">' +
       (catOpen ? "收起分类" : "展开分类") + "</span>";
 
@@ -265,7 +269,7 @@
       return '<div class="cat-row"><span class="cat-big">' + esc(big) + "</span>" +
         (tree[big] || []).map(function (c) {
           var on = c === cat;
-          return '<a class="chip' + (on ? " on" : "") + '" href="' + href2(on ? "" : c) + '">' + esc(c) + "</a>";
+          return '<a class="chip chip-cat' + (on ? " on" : "") + '" href="' + href2(on ? "" : c) + '">' + esc(c) + "</a>";
         }).join("") + "</div>";
     }).join("");
 
@@ -277,8 +281,8 @@
       '<div class="cat-body' + (catOpen ? "" : " hidden") + '" id="vCatBody">' + rows + "</div>" +
       "</div></div>" +
       /* 布局回到上一版：第一条占大格（3 列 × 2 行），其余一格一张 */
-      (list.length ? '<div class="v-grid">' + list.map(function (v, i) { return cardHtml(v, i === 0); }).join("") + "</div>"
-        : '<div class="empty">这个分类下还没有登记成片。</div>') +
+      '<div id="vList">' + (list.length ? '<div class="v-grid">' + list.map(function (v, i) { return cardHtml(v, i === 0); }).join("") + "</div>"
+        : '<div class="empty">这个分类下还没有登记成片。</div>') + "</div>" +
       "</div>";
 
     /* 收起 / 展开：与首页共用同一个开关（miao_catOpen），一处收起两处都收起 */
@@ -291,10 +295,40 @@
       try { localStorage.setItem("miao_catOpen", JSON.stringify(nowOpen)); } catch (e) { /* 存不下就算了 */ }
     };
 
-    $all(".v-card", el).forEach(function (card) {
+    bindCards(el);
+  }
+
+  function bindCards(scope) {
+    $all(".v-card", scope).forEach(function (card) {
       var v = BY_ID[card.dataset.fav];
-      $(".v-more", card).onclick = function (e) { e.preventDefault(); e.stopPropagation(); openMenu(this, v); };
+      var more = $(".v-more", card);
+      if (more) more.onclick = function (e) { e.preventDefault(); e.stopPropagation(); openMenu(this, v); };
     });
+  }
+
+  /* 只换下面的视频卡：标题与分类栏不重画 */
+  function partialList(params) {
+    var wrap = $("#vList");
+    if (!wrap) return false;
+    params = params || {};
+    var cat = params.cat || "";
+    var list = videoListFor(cat);
+    wrap.innerHTML = list.length ? '<div class="v-grid">' +
+      list.map(function (v, i) { return cardHtml(v, i === 0); }).join("") + "</div>"
+      : '<div class="empty">这个分类下还没有登记成片。</div>';
+    bindCards(wrap);
+    $all(".filter-bar .chip-cat", LAST.el || document).forEach(function (a) {
+      var name = a.textContent.trim();
+      if (name === "全部") {
+        a.classList.toggle("on", !cat);
+        a.setAttribute("href", "#/video");
+      } else {
+        a.classList.toggle("on", name === cat);
+        a.setAttribute("href", "#/video" + (name === cat ? "" : "?cat=" + encodeURIComponent(name)));
+      }
+    });
+    LAST.params = params;
+    return true;
   }
 
   /* ---------------- 播放页：#/video/<id> ---------------- */
@@ -387,7 +421,7 @@
   }
 
   root.MIAO_VIDEO_UI = {
-    vList: vList, vWatch: vWatch,
+    vList: vList, vWatch: vWatch, partial: partialList,
     mount: mount,
     /* 自测口子：三个点菜单的开关状态，测试里用它确认「点了没反应」这种死件没回来 */
     _menu: function () { return !!MENU; }

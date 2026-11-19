@@ -171,6 +171,39 @@ window.MIAO_SITE = {
       files: ["assets/data/basics-data.js"],
       examFiles: []
     },
+    /* 2026-11-11 三门进阶课：都拆成两份正文分部，装配层各一份；本批不排考。 */
+    {
+      id: "pyds", source: "MIAO_PYDS", updated: "2026-11-11", engine: "",
+      boot: ["assets/data/pyds-data.js"], assemble: "MIAO_PYDS_ASSEMBLE",
+      files: [{ glob: "assets/data/pyds/p*.js" }, "assets/data/pyds-data.js"],
+      examFiles: []
+    },
+    {
+      id: "cptr", source: "MIAO_CPTR", updated: "2026-11-11", engine: "",
+      boot: ["assets/data/cptr-data.js"], assemble: "MIAO_CPTR_ASSEMBLE",
+      files: [{ glob: "assets/data/cptr/q*.js" }, "assets/data/cptr-data.js"],
+      examFiles: []
+    },
+    {
+      id: "sql", source: "MIAO_SQL", updated: "2026-11-11", engine: "",
+      boot: ["assets/data/sql-data.js"], assemble: "MIAO_SQL_ASSEMBLE",
+      files: [{ glob: "assets/data/sql/d*.js" }, "assets/data/sql-data.js"],
+      examFiles: []
+    },
+    /* 2026-11-11 进阶课第二批：10 门语言补齐「掌握 / 精通」，每门 12 课、两片正文、一份装配层。
+       写完一门在这里登记一门 —— 正文没落盘的课不占位。 */
+    {
+      id: "pythonx", source: "MIAO_PYTHONX", updated: "2026-11-11", engine: "",
+      boot: ["assets/data/pythonx-data.js"], assemble: "MIAO_PYTHONX_ASSEMBLE",
+      files: [{ glob: "assets/data/pythonx/p*.js" }, "assets/data/pythonx-data.js"],
+      examFiles: []
+    },
+    {
+      id: "tsx", source: "MIAO_TSX", updated: "2026-11-11", engine: "",
+      boot: ["assets/data/tsx-data.js"], assemble: "MIAO_TSX_ASSEMBLE",
+      files: [{ glob: "assets/data/tsx/p*.js" }, "assets/data/tsx-data.js"],
+      examFiles: []
+    },
     /* AUTO-COURSES:BEGIN（miao-MCP 自动日更维护；这段里不要手改） */
     {
       id: "js", source: "MIAO_JS", engine: "",
@@ -193,6 +226,16 @@ window.MIAO_SITE = {
     enword: ["assets/js/exam-ui.js", "assets/js/exam-en.js"],
     paper: ["assets/js/code-editor.js", "assets/js/exam-ui.js", "assets/js/exam-paper.js",
       "assets/js/cpp-compile.js", "assets/js/cpp-sim.js", "assets/js/exam-paper-ui.js"]
+  },
+
+  /* 导航「考试」的算法题库：与课末考试分开的一套题（#/exams 列表、#/exams/<id> 做题）。
+     首屏一个字节都不拉；列表页先拉 data → ui，做题页才再拉 engine（沙箱 + 编辑器 + 判分器）。
+     engine 里 py-* 四份必须在 algo-judge.js 前面，code-editor.js 也在 algo-judge.js 前面。 */
+  algoBank: {
+    engine: ["assets/js/py-engine.js", "assets/js/py-runtime.js", "assets/js/py-builtin.js",
+      "assets/js/py-stdlib.js", "assets/js/code-editor.js", "assets/js/algo-judge.js"],
+    data: ["assets/data/algo-exam-data.js"],
+    ui: ["assets/js/algo-ui.js"]
   },
 
   /* 视频：首屏一份都不拉，点导航「视频」才拉这两份 —— 数据在前、界面在后（界面脚本要读数据）。

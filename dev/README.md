@@ -35,7 +35,9 @@ dev/
 │       │   ├── exam-grade.js ← 代码卷判分器：检查项加权 + 轨迹判定（浏览器与 Node 共用）
 │       │   ├── exam-ui.js    ← VS Code 风格考场（题面就是文件顶部那几行 # 注释，终端在屏幕正下方）
 │       │   ├── exam-paper.js ← 笔试判分引擎（选择/多选/填空/补代码/写输出/排序/勾线配对），零 DOM
-│       │   └── exam-en.js    ← 英语出题与判分：字母 / 音标 / 单词三种池子
+│       │   ├── exam-en.js    ← 英语出题与判分：字母 / 音标 / 单词三种池子
+│       │   ├── algo-judge.js ← 导航「考试」的算法题库判分器：逐条用例跑沙箱 + 用时 + 内存估算
+│       │   └── algo-ui.js    ← 算法题库列表（复用首页筛选栏 / 一行一题 / 通过状态）与做题页（左题面 / 右代码栏：代码头条右上角 运行·提交，底部 测试用例·测试结果）
 │       ├── data/
 │       │   ├── site.js       ← 登记清单：分类、每门课的骨架 boot 与正文 files、装配函数名、考场用哪套引擎、公告、页脚邮箱
 │       │   ├── index.js      ← 【生成物】首屏目录：课程元信息 + 每章标题 + 排考情况 + boot/chunks（这一章的正文在哪个文件）
@@ -46,13 +48,15 @@ dev/
 │       │   ├── ms-data.js + ms/*.js + ms-bodies.js ← 微软 MIT 四门 95 课（逐课一个文件）
 │       │   ├── py-exam-data.js + exam-parts/*.js    ← Python 45 场考卷
 │       │   ├── en-exam-data.js              ← 字母音标卷 3 场的题量与分值
-│       │   └── enword-exam-data.js          ← 【生成物】英语入门 22 场考卷的规格
+│       │   ├── enword-exam-data.js          ← 【生成物】英语入门 22 场考卷的规格
+│       │   └── algo-exam-data.js            ← 导航「考试」：13 道 Python 算法题（题面 / 样例 / 隐藏用例 / 参考解）
 │       ├── audio/letters|phonemes/          ← 74 个字母与音标 mp3
 │       ├── audio/words/                     ← 200 个单词读音 mp3（IndexTTS-2.5 生成，逐条 ASR 复核）
 │       └── img/covers/                      ← 每门课一张代码画的 16:9 SVG 封面
 ├── tests/
-│   ├── run.sh               ← 唯一的回归入口（下面六套全跑）
-│   ├── ui-e2e.js            ← jsdom 走读者路径：122 项，含「零 /api」与 12 条按需加载请求账
+│   ├── run.sh               ← 唯一的回归入口（下面全部串着跑）
+│   ├── ui-e2e.js            ← jsdom 走读者路径：238 项，含「零 /api」、12 条按需加载请求账与算法题库
+│   ├── algo-test.js         ← 算法题库 13 题 / 78 条用例：参考解全过、骨架过不了、错误分支
 │   ├── engine-test.js       ← 正文 python 段逐段与本机 CPython 比 stdout
 │   ├── exam-test.js         ← Python 45 场 + 字母音标 3 场：参考解/合法写法/宽松写法/错解
 │   ├── enword-test.js       ← 英语入门 22 场：分值、题数、空卷 0 分、错一个字母必须挂、挖空不许有第二个答案
@@ -79,7 +83,8 @@ dev/
 ```bash
 xdg-open dev/frontend/index.html          # 什么都不用起，双击就能看
 node dev/tests/static-server.js 8811      # 想走 HTTP 就起一台只会发文件的
-bash dev/tests/run.sh                     # 全量回归：UI 122 项 + 三条闸 + 笔试 117 + 对拍 205 + 考卷 45/3/22
+bash dev/tests/run.sh                     # 全量回归：UI 238 项 + 各把闸 + 对拍 + 考卷 + 算法题库 13 题
+node dev/tests/algo-test.js               # 只查算法题库 13 题 / 78 条用例
 node dev/tests/enword-test.js             # 只查英语入门那 22 场
 node dev/tools/gen-index.js               # 改了任何一课的标题 / 章数 / 词表之后必跑
 ```
@@ -138,6 +143,27 @@ node dev/tools/enword-words.js "$MIAO_ENWORDS_JSON"                             
 5. 沙箱不支持的语法（`yield` / `async` / `match`）会在终端明说「超出沙箱范围」，不许静默错判 ——
    要扩展语法就改 `py-engine.js` / `py-runtime.js`，但必须保证对拍仍然全绿。
 
+## 加一道算法题（导航「考试」的题库）
+
+题库与课末考试是**两套**东西：课末考试按课程 / 章节排，算法题库是独立的 `#/exams` 列表与 `#/exams/<id>` 做题页。
+题目在 `assets/data/algo-exam-data.js` 的 `window.MIAO_ALGO.problems` 里加一条，字段口径写在文件头：
+
+- `id` 只用小写字母 / 数字 / 短横线；`no` 连号；`difficulty` 只能是简单 / 中等 / 困难；
+  `lang` 是分类，只能是 python3 / c / c++ / ts / java；`fn` 是读者要实现的函数名；`samples` 之前的前几条是公开样例，其余是隐藏用例；
+- `tests[].args` 只放数字 / 文本 / 布尔 / None / 数组，判分器把它们转成 Python 实参；
+  `tests[].expect` 做 JSON 深比较（顺序不同不算对）；
+- `reference` 是参考解，只给回归器用，界面不展示。**加完必须跑 `node dev/tests/algo-test.js`**：
+  参考解要全过、starter 单独跑要过不了、题号与 id 不许撞。
+
+做题页照力扣那两栏：左边「题目描述」（示例与提示只放文字，不做卡片），右边代码栏的顶栏右上角是
+「重置 / 运行·提交一组」、全屏与折叠，以及语言选择（默认 C++，可切 Python 3）。C++ 需要用户本地编译器，
+运行会打开 Linux / Windows / macOS 三套命令并可下载 main.cpp；Python 3 走浏览器沙箱。题面 / 代码可拖分栏，代码 / 测试面板可拖高度。
+测试用例是 Case 标签 + 参数输入；测试结果按力扣样张：通过 / 执行用时 + Case 标签 + 输入 / 输出 / 预期结果。
+
+判分口径：一条用例跑一次沙箱（一条死循环不会拖死后面），`用时` 是这次运行的墙钟毫秒；
+`内存` 仍在内部估算（对象图 + 源码 + 实参），但界面不再展示，也不再出现在结果里。
+没有通过率、企业标签、打卡日历与排行榜 —— 这是本轮明确砍掉的部分。
+
 ## 判分与存储的实情
 
 - 判分口径：输出比对先折叠空白、去行首行尾、丢尾部空行（多打空格不许判错）；
@@ -145,7 +171,8 @@ node dev/tools/enword-words.js "$MIAO_ENWORDS_JSON"                             
 - 唯一直接看源码的检查项是 `source-has-comment`（第 15 课「注释」用），只数引号之外的 `#`。
 - 英语类默写题：忽略大小写与首尾空格，写错一个字母必挂；补全题的挖空按「一条下划线 = 一个字母」判，
   并且生成时保证 5 个字母以上的词挖完在全表里只有一个答案。
-- 成绩、收藏、进度都只写 localStorage（键：`miao_exam_results` / `miao_favs` / `miao_progress`），
+- 成绩、收藏、进度都只写 localStorage（键：`miao_exam_results` / `miao_favs` / `miao_progress`；
+  算法题库另有 `miao_algo_results` 与一题一个的 `miao_algo_draft_<id>`），
   换设备或清缓存会丢 —— 这是不要后端的代价，写在《SPEC.md》§15.10 与 §15.12 里，不藏着。
 - 搜索只覆盖课程名、章节标题与目录带的词表（英语入门那 200 个词在目录里，所以搜 `apple` 命中课程）；
   搜正文需要把所有正文拉下来，这一条明确不做，界面上也写着。

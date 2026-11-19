@@ -173,6 +173,9 @@ const RUST_MARK = [
 ];
 /* C 系字母轮廓取自 Noto Sans CJK SC Bold（SIL OFL 1.1），按墨迹框归一化；
    Java 咖啡杯 logo 取自 Devicon 的 java-original.svg（Oracle Java 商标图形）。 */
+/* SQLite 官方标志的矢量路径（Simple Icons 的 sqlite 图标，原样嵌入，只改填充色）。 */
+const SQLITE_MARK = "M21.678.521c-1.032-.92-2.28-.55-3.513.544a8.71 8.71 0 0 0-.547.535c-2.109 2.237-4.066 6.38-4.674 9.544.237.48.422 1.093.544 1.561a13.044 13.044 0 0 1 .164.703s-.019-.071-.096-.296l-.05-.146a1.689 1.689 0 0 0-.033-.08c-.138-.32-.518-.995-.686-1.289-.143.423-.27.818-.376 1.176.484.884.778 2.4.778 2.4s-.025-.099-.147-.442c-.107-.303-.644-1.244-.772-1.464-.217.804-.304 1.346-.226 1.478.152.256.296.698.422 1.186.286 1.1.485 2.44.485 2.44l.017.224a22.41 22.41 0 0 0 .056 2.748c.095 1.146.273 2.13.5 2.657l.155-.084c-.334-1.038-.47-2.399-.41-3.967.09-2.398.642-5.29 1.661-8.304 1.723-4.55 4.113-8.201 6.3-9.945-1.993 1.8-4.692 7.63-5.5 9.788-.904 2.416-1.545 4.684-1.931 6.857.666-2.037 2.821-2.912 2.821-2.912s1.057-1.304 2.292-3.166c-.74.169-1.955.458-2.362.629-.6.251-.762.337-.762.337s1.945-1.184 3.613-1.72C21.695 7.9 24.195 2.767 21.678.521m-18.573.543A1.842 1.842 0 0 0 1.27 2.9v16.608a1.84 1.84 0 0 0 1.835 1.834h9.418a22.953 22.953 0 0 1-.052-2.707c-.006-.062-.011-.141-.016-.2a27.01 27.01 0 0 0-.473-2.378c-.121-.47-.275-.898-.369-1.057-.116-.197-.098-.31-.097-.432 0-.12.015-.245.037-.386a9.98 9.98 0 0 1 .234-1.045l.217-.028c-.017-.035-.014-.065-.031-.097l-.041-.381a32.8 32.8 0 0 1 .382-1.194l.2-.019c-.008-.016-.01-.038-.018-.053l-.043-.316c.63-3.28 2.587-7.443 4.8-9.791.066-.069.133-.128.198-.194Z";
+
 const JS_LETTERS = `
 <path d="m22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067z"/>
 <path d="M13.051 11.031h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/>
@@ -234,7 +237,9 @@ function layout(spec) {
   EMIT = [];
   const ink = spec.ink, dim = spec.dim, tint = spec.tint;
   const parts = [plate(spec.plate)];
-  parts.push(MARKS[spec.id]({ tint, ink, dim, plate: spec.plate }));
+  /* mark 允许新课程复用入门课那张标志（同一门语言的第二、第三季），
+     只换牌底与强调色；没有 mark 的课仍按自己的 id 找标志。 */
+  parts.push(MARKS[spec.mark || spec.id]({ tint, ink, dim, plate: spec.plate }));
   parts.push(rr(CX - 22, 196, 44, 4, 2, tint, { tag: "中线色条" }));
   parts.push(txt(CX, 250, spec.title, { size: 42, weight: 800, fill: ink, anchor: "middle" }));
   parts.push(txt(CX, 288, spec.sub, { size: 16, fill: dim, anchor: "middle", ls: 0.6 }));
@@ -574,6 +579,27 @@ const MARKS = {
     return rr(tile.x, tile.y, tile.w, tile.h, 14, "#f7df1e", { stroke: "#c9a227", sw: 3, tag: "JS 牌" }) +
       `<g transform="translate(${tile.x},${tile.y}) scale(${n(tile.w / 24)})" fill="#1f2937">${JS_LETTERS}</g>`;
   },
+  /* Python 数据结构：沿用 Python 入门那张官方蛇形标志 —— 同一门语言的第二季，
+     标志与主课保持一致，只换标题与说明。 */
+  pyds(c) { return markSnakes(132, [PY_BLUE, PY_YELLOW]); },
+  /* C 掌握：沿用 C 入门那只立方体，按 C++ 掌握的做法揭开顶面，
+     C 写在左面；入门是实心方块，掌握是打开外壳，仍是同一套视觉。 */
+  cptr(c) {
+    const F = cppFaces(), dx = F.TR[0] - CX;
+    const hexPts = [F.T, F.TR, F.BR, F.B, F.BL, F.TL].map(p => `${n(p[0])},${n(p[1])}`).join(" ");
+    box("掌握六边形", CX - dx - 3.25, 110 - 66 - 3.25, CX + dx + 3.25, 110 + 66 + 3.25);
+    return facePoly(F.top, "#659ad2", "掌握顶面") +
+      `<polygon points="${hexPts}" fill="none" stroke="${c.tint}" stroke-width="6.5" stroke-linejoin="round"/>` +
+      lines(`M${n(F.M[0])} ${n(F.M[1])}L${n(F.TL[0])} ${n(F.TL[1])}M${n(F.M[0])} ${n(F.M[1])}L${n(F.TR[0])} ${n(F.TR[1])}`,
+        { stroke: c.tint, width: 3.5, tag: "棱线" }) +
+      glyph(GLYPH_C, 320, 126.5, 46, c.tint, "C");
+  },
+  /* SQLite：官方标志的矢量路径，原样嵌入，只改填充色。 */
+  sql(c) {
+    const size = 132, s = size / 24, tx = CX - size / 2, ty = 40;
+    box("SQLite", tx, ty, tx + size, ty + size);
+    return `<g transform="translate(${n(tx)},${n(ty)}) scale(${n(s)})"><path d="${SQLITE_MARK}" fill="#003b57"/></g>`;
+  },
 };
 
 /* ---------------- 在册课程表 ---------------- */
@@ -647,6 +673,106 @@ const SPECS = [
     plate: "#fdf8e2", tint: "#a16207", ink: "#1f2937", dim: "#6b5c3e",
     credit: "JS 字母 path 取自 Simple Icons 的 javascript 图标（官方标识路径）；仅改填充色，仅用于指代 JavaScript 这门语言。",
   },
+  {
+    id: "pyds", title: "Python 掌握", sub: "24 课 · 数据结构与算法 · 自己写一遍",
+    plate: "#e9eefb", tint: "#2456b8", ink: "#1a2233", dim: "#5c6a80",
+    credit: "标志 path 取自 python.org/static/community_logos/python-logo-generic.svg，© Python Software Foundation，CC-BY 3.0；与 Python 入门那张同一份标志，仅用于指代 Python 这门语言本身，不代表官方出品或背书。",
+  },
+  {
+    id: "cptr", title: "C 掌握", sub: "24 课 · 指针、内存、结构体、文件工程",
+    plate: "#eef4f8", tint: "#1b6f8c", ink: "#17262d", dim: "#5b7078",
+    credit: "立方体画法沿用本站 C 入门与 C++ 掌握封面；字母轮廓取自 Noto Sans CJK SC Bold（SIL OFL 1.1）。C 本身没有官方标志，这里仅用几何图形指代这门语言。",
+  },
+  {
+    id: "sql", title: "数据库与 SQL 入门", sub: "24 课 · SQLite 上的表、查询、索引、事务",
+    plate: "#eef4fb", tint: "#0f80cc", ink: "#0b2b3c", dim: "#4e6575",
+    credit: "SQLite 标志 path 取自 Simple Icons 的 sqlite 图标（官方图形路径）；SQLite 是 SQLite 项目的商标，仅用于指代这门数据库，不代表官方出品或背书。",
+  },
+  /* 2026-11-11 进阶课第二批：同一门语言沿用入门那张标志，只改牌底与强调色。
+     掌握比入门深一档，精通再深一档；三张摆在一起是同一套视觉，颜色能分开。 */
+  {
+    id: "pythonx", mark: "python", title: "Python 精通", sub: "12 课 · 工程化与大模型应用",
+    plate: "#e6ebf7", tint: "#1b3f8f", ink: "#101a33", dim: "#4f5d78",
+    credit: "标志 path 取自 python.org/static/community_logos/python-logo-generic.svg，© Python Software Foundation，CC-BY 3.0；与 Python 入门、Python 掌握同一份标志，仅用于指代 Python 这门语言本身，不代表官方出品或背书。",
+  },
+  {
+    id: "javam", mark: "java", title: "Java 掌握", sub: "12 课 · 面向对象、集合与工程",
+    plate: "#fbeedd", tint: "#a9570f", ink: "#2b1d12", dim: "#7a6357",
+    credit: "Java logo © Oracle；图形取自 Devicon 的 java-original.svg，与 Java 入门同一份标志，仅用于指代 Java 这门语言，不代表官方出品或背书。",
+  },
+  {
+    id: "javax", mark: "java", title: "Java 精通", sub: "12 课 · JVM 与企业级后端",
+    plate: "#f7e8d4", tint: "#8a4308", ink: "#26180e", dim: "#6f594b",
+    credit: "Java logo © Oracle；图形取自 Devicon 的 java-original.svg，与 Java 入门、Java 掌握同一份标志，仅用于指代 Java 这门语言，不代表官方出品或背书。",
+  },
+  {
+    id: "cppx", mark: "cpp", title: "C++ 精通", sub: "12 课 · 高性能与系统工程",
+    plate: "#e7edf6", tint: "#00366b", ink: "#0c1c2e", dim: "#4b5a70",
+    credit: "标志几何取自 ISO C++ 官方 logo（六边形立方体）；与 C++ 入门同一份标志，仅用于指代 C++ 这门语言本身，不代表官方出品或背书。",
+  },
+  {
+    id: "jsm", mark: "js", title: "JavaScript 掌握", sub: "12 课 · 闭包、异步与工程化",
+    plate: "#fbf3d3", tint: "#8a5306", ink: "#1f2937", dim: "#6b5c3e",
+    credit: "JS 字母 path 取自 Simple Icons 的 javascript 图标（官方标识路径）；与 JavaScript 入门同一份标志，仅改填充色，仅用于指代 JavaScript 这门语言。",
+  },
+  {
+    id: "jsx", mark: "js", title: "JavaScript 精通", sub: "12 课 · 运行时、全栈与项目",
+    plate: "#f6edc4", tint: "#6b4004", ink: "#1b2430", dim: "#5f5238",
+    credit: "JS 字母 path 取自 Simple Icons 的 javascript 图标（官方标识路径）；与 JavaScript 入门、JavaScript 掌握同一份标志，仅改填充色，仅用于指代 JavaScript 这门语言。",
+  },
+  {
+    id: "tsm", mark: "ts", title: "TypeScript 掌握", sub: "12 课 · 类型系统与泛型",
+    plate: "#e9eefa", tint: "#2456b8", ink: "#1a2233", dim: "#5c6a80",
+    credit: "TS 牌按 TypeScript 官方标识的蓝底白字自绘，与 TypeScript 入门同一套画法，不复制官方图形文件。",
+  },
+  {
+    id: "tsx", mark: "ts", title: "TypeScript 精通", sub: "12 课 · 类型工程与 Agent 开发",
+    plate: "#e4eaf7", tint: "#1b3f8f", ink: "#101a33", dim: "#4f5d78",
+    credit: "TS 牌按 TypeScript 官方标识的蓝底白字自绘，与 TypeScript 入门、TypeScript 掌握同一套画法，不复制官方图形文件。",
+  },
+  {
+    id: "csharpm", mark: "csharp", title: "C# 掌握", sub: "12 课 · 泛型、LINQ 与 EF Core",
+    plate: "#efe8f8", tint: "#553a7d", ink: "#241d31", dim: "#6d6680",
+    credit: "立方体画法沿用本站 C# 入门封面；字母轮廓取自 Noto Sans CJK SC Bold（SIL OFL 1.1）。本图为自绘。",
+  },
+  {
+    id: "csharpx", mark: "csharp", title: "C# 精通", sub: "12 课 · .NET 后端与 Unity",
+    plate: "#eae1f5", tint: "#432a68", ink: "#1e172a", dim: "#5f5872",
+    credit: "立方体画法沿用本站 C# 入门与 C# 掌握封面；字母轮廓取自 Noto Sans CJK SC Bold（SIL OFL 1.1）。本图为自绘。",
+  },
+  {
+    id: "asmm", mark: "asm", title: "汇编掌握", sub: "12 课 · 调用约定与反汇编",
+    plate: "#ececec", tint: "#374151", ink: "#1a202c", dim: "#5c6575",
+  },
+  {
+    id: "asmx", mark: "asm", title: "汇编精通", sub: "12 课 · SIMD、性能与逆向",
+    plate: "#e5e7eb", tint: "#1f2937", ink: "#111827", dim: "#4b5563",
+  },
+  {
+    id: "rustm", mark: "rust", title: "Rust 掌握", sub: "12 课 · 所有权、trait 与并发",
+    plate: "#fbe9dd", tint: "#96330a", ink: "#2b1a14", dim: "#7a6357",
+    credit: "标志 path 取自 rust-lang.org/static/images/rust-logo-blk.svg，与 Rust 入门同一份标志，仅改成本课程色；仅用于指代 Rust 这门语言，不代表官方出品或背书。",
+  },
+  {
+    id: "rustx", mark: "rust", title: "Rust 精通", sub: "12 课 · 系统编程与网络服务",
+    plate: "#f7e2d3", tint: "#742606", ink: "#26150f", dim: "#6f584c",
+    credit: "标志 path 取自 rust-lang.org/static/images/rust-logo-blk.svg，与 Rust 入门、Rust 掌握同一份标志，仅改成本课程色；仅用于指代 Rust 这门语言，不代表官方出品或背书。",
+  },
+  {
+    id: "gom", mark: "go", title: "Go 掌握", sub: "12 课 · 接口、并发与 HTTP",
+    plate: "#e8f3ef", tint: "#1f7563", ink: "#173d36", dim: "#4d6f67",
+    credit: "吉祥物 Gopher 图形取自 go.dev/images/favicon-gopher.svg（Renée French 设计，CC BY 3.0）；与 Go 入门同一份标志，仅用于指代 Go 这门语言，不代表官方出品或背书。",
+  },
+  {
+    id: "gox", mark: "go", title: "Go 精通", sub: "12 课 · 云原生与高并发",
+    plate: "#e1eee9", tint: "#155b4d", ink: "#102e29", dim: "#42605a",
+    credit: "吉祥物 Gopher 图形取自 go.dev/images/favicon-gopher.svg（Renée French 设计，CC BY 3.0）；与 Go 入门、Go 掌握同一份标志，仅用于指代 Go 这门语言，不代表官方出品或背书。",
+  },
+  {
+    id: "cx", mark: "c", title: "C 精通", sub: "12 课 · 系统编程与底层工程",
+    plate: "#e7eef4", tint: "#11536b", ink: "#101f26", dim: "#4e626a",
+    credit: "立方体画法沿用本站 C 入门与 C 掌握封面；字母轮廓取自 Noto Sans CJK SC Bold（SIL OFL 1.1）。C 本身没有官方标志，这里仅用几何图形指代这门语言。",
+  },
 ];
 
 /* d 属性 → 包围盒。把控制点也算进去（只会把盒子放大、不会缩小），所以拿它当
@@ -719,7 +845,7 @@ function svgBoxes(svg, yTop, yBottom) {
 /* ---------------- 校验：每张都要过的四件事 ---------------- */
 function checkSpec(spec) {
   const errs = [];
-  if (!MARKS[spec.id]) { return ["没有 " + spec.id + " 的标志函数"]; }
+  if (!MARKS[spec.mark || spec.id]) { return ["没有 " + (spec.mark || spec.id) + " 的标志函数"]; }
   let svg;
   try { svg = layout(spec); } catch (e) { return ["画图时就出界/色值非法：" + e.message]; }
   if (!/^<svg[\s>]/.test(svg)) errs.push("产物不以 <svg 开头");

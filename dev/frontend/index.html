@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="light" data-style="miao">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
+  <div class="mac-stars" aria-hidden="true"></div>
   <header class="nav">
     <div class="nav-inner">
       <a class="logo" href="#/"><b>喵站</b><span>MIAO&nbsp;DEV</span></a>
@@ -19,14 +20,17 @@
              点了给一句到位的提示，不留死链，也不假装有内容。
              用 <a> 而不是 <button>，样式跟「首页」完全同源；点击在 app.js 里拦下来。 -->
         <a href="#/video" id="navVideo">视频</a>
-        <a href="#/" class="nav-soon" data-soon="考试">考试</a>
+        <!-- 考试已经建了算法题库（#/exams 列表 + #/exams/<id> 做题），不再是占位入口。
+             幻灯片与终生学习仍然只挂入口：点了给一句到位的提示，不留死链，也不假装有内容。
+             用 <a> 而不是 <button>，样式跟「首页」完全同源；点击在 app.js 里拦下来。 -->
+        <a href="#/exams" id="navExam">考试</a>
         <a href="#/" class="nav-soon" data-soon="幻灯片">幻灯片</a>
         <a href="#/" class="nav-soon" data-soon="终生学习">终生学习</a>
       </nav>
       <div class="nav-search">
         <input id="navSearch" type="search" placeholder="搜索教程 / 章节标题 / 作者，回车搜索" aria-label="搜索">
       </div>
-      <!-- 右上角只有一个齿轮：公告、主题、字号 -->
+      <!-- 右上角只有一个齿轮：通用设置（含外观主题）、浅色 / 深色 / 跟随、整体字号 -->
       <div class="nav-right" id="navRight"></div>
     </div>
   </header>

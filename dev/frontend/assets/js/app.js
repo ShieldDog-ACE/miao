@@ -12,6 +12,8 @@
   var TUTS = DATA.tutorials || [];
   var API = window.MIAO_API;
   function examUi() { return window.MIAO_EXAM_UI || null; }   /* 考场界面脚本是进考场才注入的，每次现取 */
+  function algoUi() { return window.MIAO_ALGO_UI || null; }   /* 算法题库界面（#/exams）同样按需注入 */
+  function algoEngine() { return !!(window.MIAO_ALGO_JUDGE && window.MIAO_EDITOR); }  /* 做题页才要沙箱与编辑器 */
   function videoUi() { return window.MIAO_VIDEO_UI || null; }  /* 视频界面脚本（video-ui.js）点「视频」才注入，同样每次现取 */
 
   /* 分类：层级对象 { 大类: [小类] } → 拍平成小类列表（供 chips/下拉/默认值） */
@@ -110,18 +112,34 @@
     }
   };
 
-  /* 只剩阅读体验与本机学习数据四样：换设备或清缓存会丢，这是不要后端的代价 */
+  /* 字号默认 18，后续用滑杆自己调：14–28，数字直接显示，不再起「紧凑 / 特大」这种名字。
+     这三个常量与 normFs 必须先于 state 初始化，否则 state.fs 会算出 NaN。 */
+  var FS_MIN = 14, FS_MAX = 28, FS_DEFAULT = 18;
+  function normFs(v) {
+    var n = Number(v);
+    if (!isFinite(n)) n = FS_DEFAULT;
+    return Math.min(FS_MAX, Math.max(FS_MIN, Math.round(n)));
+  }
+
+  /* 只剩阅读体验与本机学习数据：换设备或清缓存会丢，这是不要后端的代价 */
   var state = {
-    theme: store.get("theme", "auto"),           // light | dark | pink | auto
+    theme: store.get("theme", "auto"),           // light | dark | pink | auto（pink 只作旧数据兼容）
+    style: store.get("style", "miao"),           // miao（原版）| mac（苹果风）
     progress: store.get("progress", {}),         // {tid: [cid]} 学完哪些课
     favs: store.get("favs", []),                 // [tid] 本机收藏（与 data.js 同一个键）
-    fs: store.get("fs", 15)                      // 阅读字号
+    fs: normFs(store.get("fs", FS_DEFAULT))      // 整站字号（导航、卡片、正文一起缩放）
   };
 
-  function save() {
+  /* 换主题 / 风格 / 字号只写这三个键：不要把内存里的 progress / favs 顺手重写一遍，
+     否则另一个标签页（或直接改 localStorage 的脚本）刚写进去的进度会被旧内存覆盖。 */
+  function saveTheme() {
     store.set("theme", state.theme);
-    store.set("progress", state.progress); store.set("favs", state.favs);
+    store.set("style", state.style);
     store.set("fs", state.fs);
+  }
+  function save() {
+    saveTheme();
+    store.set("progress", state.progress); store.set("favs", state.favs);
   }
 
   /* ---------------- 工具 ---------------- */
@@ -153,13 +171,20 @@
   }
   var INLINE_RE = new RegExp([
     "(\\*\\*[^*\\n]+\\*\\*)",                                       // 1 重点
+    "(`[^`\\n]+`)",                                                 // 2 行内代码
+    "(\\[([^\\]\\n]+)\\]\\(((?:https?:\\/\\/|www\\.)[^\\s)]+)\\))",      // 3 整段 / 4 文字 / 5 地址
     "((?:https?://|www\\.)[^\\s<>（），。；！？]+" +
-      "|(?:[a-z][a-z0-9-]*\\.)+(?:org|com|cn|net|io|dev|edu)(?:/[^\\s<>（），。；]*)?)",   // 2 网址
-    "(第\\s*(\\d{1,2})\\s*课)"                                       // 3 整段 / 4 课号
+      "|(?:[a-z][a-z0-9-]*\\.)+(?:org|com|cn|net|io|dev|edu)(?:/[^\\s<>（），。；]*)?)",   // 6 网址
+    "(第\\s*(\\d{1,2})\\s*课)"                                       // 7 整段 / 8 课号
   ].join("|"), "g");
   function inlineHtml(text) {
-    return esc(text).replace(INLINE_RE, function (all, em, url, ref, no) {
+    return esc(text).replace(INLINE_RE, function (all, em, code, link, label, linkUrl, url, ref, no) {
       if (em) return '<span class="em">' + em.slice(2, -2) + "</span>";
+      if (code) return '<code class="md-code">' + code.slice(1, -1) + "</code>";
+      if (link) {
+        var lh = /^https?:\/\//.test(linkUrl) ? linkUrl : "https://" + linkUrl;
+        return '<a class="art-link" href="' + lh + '" target="_blank" rel="noopener noreferrer">' + label + "</a>";
+      }
       if (url) {
         var href = /^https?:\/\//.test(url) ? url : "https://" + url;
         return '<a class="art-link" href="' + href + '" target="_blank" rel="noopener noreferrer">' + url + "</a>";
@@ -250,18 +275,35 @@
   /* 手改 localStorage 塞进一个不存在的主题名时，data-theme 会变成谁都不匹配的串，
      页面静默退回 :root 且开关上看不出问题 —— 所以这里认表，不认就直接当 auto。 */
   var THEME_OK = { light: 1, dark: 1, pink: 1, auto: 1 };
+  var STYLE_OK = { miao: 1, mac: 1 };
 
   function applyTheme() {
     var t = THEME_OK[state.theme] ? state.theme : "auto";
     if (t === "auto") {
       t = (mq && mq.matches) ? "dark" : "light";
     }
+    var st = STYLE_OK[state.style] ? state.style : "miao";
     document.documentElement.setAttribute("data-theme", t);
+    document.documentElement.setAttribute("data-style", st);
     document.documentElement.style.setProperty("--fs-base", state.fs + "px");
     $all("#segInMenu button").forEach(function (b) { b.classList.toggle("on", b.dataset.t === state.theme); });
-    $all("#segFs button").forEach(function (b) { b.classList.toggle("on", Number(b.dataset.fs) === state.fs); });
+    $all(".skin-opt").forEach(function (b) {
+      var on = b.dataset.skin === st;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    ["gearFsRange", "setFsRange"].forEach(function (id) {
+      var r = document.getElementById(id);
+      if (r) r.value = state.fs;
+    });
+    ["gearFsNow", "setFsNow"].forEach(function (id) {
+      var n = document.getElementById(id);
+      if (n) n.textContent = state.fs + "px";
+    });
   }
-  function setTheme(t) { state.theme = t; save(); applyTheme(); }
+  function setTheme(t) { state.theme = t; saveTheme(); applyTheme(); }
+  function setStyle(s) { state.style = STYLE_OK[s] ? s : "miao"; saveTheme(); applyTheme(); }
+  function setFs(px) { state.fs = normFs(px); saveTheme(); applyTheme(); }
   if (mq && mq.addEventListener) mq.addEventListener("change", function () {
     if (state.theme === "auto") applyTheme();
   });
@@ -272,7 +314,8 @@
 
 
   /* 导航栏里「首页」右边那四个入口（视频 / 考试 / 幻灯片 / 终生学习）的点击：
-     这一版只挂入口、不建页面 —— 点了给一句到位的提示，不留死链，也不假装有内容。
+     视频与考试已经建了真页面（#/video、#/exams），这里只管剩下两个占位入口 ——
+     点了给一句到位的提示，不留死链，也不假装有内容。
      以后内容页做好，把它们在 index.html 里换成真路由即可，样式不用动。 */
   function bindNavSoon() {
     $all(".nav-links .nav-soon").forEach(function (a) {
@@ -288,21 +331,18 @@
       '<div class="drop-wrap">' +
       '<button class="icon-btn" id="gearBtn" title="设置" aria-label="设置">' + GEAR_SVG + "</button>" +
       '<div class="dropdown hidden" id="gearMenu">' +
-      /* 这一项原来是「公告」，现在换成「通用设置」：公告、赞助、开源仓库、加入我们、学习记录、建议
-         六栏都在那个面板里，齿轮这一排只留外观主题与字号两个快捷开关。 */
+      /* 这一项原来是「公告」，现在换成「通用设置」：外观主题、公告、赞助、开源仓库、加入我们、
+         学习记录、建议七栏都在那个面板里。齿轮这一排只留「浅 / 深 / 跟随」与字号两个快捷开关。 */
       '<button class="dd-item" id="settingsItem" type="button">通用设置</button>' +
       '<div class="dd-sep"></div>' +
       '<div class="dd-title">外观主题</div>' +
       '<div class="seg" id="segInMenu">' +
-      '<button data-t="light" title="苹果 / DeepSeek 那套中性灰阶 + 蓝">浅色</button>' +
-      '<button data-t="dark" title="VS Code / Trae 那套灰阶 + 蓝">深色</button>' +
-      '<button data-t="pink" title="站点原本的粉色">粉色</button>' +
+      '<button data-t="light" title="浅色">浅色</button>' +
+      '<button data-t="dark" title="深色">深色</button>' +
       '<button data-t="auto" title="按系统的明暗偏好走，只会是浅色或深色">跟随</button>' +
       "</div>" +
-      '<div class="dd-title">正文字号</div>' +
-      '<div class="seg" id="segFs">' +
-      '<button data-fs="14">小</button><button data-fs="15">标准</button><button data-fs="17">大</button>' +
-      "</div>" +
+      '<div class="dd-title">整体字号</div>' +
+      '<div class="fs-row"><input class="fs-range" id="gearFsRange" type="range" min="' + FS_MIN + '" max="' + FS_MAX + '" step="1" value="' + state.fs + '" aria-label="整体字号"><b id="gearFsNow">' + state.fs + "px</b></div>" +
       '<div class="dd-sep"></div>' +
       '<div class="dd-title muted">收藏、学习进度与考试成绩只存在这台设备的浏览器里</div>' +
       "</div></div>";
@@ -316,12 +356,13 @@
     $all("#segInMenu button").forEach(function (b) {
       b.onclick = function () { setTheme(b.dataset.t); toast("主题：" + b.textContent); };
     });
-    $all("#segFs button").forEach(function (b) {
-      b.onclick = function () {
-        state.fs = Number(b.dataset.fs); save(); applyTheme();
-        toast("正文字号：" + b.textContent);
-      };
-    });
+    var fr = $("#gearFsRange");
+    if (fr) {
+      fr.oninput = function () { setFs(fr.value); };
+      /* 齿轮菜单靠 document 的 click 关掉；滑杆一按就冒泡会把菜单关了，拖不动。 */
+      fr.onclick = function (e) { e.stopPropagation(); };
+      fr.onmousedown = function (e) { e.stopPropagation(); };
+    }
     var si = $("#settingsItem");
     if (si) si.onclick = function (e) {
       e.stopPropagation();
@@ -331,11 +372,14 @@
   }
 
   /* ---------------- 通用设置 ----------------
-     齿轮里那一项点开的是这一个面板，六栏：公告 / 赞助 / 开源仓库 / 加入我们 / 学习记录 / 建议。
-     左边选一栏、右边出内容，默认落在公告。
+     齿轮里那一项点开的是这一个面板，七栏：外观主题 / 公告 / 赞助 / 开源仓库 / 加入我们 /
+     学习记录 / 建议。左边选一栏、右边出内容，默认落在公告。
      「赞助」与「加入我们」原来挂在页脚，「公告」原来是齿轮里单独一项 —— 现在都收进这里，
-     页脚那两个按钮和齿轮那一项一起删掉，不留两处入口。 */
+     页脚那两个按钮和齿轮那一项一起删掉，不留两处入口。
+     「外观主题」是这一轮新加的：齿轮只负责明暗三档（浅 / 深 / 跟随），
+     miao / mac 两套完整风格与整站字号都收在这一栏里。 */
   var SET_SECTIONS = [
+    { k: "appearance", nm: "外观主题" },
     { k: "notice", nm: "公告" },
     { k: "sponsor", nm: "赞助" },
     { k: "github", nm: "开源仓库" },
@@ -355,7 +399,7 @@
   }
 
   /* 本机存储的键（总表在 data.js 注释里）：导出与导入只认这几个，别的一律不碰 */
-  var SNAPSHOT_KEYS = ["miao_theme", "miao_fs", "miao_progress", "miao_favs", "miao_exam_results", "miao_video_favs"];
+  var SNAPSHOT_KEYS = ["miao_theme", "miao_style", "miao_fs", "miao_progress", "miao_favs", "miao_exam_results", "miao_video_favs"];
 
   function snapshot() {
     var data = {};
@@ -381,7 +425,8 @@
       try { localStorage.setItem(k, JSON.stringify(obj.data[k])); } catch (e) { /* 配额满了就认了 */ }
     });
     state.theme = store.get("theme", "auto");
-    state.fs = store.get("fs", 15);
+    state.fs = normFs(store.get("fs", 18));
+    state.style = store.get("style", "miao");
     state.progress = store.get("progress", {});
     state.favs = store.get("favs", []);
     applyTheme();
@@ -420,6 +465,27 @@
   /* 每一栏就三段：标题、要写的字、能点的动作。
      他这一轮点掉的：公告不要再套一层卡片、复制地址那种按钮全删、每栏底下那些小字说明一律不要。 */
   function setBodyHtml(k) {
+    if (k === "appearance") {
+      /* 两种整套风格：miao = 原版；mac = 这一轮新加的苹果风。齿轮只管明暗三档。 */
+      function skinCard(key, name, desc) {
+        return '<button type="button" class="skin-opt" data-skin="' + key + '" aria-pressed="false">' +
+          '<span class="skin-swatch ' + key + '" aria-hidden="true"><i></i><i></i><i></i></span>' +
+          '<span class="skin-copy"><b>' + name + "</b><span>" + desc + "</span></span></button>";
+      }
+      return '<div class="set-group">' +
+        '<div class="set-label">页面风格</div>' +
+        '<div class="skin-grid" id="setSkin">' +
+        skinCard("miao", "朴素", "低消耗") +
+        skinCard("mac", "精致", "中消耗") +
+        "</div>" +
+        "</div>" +
+        '<div class="set-group">' +
+        '<div class="set-label">整体字号</div>' +
+        '<div class="fs-row"><input class="fs-range" id="setFsRange" type="range" min="' + FS_MIN +
+        '" max="' + FS_MAX + '" step="1" value="' + state.fs + '" aria-label="整体字号"><b id="setFsNow">' +
+        state.fs + "px</b></div>" +
+        "</div>";
+    }
     if (k === "notice") {
       var list = siteField("announcements", []);
       return list.length ? list.map(function (a) {
@@ -465,6 +531,18 @@
   }
 
   function setBodyBind(k, box) {
+    if (k === "appearance") {
+      $all(".skin-opt", box).forEach(function (b) {
+        b.onclick = function () {
+          setStyle(b.dataset.skin);
+          toast("页面风格：" + b.querySelector("b").textContent);
+        };
+      });
+      var fr = $("#setFsRange", box);
+      if (fr) fr.oninput = function () { setFs(fr.value); };
+      applyTheme();
+      return;
+    }
     if (k !== "record") return;
     var ex = $("#setExport", box);
     if (ex) ex.onclick = function () {
@@ -626,7 +704,7 @@
 
   function tutCard(t) {
     var href = "#/tutorial/" + t.id;
-    return '<div class="t-card card">' +
+    return '<div class="t-card card rv">' +
       '<a class="t-open" href="' + href + '" aria-label="打开教程 ' + esc(t.title) + '"></a>' +
       coverHtml(t, "card") +
       '<div class="t-body"><h3><a class="t-title" href="' + href + '">' + esc(t.title) + "</a></h3>" +
@@ -1023,6 +1101,7 @@
     if (b.t === "h2") return '<h2 id="h2-' + i + '">' + esc(b.text) + "</h2>";
     if (b.t === "tip") return '<div class="tip-box' + tipCls(b) + '">' + inlineHtml(b.text) + "</div>";
     if (b.t === "ul") return "<ul>" + b.items.map(function (x) { return "<li>" + inlineHtml(x) + "</li>"; }).join("") + "</ul>";
+    if (b.t === "ol") return "<ol>" + b.items.map(function (x) { return "<li>" + inlineHtml(x) + "</li>"; }).join("") + "</ol>";
     if (b.t === "code") {
       return '<div class="code-block"><div class="code-head"><span class="lang">' + esc(b.lang) + "</span>" +
         '<button class="copy-btn" data-code="' + esc(b.code) + '">复制</button></div>' +
@@ -1066,6 +1145,93 @@
   /* ---------------- 英语学习卡片（正文内嵌，非独立页面） ----------------
      字母与音标在 assets/data/en-data.js（英语发音入门那门课的正文包）里，200 词在 enwords-data.js 里。
      按需加载之后这两份都在「点开那门课」时才进 window，所以渲染时现取，不缓存副本。 */
+
+  /* ---------------- Markdown → 现有块 ----------------
+     只做「渲染层」，不迁移旧的 .js 正文：章节数据里出现 md 字符串时，
+     阅读页先用这里解析成 p / h2 / ul / ol / code / tip / svg / en / img / audio 块，
+     再走原来的 blockHtml —— 所以样式、代码高光、音视频、练习卡与旧稿完全同一套。
+     方言：
+       ## 标题              → h2
+       - 项目 / 1. 项目     → ul / ol
+       ```lang ... ```      → code
+       :::tip blue ... ::: → tip
+       :::svg caption=...  → svg（正文为内联 SVG）
+       :::en kind=ph ...   → en
+       :::img / :::audio   → img / audio
+       其余非空行           → 段落
+  */
+  function mdAttrs(s) {
+    var out = {};
+    String(s || "").replace(/([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S+))/g, function (_, k, a, b, c) {
+      out[k] = a != null ? a : (b != null ? b : c);
+      return _;
+    });
+    return out;
+  }
+  function mdToBlocks(md) {
+    var lines = String(md == null ? "" : md).replace(/\r\n?/g, "\n").split("\n");
+    var blocks = [], i = 0;
+    function start(line) {
+      return /^\s*(```+|~~~+|:::|<svg\b|#{1,6}\s+|[-*+]\s+|\d+\.\s+)/i.test(line);
+    }
+    while (i < lines.length) {
+      var line = lines[i];
+      if (!line.trim()) { i++; continue; }
+      var fence = /^\s*(```+|~~~+)\s*([\w+#.-]*)\s*$/.exec(line);
+      if (fence) {
+        var mark = fence[1].charAt(0), lang = fence[2] || "text", body = [];
+        i++;
+        var close = new RegExp("^\\s*" + mark + "{3,}\\s*$");
+        while (i < lines.length && !close.test(lines[i])) { body.push(lines[i]); i++; }
+        if (i < lines.length) i++;
+        blocks.push({ t: "code", lang: lang, code: body.join("\n") });
+        continue;
+      }
+      var dir = /^\s*:::\s*([a-zA-Z]+)\s*(.*)$/.exec(line);
+      if (dir) {
+        var kind = dir[1].toLowerCase(), attrs = mdAttrs(dir[2]), body2 = [];
+        i++;
+        while (i < lines.length && !/^\s*:::\s*$/.test(lines[i])) { body2.push(lines[i]); i++; }
+        if (i < lines.length) i++;
+        var text = body2.join("\n");
+        if (kind === "tip") blocks.push({ t: "tip", color: attrs.color || dir[2].trim() || "", text: text });
+        else if (kind === "svg") blocks.push({ t: "svg", code: text, caption: attrs.caption || "" });
+        else if (kind === "en") blocks.push({ t: "en", kind: attrs.kind || attrs.type || "let", grp: attrs.grp || "" });
+        else if (kind === "img") blocks.push({ t: "img", src: attrs.src || "", alt: attrs.alt || "", caption: attrs.caption || "" });
+        else if (kind === "audio") blocks.push({ t: "audio", src: attrs.src || "", title: attrs.title || "", note: attrs.note || "" });
+        else if (text.trim()) blocks.push({ t: "p", text: text });
+        continue;
+      }
+      if (/^\s*<svg\b/i.test(line)) {
+        var svg = [];
+        while (i < lines.length) {
+          svg.push(lines[i]);
+          if (/<\/svg>\s*$/i.test(lines[i])) { i++; break; }
+          i++;
+        }
+        blocks.push({ t: "svg", code: svg.join("\n") });
+        continue;
+      }
+      var h = /^\s*(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line);
+      if (h) { blocks.push({ t: "h2", text: h[2] }); i++; continue; }
+      if (/^\s*([-*+]|\d+\.)\s+/.test(line)) {
+        var ordered = /^\s*\d+\.\s+/.test(line), items = [];
+        while (i < lines.length && /^\s*([-*+]|\d+\.)\s+/.test(lines[i])) {
+          items.push(lines[i].replace(/^\s*([-*+]|\d+\.)\s+/, "").trim());
+          i++;
+        }
+        blocks.push({ t: ordered ? "ol" : "ul", items: items });
+        continue;
+      }
+      var para = [];
+      while (i < lines.length && lines[i].trim() && !start(lines[i])) { para.push(lines[i].trim()); i++; }
+      if (para.length) blocks.push({ t: "p", text: para.join("\n") });
+      else i++;
+    }
+    return blocks;
+  }
+  var MD_MAKE = { blocks: mdToBlocks, inline: inlineHtml, chapter: chapterBlocks };
+
   function enPack() { return window.MIAO_EN || { letters: [], phonemes: [], groups: [] }; }
   function enPlayBtn(a, label, say) {
     return '<button class="en-play" type="button" data-en-src="' + esc(a || "") + '" data-say="' + esc(say || "") + '" ' +
@@ -1305,26 +1471,60 @@
   /* ---------------- 视图 ---------------- */
   var app;
 
+  /* mac 风格的滚动显现：列表项进视口才淡入上浮。
+     miao 不挂任何样式，所以这里只是把 .in 补齐，切回原版不会有隐藏内容。 */
+  var revealObserver = null, revealTimer = null;
+  function revealItems(root) {
+    var items = $all(".rv", root || document).filter(function (el) { return !el.classList.contains("in"); });
+    if (!items.length) return;
+    if (document.documentElement.getAttribute("data-style") !== "mac" || !window.IntersectionObserver) {
+      items.forEach(function (el) { el.classList.add("in"); });
+      return;
+    }
+    if (!revealObserver) {
+      revealObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          en.target.classList.add("in");
+          revealObserver.unobserve(en.target);
+        });
+      }, { threshold: 0.08, rootMargin: "0px 0px -6% 0px" });
+    }
+    items.forEach(function (el) { revealObserver.observe(el); });
+  }
+  function startRevealWatch() {
+    if (!window.MutationObserver || !app) { document.documentElement.classList.add("rv-off"); return; }
+    new MutationObserver(function () {
+      if (revealTimer) return;
+      revealTimer = setTimeout(function () { revealTimer = null; revealItems(app); }, 40);
+    }).observe(app, { childList: true, subtree: true });
+  }
+
   /* 首页就是分类页：不再单独做一个只有卡片的落地页 */
-  function vCategory(params) {
-    var curCat = params.cat || "";
-    var curDiff = params.diff || "";
-    var sort = params.sort || "hot";
+  function tutListFor(params) {
+    params = params || {};
+    var curCat = params.cat || "", curDiff = params.diff || "";
     var list = TUTS.filter(function (t) {
       return (!curCat || t.cat === curCat) && (!curDiff || t.diff === curDiff);
     });
-    list.sort(function (a, b) {
-      if (sort === "new") return a.updated < b.updated ? 1 : -1;
-      return (b.chaps || 0) - (a.chaps || 0);
-    });
+    /* 静态站不再摆「按热度 / 按最新」；保持原来默认的章节数顺序，列表才不跳。 */
+    list.sort(function (a, b) { return (b.chaps || 0) - (a.chaps || 0); });
+    return list;
+  }
+
+  function vCategory(params) {
+    var curCat = params.cat || "";
+    var curDiff = params.diff || "";
+    var list = tutListFor(params);
     function chipLink(label, key, val) {
-      var p = { cat: curCat, diff: curDiff, sort: sort };
+      var p = { cat: curCat, diff: curDiff };
       /* 点一下定，再点同一个就取消：已经亮着的那颗把值清空再拼链接（「全部」本来就是空，不受影响） */
       var on = (key === "cat" ? curCat : curDiff) === val;
       p[key] = on ? "" : val;
       var qs = Object.keys(p).filter(function (k) { return p[k]; })
         .map(function (k) { return k + "=" + encodeURIComponent(p[k]); }).join("&");
-      return '<a class="chip' + (on ? " on" : "") + '" href="#/category' + (qs ? "?" + qs : "") + '">' + label + "</a>";
+      return '<a class="chip chip-' + key + (on ? " on" : "") + '" data-fkey="' + key + '" data-fval="' + esc(val) +
+        '" href="#/category' + (qs ? "?" + qs : "") + '">' + label + "</a>";
     }
     /* 分类按「大类 → 小类」分组展示；「全部」清空分类；右侧按钮可收起/展开 */
     var catBody = Array.isArray(DATA.categories)
@@ -1348,14 +1548,9 @@
       '<div class="container">' +
       '<h1 class="page-title">首页</h1>' +
       '<div class="filter-bar">' + catChips + "</div>" +
-      '<div class="filter-bar" style="margin-top:-6px">' + diffChips +
-      '<span class="spacer"></span>' +
-      '<select class="input" id="sortSel" style="width:130px">' +
-      '<option value="hot"' + (sort === "hot" ? " selected" : "") + ">按热度</option>" +
-      '<option value="new"' + (sort === "new" ? " selected" : "") + ">按最新</option>" +
-      "</select></div>" +
-      (list.length ? '<div class="grid">' + list.map(tutCard).join("") + "</div>"
-        : '<div class="empty">该分类下暂无教程</div>') +
+      '<div class="filter-bar" style="margin-top:-6px">' + diffChips + "</div>" +
+      '<div id="tutList">' + (list.length ? '<div class="grid">' + list.map(tutCard).join("") + "</div>"
+        : '<div class="empty">该分类下暂无教程</div>') + "</div>" +
       "</div>";
     var catTg = $("#catToggle");
     if (catTg) catTg.onclick = function () {
@@ -1365,10 +1560,28 @@
       catTg.setAttribute("aria-expanded", nowOpen ? "true" : "false");
       store.set("catOpen", nowOpen);
     };
-    $("#sortSel").onchange = function (e) {
-      var qs = "?sort=" + e.target.value + (curCat ? "&cat=" + encodeURIComponent(curCat) : "") + (curDiff ? "&diff=" + encodeURIComponent(curDiff) : "");
-      location.hash = "#/category" + qs;
-    };
+  }
+
+  /* 只换下面的教程卡：标题、分类栏、难度栏都不重画 */
+  function partialCategory(params) {
+    var wrap = $("#tutList");
+    if (!wrap) return false;
+    var list = tutListFor(params);
+    wrap.innerHTML = list.length ? '<div class="grid">' + list.map(tutCard).join("") + "</div>"
+      : '<div class="empty">该分类下暂无教程</div>';
+    var curCat = params.cat || "", curDiff = params.diff || "";
+    $all(".filter-bar .chip[data-fkey]").forEach(function (a) {
+      var k = a.dataset.fkey, v = a.dataset.fval || "";
+      var on = (k === "cat" ? curCat : curDiff) === v;
+      a.classList.toggle("on", on);
+      var p = { cat: curCat, diff: curDiff };
+      p[k] = on ? "" : v;
+      var qs = Object.keys(p).filter(function (x) { return p[x]; })
+        .map(function (x) { return x + "=" + encodeURIComponent(p[x]); }).join("&");
+      a.setAttribute("href", "#/category" + (qs ? "?" + qs : ""));
+    });
+    revealItems(wrap);
+    return true;
   }
 
   function vTutorial(params) {
@@ -1380,11 +1593,10 @@
     var started = done.length > 0;
     var pct = chapters0.length ? tutProgress(t) : 0;
     var fav = t.faved === true;
-    var passedN = (t.examPassed || []).length, examN = (t.examIds || []).length;
     var chapters = t.chapters || [];
     var chapsN = chapters.length || t.chaps || 0;
     var chapItems = chapters.length ? chapters.map(function (c, i) {
-      return '<a class="chap-item' + (isDone(t.id, c.id) ? " done" : "") + '" href="#/read/' + t.id + "/" + c.id + '">' +
+      return '<a class="chap-item rv' + (isDone(t.id, c.id) ? " done" : "") + '" href="#/read/' + t.id + "/" + c.id + '">' +
         '<span class="idx">' + (isDone(t.id, c.id) ? "✓" : i + 1) + "</span>" +
         '<span class="tt">' + esc(c.title) + "</span></a>";
     }).join("") : '<div class="muted small" style="padding:12px 14px 16px">暂无章节</div>';
@@ -1416,7 +1628,6 @@
       '<div class="side-sep"></div>' +
       '<div class="kv"><span>章节数</span><span>' + chapsN + "</span></div>" +
       '<div class="kv"><span>本机已学</span><span>' + done.length + " / " + chapsN + "</span></div>" +
-      (examN ? '<div class="kv"><span>课末考试</span><span>' + passedN + " / " + examN + " 课已通过</span></div>" : "") +
       '<div class="kv"><span>难度</span><span class="kv-diff">' + diffBadge(t) + "</span></div>" +
       '<div class="kv"><span>最近更新</span><span>' + esc(t.updated) + "</span></div>" +
       "</div></div></div>";
@@ -1440,6 +1651,15 @@
   /* 阅读页滚动记忆：侧栏目录的滚动位置跨渲染保留；同章重渲染（完成/加载更多）不跳窗口 */
   var readMem = { tid: "", key: "", treeTop: 0 };
 
+  /* 章节目录里若带 md（Markdown 源），优先按 Markdown 渲染；否则继续用旧 .js 的 blocks。 */
+  function chapterBlocks(c) {
+    if (typeof c.md === "string" && c.md.trim()) {
+      if (c._mdSrc !== c.md) { c._mdBlocks = mdToBlocks(c.md); c._mdSrc = c.md; }
+      return c._mdBlocks;
+    }
+    return c.blocks || [];
+  }
+
   function vRead(params) {
     var t = tut(params.id);
     if (!t) { v404(); return; }
@@ -1450,6 +1670,7 @@
       return;
     }
     var c = chap(t, params.cid) || t.chapters[0];
+    var blocks = chapterBlocks(c);
     if (!c.blocks) c.blocks = [];          // 章节正文加载失败时只有 {id,title} 桩，兜底空数组防崩溃
     setInlineRefs(t.id, t.chapters);       // 正文里的「第 N 课」要靠章号表才知道跳哪
     var idx = t.chapters.indexOf(c);
@@ -1470,32 +1691,15 @@
     }).join("");
 
     var outline = [];
-    c.blocks.forEach(function (b, i) { if (b.t === "h2") outline.push('<a data-h="h2-' + i + '">' + esc(b.text) + "</a>"); });
+    blocks.forEach(function (b, i) { if (b.t === "h2") outline.push('<a data-h="h2-' + i + '">' + esc(b.text) + "</a>"); });
 
     var moreHtml = (win && win.hasMore)
       ? '<div style="text-align:center;padding:18px"><button class="btn btn-soft" id="loadMore">继续加载（已读约 ' + fmtStat(win.nextOffset) + " / 共 " + fmtStat(win.totalChars) + " 字）</button></div>"
       : "";
-    var hasExam = (t.examIds || []).indexOf(c.id) >= 0;
-    var myExam = (t.examResults || {})[c.id];
-    /* 卷型不同，那句提示要换：Python 是写代码，字母音标卷与单词卷都是答题 */
-    var examWhat = t.engine === "en"
-      ? "25 道题：选择、听音选字母、听音写字母、字母配对，答不了随时从左上角退出。"
-      : t.engine === "enword"
-        ? (c.id === "ew-l22" ? "20 道题，范围是前 21 课的全部词：选择、听音选词、默写、连线。"
-                             : "14 道题，只考本课的词：选择、听音选词、补全单词、中译英默写、连线。")
-        : "题目是一小段代码任务，答不了随时从左上角退出。";
-    var opsHtml = hasExam
-      ? '<div class="art-ops">' +
-        (done
-          ? '<span class="exam-entry done">✓ 这一课已考过' + (myExam && myExam.best ? "（最高 " + myExam.best + " 分）" : "") + "</span>" +
-            '<a class="btn btn-soft" href="#/exam/' + t.id + "/" + c.id + '">再考一次</a>' +
-            '<span class="exam-note">成绩只存你考过这件事，重考不扣分，取最高分。</span>'
-          : '<a class="exam-entry" href="#/exam/' + t.id + "/" + c.id + '">进入考试 →</a>' +
-            '<span class="exam-note">这一课要考过才算完成。' + examWhat + "</span>") +
-        "</div>"
-      : '<div class="art-ops">' +
-        '<button class="btn ' + (done ? "soft" : "primary") + '" id="doneBtn">' + (done ? "✓ 已完成（点击取消）" : "完成！") + "</button>" +
-        "</div>";
+    /* 文档类教程不再挂「进入考试」入口；这里只保留完成标记。 */
+    var opsHtml = '<div class="art-ops">' +
+      '<button class="btn ' + (done ? "btn-soft" : "btn-primary") + '" id="doneBtn">' + (done ? "✓ 已完成（点击取消）" : "完成！") + "</button>" +
+      "</div>";
 
     app.innerHTML =
       '<div class="read-wrap"><div class="read-grid">' +
@@ -1503,7 +1707,7 @@
       '<article class="article">' +
       "<h1>" + esc(c.title) + "</h1>" +
       '<div class="art-meta">' + esc(t.title) + " · 第 " + (idx + 1) + "/" + t.chapters.length + " 章 · " + esc(t.author) + "</div>" +
-      c.blocks.map(blockHtml).join("") +
+      blocks.map(blockHtml).join("") +
       opsHtml +
       '<div class="pn-nav">' +
       (prev
@@ -1559,13 +1763,20 @@
     if (db) db.onclick = function () {
       var arr = state.progress[t.id] || (state.progress[t.id] = []);
       var i = arr.indexOf(c.id);
-      if (i >= 0) { arr.splice(i, 1); toast("已取消完成标记"); }
+      var nowDone;
+      if (i >= 0) { arr.splice(i, 1); nowDone = false; toast("已取消完成标记"); }
       else {
-        arr.push(c.id);
+        arr.push(c.id); nowDone = true;
         if (t.chapters.every(function (x) { return arr.indexOf(x.id) >= 0; })) toast("恭喜！已学完整本「" + t.title + "」");
         else toast("本章已完成，进度记在本机");
       }
-      save(); vRead(params);
+      save();
+      /* 只改这颗按钮和左侧目录的圆点，不再 vRead 重渲染整页 ——
+         否则整篇正文会消失一帧再回来，也就是用户说的「闪屏」。 */
+      db.className = "btn " + (nowDone ? "btn-soft" : "btn-primary");
+      db.textContent = nowDone ? "✓ 已完成（点击取消）" : "完成！";
+      var rt = $(".rt-item.on");
+      if (rt) rt.classList.toggle("done", nowDone);
     };
   }
 
@@ -1652,26 +1863,134 @@
     return { seg: seg, params: params };
   }
 
+  /* ---------------- 同一板块内切换：交叉虚化 ----------------
+     文档左侧合集、视频合集、题库列表点进去时，不要再走整页「淡入 + 上浮」；
+     先把旧页面拍一张快照盖在上面，路由把新页面画好之后让快照淡出，
+     新内容在下面同时露出来 —— 视觉上就是交叉虚化，旧页不会先消失再弹起。 */
+  function sectionOf(hash) {
+    return String(hash || "").replace(/^#\/?/, "").split(/[/?]/)[0] || "";
+  }
+  function sameSection(href) {
+    var a = sectionOf(href), b = sectionOf(location.hash);
+    if (a === b && (a === "read" || a === "video" || a === "exams")) return true;
+    return b === "tutorial" && a === "read";       /* 详情页左目录 → 正文 */
+  }
+  function viewDone() {
+    try { document.dispatchEvent(new CustomEvent("miao:view")); } catch (e) { /* 老浏览器 */ }
+  }
+  var routeFading = false;
+  function routeCrossfade(href) {
+    /* 非「精致」不做任何交叉虚化 / 页面转场，直接换页 */
+    if (document.documentElement.getAttribute("data-style") !== "mac") {
+      if (href !== location.hash) location.hash = href;
+      return;
+    }
+    var reduced = false;
+    try { reduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch (e) { }
+    if (routeFading || reduced || !app || href === location.hash) {
+      if (href !== location.hash) location.hash = href;
+      return;
+    }
+    var overlay = document.createElement("div");
+    overlay.className = "route-xfade";
+    overlay.setAttribute("aria-hidden", "true");
+    var inner = document.createElement("div");
+    inner.className = "route-xfade-inner";
+    inner.innerHTML = app.innerHTML;
+    inner.style.transform = "translateY(" + (-(window.scrollY || 0)) + "px)";
+    overlay.appendChild(inner);
+    var navEl = document.querySelector("header.nav");
+    if (navEl) overlay.style.top = Math.max(0, navEl.getBoundingClientRect().height) + "px";
+    /* 快照里的媒体不要再拉一遍、更不要在淡出时串声 */
+    Array.prototype.forEach.call(overlay.querySelectorAll("video, audio"), function (el) {
+      el.removeAttribute("src");
+      el.removeAttribute("autoplay");
+      Array.prototype.forEach.call(el.querySelectorAll("source"), function (src) { src.removeAttribute("src"); });
+    });
+    /* 左目录自己也会滚，快照里把它对准原来的位置，避免切章时目录“跳一下” */
+    var oldTree = app.querySelector(".read-tree");
+    var newTree = overlay.querySelector(".read-tree");
+    if (oldTree && newTree) newTree.scrollTop = oldTree.scrollTop;
+    document.body.classList.add("route-xfade-on");
+    document.body.appendChild(overlay);
+    routeFading = true;
+    var done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      document.removeEventListener("miao:view", finish);
+      /* 新页面已经画好：这一屏的 .rv 直接算“已出现”，并停掉上浮动画；
+         否则快照淡出后它们会从下面再弹一次。 */
+      Array.prototype.forEach.call(app.querySelectorAll(".rv"), function (el) {
+        el.classList.add("in", "no-anim");
+      });
+      app.classList.add("xfade-static");
+      document.body.classList.remove("route-xfade-on");
+      overlay.classList.add("out");
+      setTimeout(function () { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 320);
+      routeFading = false;
+    }
+    document.addEventListener("miao:view", finish);
+    location.hash = href;
+    setTimeout(finish, 900);          /* 数据加载慢时兜底，不让快照一直盖着 */
+  }
+  function onRouteClick(ev) {
+    if (ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+    var a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+    if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+    if (!a.closest(".rt-item, .pn-item, .v-ep, .v-card, .algo-line-title, .chap-item, .tut-hero .btn")) return;
+    var href = a.getAttribute("href");
+    if (!/^#\/(read|video|exams)(\/|\?|$)/.test(href)) return;
+    if (href === location.hash) { ev.preventDefault(); return; }   /* 当前这一条：不重画 */
+    if (!sameSection(href)) return;                                 /* 跨板块仍走原来的页面转场 */
+    ev.preventDefault();
+    routeCrossfade(href);
+  }
+
   async function router() {
     var r = parseHash(), s = r.seg;
     closeSettings();          /* 换页就把通用设置收掉：里面那张学习记录是按当时那份数据画的 */
+    /* 语言菜单可能被临时挂到 body 上（避免被代码栏裁切）；换页时把遗留的那份清掉 */
+    Array.prototype.forEach.call(document.querySelectorAll("body > .algo-lang-menu"), function (m) { m.remove(); });
+    /* 算法题里的代码设置是另一张模态卡，换页也一并收掉 */
+    Array.prototype.forEach.call(document.querySelectorAll("body > .mask"), function (m) {
+      if (m.querySelector(".algo-code-set") || m.querySelector(".algo-cpp-guide")) m.remove();
+    });
     if (window.MIAO_CLOSE_FOOT) window.MIAO_CLOSE_FOOT();   /* 页脚那两个弹层同理，换页就收掉 */
+    /* 导航高亮：只有视频与考试这两个真页面参与；首页那颗永远不亮（它一匹配就全站都亮了） */
+    var navOn = s[0] === "exams" ? "#/exams" : s[0] === "video" ? "#/video" : "";
+    $all(".nav-links a").forEach(function (a) {
+      a.classList.toggle("on", !!navOn && a.getAttribute("href") === navOn);
+    });
     /* 读者一动（换页、进考场、回首页），正在跑的预取立刻让路 —— 补齐别的分片永远不是当前的事 */
     if (API.stopPrefetch) API.stopPrefetch();
     /* 考场是整屏界面：站点导航条与页脚让位（否则 sticky 的导航条会盖住标题栏的运行/交卷） */
     document.body.classList.toggle("exam-mode", s[0] === "exam");
+    /* 算法题库的做题页也收起页脚，但不收导航条 —— 它照力扣那样把「回列表」留在地址栏下面 */
+    document.body.classList.toggle("algo-mode", s[0] === "exams" && !!s[1]);
     if (!BE.ready && !BE.error) await BE.boot();
-    if (BE.error && s[0] !== "login") return beOffline();
+    /* 列表页只改下面的列表：分类 / 难度 / 视频 / 题库筛选都不重画上面的标题和筛选栏 */
+    if ((s.length === 0 || s[0] === "category") && $("#tutList") && partialCategory(r.params)) return;
+    if (s[0] === "video" && !s[1] && $("#vList") && window.MIAO_VIDEO_UI && window.MIAO_VIDEO_UI.partial) {
+      if (window.MIAO_VIDEO_UI.partial(r.params)) return;
+    }
+    if (s[0] === "exams" && !s[1] && $("#algoList") && window.MIAO_ALGO_UI && window.MIAO_ALGO_UI.partial) {
+      if (window.MIAO_ALGO_UI.partial(r.params)) return;
+    }
+    if (BE.error && s[0] !== "login") { beOffline(); viewDone(); return; }
     /* 正文与考场脚本都是点开才拉的：先给一句到位的等待提示，别让人对着不动的旧页面猜 */
     var wantId = s[1];
     var needFetch = (s[0] === "tutorial" || s[0] === "read" || s[0] === "exam") &&
       wantId && !API.bodyReady(wantId, s[2] || "");
+    /* 算法题库：列表页没有 wantId，所以单独算一条；只有做题页才要沙箱与编辑器 */
+    var needAlgo = s[0] === "exams" && (!algoUi() || (!!s[1] && !algoEngine()));
     /* 视频那两份脚本（清单 + 界面）也在首屏之外，第一次进视频页同样先说一句 */
     var needVideo = s[0] === "video" && !videoUi();
-    if (needFetch || needVideo) {
+    if (needFetch || needAlgo || needVideo) {
       app.innerHTML = '<div class="container"><div class="empty">' +
         (s[0] === "tutorial" ? "正在取这本教程的目录…"
-          : s[0] === "video" ? "正在取视频清单…" : "正在取这一课的正文…") + "</div></div>";
+          : s[0] === "video" ? "正在取视频清单…"
+            : s[0] === "exams" ? "正在取算法题库…" : "正在取这一课的正文…") + "</div></div>";
     }
     try {
       if (s[0] === "tutorial" && s[1]) {
@@ -1684,12 +2003,17 @@
         await BE.ensureTutorial(s[1]);                  // 考试要考哪一课，得先有章节目录
         await API.get("/api/exams/" + encodeURIComponent(s[1]) + "/" + encodeURIComponent(s[2]));
       }                                                       // 题包与考场界面（Python 还带沙箱）都在这一条里拉
+      else if (s[0] === "exams") {
+        await API.ensureAlgoBank(!!s[1]);               // 列表：题面 + 界面；做题页：再把沙箱与编辑器拉进来
+      }
       else if (s[0] === "video") {
         await API.ensureVideos();                       // 数据在前、界面在后；拉成功之前 MIAO_VIDEO_UI 不存在
       }
     } catch (e) {
       toast((e && e.message) || "加载失败");
     }
+    /* 数据到位、真正要画下一屏时才放开上浮；加载期间旧页保持静止，不再重演一次转场 */
+    if (app) app.classList.remove("xfade-static");
     if (s.length === 0) vCategory(r.params);
     else if (s[0] === "category") vCategory(r.params);
     else if (s[0] === "tutorial" && s[1]) vTutorial({ id: s[1] });
@@ -1700,14 +2024,23 @@
       }
     else if (s[0] === "exam" && s[1] && s[2]) {
       var UI = examUi();                            /* 考场脚本此刻才在 window 上 */
-      if (!UI) { v404(); return; }
+      if (!UI) { v404(); viewDone(); return; }
       UI.onPassed = markExamPassed;
       UI.vExam(app, { id: s[1], cid: s[2] });
+      viewDone();
       return;                                      /* 考试是整屏界面，不再滚回页首 */
+    }
+    else if (s[0] === "exams") {
+      var AUI = algoUi();                           /* 算法题库界面同样按需注入 */
+      if (!AUI) { v404(); viewDone(); return; }
+      if (s[1]) AUI.vProblem(app, decodeURIComponent(s[1]));
+      else AUI.vList(app, r.params);
+      viewDone();
+      return;
     }
     else if (s[0] === "video") {
       var VUI = videoUi();                              /* 界面脚本此刻才在 window 上 */
-      if (!VUI) { v404(); return; }
+      if (!VUI) { v404(); viewDone(); return; }
       VUI.mount(window.MIAO_VIDEOS);                    /* 摊平合集与序号：列表与右栏都读这份索引 */
       if (s[1]) VUI.vWatch(app, decodeURIComponent(s[1]));
       else VUI.vList(app, r.params);
@@ -1715,6 +2048,7 @@
     else if (s[0] === "search") vSearch(r.params);
     else v404();
     window.scrollTo(0, 0);
+    viewDone();
   }
 
   /* ---------------- 启动 ---------------- */
@@ -1740,6 +2074,9 @@
 
   function init() {
     app = $("#app");
+    startRevealWatch();
+    document.addEventListener("click", onRouteClick);
+    window.MIAO_ROUTE_CROSSFADE = routeCrossfade;
     window.MIAO_NAV = function (h) { location.hash = h; };
     /* 考场界面（exam-ui.js）是进考场才注入的，onPassed 在路由里每次现挂 */
     renderNavRight();
@@ -1758,6 +2095,7 @@
     window.addEventListener("hashchange", router);
     router();
   }
+  window.MIAO_MD = MD_MAKE;                /* Markdown 渲染层：mdToBlocks / inline，旧 .js 正文继续走 blocks */
   window.MIAO_HL = (function () {          /* 自测用：正文高光不碰 DOM，喂一段代码就能验「剥掉 span 必须逐字等于原文」 */
     return { code: hlCode, py: hlPy, js: hlJs, html: hlHtml, css: hlCss, json: hlJson,
       yaml: hlYaml, ini: hlIni, text: hlText, shell: hlShell, cpp: hlCpp,
